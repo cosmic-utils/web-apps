@@ -1,9 +1,17 @@
+use std::path::PathBuf;
+
 use iced::{
-    widget::{button, column, pick_list, row, scrollable, text, text_input, toggler, Container},
+    widget::{
+        button, column, image, pick_list, row, scrollable, svg, text, text_input, toggler,
+        Container,
+    },
     Alignment, Application, Command, Length,
 };
 
-use crate::common::{get_supported_browsers, get_webapps, Browser, WebAppLauncher};
+use crate::common::{
+    find_icons, get_icon_name_from_url, get_supported_browsers, get_webapps, Browser,
+    WebAppLauncher,
+};
 
 #[derive(Debug, Clone)]
 pub enum Buttons {
@@ -23,6 +31,7 @@ pub enum AppMessage {
     Arguments(String),
     Browser(Browser),
     Category(String),
+    FetchIcon,
 }
 
 pub struct Wam {
@@ -96,7 +105,23 @@ impl Application for Wam {
                 Command::none()
             }
             AppMessage::Clicked(btn) => match btn {
-                Buttons::Favicon => Command::none(),
+                Buttons::Favicon => {
+                    if !self.app_url.is_empty() {
+                        let to_find = get_icon_name_from_url(&self.app_url);
+                        let found = find_icons(&to_find);
+                        let mut path = String::new();
+
+                        if let Some(icon_path) = found {
+                            if !icon_path.is_empty() {
+                                path = icon_path[0].clone();
+                            }
+                        }
+
+                        self.app_icon = path;
+                    }
+
+                    Command::none()
+                }
                 Buttons::Edit(launcher) => {
                     self.app_title = launcher.name;
                     self.app_url = launcher.url;
@@ -154,6 +179,19 @@ impl Application for Wam {
 
                 Command::none()
             }
+            AppMessage::FetchIcon => {
+                let to_find = get_icon_name_from_url(&self.app_url);
+                let found = find_icons(&to_find);
+                let mut path = String::new();
+
+                if let Some(icon_path) = found {
+                    path = icon_path[0].clone();
+                }
+
+                self.app_icon = path;
+
+                Command::none()
+            }
         }
     }
 
@@ -164,19 +202,37 @@ impl Application for Wam {
             .width(Length::Fixed(340.));
         let app_url = text_input("URL", &self.app_url)
             .on_input(AppMessage::Url)
+            .on_submit(AppMessage::FetchIcon)
             .padding(10)
             .width(Length::Fixed(340.));
 
         let col = column![app_title, app_url].spacing(14);
 
-        let dl_btn = button("DL FAV")
+        let search_ico = include_bytes!("../assets/icons/search.svg");
+        let dl_btn = button(svg(svg::Handle::from_memory(search_ico.to_vec())))
             .on_press(AppMessage::Clicked(Buttons::Favicon))
             .width(Length::Fixed(96.))
             .height(Length::Fixed(96.));
-        let fav_btn = button("FAV BTN")
-            .on_press(AppMessage::Clicked(Buttons::Favicon))
-            .width(Length::Fixed(96.))
-            .height(Length::Fixed(96.));
+
+        let fav_btn = if !self.app_icon.is_empty() {
+            let icon_ext = self.determine_icon_type(&self.app_icon);
+
+            match icon_ext {
+                IconExt::Raster => button(image(self.image_handler(&self.app_icon)))
+                    .on_press(AppMessage::Clicked(Buttons::Favicon))
+                    .width(Length::Fixed(96.))
+                    .height(Length::Fixed(96.)),
+                IconExt::Svg => button(svg(self.svg_handler(&self.app_icon)))
+                    .on_press(AppMessage::Clicked(Buttons::Favicon))
+                    .width(Length::Fixed(96.))
+                    .height(Length::Fixed(96.)),
+            }
+        } else {
+            button(svg(self.svg_handler(&self.app_icon)))
+                .on_press(AppMessage::Clicked(Buttons::Favicon))
+                .width(Length::Fixed(96.))
+                .height(Length::Fixed(96.))
+        };
 
         let row = row![col, dl_btn, fav_btn].spacing(12).width(Length::Fill);
 
@@ -270,5 +326,38 @@ impl Application for Wam {
         .spacing(24);
 
         Container::new(col).padding(30).into()
+    }
+}
+
+pub enum IconExt {
+    Raster,
+    Svg,
+}
+
+impl Wam {
+    pub fn image_handler(&self, path: &str) -> image::Handle {
+        image::Handle::from_path(path)
+    }
+
+    pub fn svg_handler(&self, path: &str) -> svg::Handle {
+        svg::Handle::from_path(path)
+    }
+
+    pub fn determine_icon_type(&self, path: &str) -> IconExt {
+        let mut pathbuf = PathBuf::new();
+        pathbuf.push(path);
+
+        let extension = pathbuf.extension().expect("expected file extension");
+
+        match extension.to_str() {
+            Some(e) => {
+                if e.ends_with("svg") {
+                    IconExt::Svg
+                } else {
+                    IconExt::Raster
+                }
+            }
+            _ => IconExt::Raster,
+        }
     }
 }

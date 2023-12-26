@@ -7,6 +7,7 @@ use std::{
     io::{self, BufRead, Result, Write},
     path::PathBuf,
 };
+use url::Url;
 use walkdir::WalkDir;
 use xdg::BaseDirectories;
 
@@ -48,21 +49,6 @@ impl WebAppLauncher {
         let filename = format!("webapp-{}.desktop", codename);
         path.push(filename);
         let web_browser = browser;
-
-        if icon.is_empty() {
-            let to_find = "scanner";
-
-            let look_path = "/home/elevenhsoft/.local/share/icons";
-            let found = find_icons(look_path, to_find);
-
-            tracing::info!("{:?}", found);
-
-            let look_path = "/usr/share/icons";
-            let found = find_icons(look_path, to_find);
-
-            tracing::info!("{:?}", found);
-        }
-
         let is_valid = !name.is_empty() && !icon.is_empty();
         let exec = String::new(); // TODO: Implement this exec_string
         let isolate_profile = isolated;
@@ -386,7 +372,17 @@ pub fn get_supported_browsers() -> Vec<Browser> {
     browsers
 }
 
-pub fn find_icons(path: &str, icon_name: &str) -> Option<Vec<String>> {
+pub fn get_icon_name_from_url(url: &str) -> String {
+    match Url::parse(url) {
+        Ok(url) => {
+            let parts: Vec<&str> = url.host_str().unwrap().split('.').collect();
+            parts[parts.len() - 2].to_string()
+        }
+        Err(_) => String::new(),
+    }
+}
+
+pub fn find_icon(path: &str, icon_name: &str) -> Option<Vec<String>> {
     let mut icons: Vec<String> = Vec::new();
 
     for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
@@ -399,4 +395,24 @@ pub fn find_icons(path: &str, icon_name: &str) -> Option<Vec<String>> {
         }
     }
     Some(icons)
+}
+
+pub fn find_icons(icon_name: &str) -> Option<Vec<String>> {
+    let base_dir = BaseDirectories::new().expect("no base directories found");
+    let mut local_dir = base_dir.get_data_home();
+    local_dir.push("icons");
+    let local_dir = local_dir
+        .to_str()
+        .expect("cant convert local path to string");
+    let system_dir = "/usr/share/icons";
+
+    let local_icons = find_icon(local_dir, icon_name).unwrap();
+    let system_icons = find_icon(system_dir, icon_name).unwrap();
+
+    let mut result: Vec<String> = Vec::new();
+
+    result.extend(local_icons);
+    result.extend(system_icons);
+
+    Some(result)
 }
