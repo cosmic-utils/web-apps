@@ -1,11 +1,15 @@
 use iced::{
-    widget::{button, column, pick_list, row, scrollable, text_input, Container},
+    widget::{button, column, pick_list, row, scrollable, text, text_input, Container},
     Application, Command, Length,
 };
 
-#[derive(Debug, Clone, Copy)]
+use crate::common::{get_supported_browsers, get_webapps, WebAppLauncher};
+
+#[derive(Debug, Clone)]
 pub enum Buttons {
     Favicon,
+    Edit(Box<WebAppLauncher>),
+    Delete(Box<WebAppLauncher>),
 }
 
 #[derive(Debug, Clone)]
@@ -15,14 +19,14 @@ pub enum AppMessage {
     Title(String),
     Url(String),
     Arguments(String),
-    Browser(&'static str),
+    Browser(String),
 }
 
 pub struct Wam {
     pub app_title: String,
     pub app_url: String,
-    pub app_arguments: String,
-    pub app_browser: &'static str,
+    pub app_parameters: String,
+    pub app_browser: String,
 }
 
 impl Application for Wam {
@@ -39,8 +43,8 @@ impl Application for Wam {
             Wam {
                 app_title: String::new(),
                 app_url: String::new(),
-                app_arguments: String::new(),
-                app_browser: "Browser",
+                app_parameters: String::new(),
+                app_browser: String::from("Browser"),
             },
             Command::none(),
         )
@@ -71,17 +75,29 @@ impl Application for Wam {
                 Command::none()
             }
             AppMessage::Arguments(args) => {
-                self.app_arguments = args;
+                self.app_parameters = args;
 
-                println!("{}", self.app_arguments);
+                println!("{}", self.app_parameters);
 
                 Command::none()
             }
             AppMessage::Clicked(btn) => match btn {
                 Buttons::Favicon => Command::none(),
+                Buttons::Edit(launcher) => {
+                    self.app_title = launcher.name;
+                    self.app_url = launcher.url;
+                    self.app_parameters = launcher.custom_parameters;
+                    self.app_browser = launcher.web_browser;
+
+                    Command::none()
+                }
+                Buttons::Delete(launcher) => {
+                    tracing::info!("{:?}", launcher);
+                    Command::none()
+                }
             },
             AppMessage::Browser(browser) => {
-                self.app_browser = &browser;
+                self.app_browser = browser;
 
                 Command::none()
             }
@@ -112,14 +128,19 @@ impl Application for Wam {
 
         let row = row![col, dl_btn, fav_btn].spacing(12).width(Length::Fill);
 
-        let app_arguments = text_input("Non-standard arguments", &self.app_arguments)
+        let app_arguments = text_input("Non-standard arguments", &self.app_parameters)
             .on_input(AppMessage::Arguments)
             .padding(10)
             .width(Length::Fill);
 
-        let browsers = vec!["Firefox", "Firefox (flatpak)", "Chrome"];
+        let mut browsers = Vec::new();
 
-        let app_browsers = pick_list(browsers.clone(), Some(self.app_browser), |browser| {
+        for browser in get_supported_browsers() {
+            let name = browser.name.clone();
+            browsers.push(name)
+        }
+
+        let app_browsers = pick_list(browsers, Some(self.app_browser.clone()), |browser| {
             AppMessage::Browser(browser)
         })
         .width(Length::Fill)
@@ -130,15 +151,37 @@ impl Application for Wam {
             .width(Length::Fill)
             .padding(10);
 
+        let heading = text("Installed").size(32.);
+
         let mut app_list = column!().spacing(10);
 
-        for _ in 1..20 {
-            app_list = app_list.push(button("Appkaaaa").width(Length::Fill).padding(10));
+        for app in get_webapps() {
+            match app {
+                Ok(data) => {
+                    let name = text(&data.name);
+                    let edit = button("Edit")
+                        .on_press(AppMessage::Clicked(Buttons::Edit(Box::new(data.clone()))));
+                    let delete = button("Delete")
+                        .on_press(AppMessage::Clicked(Buttons::Delete(Box::new(data.clone()))));
+
+                    let row = row!(name, edit, delete);
+                    app_list = app_list.push(row);
+                }
+                Err(e) => tracing::error!("Error reading web app: {}", e),
+            }
         }
 
         let scrollable_list = scrollable(app_list).width(Length::Fill);
 
-        let col = column![row, app_arguments, app_browsers, app_done, scrollable_list].spacing(14);
+        let col = column![
+            row,
+            app_arguments,
+            app_browsers,
+            app_done,
+            heading,
+            scrollable_list
+        ]
+        .spacing(24);
 
         Container::new(col).padding(30).into()
     }
