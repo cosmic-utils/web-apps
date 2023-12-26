@@ -191,16 +191,18 @@ impl WebAppLauncher {
         }
     }
 
-    pub fn create(&self) -> Result<()> {
-        let _exec_string = String::new();
+    pub fn exec_string(&self) -> String {
+        self.exec.to_string()
+    }
 
+    pub fn create(&self) -> Result<()> {
         let mut output = File::create(&self.path)?;
 
         writeln!(output, "[Desktop Entry]")?;
         writeln!(output, "Version=1.0")?;
         writeln!(output, "Name={}", self.name)?;
         writeln!(output, "Comment=Web App")?;
-        writeln!(output, "Exec={}", _exec_string)?;
+        writeln!(output, "Exec={}", self.exec_string())?;
         writeln!(output, "Terminal=false")?;
         writeln!(output, "Type=Application")?;
         writeln!(output, "Icon={}", self.icon)?;

@@ -125,6 +125,7 @@ impl Application for Wam {
                 Buttons::Edit(launcher) => {
                     self.app_title = launcher.name;
                     self.app_url = launcher.url;
+                    self.app_icon = launcher.icon;
                     self.app_parameters = launcher.custom_parameters;
                     self.app_category = launcher.category;
                     self.app_browser =
@@ -288,11 +289,10 @@ impl Application for Wam {
             .width(Length::Fill)
             .padding(10);
 
-        let heading = text("Installed").size(32.);
-
         let mut app_list = column!().spacing(10);
+        let webapps = get_webapps();
 
-        for app in get_webapps() {
+        for app in webapps.iter() {
             match app {
                 Ok(data) => {
                     let edit = button("Edit")
@@ -312,7 +312,15 @@ impl Application for Wam {
             }
         }
 
-        let scrollable_list = scrollable(app_list).width(Length::Fill);
+        let mut installed = column![];
+
+        if !webapps.is_empty() {
+            installed = installed.push(text("Installed").size(32.));
+
+            let scrollable_list = scrollable(app_list).width(Length::Fill);
+
+            installed = installed.push(scrollable_list);
+        }
 
         let col = column![
             row,
@@ -320,8 +328,7 @@ impl Application for Wam {
             cat_row,
             app_browsers,
             app_done,
-            heading,
-            scrollable_list
+            installed,
         ]
         .spacing(24);
 
