@@ -7,7 +7,10 @@ edition = "2021"
 
 [dependencies]
 iced = { git = "https://github.com/iced-rs/iced", features = ["tokio", "advanced", "image"] }
+rand = "0.8.5"
 reqwest = "0.11.23"
 tracing = "0.1"
 tracing-subscriber = "0.3.0"
 xdg = "2.5.2"
+url = "2.5.0"
+walkdir = "2.4.0"

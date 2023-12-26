@@ -15,11 +15,11 @@ fn main() -> iced::Result {
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     Wam::run(Settings {
-        id: Some("wam_rust".to_string()),
+        id: Some("wam-rust".to_string()),
         window: window::Settings {
             size: iced::Size {
                 width: 600.,
-                height: 600.,
+                height: 740.,
             },
             resizable: false,
             ..Default::default()

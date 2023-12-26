@@ -1,15 +1,20 @@
+#![allow(clippy::too_many_arguments)]
+
+use rand::{thread_rng, Rng};
 use std::{
-    fs::{self, File},
-    io::{self, BufRead, Result},
+    fmt::Display,
+    fs::{self, remove_dir_all, remove_file, File},
+    io::{self, BufRead, Result, Write},
     path::PathBuf,
 };
+use walkdir::WalkDir;
 use xdg::BaseDirectories;
 
 #[derive(Debug, Clone)]
 pub struct WebAppLauncher {
     pub path: PathBuf,
     pub codename: String,
-    pub web_browser: String,
+    pub web_browser: Browser,
     pub name: String,
     pub icon: String,
     pub is_valid: bool,
@@ -23,9 +28,66 @@ pub struct WebAppLauncher {
 }
 
 impl WebAppLauncher {
-    pub fn new(path: PathBuf, codename: String) -> Result<WebAppLauncher> {
+    pub fn new(
+        name: String,
+        url: String,
+        icon: String,
+        category: String,
+        browser: Browser,
+        custom_parameters: String,
+        isolated: bool,
+        navbar: bool,
+        privatewindow: bool,
+    ) -> Self {
+        let random_code: u16 = thread_rng().gen_range(1000..10000);
+        let base_dir = BaseDirectories::new().expect("base directories not found");
+        let mut path = base_dir.get_data_home();
+
+        let codename = format!("{}{}", name, random_code);
+        path.push("applications");
+        let filename = format!("webapp-{}.desktop", codename);
+        path.push(filename);
+        let web_browser = browser;
+
+        if icon.is_empty() {
+            let to_find = "scanner";
+
+            let look_path = "/home/elevenhsoft/.local/share/icons";
+            let found = find_icons(look_path, to_find);
+
+            tracing::info!("{:?}", found);
+
+            let look_path = "/usr/share/icons";
+            let found = find_icons(look_path, to_find);
+
+            tracing::info!("{:?}", found);
+        }
+
+        let is_valid = !name.is_empty() && !icon.is_empty();
+        let exec = String::new(); // TODO: Implement this exec_string
+        let isolate_profile = isolated;
+        let is_incognito = privatewindow;
+
+        Self {
+            path,
+            codename,
+            web_browser,
+            name,
+            icon,
+            is_valid,
+            exec,
+            category,
+            url,
+            custom_parameters,
+            isolate_profile,
+            navbar,
+            is_incognito,
+        }
+    }
+
+    pub fn read(path: PathBuf, codename: String) -> Result<WebAppLauncher> {
         let file = File::open(&path)?;
-        let mut web_browser = String::new();
+        let mut browser_name = String::new();
         let mut name = String::new();
         let mut icon = String::new();
         let mut is_valid = false;
@@ -71,7 +133,7 @@ impl WebAppLauncher {
                     };
 
                     if line.contains("X-WebApp-Browser=") {
-                        web_browser = line.replace("X-WebApp-Browser=", "");
+                        browser_name = line.replace("X-WebApp-Browser=", "");
                     };
 
                     if line.contains("X-WebApp-URL=") {
@@ -102,21 +164,111 @@ impl WebAppLauncher {
             is_valid = true
         }
 
-        Ok(WebAppLauncher {
-            path,
-            codename,
-            web_browser,
-            name,
-            icon,
-            is_valid,
-            exec,
-            category,
-            url,
-            custom_parameters,
-            isolate_profile,
-            navbar,
-            is_incognito,
-        })
+        let web_browser = Browser::web_browser(browser_name);
+
+        match web_browser {
+            Some(web_browser) => Ok(WebAppLauncher {
+                path,
+                codename,
+                web_browser,
+                name,
+                icon,
+                is_valid,
+                exec,
+                category,
+                url,
+                custom_parameters,
+                isolate_profile,
+                navbar,
+                is_incognito,
+            }),
+            None => {
+                let supported = get_supported_browsers();
+                let web_browser = supported[0].clone();
+
+                Ok(WebAppLauncher {
+                    path,
+                    codename,
+                    web_browser,
+                    name,
+                    icon,
+                    is_valid,
+                    exec,
+                    category,
+                    url,
+                    custom_parameters,
+                    isolate_profile,
+                    navbar,
+                    is_incognito,
+                })
+            }
+        }
+    }
+
+    pub fn create(&self) -> Result<()> {
+        let _exec_string = String::new();
+
+        let mut output = File::create(&self.path)?;
+
+        writeln!(output, "[Desktop Entry]")?;
+        writeln!(output, "Version=1.0")?;
+        writeln!(output, "Name={}", self.name)?;
+        writeln!(output, "Comment=Web App")?;
+        writeln!(output, "Exec={}", _exec_string)?;
+        writeln!(output, "Terminal=false")?;
+        writeln!(output, "Type=Application")?;
+        writeln!(output, "Icon={}", self.icon)?;
+        writeln!(output, "Categories=GTK;{};", self.category)?;
+        writeln!(output, "MimeType=text/html;text/xml;application/xhtml_xml;")?;
+        writeln!(output, "StartupWMClass=WebApp-{}", self.codename)?;
+        writeln!(output, "StartupNotify=true")?;
+        writeln!(output, "X-MultipleArgs=false")?;
+        writeln!(output, "X-WebApp-Browser={}", self.web_browser.name)?;
+        writeln!(output, "X-WebApp-URL={}", self.url)?;
+        writeln!(output, "X-WebApp-Navbar={}", self.navbar)?;
+        writeln!(output, "X-WebApp-PrivateWindow={}", self.is_incognito)?;
+        writeln!(output, "X-WebApp-Isolated={}", self.isolate_profile)?;
+        writeln!(
+            output,
+            "X-WebApp-CustomParameters={}",
+            self.custom_parameters
+        )?;
+
+        Ok(())
+    }
+
+    pub fn delete(&self) -> Result<()> {
+        let base_dir = BaseDirectories::new().expect("no base directories found");
+        let ice_dir = base_dir.get_data_home().join("ice");
+        let profiles_dir = ice_dir.join("profiles").join(&self.codename);
+        let firefox_profiles_dir = profiles_dir.join("firefox").join(&self.codename);
+
+        let exist = self.path.as_path().exists();
+
+        match exist {
+            true => {
+                remove_file(&self.path)?;
+            }
+            false => {
+                tracing::error!("file not found");
+            }
+        }
+
+        match remove_dir_all(firefox_profiles_dir) {
+            Ok(_) => {
+                tracing::info!("Removed firefox profile directory.");
+
+                match remove_dir_all(profiles_dir) {
+                    Ok(_) => tracing::info!("Removed profiles directories."),
+                    Err(_) => tracing::info!("Trying remove profiles directories."),
+                }
+            }
+            Err(_) => tracing::info!("Trying remove firefox profile directory."),
+        }
+
+        // TODO: Implement epiphany deletion
+
+        Ok(())
     }
 }
 
@@ -143,7 +295,7 @@ pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
                         if filename.starts_with("webapp-") && filename.ends_with(".desktop") {
                             let codename = filename.replace("webapp-", "").replace(".desktop", "");
 
-                            let launcher = WebAppLauncher::new(entry.path(), codename);
+                            let launcher = WebAppLauncher::read(entry.path(), codename);
                             webapps.push(launcher);
                         }
                     }
@@ -159,7 +311,7 @@ pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
 
 use crate::supported_browsers::supported_browsers;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrowserType {
     Firefox,
     FirefoxFlatpak,
@@ -170,12 +322,18 @@ pub enum BrowserType {
     Falkon,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Browser {
     _type: BrowserType,
     pub name: String,
     pub exec: String,
     test_path: PathBuf,
+}
+
+impl Display for Browser {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
 }
 
 impl Browser {
@@ -201,6 +359,11 @@ impl Browser {
             test_path,
         }
     }
+
+    pub fn web_browser(name: String) -> Option<Browser> {
+        let supported = get_supported_browsers();
+        supported.into_iter().find(|b| b.name == name)
+    }
 }
 
 pub fn get_supported_browsers() -> Vec<Browser> {
@@ -221,4 +384,19 @@ pub fn get_supported_browsers() -> Vec<Browser> {
     }
 
     browsers
+}
+
+pub fn find_icons(path: &str, icon_name: &str) -> Option<Vec<String>> {
+    let mut icons: Vec<String> = Vec::new();
+
+    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
+        if let Some(filename) = entry.file_name().to_str() {
+            if filename.contains(icon_name) {
+                if let Some(path) = entry.path().to_str() {
+                    icons.push(path.to_string())
+                }
+            }
+        }
+    }
+    Some(icons)
 }
