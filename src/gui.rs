@@ -347,17 +347,22 @@ impl Wam {
         let mut pathbuf = PathBuf::new();
         pathbuf.push(path);
 
-        let extension = pathbuf.extension().expect("expected file extension");
+        let extension = pathbuf.extension();
 
-        match extension.to_str() {
-            Some(e) => {
-                if e.ends_with("svg") {
-                    IconExt::Svg
-                } else {
-                    IconExt::Raster
+        if let Some(ext) = extension {
+            match ext.to_str() {
+                Some(e) => {
+                    if e.ends_with("svg") {
+                        IconExt::Svg
+                    } else {
+                        IconExt::Raster
+                    }
                 }
+                _ => IconExt::Raster,
             }
-            _ => IconExt::Raster,
+        } else {
+            // TODO: Proper error handling
+            IconExt::Raster
         }
     }
 }

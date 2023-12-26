@@ -374,10 +374,13 @@ pub fn get_supported_browsers() -> Vec<Browser> {
 
 pub fn get_icon_name_from_url(url: &str) -> String {
     match Url::parse(url) {
-        Ok(url) => {
-            let parts: Vec<&str> = url.host_str().unwrap().split('.').collect();
-            parts[parts.len() - 2].to_string()
-        }
+        Ok(url) => match url.host_str() {
+            Some(host) => {
+                let parts: Vec<&str> = host.split('.').collect();
+                parts[parts.len() - 2].to_string()
+            }
+            None => String::new(),
+        },
         Err(_) => String::new(),
     }
 }
