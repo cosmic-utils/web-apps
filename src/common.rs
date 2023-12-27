@@ -2,6 +2,8 @@
 
 use dircpy::copy_dir;
 use rand::{thread_rng, Rng};
+use reqwest::blocking::Client;
+use scraper::{Html, Selector};
 use std::{
     fmt::Display,
     fs::{self, create_dir_all, remove_dir_all, remove_file, File},
@@ -452,7 +454,7 @@ pub fn find_icon(path: &str, icon_name: &str) -> Option<Vec<String>> {
     Some(icons)
 }
 
-pub fn find_icons(icon_name: &str) -> Option<Vec<String>> {
+pub fn find_icons(icon_name: &str, url: Option<&str>) -> Option<Vec<String>> {
     let base_dir = BaseDirectories::new().expect("no base directories found");
     let mut local_dir = base_dir.get_data_home();
     local_dir.push("icons");
@@ -469,5 +471,47 @@ pub fn find_icons(icon_name: &str) -> Option<Vec<String>> {
     result.extend(local_icons);
     result.extend(system_icons);
 
+    if let Some(vec) = download_favicon(url.unwrap()) {
+        result.extend(vec);
+    }
+
     Some(result)
+}
+
+pub fn download_favicon(url: &str) -> Option<Vec<String>> {
+    let mut favs = Vec::new();
+
+    let content = Client::new()
+        .get(url)
+        .send()
+        .expect("sending request")
+        .text()
+        .expect("getting content");
+
+    let document = Html::parse_document(&content);
+    let head = Selector::parse("head").unwrap();
+    let link = Selector::parse("link").unwrap();
+    let meta = Selector::parse("meta").unwrap();
+
+    for head in document.select(&head) {
+        let fragment = Html::parse_document(&head.html());
+
+        for link in fragment.select(&link) {
+            if link.attr("rel") == Some("icon") {
+                let val = link.value().attr("href").unwrap();
+
+                favs.push(val.to_string());
+            }
+        }
+
+        for meta in fragment.select(&meta) {
+            if meta.value().attr("property") == Some("og:image") {
+                let val = meta.value().attr("content").unwrap();
+
+                favs.push(val.to_string());
+            }
+        }
+    }
+
+    Some(favs)
 }

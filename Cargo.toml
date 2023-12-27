@@ -7,8 +7,9 @@ edition = "2021"
 
 [dependencies]
 iced = { git = "https://github.com/iced-rs/iced", features = ["tokio", "advanced", "image", "svg"] }
+iced_aw = { git = "https://github.com/iced-rs/iced_aw", features = ["card", "modal", "wrap"] }
 rand = "0.8.5"
-reqwest = "0.11.23"
+reqwest = { version = "0.11.23", features = ["blocking"] }
 tracing = "0.1"
 tracing-subscriber = "0.3.0"
 xdg = "2.5.2"
@@ -16,3 +17,4 @@ url = "2.5.0"
 walkdir = "2.4.0"
 dirs = "5.0"
 dircpy = "0.3.15"
+scraper = "0.18.1"
