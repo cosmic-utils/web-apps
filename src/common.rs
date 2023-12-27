@@ -1,9 +1,10 @@
 #![allow(clippy::too_many_arguments)]
 
+use dircpy::copy_dir;
 use rand::{thread_rng, Rng};
 use std::{
     fmt::Display,
-    fs::{self, remove_dir_all, remove_file, File},
+    fs::{self, create_dir_all, remove_dir_all, remove_file, File},
     io::{self, BufRead, Result, Write},
     path::PathBuf,
 };
@@ -44,13 +45,13 @@ impl WebAppLauncher {
         let base_dir = BaseDirectories::new().expect("base directories not found");
         let mut path = base_dir.get_data_home();
 
-        let codename = format!("{}{}", name, random_code);
+        let codename = format!("{}{}", name.replace(' ', ""), random_code);
         path.push("applications");
         let filename = format!("webapp-{}.desktop", codename);
         path.push(filename);
         let web_browser = browser;
         let is_valid = !name.is_empty() && !icon.is_empty();
-        let exec = String::new(); // TODO: Implement this exec_string
+        let exec = web_browser.exec.clone();
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
 
@@ -191,8 +192,57 @@ impl WebAppLauncher {
         }
     }
 
-    pub fn exec_string(&self) -> String {
-        self.exec.to_string()
+    fn exec_firefox(&self, is_flatpak: bool) -> String {
+        let mut profile_dir = PathBuf::new();
+
+        if is_flatpak {
+            let home = dirs::home_dir().expect("cant get home dir");
+            profile_dir.push(home);
+            profile_dir.push(".var/app/org.mozilla.firefox/data/ice/firefox");
+        } else {
+            let base_dir = BaseDirectories::new().expect("no base directories found");
+            let ice_dir = base_dir.get_data_home().join("ice");
+            let profiles_dir = ice_dir.join("profiles").join(&self.codename);
+            profile_dir = profiles_dir.join("firefox").join(&self.codename);
+        }
+
+        let profile_path = profile_dir.join(&self.codename);
+        let profile_dir = profile_dir.to_str().unwrap();
+
+        create_dir_all(profile_dir).expect("cant create profile dir");
+
+        // TODO: copy firefox default profile from webapp-manager
+        copy_dir("firefox/profile", profile_path.clone()).expect("cant copy firefox profile dir");
+
+        let profile_path = profile_path.to_str().unwrap();
+        let mut exec_string = format!(
+            r#"sh -c 'XAPP_FORCE_GTKWINDOW_ICON="{}" {} --class WebApp-{} --name WebApp-{} --profile {} --no-remote "#,
+            self.icon, self.exec, self.codename, self.codename, profile_path
+        );
+
+        if self.is_incognito {
+            exec_string.push_str("--private-window ");
+        }
+
+        if !self.custom_parameters.is_empty() {
+            exec_string.push_str(&self.custom_parameters);
+        }
+
+        exec_string.push_str(&format!(r#""{}"'"#, &self.url));
+
+        exec_string
+    }
+
+    fn exec_string(&self) -> String {
+        match self.web_browser._type {
+            BrowserType::Firefox => self.exec_firefox(false),
+            BrowserType::FirefoxFlatpak => self.exec_firefox(true),
+            BrowserType::Librewolf => todo!(),
+            BrowserType::WaterfoxFlatpak => todo!(),
+            BrowserType::Chromium => todo!(),
+            BrowserType::Epiphany => todo!(),
+            BrowserType::Falkon => todo!(),
+        }
     }
 
     pub fn create(&self) -> Result<()> {

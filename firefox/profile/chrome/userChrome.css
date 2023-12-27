@@ -1,0 +1,7 @@
+#nav-bar, #identity-box, #tabbrowser-tabs, #TabsToolbar {
+	visibility: collapse;
+}
+
+#nav-bar * {
+    visibility: visible !important;
+}
