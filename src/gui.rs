@@ -4,7 +4,7 @@ use iced::{
     widget::{
         button::{self},
         column, image, pick_list, row, scrollable, svg, text, text_input, toggler, Button,
-        Container, Row,
+        Container, Row, TextInput,
     },
     Alignment, Application, BorderRadius, Color, Command, Length, Theme,
 };
@@ -34,6 +34,8 @@ pub enum AppMessage {
     OpenModal,
     CloseModal,
     CancelButtonPressed,
+    PerformIconSearch,
+    CustomIconsSearch(String),
     // common
     Result,
     Clicked(Buttons),
@@ -78,6 +80,7 @@ pub struct Wam {
     pub app_incognito: bool,
     pub app_isolated: bool,
     show_modal: bool,
+    icon_searching: String,
     selected_icon: Option<Icon>,
     app_browsers: Vec<Browser>,
     edit_mode: bool,
@@ -112,6 +115,7 @@ impl Application for Wam {
                 app_incognito: false,
                 app_isolated: true,
                 show_modal: false,
+                icon_searching: String::new(),
                 selected_icon: None,
                 app_browsers: browsers,
                 edit_mode: false,
@@ -211,7 +215,7 @@ impl Application for Wam {
                             get_icon_name_from_url(self.app_url.clone())
                         };
 
-                        Command::perform(find_icons(to_find, self.app_url.clone()), |icons| {
+                        Command::perform(find_icons(to_find, Some(self.app_url.clone())), |icons| {
                             AppMessage::FoundIcons(icons)
                         })
                     } else {
@@ -370,6 +374,25 @@ impl Application for Wam {
                 self.selected_icon = Some(ico);
 
                 Command::none()
+            }
+            AppMessage::CustomIconsSearch(field) => {
+                self.icon_searching = field;
+
+                Command::none()
+            }
+            AppMessage::PerformIconSearch => {
+                if let Some(icons) = self.icons.as_mut() {
+                    icons.clear()
+                };
+
+                if !self.icon_searching.is_empty() {
+                    Command::perform(
+                        find_icons(self.icon_searching.clone(), Some(self.app_url.clone())),
+                        AppMessage::FoundIcons,
+                    )
+                } else {
+                    Command::none()
+                }
             }
         }
     }
@@ -539,18 +562,21 @@ impl Application for Wam {
 
         let overlay = if self.show_modal {
             Some(
-                Card::new(text("Icon Picker"), icons_container(self.icons.clone()))
-                    .foot(
-                        Row::new().spacing(10).padding(5).width(Length::Fill).push(
-                            Button::new(text("Cancel").horizontal_alignment(Horizontal::Center))
-                                .width(Length::Fill)
-                                .on_press(AppMessage::CancelButtonPressed),
-                        ),
-                    )
-                    .max_width(500.0)
-                    .max_height(600.0)
-                    .height(Length::Shrink)
-                    .on_close(AppMessage::CloseModal),
+                Card::new(
+                    text("Icon Picker"),
+                    self.icons_container(self.icons.clone()),
+                )
+                .foot(
+                    Row::new().spacing(10).padding(5).width(Length::Fill).push(
+                        Button::new(text("Cancel").horizontal_alignment(Horizontal::Center))
+                            .width(Length::Fill)
+                            .on_press(AppMessage::CancelButtonPressed),
+                    ),
+                )
+                .max_width(500.0)
+                .max_height(600.0)
+                .height(Length::Shrink)
+                .on_close(AppMessage::CloseModal),
             )
         } else {
             None
@@ -564,28 +590,38 @@ impl Application for Wam {
     }
 }
 
-fn icons_container(icons: Option<Vec<Icon>>) -> iced::Element<'static, AppMessage> {
-    let mut container = Wrap::new().max_width(500.);
+impl Wam {
+    fn icons_container(&self, icons: Option<Vec<Icon>>) -> iced::Element<'static, AppMessage> {
+        let search_field = TextInput::new("Search for icon", &self.icon_searching)
+            .on_input(AppMessage::CustomIconsSearch)
+            .on_submit(AppMessage::PerformIconSearch)
+            .padding(10)
+            .width(Length::Fill);
 
-    if icons.is_some() {
-        for ico in icons.unwrap().iter() {
-            let btn = match ico.clone().icon {
-                IconType::Raster(icon) => Button::new(image(icon))
-                    .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.))
-                    .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone())))
-                    .style(theme::Button::Custom(Box::new(CustomButton))),
-                IconType::Svg(icon) => Button::new(svg(icon))
-                    .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.))
-                    .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone())))
-                    .style(theme::Button::Custom(Box::new(CustomButton))),
-            };
-            container = container.push(btn);
+        let mut container = Wrap::new().max_width(500.);
+
+        if icons.is_some() {
+            for ico in icons.unwrap().iter() {
+                let btn = match ico.clone().icon {
+                    IconType::Raster(icon) => Button::new(image(icon))
+                        .width(Length::Fixed(96.))
+                        .height(Length::Fixed(96.))
+                        .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone())))
+                        .style(theme::Button::Custom(Box::new(CustomButton))),
+                    IconType::Svg(icon) => Button::new(svg(icon))
+                        .width(Length::Fixed(96.))
+                        .height(Length::Fixed(96.))
+                        .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone())))
+                        .style(theme::Button::Custom(Box::new(CustomButton))),
+                };
+                container = container.push(btn);
+            }
         }
-    }
 
-    scrollable(container).into()
+        let col = column![search_field, container].spacing(20);
+
+        scrollable(col).into()
+    }
 }
 
 struct CustomButton;

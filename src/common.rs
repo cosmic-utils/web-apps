@@ -493,7 +493,7 @@ pub async fn find_icon(path: &str, icon_name: &str) -> Vec<String> {
     icons
 }
 
-pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
+pub async fn find_icons(icon_name: String, url: Option<String>) -> Vec<String> {
     let base_dir = BaseDirectories::new().expect("no base directories found");
     let mut local_dir = base_dir.get_data_home();
     local_dir.push("icons");
@@ -510,8 +510,10 @@ pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     result.extend(local_icons);
     result.extend(system_icons);
 
-    if let Ok(data) = download_favicon(&url).await {
-        result.extend(data)
+    if let Some(u) = url {
+        if let Ok(data) = download_favicon(&u).await {
+            result.extend(data)
+        }
     }
 
     result
