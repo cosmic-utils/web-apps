@@ -2,11 +2,11 @@
 
 use dircpy::copy_dir;
 use rand::{thread_rng, Rng};
-use reqwest::blocking::Client;
+use reqwest::Client;
 use scraper::{Html, Selector};
 use std::{
     fmt::Display,
-    fs::{self, create_dir_all, remove_dir_all, remove_file, File},
+    fs::{self, copy, create_dir_all, remove_dir_all, remove_file, File},
     io::{self, BufRead, Result, Write},
     path::PathBuf,
 };
@@ -426,8 +426,8 @@ pub fn get_supported_browsers() -> Vec<Browser> {
     browsers
 }
 
-pub fn get_icon_name_from_url(url: &str) -> String {
-    match Url::parse(url) {
+pub fn get_icon_name_from_url(url: String) -> String {
+    match Url::parse(&url) {
         Ok(url) => match url.host_str() {
             Some(host) => {
                 let parts: Vec<&str> = host.split('.').collect();
@@ -439,7 +439,7 @@ pub fn get_icon_name_from_url(url: &str) -> String {
     }
 }
 
-pub fn find_icon(path: &str, icon_name: &str) -> Option<Vec<String>> {
+pub async fn find_icon(path: &str, icon_name: &str) -> Vec<String> {
     let mut icons: Vec<String> = Vec::new();
 
     for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
@@ -451,10 +451,11 @@ pub fn find_icon(path: &str, icon_name: &str) -> Option<Vec<String>> {
             }
         }
     }
-    Some(icons)
+
+    icons
 }
 
-pub fn find_icons(icon_name: &str, url: Option<&str>) -> Option<Vec<String>> {
+pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     let base_dir = BaseDirectories::new().expect("no base directories found");
     let mut local_dir = base_dir.get_data_home();
     local_dir.push("icons");
@@ -463,29 +464,31 @@ pub fn find_icons(icon_name: &str, url: Option<&str>) -> Option<Vec<String>> {
         .expect("cant convert local path to string");
     let system_dir = "/usr/share/icons";
 
-    let local_icons = find_icon(local_dir, icon_name).unwrap();
-    let system_icons = find_icon(system_dir, icon_name).unwrap();
+    let local_icons = find_icon(local_dir, &icon_name).await;
+    let system_icons = find_icon(system_dir, &icon_name).await;
 
     let mut result: Vec<String> = Vec::new();
 
     result.extend(local_icons);
     result.extend(system_icons);
 
-    if let Some(vec) = download_favicon(url.unwrap()) {
-        result.extend(vec);
+    if let Ok(data) = download_favicon(&url).await {
+        result.extend(data)
     }
 
-    Some(result)
+    result
 }
 
-pub fn download_favicon(url: &str) -> Option<Vec<String>> {
+pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
     let mut favs = Vec::new();
 
     let content = Client::new()
         .get(url)
         .send()
+        .await
         .expect("sending request")
         .text()
+        .await
         .expect("getting content");
 
     let document = Html::parse_document(&content);
@@ -513,5 +516,38 @@ pub fn download_favicon(url: &str) -> Option<Vec<String>> {
         }
     }
 
-    Some(favs)
+    Ok(favs)
+}
+
+pub fn move_icon(path: String, output_name: String) -> Result<String> {
+    let base_dir = BaseDirectories::new().expect("not found base directories");
+    let mut icons_folder = base_dir.get_data_home();
+    icons_folder.push("ice/icons");
+
+    let ext = if path.ends_with(".svg") {
+        ".svg"
+    } else {
+        ".png"
+    };
+
+    let save_path = icons_folder
+        .join(format!("{}{}", output_name.replace(' ', ""), ext))
+        .to_str()
+        .unwrap()
+        .to_string();
+
+    if path.starts_with("http") {
+        let response = reqwest::blocking::get(path).expect("sending request");
+
+        if response.status().is_success() {
+            let content = response.bytes().expect("getting image bytes");
+
+            let mut file = File::create(&save_path).expect("creating file");
+            file.write_all(&content).expect("saving image");
+        }
+    } else {
+        copy(&path, &save_path).expect("saving image");
+    }
+
+    Ok(save_path)
 }

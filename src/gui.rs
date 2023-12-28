@@ -1,5 +1,6 @@
-use std::path::PathBuf;
+use std::{fs::File, io::Read};
 
+use anyhow::Error;
 use iced::{
     alignment::{Horizontal, Vertical},
     widget::{
@@ -9,17 +10,17 @@ use iced::{
     Alignment, Application, Command, Length,
 };
 use iced_aw::{modal, Card, Wrap};
-use reqwest::blocking::Client;
+use reqwest::Client;
 
 use crate::common::{
-    find_icons, get_icon_name_from_url, get_supported_browsers, get_webapps, Browser,
+    find_icons, get_icon_name_from_url, get_supported_browsers, get_webapps, move_icon, Browser,
     WebAppLauncher,
 };
 
 #[derive(Debug, Clone)]
 pub enum Buttons {
     SearchFavicon,
-    Favicon,
+    Favicon(String),
     Edit(Box<WebAppLauncher>),
     Delete(Box<WebAppLauncher>),
     Navbar(bool),
@@ -28,6 +29,9 @@ pub enum Buttons {
 
 #[derive(Debug, Clone)]
 pub enum AppMessage {
+    PushIcon(Icon),
+    FoundIcons(Vec<String>),
+    SetIcon(Icon),
     // modal
     OpenModal,
     CloseModal,
@@ -40,11 +44,30 @@ pub enum AppMessage {
     Arguments(String),
     Browser(Browser),
     Category(String),
-    FetchIcon,
+    ErrorLoadingIcon,
+}
+
+#[derive(Debug, Clone)]
+pub enum IconType {
+    Raster(image::Handle),
+    Svg(svg::Handle),
+}
+
+#[derive(Debug, Clone)]
+pub struct Icon {
+    pub icon: IconType,
+    pub path: String,
+}
+
+impl Icon {
+    pub fn new(icon: IconType, path: String) -> Self {
+        Self { icon, path }
+    }
 }
 
 pub struct Wam {
-    pub icons: Vec<String>,
+    pub icons_paths: Vec<String>,
+    pub icons: Option<Vec<Icon>>,
     pub app_title: String,
     pub app_url: String,
     pub app_icon: String,
@@ -74,7 +97,8 @@ impl Application for Wam {
 
         (
             Wam {
-                icons: Vec::new(),
+                icons_paths: Vec::new(),
+                icons: Some(Vec::new()),
                 app_title: String::new(),
                 app_url: String::new(),
                 app_icon: String::new(),
@@ -117,22 +141,74 @@ impl Application for Wam {
 
                 Command::none()
             }
-            AppMessage::Clicked(btn) => match btn {
-                Buttons::SearchFavicon => {
-                    if !self.app_url.is_empty() {
-                        let to_find = get_icon_name_from_url(&self.app_url);
-                        let found = find_icons(&to_find, Some(&self.app_url));
+            AppMessage::PushIcon(icon) => {
+                if let Some(vec) = self.icons.as_mut() {
+                    vec.push(icon)
+                }
 
-                        if let Some(icon_path) = found {
-                            if !icon_path.is_empty() {
-                                self.icons = icon_path;
+                Command::none()
+            }
+            AppMessage::FoundIcons(result) => {
+                if !result.is_empty() {
+                    let commands: Vec<Command<AppMessage>> = result
+                        .into_iter()
+                        .map(|path| {
+                            let is_svg = path.ends_with(".svg");
+
+                            match is_svg {
+                                true => {
+                                    Command::perform(svg_from_memory(path), |result| match result {
+                                        Ok(icon) => AppMessage::PushIcon(icon),
+                                        Err(_) => AppMessage::ErrorLoadingIcon,
+                                    })
+                                }
+                                false => {
+                                    Command::perform(image_from_memory(path), |result| match result
+                                    {
+                                        Ok(icon) => AppMessage::PushIcon(icon),
+                                        Err(_) => AppMessage::ErrorLoadingIcon,
+                                    })
+                                }
                             }
-                        }
-                    }
+                        })
+                        .collect();
 
+                    Command::batch(commands)
+                } else {
                     Command::none()
                 }
-                Buttons::Favicon => Command::none(),
+            }
+            AppMessage::Clicked(btn) => match btn {
+                Buttons::SearchFavicon => {
+                    if let Some(icons) = self.icons.as_mut() {
+                        icons.clear()
+                    };
+
+                    if !self.app_url.is_empty() {
+                        let url = self.app_url.clone();
+                        let to_find = get_icon_name_from_url(url.clone());
+
+                        Command::perform(find_icons(to_find, url), |icons| {
+                            AppMessage::FoundIcons(icons)
+                        })
+                    } else {
+                        Command::none()
+                    }
+                }
+                Buttons::Favicon(path) => {
+                    let is_svg = path.ends_with(".svg");
+
+                    match is_svg {
+                        true => Command::perform(svg_from_memory(path), |result| match result {
+                            Ok(icon) => AppMessage::SetIcon(icon),
+                            Err(_) => AppMessage::ErrorLoadingIcon,
+                        }),
+                        false => Command::perform(image_from_memory(path), |result| match result {
+                            Ok(icon) => AppMessage::SetIcon(icon),
+                            Err(_) => AppMessage::ErrorLoadingIcon,
+                        }),
+                    }
+                }
                 Buttons::Edit(launcher) => {
                     self.app_title = launcher.name;
                     self.app_url = launcher.url;
@@ -191,19 +267,6 @@ impl Application for Wam {
 
                 Command::none()
             }
-            AppMessage::FetchIcon => {
-                let to_find = get_icon_name_from_url(&self.app_url);
-                let found = find_icons(&to_find, Some(&self.app_url));
-                let mut path = String::new();
-
-                if let Some(icon_path) = found {
-                    path = icon_path[0].clone();
-                }
-
-                self.app_icon = path;
-
-                Command::none()
-            }
             AppMessage::OpenModal => {
                 self.show_modal = true;
 
@@ -219,6 +282,16 @@ impl Application for Wam {
 
                 Command::none()
             }
+            AppMessage::ErrorLoadingIcon => Command::none(),
+            AppMessage::SetIcon(icon) => {
+                let path = icon.path;
+
+                if let Ok(saved) = move_icon(path, self.app_title.clone()) {
+                    self.app_icon = saved;
+                }
+
+                Command::none()
+            }
         }
     }
 
@@ -229,7 +302,6 @@ impl Application for Wam {
             .width(Length::Fixed(340.));
         let app_url = text_input("URL", &self.app_url)
             .on_input(AppMessage::Url)
-            .on_submit(AppMessage::FetchIcon)
             .padding(10)
             .width(Length::Fixed(340.));
 
@@ -241,28 +313,28 @@ impl Application for Wam {
             .width(Length::Fixed(96.))
             .height(Length::Fixed(96.));
 
-        let fav_btn = if !self.icons.is_empty() {
-            let icon = &self.icons[0];
-            let icon_ext = self.determine_icon_type(icon);
+        let icons = self.icons.clone().unwrap();
 
-            match icon_ext {
-                IconExt::Raster => button(image(image_handler(icon)))
+        let icon = if !icons.is_empty() || !self.app_icon.is_empty() {
+            if self.app_icon.ends_with(".svg") {
+                let img = svg(svg::Handle::from_path(self.app_icon.clone()));
+                button(img)
                     .on_press(AppMessage::OpenModal)
                     .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.)),
-                IconExt::Svg => button(svg(svg_handler(icon)))
+                    .height(Length::Fixed(96.))
+            } else {
+                let img = image(image::Handle::from_path(self.app_icon.clone()));
+                button(img)
                     .on_press(AppMessage::OpenModal)
                     .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.)),
+                    .height(Length::Fixed(96.))
             }
         } else {
-            button("ICON")
-                .on_press(AppMessage::OpenModal)
+            button("")
                 .width(Length::Fixed(96.))
                 .height(Length::Fixed(96.))
         };
-
-        let row = row![col, dl_btn, fav_btn].spacing(12).width(Length::Fill);
+        let row = row![col, dl_btn, icon].spacing(12).width(Length::Fill);
 
         let app_arguments = text_input("Non-standard arguments", &self.app_parameters)
             .on_input(AppMessage::Arguments)
@@ -388,104 +460,74 @@ impl Application for Wam {
     }
 }
 
-pub enum IconExt {
-    Raster,
-    Svg,
-}
-
-fn icons_container(icons: Vec<String>) -> iced::Element<'static, AppMessage> {
+fn icons_container(icons: Option<Vec<Icon>>) -> iced::Element<'static, AppMessage> {
     let mut container = Wrap::new().max_width(500.);
 
-    for path in icons.iter() {
-        let icon = if !path.starts_with("https://") && !path.starts_with("http://") {
-            if path.ends_with(".svg") {
-                let svg = svg(svg_handler(path));
-
-                button(svg)
-                    .on_press(AppMessage::Clicked(Buttons::Favicon))
-                    .width(96.)
-                    .height(96.)
-            } else {
-                let img = image(image_handler(path));
-
-                button(img)
-                    .on_press(AppMessage::Clicked(Buttons::Favicon))
-                    .width(96.)
-                    .height(96.)
-            }
-        } else if path.ends_with(".svg") {
-            let svg = svg(svg_from_memory(path));
-
-            button(svg)
-                .on_press(AppMessage::Clicked(Buttons::Favicon))
-                .width(96.)
-                .height(96.)
-        } else {
-            let img = image(image_from_memory(path));
-
-            button(img)
-                .on_press(AppMessage::Clicked(Buttons::Favicon))
-                .width(96.)
-                .height(96.)
-        };
-
-        container = container.push(icon);
+    if icons.is_some() {
+        for ico in icons.unwrap().iter() {
+            let btn = match ico.clone().icon {
+                IconType::Raster(icon) => button(image(icon))
+                    .width(Length::Fixed(96.))
+                    .height(Length::Fixed(96.))
+                    .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone()))),
+                IconType::Svg(icon) => button(svg(icon))
+                    .width(Length::Fixed(96.))
+                    .height(Length::Fixed(96.))
+                    .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone()))),
+            };
+            container = container.push(btn);
+        }
     }
 
     scrollable(container).into()
 }
 
-pub fn image_handler(path: &str) -> image::Handle {
-    image::Handle::from_path(path)
+pub async fn image_from_memory(path: String) -> Result<Icon, Error> {
+    let img_bytes = if path.starts_with("http") {
+        Client::new()
+            .get(path.clone())
+            .send()
+            .await
+            .expect("sending request")
+            .bytes()
+            .await
+            .expect("getting content")
+            .to_vec()
+    } else {
+        let mut file = File::open(path.clone())?;
+        let mut buffer = Vec::new();
+
+        file.read_to_end(&mut buffer)?;
+
+        buffer.to_vec()
+    };
+
+    let icon = image::Handle::from_memory(img_bytes.to_vec());
+
+    Ok(Icon::new(IconType::Raster(icon), path))
 }
 
-pub fn image_from_memory(path: &str) -> image::Handle {
-    let img_bytes = Client::new()
-        .get(path)
-        .send()
-        .expect("sending request")
-        .bytes()
-        .expect("fetching image");
+pub async fn svg_from_memory(path: String) -> Result<Icon, Error> {
+    let img_bytes = if path.starts_with("http") {
+        Client::new()
+            .get(path.clone())
+            .send()
+            .await
+            .expect("sending request")
+            .bytes()
+            .await
+            .expect("getting content")
+            .to_vec()
+    } else {
+        let mut file = File::open(path.clone())?;
+        let mut buffer = Vec::new();
 
-    image::Handle::from_memory(img_bytes)
-}
+        file.read_to_end(&mut buffer)?;
 
-pub fn svg_handler(path: &str) -> svg::Handle {
-    svg::Handle::from_path(path)
-}
+        buffer.to_vec()
+    };
 
-pub fn svg_from_memory(path: &str) -> svg::Handle {
-    let img_bytes = Client::new()
-        .get(path)
-        .send()
-        .expect("sending request")
-        .bytes()
-        .expect("fetching image");
+    let icon = svg::Handle::from_memory(img_bytes.to_vec());
 
-    svg::Handle::from_memory(img_bytes.to_vec())
-}
-
-impl Wam {
-    pub fn determine_icon_type(&self, path: &str) -> IconExt {
-        let mut pathbuf = PathBuf::new();
-        pathbuf.push(path);
-
-        let extension = pathbuf.extension();
-
-        if let Some(ext) = extension {
-            match ext.to_str() {
-                Some(e) => {
-                    if e.ends_with("svg") {
-                        IconExt::Svg
-                    } else {
-                        IconExt::Raster
-                    }
-                }
-                _ => IconExt::Raster,
-            }
-        } else {
-            // TODO: Proper error handling
-            IconExt::Raster
-        }
-    }
+    Ok(Icon::new(IconType::Svg(icon), path))
 }
