@@ -326,6 +326,8 @@ impl Application for Wam {
             }
             AppMessage::ErrorLoadingIcon => Command::none(),
             AppMessage::SetIcon(icon) => {
+                self.show_modal = false;
+
                 let path = icon.path;
 
                 if let Ok(saved) = move_icon(path, self.app_title.clone()) {
