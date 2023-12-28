@@ -236,13 +236,46 @@ impl WebAppLauncher {
         exec_string
     }
 
+    fn exec_chromium(&self) -> String {
+        let mut exec_string = String::new();
+
+        if self.isolate_profile {
+            let mut profile_dir = PathBuf::new();
+
+            let base_dir = BaseDirectories::new().expect("no base directories found");
+            let ice_dir = base_dir.get_data_home().join("ice");
+            profile_dir.push(ice_dir.join("profiles").join(&self.codename));
+
+            let profile_path = profile_dir.to_str().unwrap();
+
+            exec_string = format!(
+                r#"{} --app="{}" --class=WebApp-{} --name=WebApp-{} --user-data-dir={} "#,
+                self.exec, self.url, self.codename, self.codename, profile_path
+            );
+        }
+
+        if self.is_incognito {
+            if self.web_browser.name.starts_with("Microsoft Edge") {
+                exec_string.push_str("--inprivate ");
+            } else {
+                exec_string.push_str("--incognito ");
+            }
+        }
+
+        if !self.custom_parameters.is_empty() {
+            exec_string.push_str(&format!("{} ", self.custom_parameters));
+        }
+
+        exec_string
+    }
+
     fn exec_string(&self) -> String {
         match self.web_browser._type {
             BrowserType::Firefox => self.exec_firefox(false),
             BrowserType::FirefoxFlatpak => self.exec_firefox(true),
             BrowserType::Librewolf => todo!(),
             BrowserType::WaterfoxFlatpak => todo!(),
-            BrowserType::Chromium => todo!(),
+            BrowserType::Chromium => self.exec_chromium(),
             BrowserType::Epiphany => todo!(),
             BrowserType::Falkon => todo!(),
         }
@@ -531,6 +564,8 @@ pub fn move_icon(path: String, output_name: String) -> Result<String> {
     let base_dir = BaseDirectories::new().expect("not found base directories");
     let mut icons_folder = base_dir.get_data_home();
     icons_folder.push("ice/icons");
+
+    create_dir_all(&icons_folder).expect("cant create icons folder");
 
     let ext = if path.ends_with(".svg") {
         ".svg"
