@@ -485,7 +485,7 @@ impl Application for Wam {
             .on_press(AppMessage::Result)
             .width(Length::Fill)
             .padding(10)
-            .style(theme::Button::Custom(Box::new(AddButton)));
+            .style(theme::Button::Positive);
 
         let mut app_list = column!().spacing(10);
         let webapps = get_webapps();
@@ -495,11 +495,16 @@ impl Application for Wam {
                 Ok(data) => {
                     let edit = Button::new("Edit")
                         .on_press(AppMessage::Clicked(Buttons::Edit(Box::new(data.clone()))))
-                        .padding(10);
+                        .width(Length::Fixed(90.))
+                        .style(theme::Button::Secondary);
                     let delete = Button::new("Delete")
                         .on_press(AppMessage::Clicked(Buttons::Delete(Box::new(data.clone()))))
-                        .padding(10);
-                    let name = text(&data.name).size(26.);
+                        .width(Length::Fixed(90.))
+                        .style(theme::Button::Secondary);
+                    let name = text(&format!("{}   [{}]", data.name, data.url))
+                        .size(18.)
+                        .width(Length::Fill)
+                        .style(theme::Text::Color(Color::from_rgba(255., 255., 255., 0.5)));
 
                     let row = row![edit, delete, name]
                         .spacing(10)
@@ -513,7 +518,7 @@ impl Application for Wam {
         let mut installed = column![];
 
         if !webapps.is_empty() {
-            installed = installed.push(text("Installed").size(32.));
+            installed = installed.push(text("Installed").size(32.)).spacing(30);
 
             let scrollable_list = scrollable(app_list).width(Length::Fill);
 
@@ -581,41 +586,6 @@ fn icons_container(icons: Option<Vec<Icon>>) -> iced::Element<'static, AppMessag
     }
 
     scrollable(container).into()
-}
-
-struct AddButton;
-
-impl button::StyleSheet for AddButton {
-    type Style = Theme;
-
-    fn active(&self, _style: &Self::Style) -> button::Appearance {
-        button::Appearance {
-            text_color: Color::WHITE,
-            ..Default::default()
-        }
-    }
-
-    fn disabled(&self, style: &Self::Style) -> button::Appearance {
-        let active = self.active(style);
-
-        button::Appearance { ..active }
-    }
-
-    fn hovered(&self, style: &Self::Style) -> button::Appearance {
-        let active = self.active(style);
-
-        button::Appearance {
-            border_color: Color::from_rgb(59., 122., 87.),
-            ..active
-        }
-    }
-
-    fn pressed(&self, style: &Self::Style) -> button::Appearance {
-        button::Appearance {
-            shadow_offset: iced::Vector::default(),
-            ..self.active(style)
-        }
-    }
 }
 
 struct CustomButton;
