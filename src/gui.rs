@@ -1,10 +1,12 @@
 use iced::{
     alignment::{Horizontal, Vertical},
+    theme::{self},
     widget::{
-        button, column, image, pick_list, row, scrollable, svg, text, text_input, toggler,
+        button::{self},
+        column, image, pick_list, row, scrollable, svg, text, text_input, toggler, Button,
         Container, Row,
     },
-    Alignment, Application, Command, Length,
+    Alignment, Application, BorderRadius, Color, Command, Length, Theme,
 };
 use iced_aw::{modal, Card, Wrap};
 
@@ -120,7 +122,7 @@ impl Application for Wam {
     }
 
     fn title(&self) -> String {
-        String::from("WAM Rust - Web App Manager written in Rust and Iced rs.")
+        String::from("WAM Rust - Web App Manager")
     }
 
     fn theme(&self) -> Self::Theme {
@@ -146,9 +148,19 @@ impl Application for Wam {
             }
             AppMessage::PushIcon(icon) => {
                 if let Some(vec) = self.icons.as_mut() {
-                    vec.push(icon)
-                }
+                    if vec.is_empty() {
+                        self.selected_icon = Some(icon.clone());
+                        if !&icon.path.starts_with("http") {
+                            self.app_icon = icon.path.clone()
+                        } else {
+                            self.app_icon =
+                                move_icon(icon.path.clone(), self.app_title.replace(' ', ""))
+                                    .expect("cant download icon")
+                        }
+                    }
 
+                    vec.push(icon.clone());
+                }
                 Command::none()
             }
             AppMessage::FoundIcons(result) => {
@@ -366,50 +378,66 @@ impl Application for Wam {
         let app_title = text_input("Title", &self.app_title)
             .on_input(AppMessage::Title)
             .padding(10)
-            .width(Length::Fixed(340.));
+            .width(Length::Fixed(340.))
+            .style(theme::TextInput::Custom(Box::new(InputField)));
         let app_url = text_input("URL", &self.app_url)
             .on_input(AppMessage::Url)
             .padding(10)
-            .width(Length::Fixed(340.));
+            .width(Length::Fixed(340.))
+            .style(theme::TextInput::Custom(Box::new(InputField)));
 
         let col = column![app_title, app_url].spacing(14);
 
         let search_ico = include_bytes!("../assets/icons/search.svg");
-        let dl_btn = button(svg(svg::Handle::from_memory(search_ico.to_vec())))
-            .on_press(AppMessage::Clicked(Buttons::SearchFavicon))
-            .width(Length::Fixed(96.))
-            .height(Length::Fixed(96.));
+        let dl_btn = Button::new(
+            svg(svg::Handle::from_memory(search_ico.to_vec()))
+                .width(Length::Fill)
+                .height(Length::Fill),
+        )
+        .on_press(AppMessage::Clicked(Buttons::SearchFavicon))
+        .width(Length::Fixed(96.))
+        .height(Length::Fixed(96.))
+        .style(theme::Button::Custom(Box::new(CustomButton)));
 
         let icons = self.icons.clone().unwrap();
 
         let icon = if !icons.is_empty() || !self.app_icon.is_empty() {
             match self.selected_icon.clone() {
                 Some(data) => match data.icon {
-                    IconType::Raster(data) => button(image(data))
-                        .on_press(AppMessage::OpenModal)
-                        .width(Length::Fixed(96.))
-                        .height(Length::Fixed(96.)),
-                    IconType::Svg(data) => button(svg(data))
-                        .on_press(AppMessage::OpenModal)
-                        .width(Length::Fixed(96.))
-                        .height(Length::Fixed(96.)),
+                    IconType::Raster(data) => {
+                        Button::new(image(data).width(Length::Fill).height(Length::Fill))
+                            .on_press(AppMessage::OpenModal)
+                            .width(Length::Fixed(96.))
+                            .height(Length::Fixed(96.))
+                            .style(theme::Button::Custom(Box::new(CustomButton)))
+                    }
+                    IconType::Svg(data) => {
+                        Button::new(svg(data).width(Length::Fill).height(Length::Fill))
+                            .on_press(AppMessage::OpenModal)
+                            .width(Length::Fixed(96.))
+                            .height(Length::Fixed(96.))
+                            .style(theme::Button::Custom(Box::new(CustomButton)))
+                    }
                 },
-                None => button("")
+                None => Button::new("")
                     .on_press(AppMessage::OpenModal)
                     .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.)),
+                    .height(Length::Fixed(96.))
+                    .style(theme::Button::Custom(Box::new(CustomButton))),
             }
         } else {
-            button("")
+            Button::new("")
                 .width(Length::Fixed(96.))
                 .height(Length::Fixed(96.))
+                .style(theme::Button::Custom(Box::new(CustomButton)))
         };
         let row = row![col, dl_btn, icon].spacing(12).width(Length::Fill);
 
         let app_arguments = text_input("Non-standard arguments", &self.app_parameters)
             .on_input(AppMessage::Arguments)
             .padding(10)
-            .width(Length::Fill);
+            .width(Length::Fill)
+            .style(theme::TextInput::Custom(Box::new(InputField)));
 
         let categories = [
             String::from("Web"),
@@ -453,10 +481,11 @@ impl Application for Wam {
         .width(Length::Fill)
         .padding(10);
 
-        let app_done = button("Done")
+        let app_done = Button::new("Done")
             .on_press(AppMessage::Result)
             .width(Length::Fill)
-            .padding(10);
+            .padding(10)
+            .style(theme::Button::Custom(Box::new(AddButton)));
 
         let mut app_list = column!().spacing(10);
         let webapps = get_webapps();
@@ -464,10 +493,10 @@ impl Application for Wam {
         for app in webapps.iter() {
             match app {
                 Ok(data) => {
-                    let edit = button("Edit")
+                    let edit = Button::new("Edit")
                         .on_press(AppMessage::Clicked(Buttons::Edit(Box::new(data.clone()))))
                         .padding(10);
-                    let delete = button("Delete")
+                    let delete = Button::new("Delete")
                         .on_press(AppMessage::Clicked(Buttons::Delete(Box::new(data.clone()))))
                         .padding(10);
                     let name = text(&data.name).size(26.);
@@ -508,7 +537,7 @@ impl Application for Wam {
                 Card::new(text("Icon Picker"), icons_container(self.icons.clone()))
                     .foot(
                         Row::new().spacing(10).padding(5).width(Length::Fill).push(
-                            button(text("Cancel").horizontal_alignment(Horizontal::Center))
+                            Button::new(text("Cancel").horizontal_alignment(Horizontal::Center))
                                 .width(Length::Fill)
                                 .on_press(AppMessage::CancelButtonPressed),
                         ),
@@ -536,18 +565,154 @@ fn icons_container(icons: Option<Vec<Icon>>) -> iced::Element<'static, AppMessag
     if icons.is_some() {
         for ico in icons.unwrap().iter() {
             let btn = match ico.clone().icon {
-                IconType::Raster(icon) => button(image(icon))
+                IconType::Raster(icon) => Button::new(image(icon))
                     .width(Length::Fixed(96.))
                     .height(Length::Fixed(96.))
-                    .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone()))),
-                IconType::Svg(icon) => button(svg(icon))
+                    .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone())))
+                    .style(theme::Button::Custom(Box::new(CustomButton))),
+                IconType::Svg(icon) => Button::new(svg(icon))
                     .width(Length::Fixed(96.))
                     .height(Length::Fixed(96.))
-                    .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone()))),
+                    .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone())))
+                    .style(theme::Button::Custom(Box::new(CustomButton))),
             };
             container = container.push(btn);
         }
     }
 
     scrollable(container).into()
+}
+
+struct AddButton;
+
+impl button::StyleSheet for AddButton {
+    type Style = Theme;
+
+    fn active(&self, _style: &Self::Style) -> button::Appearance {
+        button::Appearance {
+            text_color: Color::WHITE,
+            ..Default::default()
+        }
+    }
+
+    fn disabled(&self, style: &Self::Style) -> button::Appearance {
+        let active = self.active(style);
+
+        button::Appearance { ..active }
+    }
+
+    fn hovered(&self, style: &Self::Style) -> button::Appearance {
+        let active = self.active(style);
+
+        button::Appearance {
+            border_color: Color::from_rgb(59., 122., 87.),
+            ..active
+        }
+    }
+
+    fn pressed(&self, style: &Self::Style) -> button::Appearance {
+        button::Appearance {
+            shadow_offset: iced::Vector::default(),
+            ..self.active(style)
+        }
+    }
+}
+
+struct CustomButton;
+
+impl button::StyleSheet for CustomButton {
+    type Style = Theme;
+
+    fn active(&self, _style: &Self::Style) -> button::Appearance {
+        button::Appearance {
+            background: Some(iced::Background::Color(Color::TRANSPARENT)),
+            ..Default::default()
+        }
+    }
+
+    fn disabled(&self, style: &Self::Style) -> button::Appearance {
+        let active = self.active(style);
+
+        button::Appearance {
+            shadow_offset: iced::Vector::default(),
+            background: active.background.map(|background| match background {
+                iced::Background::Color(color) => iced::Background::Color(iced::Color {
+                    a: color.a * 0.5,
+                    ..color
+                }),
+                iced::Background::Gradient(gradient) => {
+                    iced::Background::Gradient(gradient.mul_alpha(0.5))
+                }
+            }),
+            text_color: iced::Color {
+                a: active.text_color.a * 0.5,
+                ..active.text_color
+            },
+            ..active
+        }
+    }
+
+    fn hovered(&self, style: &Self::Style) -> button::Appearance {
+        let active = self.active(style);
+
+        button::Appearance { ..active }
+    }
+
+    fn pressed(&self, style: &Self::Style) -> button::Appearance {
+        button::Appearance {
+            shadow_offset: iced::Vector::default(),
+            ..self.active(style)
+        }
+    }
+}
+
+struct InputField;
+
+impl text_input::StyleSheet for InputField {
+    type Style = Theme;
+
+    fn active(&self, _style: &Self::Style) -> text_input::Appearance {
+        text_input::Appearance {
+            background: iced::Background::Color(Color::TRANSPARENT),
+            border_radius: BorderRadius::from(8.),
+            border_width: 1.,
+            border_color: Color::WHITE,
+            icon_color: Color::WHITE,
+        }
+    }
+
+    fn focused(&self, style: &Self::Style) -> text_input::Appearance {
+        let active = self.active(style);
+        text_input::Appearance {
+            border_width: 2.,
+            ..active
+        }
+    }
+
+    fn placeholder_color(&self, _style: &Self::Style) -> Color {
+        Color::from_rgba(255., 255., 255., 0.75)
+    }
+
+    fn value_color(&self, _style: &Self::Style) -> Color {
+        Color::WHITE
+    }
+
+    fn disabled_color(&self, _style: &Self::Style) -> Color {
+        Color::from_rgba(255., 255., 255., 0.30)
+    }
+
+    fn selection_color(&self, _style: &Self::Style) -> Color {
+        Color::from_rgb(128., 191., 255.)
+    }
+
+    fn disabled(&self, style: &Self::Style) -> text_input::Appearance {
+        let active = self.active(style);
+
+        text_input::Appearance {
+            background: iced::Background::Color(Color::TRANSPARENT),
+            border_width: 0.,
+            border_color: Color::TRANSPARENT,
+            ..active
+        }
+    }
 }
