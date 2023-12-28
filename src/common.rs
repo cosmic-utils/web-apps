@@ -328,16 +328,13 @@ impl WebAppLauncher {
             }
         }
 
-        match remove_dir_all(firefox_profiles_dir) {
-            Ok(_) => {
-                tracing::info!("Removed firefox profile directory.");
+        if remove_dir_all(firefox_profiles_dir).is_ok() {
+            tracing::info!("Removed firefox profile directory.");
 
-                match remove_dir_all(profiles_dir) {
-                    Ok(_) => tracing::info!("Removed profiles directories."),
-                    Err(_) => tracing::info!("Trying remove profiles directories."),
-                }
+            match remove_dir_all(profiles_dir) {
+                Ok(_) => tracing::info!("Removed profiles directories."),
+                Err(_) => tracing::info!("Trying remove profiles directories."),
             }
-            Err(_) => tracing::info!("Trying remove firefox profile directory."),
         }
 
         // TODO: Implement epiphany deletion
