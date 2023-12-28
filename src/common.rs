@@ -1,13 +1,14 @@
 #![allow(clippy::too_many_arguments)]
 
 use dircpy::copy_dir;
+use iced::widget::{image, svg};
 use rand::{thread_rng, Rng};
 use reqwest::Client;
 use scraper::{Html, Selector};
 use std::{
     fmt::Display,
     fs::{self, copy, create_dir_all, remove_dir_all, remove_file, File},
-    io::{self, BufRead, Result, Write},
+    io::{self, BufRead, Read, Result, Write},
     path::PathBuf,
 };
 use url::Url;
@@ -349,7 +350,10 @@ pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
     webapps
 }
 
-use crate::supported_browsers::supported_browsers;
+use crate::{
+    gui::{Icon, IconType},
+    supported_browsers::supported_browsers,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrowserType {
@@ -550,4 +554,54 @@ pub fn move_icon(path: String, output_name: String) -> Result<String> {
     }
 
     Ok(save_path)
+}
+
+pub async fn image_from_memory(path: String) -> Result<Icon> {
+    let img_bytes = if path.starts_with("http") {
+        Client::new()
+            .get(path.clone())
+            .send()
+            .await
+            .expect("sending request")
+            .bytes()
+            .await
+            .expect("getting content")
+            .to_vec()
+    } else {
+        let mut file = File::open(path.clone())?;
+        let mut buffer = Vec::new();
+
+        file.read_to_end(&mut buffer)?;
+
+        buffer.to_vec()
+    };
+
+    let icon = image::Handle::from_memory(img_bytes.to_vec());
+
+    Ok(Icon::new(IconType::Raster(icon), path))
+}
+
+pub async fn svg_from_memory(path: String) -> Result<Icon> {
+    let img_bytes = if path.starts_with("http") {
+        Client::new()
+            .get(path.clone())
+            .send()
+            .await
+            .expect("sending request")
+            .bytes()
+            .await
+            .expect("getting content")
+            .to_vec()
+    } else {
+        let mut file = File::open(path.clone())?;
+        let mut buffer = Vec::new();
+
+        file.read_to_end(&mut buffer)?;
+
+        buffer.to_vec()
+    };
+
+    let icon = svg::Handle::from_memory(img_bytes.to_vec());
+
+    Ok(Icon::new(IconType::Svg(icon), path))
 }

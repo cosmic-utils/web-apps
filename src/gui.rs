@@ -1,6 +1,3 @@
-use std::{fs::File, io::Read};
-
-use anyhow::Error;
 use iced::{
     alignment::{Horizontal, Vertical},
     widget::{
@@ -10,11 +7,10 @@ use iced::{
     Alignment, Application, Command, Length,
 };
 use iced_aw::{modal, Card, Wrap};
-use reqwest::Client;
 
 use crate::common::{
-    find_icons, get_icon_name_from_url, get_supported_browsers, get_webapps, move_icon, Browser,
-    WebAppLauncher,
+    find_icons, get_icon_name_from_url, get_supported_browsers, get_webapps, image_from_memory,
+    move_icon, svg_from_memory, Browser, WebAppLauncher,
 };
 
 #[derive(Debug, Clone)]
@@ -45,6 +41,7 @@ pub enum AppMessage {
     Browser(Browser),
     Category(String),
     ErrorLoadingIcon,
+    SelectIcon(Icon),
 }
 
 #[derive(Debug, Clone)]
@@ -71,6 +68,7 @@ pub struct Wam {
     pub app_title: String,
     pub app_url: String,
     pub app_icon: String,
+    selected_icon: Option<Icon>,
     pub app_parameters: String,
     pub app_category: String,
     pub app_browser_name: String,
@@ -102,6 +100,7 @@ impl Application for Wam {
                 app_title: String::new(),
                 app_url: String::new(),
                 app_icon: String::new(),
+                selected_icon: None,
                 app_parameters: String::new(),
                 app_category: String::from("Web"),
                 app_browser_name: String::from("Browser"),
@@ -287,8 +286,23 @@ impl Application for Wam {
                 let path = icon.path;
 
                 if let Ok(saved) = move_icon(path, self.app_title.clone()) {
-                    self.app_icon = saved;
+                    self.app_icon = saved.clone();
+
+                    if saved.ends_with(".svg") {
+                        Command::perform(svg_from_memory(saved), |result| {
+                            AppMessage::SelectIcon(result.unwrap())
+                        })
+                    } else {
+                        Command::perform(image_from_memory(saved), |result| {
+                            AppMessage::SelectIcon(result.unwrap())
+                        })
+                    }
+                } else {
+                    Command::none()
                 }
+            }
+            AppMessage::SelectIcon(ico) => {
+                self.selected_icon = Some(ico);
 
                 Command::none()
             }
@@ -316,18 +330,21 @@ impl Application for Wam {
         let icons = self.icons.clone().unwrap();
 
         let icon = if !icons.is_empty() || !self.app_icon.is_empty() {
-            if self.app_icon.ends_with(".svg") {
-                let img = svg(svg::Handle::from_path(self.app_icon.clone()));
-                button(img)
+            match self.selected_icon.clone() {
+                Some(data) => match data.icon {
+                    IconType::Raster(data) => button(image(data))
+                        .on_press(AppMessage::OpenModal)
+                        .width(Length::Fixed(96.))
+                        .height(Length::Fixed(96.)),
+                    IconType::Svg(data) => button(svg(data))
+                        .on_press(AppMessage::OpenModal)
+                        .width(Length::Fixed(96.))
+                        .height(Length::Fixed(96.)),
+                },
+                None => button("")
                     .on_press(AppMessage::OpenModal)
                     .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.))
-            } else {
-                let img = image(image::Handle::from_path(self.app_icon.clone()));
-                button(img)
-                    .on_press(AppMessage::OpenModal)
-                    .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.))
+                    .height(Length::Fixed(96.)),
             }
         } else {
             button("")
@@ -480,54 +497,4 @@ fn icons_container(icons: Option<Vec<Icon>>) -> iced::Element<'static, AppMessag
     }
 
     scrollable(container).into()
-}
-
-pub async fn image_from_memory(path: String) -> Result<Icon, Error> {
-    let img_bytes = if path.starts_with("http") {
-        Client::new()
-            .get(path.clone())
-            .send()
-            .await
-            .expect("sending request")
-            .bytes()
-            .await
-            .expect("getting content")
-            .to_vec()
-    } else {
-        let mut file = File::open(path.clone())?;
-        let mut buffer = Vec::new();
-
-        file.read_to_end(&mut buffer)?;
-
-        buffer.to_vec()
-    };
-
-    let icon = image::Handle::from_memory(img_bytes.to_vec());
-
-    Ok(Icon::new(IconType::Raster(icon), path))
-}
-
-pub async fn svg_from_memory(path: String) -> Result<Icon, Error> {
-    let img_bytes = if path.starts_with("http") {
-        Client::new()
-            .get(path.clone())
-            .send()
-            .await
-            .expect("sending request")
-            .bytes()
-            .await
-            .expect("getting content")
-            .to_vec()
-    } else {
-        let mut file = File::open(path.clone())?;
-        let mut buffer = Vec::new();
-
-        file.read_to_end(&mut buffer)?;
-
-        buffer.to_vec()
-    };
-
-    let icon = svg::Handle::from_memory(img_bytes.to_vec());
-
-    Ok(Icon::new(IconType::Svg(icon), path))
 }
