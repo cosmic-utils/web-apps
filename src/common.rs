@@ -344,7 +344,9 @@ pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
                 }
             }
         }
-        Err(e) => tracing::error!("Error opening directory: {}", e),
+        Err(_) => {
+            create_dir_all(apps_dir()).expect("Cannot create local applications dir");
+        }
     }
 
     webapps
@@ -371,7 +373,7 @@ pub struct Browser {
     _type: BrowserType,
     pub name: String,
     pub exec: String,
-    test_path: PathBuf,
+    test: PathBuf,
 }
 
 impl Display for Browser {
@@ -381,26 +383,28 @@ impl Display for Browser {
 }
 
 impl Browser {
-    pub fn new(_type: BrowserType, name: &str, exec: &str, test: &str) -> Self {
+    pub fn new(_type: BrowserType, name: &str, exec: &str, test_path: &str) -> Self {
         let name = name.to_string();
         let exec = exec.to_string();
 
-        let mut test_path = PathBuf::new();
+        let mut test = PathBuf::new();
 
-        if test.starts_with(".local/share/") {
+        if test_path.starts_with(".local/share/") {
             let base = BaseDirectories::new().expect("base directories not found");
             let mut data_home = base.get_data_home();
-            let flatpak_path: Vec<_> = test.split(".local/share/").collect();
+            let flatpak_path: Vec<_> = test_path.split(".local/share/").collect();
             data_home.push(flatpak_path[1]);
 
-            test_path = data_home;
+            test.push(data_home)
+        } else {
+            test.push(test_path)
         }
 
         Self {
             _type,
             name,
             exec,
-            test_path,
+            test,
         }
     }
 
@@ -416,7 +420,7 @@ pub fn get_supported_browsers() -> Vec<Browser> {
     let mut browsers = Vec::new();
 
     for browser in test_browsers {
-        let exists = browser.test_path.as_path().try_exists();
+        let exists = browser.test.as_path().try_exists();
 
         match exists {
             Ok(found) => match found {
