@@ -181,90 +181,98 @@ impl Application for Wam {
                     Command::none()
                 }
             }
-            AppMessage::Clicked(btn) => {
-                match btn {
-                    Buttons::SearchFavicon => {
-                        if let Some(icons) = self.icons.as_mut() {
-                            icons.clear()
+            AppMessage::Clicked(btn) => match btn {
+                Buttons::SearchFavicon => {
+                    if let Some(icons) = self.icons.as_mut() {
+                        icons.clear()
+                    };
+
+                    if !self.app_url.is_empty() {
+                        let url = self.app_url.clone();
+
+                        let to_find = if url.starts_with("http://") || url.starts_with("https://") {
+                            get_icon_name_from_url(url.clone())
+                        } else {
+                            let prefix = "https://";
+                            self.app_url = format!("{}{}", prefix, url);
+
+                            get_icon_name_from_url(self.app_url.clone())
                         };
 
-                        if !self.app_url.is_empty() {
-                            let url = self.app_url.clone();
-                            let to_find = get_icon_name_from_url(url.clone());
-
-                            Command::perform(find_icons(to_find, url), |icons| {
-                                AppMessage::FoundIcons(icons)
-                            })
-                        } else {
-                            Command::none()
-                        }
-                    }
-                    Buttons::Favicon(path) => {
-                        let is_svg = path.ends_with(".svg");
-
-                        match is_svg {
-                            true => {
-                                Command::perform(svg_from_memory(path), |result| match result {
-                                    Ok(icon) => AppMessage::SetIcon(icon),
-                                    Err(_) => AppMessage::ErrorLoadingIcon,
-                                })
-                            }
-                            false => {
-                                Command::perform(image_from_memory(path), |result| match result {
-                                    Ok(icon) => AppMessage::SetIcon(icon),
-                                    Err(_) => AppMessage::ErrorLoadingIcon,
-                                })
-                            }
-                        }
-                    }
-                    Buttons::Edit(launcher) => {
-                        self.edit_mode = true;
-                        self.launcher = Some(launcher.clone());
-
-                        self.app_title = launcher.name;
-                        self.app_url = launcher.url;
-                        self.app_icon = launcher.icon.clone();
-                        self.app_parameters = launcher.custom_parameters;
-                        self.app_category = launcher.category;
-                        self.app_browser = Browser::web_browser(launcher.web_browser.name)
-                            .expect("browser not found");
-                        self.app_navbar = launcher.navbar;
-                        self.app_incognito = launcher.is_incognito;
-
-                        let is_svg = launcher.icon.ends_with(".svg");
-
-                        match is_svg {
-                            true => Command::perform(svg_from_memory(launcher.icon), |result| {
-                                match result {
-                                    Ok(icon) => AppMessage::SetIcon(icon),
-                                    Err(_) => AppMessage::ErrorLoadingIcon,
-                                }
-                            }),
-                            false => Command::perform(image_from_memory(launcher.icon), |result| {
-                                match result {
-                                    Ok(icon) => AppMessage::SetIcon(icon),
-                                    Err(_) => AppMessage::ErrorLoadingIcon,
-                                }
-                            }),
-                        }
-                    }
-                    Buttons::Delete(launcher) => {
-                        let _ = launcher.delete();
-
-                        Command::none()
-                    }
-                    Buttons::Navbar(selected) => {
-                        self.app_navbar = selected;
-
-                        Command::none()
-                    }
-                    Buttons::Incognito(selected) => {
-                        self.app_incognito = selected;
-
+                        Command::perform(find_icons(to_find, self.app_url.clone()), |icons| {
+                            AppMessage::FoundIcons(icons)
+                        })
+                    } else {
                         Command::none()
                     }
                 }
-            }
+                Buttons::Favicon(path) => {
+                    let is_svg = path.ends_with(".svg");
+
+                    match is_svg {
+                        true => Command::perform(svg_from_memory(path), |result| match result {
+                            Ok(icon) => AppMessage::SetIcon(icon),
+                            Err(_) => AppMessage::ErrorLoadingIcon,
+                        }),
+                        false => Command::perform(image_from_memory(path), |result| match result {
+                            Ok(icon) => AppMessage::SetIcon(icon),
+                            Err(_) => AppMessage::ErrorLoadingIcon,
+                        }),
+                    }
+                }
+                Buttons::Edit(launcher) => {
+                    self.edit_mode = true;
+                    self.launcher = Some(launcher.clone());
+
+                    self.app_title = launcher.name;
+                    self.app_url = launcher.url;
+                    self.app_icon = launcher.icon.clone();
+                    self.app_parameters = launcher.custom_parameters;
+                    self.app_category = launcher.category;
+                    self.app_browser =
+                        Browser::web_browser(launcher.web_browser.name).expect("browser not found");
+                    self.app_navbar = launcher.navbar;
+                    self.app_incognito = launcher.is_incognito;
+
+                    let is_svg = launcher.icon.ends_with(".svg");
+
+                    match is_svg {
+                        true => {
+                            Command::perform(
+                                svg_from_memory(launcher.icon),
+                                |result| match result {
+                                    Ok(icon) => AppMessage::SetIcon(icon),
+                                    Err(_) => AppMessage::ErrorLoadingIcon,
+                                },
+                            )
+                        }
+                        false => {
+                            Command::perform(
+                                image_from_memory(launcher.icon),
+                                |result| match result {
+                                    Ok(icon) => AppMessage::SetIcon(icon),
+                                    Err(_) => AppMessage::ErrorLoadingIcon,
+                                },
+                            )
+                        }
+                    }
+                }
+                Buttons::Delete(launcher) => {
+                    let _ = launcher.delete();
+
+                    Command::none()
+                }
+                Buttons::Navbar(selected) => {
+                    self.app_navbar = selected;
+
+                    Command::none()
+                }
+                Buttons::Incognito(selected) => {
+                    self.app_incognito = selected;
+
+                    Command::none()
+                }
+            },
             AppMessage::Browser(browser) => {
                 self.app_browser = browser;
 
