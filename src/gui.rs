@@ -69,6 +69,7 @@ impl Icon {
 pub struct Wam {
     pub icons_paths: Vec<String>,
     pub icons: Option<Vec<Icon>>,
+    pub app_codename: Option<String>,
     pub app_title: String,
     pub app_url: String,
     pub app_icon: String,
@@ -104,6 +105,7 @@ impl Application for Wam {
             Wam {
                 icons_paths: Vec::new(),
                 icons: Some(Vec::new()),
+                app_codename: None,
                 app_title: String::new(),
                 app_url: String::new(),
                 app_icon: String::new(),
@@ -299,6 +301,7 @@ impl Application for Wam {
                     let _ = launcher.delete();
                     Box::new(WebAppLauncher::new(
                         self.app_title.clone(),
+                        Some(launcher.codename),
                         self.app_url.clone(),
                         self.app_icon.clone(),
                         self.app_category.clone(),
@@ -311,6 +314,7 @@ impl Application for Wam {
                 } else {
                     Box::new(WebAppLauncher::new(
                         self.app_title.clone(),
+                        None,
                         self.app_url.clone(),
                         self.app_icon.clone(),
                         self.app_category.clone(),
@@ -510,6 +514,8 @@ impl Application for Wam {
             .padding(10)
             .style(theme::Button::Positive);
 
+        let browsers_row = row![app_browsers, app_done].spacing(20);
+
         let mut app_list = column!().spacing(10);
         let webapps = get_webapps();
 
@@ -548,15 +554,7 @@ impl Application for Wam {
             installed = installed.push(scrollable_list);
         }
 
-        let col = column![
-            row,
-            app_arguments,
-            cat_row,
-            app_browsers,
-            app_done,
-            installed,
-        ]
-        .spacing(24);
+        let col = column![row, app_arguments, cat_row, browsers_row, installed,].spacing(24);
 
         let underlay = Container::new(col).padding(30);
 

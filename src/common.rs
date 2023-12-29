@@ -35,6 +35,7 @@ pub struct WebAppLauncher {
 impl WebAppLauncher {
     pub fn new(
         name: String,
+        codename: Option<String>,
         url: String,
         icon: String,
         category: String,
@@ -44,19 +45,23 @@ impl WebAppLauncher {
         navbar: bool,
         privatewindow: bool,
     ) -> Self {
-        let random_code: u16 = thread_rng().gen_range(1000..10000);
-        let base_dir = BaseDirectories::new().expect("base directories not found");
-        let mut path = base_dir.get_data_home();
-
-        let codename = format!("{}{}", name.replace(' ', ""), random_code);
-        path.push("applications");
+        let codename = if let Some(codename) = codename {
+            codename
+        } else {
+            let random_code: u16 = thread_rng().gen_range(1000..10000);
+            format!("{}{}", name.replace(' ', ""), random_code)
+        };
         let filename = format!("webapp-{}.desktop", codename);
-        path.push(filename);
         let web_browser = browser;
         let is_valid = !name.is_empty() && !icon.is_empty();
         let exec = web_browser.exec.clone();
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
+
+        let base_dir = BaseDirectories::new().expect("base directories not found");
+        let mut path = base_dir.get_data_home();
+        path.push("applications");
+        path.push(filename);
 
         Self {
             path,
