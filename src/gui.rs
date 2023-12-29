@@ -454,6 +454,7 @@ impl Application for Wam {
             }
         } else {
             Button::new("")
+                .on_press(AppMessage::OpenModal)
                 .width(Length::Fixed(96.))
                 .height(Length::Fixed(96.))
                 .style(theme::Button::Custom(Box::new(CustomButton)))
