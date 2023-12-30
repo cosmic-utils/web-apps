@@ -429,35 +429,9 @@ impl Application for Wam {
         let icons = self.icons.clone().unwrap();
 
         let icon = if !icons.is_empty() || !self.app_icon.is_empty() {
-            match self.selected_icon.clone() {
-                Some(data) => match data.icon {
-                    IconType::Raster(data) => {
-                        Button::new(image(data).width(Length::Fill).height(Length::Fill))
-                            .on_press(AppMessage::OpenModal)
-                            .width(Length::Fixed(96.))
-                            .height(Length::Fixed(96.))
-                            .style(theme::Button::Custom(Box::new(CustomButton)))
-                    }
-                    IconType::Svg(data) => {
-                        Button::new(svg(data).width(Length::Fill).height(Length::Fill))
-                            .on_press(AppMessage::OpenModal)
-                            .width(Length::Fixed(96.))
-                            .height(Length::Fixed(96.))
-                            .style(theme::Button::Custom(Box::new(CustomButton)))
-                    }
-                },
-                None => Button::new("")
-                    .on_press(AppMessage::OpenModal)
-                    .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.))
-                    .style(theme::Button::Custom(Box::new(CustomButton))),
-            }
+            self.icon_picker_icon(self.selected_icon.clone())
         } else {
-            Button::new("")
-                .on_press(AppMessage::OpenModal)
-                .width(Length::Fixed(96.))
-                .height(Length::Fixed(96.))
-                .style(theme::Button::Custom(Box::new(CustomButton)))
+            self.icon_picker_icon(None)
         };
         let row = row![col, dl_btn, icon].spacing(12).width(Length::Fill);
 
@@ -621,6 +595,41 @@ impl Wam {
 
         scrollable(col).into()
     }
+
+    fn icon_picker_icon(&self, icon: Option<Icon>) -> iced::Element<'static, AppMessage> {
+        let ico = if let Some(ico) = icon {
+            match ico.icon {
+                IconType::Raster(data) => {
+                    Button::new(image(data).width(Length::Fill).height(Length::Fill))
+                        .on_press(AppMessage::OpenModal)
+                        .width(Length::Fixed(96.))
+                        .height(Length::Fixed(96.))
+                        .style(theme::Button::Custom(Box::new(CustomButton)))
+                }
+                IconType::Svg(data) => {
+                    Button::new(svg(data).width(Length::Fill).height(Length::Fill))
+                        .on_press(AppMessage::OpenModal)
+                        .width(Length::Fixed(96.))
+                        .height(Length::Fixed(96.))
+                        .style(theme::Button::Custom(Box::new(CustomButton)))
+                }
+            }
+        } else {
+            let default_icon_path = String::from("assets/icons/moleskine-icon.svg");
+            let handler = svg::Handle::from_path(default_icon_path);
+            let default = svg(handler);
+
+            Button::new(default)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .on_press(AppMessage::OpenModal)
+                .width(Length::Fixed(96.))
+                .height(Length::Fixed(96.))
+                .style(theme::Button::Custom(Box::new(CustomButton)))
+        };
+
+        Container::new(ico).into()
+    }
 }
 
 struct CustomButton;
@@ -679,9 +688,9 @@ impl text_input::StyleSheet for InputField {
     fn active(&self, _style: &Self::Style) -> text_input::Appearance {
         text_input::Appearance {
             background: iced::Background::Color(Color::TRANSPARENT),
-            border_radius: BorderRadius::from(8.),
+            border_radius: BorderRadius::from(4.),
             border_width: 1.,
-            border_color: Color::WHITE,
+            border_color: Color::from_rgba(0.76, 0.76, 0.76, 0.05),
             icon_color: Color::WHITE,
         }
     }
@@ -689,7 +698,8 @@ impl text_input::StyleSheet for InputField {
     fn focused(&self, style: &Self::Style) -> text_input::Appearance {
         let active = self.active(style);
         text_input::Appearance {
-            border_width: 2.,
+            border_width: 1.,
+            border_color: Color::from_rgba(0.76, 0.76, 0.76, 0.20),
             ..active
         }
     }
