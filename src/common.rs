@@ -506,12 +506,17 @@ pub async fn find_icons(icon_name: String, url: Option<String>) -> Vec<String> {
         .to_str()
         .expect("cant convert local path to string");
     let system_dir = "/usr/share/icons";
+    let mut home_dir = dirs::home_dir().expect("cant get home directory");
+    home_dir.push(".icons");
+    let home_dir = home_dir.to_str().expect("cant convert path to string");
 
+    let home_icons = find_icon(home_dir, &icon_name).await;
     let local_icons = find_icon(local_dir, &icon_name).await;
     let system_icons = find_icon(system_dir, &icon_name).await;
 
     let mut result: Vec<String> = Vec::new();
 
+    result.extend(home_icons);
     result.extend(local_icons);
     result.extend(system_icons);
 
