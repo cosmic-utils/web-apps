@@ -222,6 +222,12 @@ impl WebAppLauncher {
         // TODO: copy firefox default profile from webapp-manager
         copy_dir("firefox/profile", profile_path.clone()).expect("cant copy firefox profile dir");
 
+        if self.navbar {
+            let profile_path = profile_path.join("chrome/userChrome.css");
+            copy("firefox/userChrome-with-navbar.css", profile_path)
+                .expect("cannot copy userChrome.css");
+        }
+
         let profile_path = profile_path.to_str().unwrap();
         let mut exec_string = format!(
             r#"sh -c 'XAPP_FORCE_GTKWINDOW_ICON="{}" {} --class WebApp-{} --name WebApp-{} --profile {} --no-remote "#,
@@ -236,7 +242,7 @@ impl WebAppLauncher {
             exec_string.push_str(&self.custom_parameters);
         }
 
-        exec_string.push_str(&format!(r#""{}"'"#, &self.url));
+        exec_string.push_str(&format!(r#" "{}"'"#, &self.url));
 
         exec_string
     }
