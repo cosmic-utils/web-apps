@@ -30,6 +30,7 @@ pub struct WebAppLauncher {
     pub isolate_profile: bool,
     pub navbar: bool,
     pub is_incognito: bool,
+    app_base_dir: Option<PathBuf>,
 }
 
 impl WebAppLauncher {
@@ -63,6 +64,10 @@ impl WebAppLauncher {
         path.push("applications");
         path.push(filename);
 
+        let base_dir = BaseDirectories::new().expect("cant follow base directories");
+        let local_share = base_dir.get_data_home();
+        let app_base_dir = Some(local_share.join("wam-rust"));
+
         Self {
             path,
             codename,
@@ -77,6 +82,7 @@ impl WebAppLauncher {
             isolate_profile,
             navbar,
             is_incognito,
+            app_base_dir,
         }
     }
 
@@ -176,6 +182,7 @@ impl WebAppLauncher {
                 isolate_profile,
                 navbar,
                 is_incognito,
+                app_base_dir: None,
             }),
             None => {
                 let supported = get_supported_browsers();
@@ -195,6 +202,7 @@ impl WebAppLauncher {
                     isolate_profile,
                     navbar,
                     is_incognito,
+                    app_base_dir: None,
                 })
             }
         }
@@ -219,13 +227,22 @@ impl WebAppLauncher {
 
         create_dir_all(profile_dir).expect("cant create profile dir");
 
-        // TODO: copy firefox default profile from webapp-manager
-        copy_dir("firefox/profile", profile_path.clone()).expect("cant copy firefox profile dir");
+        match &self.app_base_dir {
+            Some(dir) => {
+                let profile = dir.join("firefox/profile");
+                copy_dir(profile, profile_path.clone()).expect("cant copy firefox profile dir");
+            }
+            None => {}
+        }
 
         if self.navbar {
-            let profile_path = profile_path.join("chrome/userChrome.css");
-            copy("firefox/userChrome-with-navbar.css", profile_path)
-                .expect("cannot copy userChrome.css");
+            match &self.app_base_dir {
+                Some(dir) => {
+                    let profile = dir.join("chrome/userChrome.css");
+                    copy(profile, profile_path.clone()).expect("cannot copy userChrome.css");
+                }
+                None => {}
+            }
         }
 
         let profile_path = profile_path.to_str().unwrap();

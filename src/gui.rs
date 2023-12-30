@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use iced::{
     alignment::{Horizontal, Vertical},
     theme::{self, Custom, Palette},
@@ -10,6 +12,7 @@ use iced::{
 };
 use iced_aw::{modal, Card, Wrap};
 use url::Url;
+use xdg::BaseDirectories;
 
 use crate::common::{
     find_icons, get_icon_name_from_url, get_supported_browsers, get_webapps, image_from_memory,
@@ -88,6 +91,7 @@ pub struct Wam {
     app_browsers: Vec<Browser>,
     edit_mode: bool,
     launcher: Option<Box<WebAppLauncher>>,
+    app_base_dir: PathBuf,
 }
 
 impl Application for Wam {
@@ -103,6 +107,9 @@ impl Application for Wam {
         let browsers = get_supported_browsers();
         let browser = &browsers[0];
 
+        let base_dir = BaseDirectories::new().expect("cant follow base directories");
+        let local_share = base_dir.get_data_home();
+        let wam_rust_path = local_share.join("wam-rust");
         (
             Wam {
                 icons_paths: Vec::new(),
@@ -124,6 +131,7 @@ impl Application for Wam {
                 app_browsers: browsers,
                 edit_mode: false,
                 launcher: None,
+                app_base_dir: wam_rust_path,
             },
             Command::none(),
         )
@@ -430,9 +438,11 @@ impl Application for Wam {
 
         let col = column![app_title, app_url].spacing(14);
 
-        let search_ico = include_bytes!("../assets/icons/search.svg");
+        let search_ico = &self.app_base_dir.join("icons/search.svg");
+        let search_ico = search_ico.to_str().expect("cant find needed search icon");
+
         let dl_btn = Button::new(
-            svg(svg::Handle::from_memory(search_ico.to_vec()))
+            svg(svg::Handle::from_path(search_ico))
                 .width(Length::Fill)
                 .height(Length::Fill),
         )
@@ -662,7 +672,9 @@ impl Wam {
                 }
             }
         } else {
-            let default_icon_path = String::from("assets/icons/moleskine-icon.svg");
+            let default_ico = &self.app_base_dir.join("icons/moleskine-icon.svg");
+            let default_ico = default_ico.to_str().expect("cant find needed icon");
+            let default_icon_path = String::from(default_ico);
             let handler = svg::Handle::from_path(default_icon_path);
             let default = svg(handler);
 
