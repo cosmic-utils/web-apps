@@ -597,7 +597,7 @@ pub fn move_icon(path: String, output_name: String) -> Result<String> {
             let mut file = File::create(&save_path).expect("creating file");
             file.write_all(&content).expect("saving image");
         }
-    } else {
+    } else if !path.contains(&save_path) {
         copy(&path, &save_path).expect("saving image");
     }
 
