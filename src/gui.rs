@@ -9,6 +9,7 @@ use iced::{
     Alignment, Application, BorderRadius, Color, Command, Length, Theme,
 };
 use iced_aw::{modal, Card, Wrap};
+use url::Url;
 
 use crate::common::{
     find_icons, get_icon_name_from_url, get_supported_browsers, get_webapps, image_from_memory,
@@ -486,8 +487,7 @@ impl Application for Wam {
         let app_done = Button::new("Done")
             .on_press(AppMessage::Result)
             .width(Length::Fill)
-            .padding(10)
-            .style(theme::Button::Positive);
+            .padding(10);
 
         let browsers_row = row![app_browsers, app_done].spacing(20);
 
@@ -500,17 +500,23 @@ impl Application for Wam {
                     let edit = Button::new("Edit")
                         .on_press(AppMessage::Clicked(Buttons::Edit(Box::new(data.clone()))))
                         .width(Length::Fixed(90.))
-                        .style(theme::Button::Secondary);
+                        .style(theme::Button::Destructive);
                     let delete = Button::new("Delete")
                         .on_press(AppMessage::Clicked(Buttons::Delete(Box::new(data.clone()))))
                         .width(Length::Fixed(90.))
-                        .style(theme::Button::Secondary);
-                    let name = text(&format!("{}  -  {}", data.name, data.url))
-                        .size(18.)
-                        .width(Length::Fill)
-                        .style(theme::Text::Color(Color::from_rgba(255., 255., 255., 0.5)));
+                        .style(theme::Button::Destructive);
 
-                    let row = row![edit, delete, name]
+                    let host = Url::parse(&data.url).expect("cant parse url");
+                    let host = host.host().unwrap();
+
+                    let name = Button::new(text(data.name.clone()))
+                        .width(Length::FillPortion(2))
+                        .style(theme::Button::Positive);
+                    let url = Button::new(text(host))
+                        .width(Length::FillPortion(3))
+                        .style(theme::Button::Secondary);
+
+                    let row = row![edit, delete, name, url]
                         .spacing(10)
                         .align_items(Alignment::Center);
                     app_list = app_list.push(row);
