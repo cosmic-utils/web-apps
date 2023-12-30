@@ -1,6 +1,6 @@
 use iced::{
     alignment::{Horizontal, Vertical},
-    theme::{self},
+    theme::{self, Custom, Palette},
     widget::{
         button::{self},
         column, image, pick_list, row, scrollable, svg, text, text_input, toggler, Button,
@@ -133,7 +133,15 @@ impl Application for Wam {
     }
 
     fn theme(&self) -> Self::Theme {
-        iced::Theme::Dark
+        let custom_palette = Custom::new(Palette {
+            background: Color::from_rgb(0.1, 0.1, 0.1),
+            text: Color::from_rgba(1.0, 1.0, 1.0, 0.75),
+            primary: Color::from_rgb(0.0, 0.28, 0.73),
+            success: Color::from_rgb(0.24, 0.57, 0.25),
+            danger: Color::from_rgb(0.90, 0.17, 0.31),
+        });
+
+        iced::Theme::Custom(Box::new(custom_palette))
     }
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
@@ -500,7 +508,7 @@ impl Application for Wam {
                     let edit = Button::new("Edit")
                         .on_press(AppMessage::Clicked(Buttons::Edit(Box::new(data.clone()))))
                         .width(Length::Fixed(90.))
-                        .style(theme::Button::Destructive);
+                        .style(theme::Button::Primary);
                     let delete = Button::new("Delete")
                         .on_press(AppMessage::Clicked(Buttons::Delete(Box::new(data.clone()))))
                         .width(Length::Fixed(90.))
@@ -514,7 +522,7 @@ impl Application for Wam {
                         .style(theme::Button::Positive);
                     let url = Button::new(text(host))
                         .width(Length::FillPortion(3))
-                        .style(theme::Button::Secondary);
+                        .style(theme::Button::Positive);
 
                     let row = row![edit, delete, name, url]
                         .spacing(10)
@@ -528,14 +536,15 @@ impl Application for Wam {
         let mut installed = column![];
 
         if !webapps.is_empty() {
-            installed = installed.push(text("Installed").size(32.)).spacing(30);
+            installed = installed.push(text("INSTALLED").size(26.)).spacing(10);
 
             let scrollable_list = scrollable(app_list).width(Length::Fill);
 
             installed = installed.push(scrollable_list);
         }
 
-        let col = column![row, app_arguments, cat_row, browsers_row, installed,].spacing(24);
+        let col = column![row, app_arguments, cat_row, browsers_row].spacing(20);
+        let col = column![col, installed].spacing(50);
 
         let underlay = Container::new(col).padding(30);
 
