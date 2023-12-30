@@ -531,7 +531,7 @@ impl Application for Wam {
                         .on_press(AppMessage::Clicked(Buttons::Delete(Box::new(data.clone()))))
                         .width(Length::Fixed(90.))
                         .style(theme::Button::Secondary);
-                    let name = text(&format!("{}   [{}]", data.name, data.url))
+                    let name = text(&format!("{}  -  {}", data.name, data.url))
                         .size(18.)
                         .width(Length::Fill)
                         .style(theme::Text::Color(Color::from_rgba(255., 255., 255., 0.5)));
