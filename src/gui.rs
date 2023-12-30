@@ -23,6 +23,7 @@ pub enum Buttons {
     Edit(Box<WebAppLauncher>),
     Delete(Box<WebAppLauncher>),
     Navbar(bool),
+    IsolatedProfile(bool),
     Incognito(bool),
 }
 
@@ -299,6 +300,11 @@ impl Application for Wam {
 
                     Command::none()
                 }
+                Buttons::IsolatedProfile(selected) => {
+                    self.app_isolated = selected;
+
+                    Command::none()
+                }
             },
             AppMessage::Browser(browser) => {
                 self.app_browser = browser;
@@ -470,17 +476,43 @@ impl Application for Wam {
         .width(Length::Fill)
         .padding(10);
 
-        let navbar = toggler(String::from("Nav Bar"), self.app_navbar, |b| {
-            AppMessage::Clicked(Buttons::Navbar(b))
-        })
-        .width(Length::Fill);
+        let browser_specific = match self.app_browser._type {
+            crate::common::BrowserType::Firefox => {
+                toggler(String::from("Nav Bar"), self.app_navbar, |b| {
+                    AppMessage::Clicked(Buttons::Navbar(b))
+                })
+                .width(Length::Fill)
+            }
+            crate::common::BrowserType::FirefoxFlatpak => {
+                toggler(String::from("Nav Bar"), self.app_navbar, |b| {
+                    AppMessage::Clicked(Buttons::Navbar(b))
+                })
+                .width(Length::Fill)
+            }
+            crate::common::BrowserType::Librewolf => {
+                toggler(String::from("Nav Bar"), self.app_navbar, |b| {
+                    AppMessage::Clicked(Buttons::Navbar(b))
+                })
+                .width(Length::Fill)
+            }
+            crate::common::BrowserType::WaterfoxFlatpak => {
+                toggler(String::from("Nav Bar"), self.app_navbar, |b| {
+                    AppMessage::Clicked(Buttons::Navbar(b))
+                })
+                .width(Length::Fill)
+            }
+            _ => toggler(String::from("Isolated Profile"), self.app_isolated, |b| {
+                AppMessage::Clicked(Buttons::IsolatedProfile(b))
+            })
+            .width(Length::Fill),
+        };
 
         let incognito = toggler(String::from("Private Mode"), self.app_incognito, |b| {
             AppMessage::Clicked(Buttons::Incognito(b))
         })
         .width(Length::Fill);
 
-        let cat_row = row![category, incognito, navbar]
+        let cat_row = row![category, incognito, browser_specific]
             .align_items(Alignment::Center)
             .spacing(20);
 

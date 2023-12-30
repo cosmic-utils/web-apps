@@ -411,7 +411,7 @@ pub enum BrowserType {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Browser {
-    _type: BrowserType,
+    pub _type: BrowserType,
     pub name: String,
     pub exec: String,
     test: PathBuf,
