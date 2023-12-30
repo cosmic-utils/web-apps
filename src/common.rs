@@ -527,8 +527,10 @@ pub async fn find_icons(icon_name: String, url: Option<String>) -> Vec<String> {
     result.extend(system_icons);
 
     if let Some(u) = url {
-        if let Ok(data) = download_favicon(&u).await {
-            result.extend(data)
+        if u.starts_with("http") {
+            if let Ok(data) = download_favicon(&u).await {
+                result.extend(data)
+            }
         }
     }
 
