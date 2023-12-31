@@ -229,7 +229,7 @@ impl WebAppLauncher {
 
         match &self.app_base_dir {
             Some(dir) => {
-                let profile = dir.join("firefox/profile");
+                let profile = dir.join("profile");
                 copy_dir(profile, profile_path.clone()).expect("cant copy firefox profile dir");
             }
             None => {}
