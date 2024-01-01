@@ -466,6 +466,7 @@ impl Application for Wam {
 
         let dl_btn = Button::new(
             svg(svg::Handle::from_path(search_ico))
+                .style(theme::Svg::Custom(Box::new(AdaptiveSvg)))
                 .width(Length::Fill)
                 .height(Length::Fill),
         )
@@ -699,7 +700,7 @@ impl Wam {
             let default_ico = default_ico.to_str().expect("cant find needed icon");
             let default_icon_path = String::from(default_ico);
             let handler = svg::Handle::from_path(default_icon_path);
-            let default = svg(handler);
+            let default = svg(handler).style(theme::Svg::Custom(Box::new(AdaptiveSvg)));
 
             Button::new(default)
                 .width(Length::Fill)
@@ -810,6 +811,18 @@ impl text_input::StyleSheet for InputField {
             border_width: 0.,
             border_color: Color::TRANSPARENT,
             ..active
+        }
+    }
+}
+
+struct AdaptiveSvg;
+
+impl svg::StyleSheet for AdaptiveSvg {
+    type Style = Theme;
+
+    fn appearance(&self, style: &Self::Style) -> svg::Appearance {
+        svg::Appearance {
+            color: Some(style.palette().text),
         }
     }
 }
