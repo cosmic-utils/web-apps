@@ -142,15 +142,38 @@ impl Application for Wam {
     }
 
     fn theme(&self) -> Self::Theme {
-        let custom_palette = Custom::new(Palette {
-            background: Color::from_rgb(0.1, 0.1, 0.1),
-            text: Color::from_rgba(1.0, 1.0, 1.0, 0.75),
+        let gsettings = "gsettings";
+
+        let cs_cmd = std::process::Command::new(gsettings)
+            .arg("get")
+            .arg("org.gnome.desktop.interface")
+            .arg("color-scheme")
+            .output()
+            .expect("Can't get current color scheme");
+
+        let mut palette: Palette = Palette {
+            background: Color::WHITE,
+            text: Color::from_rgba(0.0, 0.0, 0.0, 0.75),
             primary: Color::from_rgb(0.0, 0.28, 0.73),
             success: Color::from_rgb(0.24, 0.57, 0.25),
             danger: Color::from_rgb(0.90, 0.17, 0.31),
-        });
+        };
 
-        iced::Theme::Custom(Box::new(custom_palette))
+        if cs_cmd.status.success() {
+            let color_scheme = String::from_utf8_lossy(&cs_cmd.stdout);
+
+            if color_scheme.trim().contains("dark") {
+                palette = Palette {
+                    background: Color::from_rgb(0.1, 0.1, 0.1),
+                    text: Color::from_rgba(1.0, 1.0, 1.0, 0.75),
+                    primary: Color::from_rgb(0.0, 0.28, 0.73),
+                    success: Color::from_rgb(0.24, 0.57, 0.25),
+                    danger: Color::from_rgb(0.90, 0.17, 0.31),
+                }
+            }
+        }
+
+        iced::Theme::Custom(Box::new(Custom::new(palette)))
     }
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
@@ -744,13 +767,13 @@ struct InputField;
 impl text_input::StyleSheet for InputField {
     type Style = Theme;
 
-    fn active(&self, _style: &Self::Style) -> text_input::Appearance {
+    fn active(&self, style: &Self::Style) -> text_input::Appearance {
         text_input::Appearance {
             background: iced::Background::Color(Color::TRANSPARENT),
             border_radius: BorderRadius::from(4.),
             border_width: 1.,
-            border_color: Color::from_rgba(0.76, 0.76, 0.76, 0.05),
-            icon_color: Color::WHITE,
+            border_color: style.palette().text,
+            icon_color: style.palette().text,
         }
     }
 
@@ -763,16 +786,16 @@ impl text_input::StyleSheet for InputField {
         }
     }
 
-    fn placeholder_color(&self, _style: &Self::Style) -> Color {
-        Color::from_rgba(255., 255., 255., 0.75)
+    fn placeholder_color(&self, style: &Self::Style) -> Color {
+        style.palette().text
     }
 
-    fn value_color(&self, _style: &Self::Style) -> Color {
-        Color::WHITE
+    fn value_color(&self, style: &Self::Style) -> Color {
+        style.palette().text
     }
 
-    fn disabled_color(&self, _style: &Self::Style) -> Color {
-        Color::from_rgba(255., 255., 255., 0.30)
+    fn disabled_color(&self, style: &Self::Style) -> Color {
+        style.palette().text
     }
 
     fn selection_color(&self, _style: &Self::Style) -> Color {
