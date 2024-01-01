@@ -148,8 +148,7 @@ impl Application for Wam {
             .arg("get")
             .arg("org.gnome.desktop.interface")
             .arg("color-scheme")
-            .output()
-            .expect("Can't get current color scheme");
+            .output();
 
         let mut palette: Palette = Palette {
             background: Color::WHITE,
@@ -159,8 +158,8 @@ impl Application for Wam {
             danger: Color::from_rgb(0.90, 0.17, 0.31),
         };
 
-        if cs_cmd.status.success() {
-            let color_scheme = String::from_utf8_lossy(&cs_cmd.stdout);
+        if let Ok(cmd) = cs_cmd {
+            let color_scheme = String::from_utf8_lossy(&cmd.stdout);
 
             if color_scheme.trim().contains("dark") {
                 palette = Palette {
@@ -171,7 +170,7 @@ impl Application for Wam {
                     danger: Color::from_rgb(0.90, 0.17, 0.31),
                 }
             }
-        }
+        };
 
         iced::Theme::Custom(Box::new(Custom::new(palette)))
     }
