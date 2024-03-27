@@ -1,13 +1,13 @@
 [package]
 name = "wam-rust"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iced = { git = "https://github.com/iced-rs/iced", features = ["tokio", "advanced", "image", "svg"] }
-iced_aw = { git = "https://github.com/iced-rs/iced_aw", features = ["card", "modal", "wrap"] }
+iced = { version="0.12.1", features = ["tokio", "advanced", "image", "svg"] }
+iced_aw = { version="0.8.0", features = ["card", "modal", "wrap"] }
 rand = "0.8.5"
 reqwest = { version = "0.11.23", features = ["blocking"] }
 anyhow = "1.0.77"

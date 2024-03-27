@@ -1,14 +1,15 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 use iced::{
     alignment::{Horizontal, Vertical},
+    border::Radius,
     theme::{self, Custom, Palette},
     widget::{
         button::{self},
         column, image, pick_list, row, scrollable, svg, text, text_input, toggler, Button,
         Container, Row, TextInput,
     },
-    Alignment, Application, BorderRadius, Color, Command, Length, Theme,
+    Alignment, Application, Border, Color, Command, Length, Theme,
 };
 use iced_aw::{modal, Card, Wrap};
 use url::Url;
@@ -172,7 +173,7 @@ impl Application for Wam {
             }
         };
 
-        iced::Theme::Custom(Box::new(Custom::new(palette)))
+        iced::Theme::Custom(Arc::new(Custom::new(String::from("WAMColors"), palette)))
     }
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
@@ -446,7 +447,7 @@ impl Application for Wam {
         }
     }
 
-    fn view(&self) -> iced::Element<'_, Self::Message, iced::Renderer<Self::Theme>> {
+    fn view(&self) -> iced::Element<'_, Self::Message, iced::Theme> {
         let app_title = text_input("Title", &self.app_title)
             .on_input(AppMessage::Title)
             .padding(10)
@@ -770,9 +771,11 @@ impl text_input::StyleSheet for InputField {
     fn active(&self, style: &Self::Style) -> text_input::Appearance {
         text_input::Appearance {
             background: iced::Background::Color(Color::TRANSPARENT),
-            border_radius: BorderRadius::from(4.),
-            border_width: 1.,
-            border_color: style.palette().text,
+            border: Border {
+                color: style.palette().text,
+                width: 1.,
+                radius: Radius::from(4.),
+            },
             icon_color: style.palette().text,
         }
     }
@@ -780,8 +783,11 @@ impl text_input::StyleSheet for InputField {
     fn focused(&self, style: &Self::Style) -> text_input::Appearance {
         let active = self.active(style);
         text_input::Appearance {
-            border_width: 1.,
-            border_color: Color::from_rgba(0.76, 0.76, 0.76, 0.20),
+            border: Border {
+                color: Color::from_rgba(0.76, 0.76, 0.76, 0.20),
+                width: 1.,
+                ..Default::default()
+            },
             ..active
         }
     }
@@ -807,8 +813,11 @@ impl text_input::StyleSheet for InputField {
 
         text_input::Appearance {
             background: iced::Background::Color(Color::TRANSPARENT),
-            border_width: 0.,
-            border_color: Color::TRANSPARENT,
+            border: Border {
+                color: Color::TRANSPARENT,
+                width: 0.,
+                ..Default::default()
+            },
             ..active
         }
     }
