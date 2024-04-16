@@ -23,7 +23,7 @@ scraper = "0.18.1"
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic"
 default-features = false
-features = ["wayland", "tokio"]
+features = ["tokio", "multi-window", "winit"]
 
 [build-dependencies]
 xdg = "2.5.2"

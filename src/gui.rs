@@ -1,19 +1,20 @@
+#![allow(dead_code)]
+// z gh
 use cosmic::{
-    app::{Command, Core, Message},
+    app::{Command, Core},
     executor,
-    iced::{Alignment, Length},
-    iced_widget::{pick_list, scrollable, text, text_input, toggler, Button, Container},
+    iced::{self, event, window},
+    iced_core::{Alignment, Length, Point},
+    iced_widget::{pick_list, toggler, Button, Container},
+    iced_widget::{scrollable, text, text_input},
     widget::{Column, Row},
-    Application, Element,
+    ApplicationExt, Element,
 };
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 use url::Url;
 use xdg::BaseDirectories;
 
-use crate::common::{
-    find_icons, get_icon_name_from_url, get_supported_browsers, get_webapps, image_from_memory,
-    move_icon, svg_from_memory, Browser, WebAppLauncher,
-};
+use crate::common::{get_supported_browsers, get_webapps, Browser, WebAppLauncher};
 
 #[derive(Debug, Clone)]
 pub enum Buttons {
@@ -27,10 +28,7 @@ pub enum Buttons {
 }
 
 #[derive(Debug, Clone)]
-pub enum AppMessage {
-    PushIcon(Icon),
-    FoundIcons(Vec<String>),
-    SetIcon(Icon),
+pub enum WamMessage {
     Result,
     Clicked(Buttons),
     Title(String),
@@ -38,8 +36,15 @@ pub enum AppMessage {
     Arguments(String),
     Browser(Browser),
     Category(String),
-    ErrorLoadingIcon,
-    SelectIcon(Icon),
+}
+
+#[derive(Debug, Clone)]
+pub enum Message {
+    CloseWindow(window::Id),
+    WindowOpened(window::Id, Option<Point>),
+    WindowClosed(window::Id),
+    OpenIconPicker,
+    WamStruct(WamMessage),
 }
 
 #[derive(Debug, Clone)]
@@ -60,8 +65,20 @@ impl Icon {
     }
 }
 
-pub struct Wam {
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug)]
+pub enum MultiWindow {
+    App(Wam),
+    Picker(IconPicker),
+}
+
+pub struct Window {
     core: Core,
+    windows: HashMap<window::Id, MultiWindow>,
+}
+
+#[derive(Debug)]
+pub struct Wam {
     pub icons_paths: Vec<String>,
     pub icons: Option<Vec<Icon>>,
     pub app_codename: Option<String>,
@@ -78,242 +95,196 @@ pub struct Wam {
     _icon_searching: String,
     selected_icon: Option<Icon>,
     app_browsers: Vec<Browser>,
-    edit_mode: bool,
-    launcher: Option<Box<WebAppLauncher>>,
+    _edit_mode: bool,
+    _launcher: Option<Box<WebAppLauncher>>,
     app_base_dir: PathBuf,
 }
 
-impl Application for Wam {
+#[derive(Debug)]
+pub struct IconPicker {
+    input: String,
+}
+
+impl cosmic::Application for Window {
     type Executor = executor::Default;
-    type Message = AppMessage;
     type Flags = ();
+    type Message = Message;
 
-    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        match message {
-            AppMessage::Title(text) => {
-                self.app_title = text;
+    const APP_ID: &'static str = "org.cosmic.WamRust";
 
-                Command::none()
-            }
-            AppMessage::Url(url) => {
-                self.app_url = url;
-
-                Command::none()
-            }
-            AppMessage::Arguments(args) => {
-                self.app_parameters = args;
-
-                Command::none()
-            }
-            AppMessage::PushIcon(icon) => {
-                if let Some(vec) = self.icons.as_mut() {
-                    if vec.is_empty() {
-                        self.selected_icon = Some(icon.clone());
-                        if !&icon.path.starts_with("http") {
-                            self.app_icon = icon.path.clone()
-                        } else {
-                            self.app_icon =
-                                move_icon(icon.path.clone(), self.app_title.replace(' ', ""))
-                                    .expect("cant download icon")
-                        }
-                    }
-
-                    vec.push(icon.clone());
-                }
-                Command::none()
-            }
-            AppMessage::FoundIcons(result) => {
-                if !result.is_empty() {
-                    let commands: Vec<Command<AppMessage>> = result
-                        .into_iter()
-                        .map(|path| {
-                            let is_svg = path.ends_with(".svg");
-
-                            match is_svg {
-                                true => {
-                                    Command::perform(svg_from_memory(path), |result| match result {
-                                        Ok(icon) => Message::App(AppMessage::PushIcon(icon)),
-                                        Err(_) => Message::App(AppMessage::ErrorLoadingIcon),
-                                    })
-                                }
-                                false => {
-                                    Command::perform(image_from_memory(path), |result| match result
-                                    {
-                                        Ok(icon) => Message::App(AppMessage::PushIcon(icon)),
-                                        Err(_) => Message::App(AppMessage::ErrorLoadingIcon),
-                                    })
-                                }
-                            }
-                        })
-                        .collect();
-
-                    Command::batch(commands)
-                } else {
-                    Command::none()
-                }
-            }
-            AppMessage::Clicked(btn) => {
-                match btn {
-                    Buttons::SearchFavicon => {
-                        if let Some(icons) = self.icons.as_mut() {
-                            icons.clear()
-                        };
-
-                        if !self.app_url.is_empty() {
-                            let url = self.app_url.clone();
-
-                            let to_find =
-                                if url.starts_with("http://") || url.starts_with("https://") {
-                                    get_icon_name_from_url(url.clone())
-                                } else {
-                                    let prefix = "https://";
-                                    self.app_url = format!("{}{}", prefix, url);
-
-                                    get_icon_name_from_url(self.app_url.clone())
-                                };
-
-                            Command::perform(
-                                find_icons(to_find, Some(self.app_url.clone())),
-                                |icons| Message::App(AppMessage::FoundIcons(icons)),
-                            )
-                        } else {
-                            Command::none()
-                        }
-                    }
-                    Buttons::Edit(launcher) => {
-                        self.edit_mode = true;
-                        self.launcher = Some(launcher.clone());
-
-                        self.app_title = launcher.name;
-                        self.app_url = launcher.url;
-                        self.app_icon = launcher.icon.clone();
-                        self.app_parameters = launcher.custom_parameters;
-                        self.app_category = launcher.category;
-                        self.app_browser = Browser::web_browser(launcher.web_browser.name)
-                            .expect("browser not found");
-                        self.app_navbar = launcher.navbar;
-                        self.app_incognito = launcher.is_incognito;
-
-                        let is_svg = launcher.icon.ends_with(".svg");
-
-                        match is_svg {
-                            true => Command::perform(svg_from_memory(launcher.icon), |result| {
-                                match result {
-                                    Ok(icon) => Message::App(AppMessage::SetIcon(icon)),
-                                    Err(_) => Message::App(AppMessage::ErrorLoadingIcon),
-                                }
-                            }),
-                            false => Command::perform(image_from_memory(launcher.icon), |result| {
-                                match result {
-                                    Ok(icon) => Message::App(AppMessage::SetIcon(icon)),
-                                    Err(_) => Message::App(AppMessage::ErrorLoadingIcon),
-                                }
-                            }),
-                        }
-                    }
-                    Buttons::Delete(launcher) => {
-                        let _ = launcher.delete();
-
-                        Command::none()
-                    }
-                    Buttons::Navbar(selected) => {
-                        self.app_navbar = selected;
-
-                        Command::none()
-                    }
-                    Buttons::Incognito(selected) => {
-                        self.app_incognito = selected;
-
-                        Command::none()
-                    }
-                    Buttons::IsolatedProfile(selected) => {
-                        self.app_isolated = selected;
-
-                        Command::none()
-                    }
-                }
-            }
-            AppMessage::Browser(browser) => {
-                self.app_browser = browser;
-
-                Command::none()
-            }
-            AppMessage::Result => {
-                let launcher = if let Some(launcher) = self.launcher.to_owned() {
-                    let _ = launcher.delete();
-                    Box::new(WebAppLauncher::new(
-                        self.app_title.clone(),
-                        Some(launcher.codename),
-                        self.app_url.clone(),
-                        self.app_icon.clone(),
-                        self.app_category.clone(),
-                        self.app_browser.clone(),
-                        self.app_parameters.clone(),
-                        self.app_isolated,
-                        self.app_navbar,
-                        self.app_incognito,
-                    ))
-                } else {
-                    Box::new(WebAppLauncher::new(
-                        self.app_title.clone(),
-                        None,
-                        self.app_url.clone(),
-                        self.app_icon.clone(),
-                        self.app_category.clone(),
-                        self.app_browser.clone(),
-                        self.app_parameters.clone(),
-                        self.app_isolated,
-                        self.app_navbar,
-                        self.app_incognito,
-                    ))
-                };
-
-                if launcher.is_valid {
-                    let _ = launcher.create();
-                }
-
-                Command::none()
-            }
-            AppMessage::Category(category) => {
-                self.app_category = category;
-
-                Command::none()
-            }
-            AppMessage::ErrorLoadingIcon => Command::none(),
-            AppMessage::SetIcon(icon) => {
-                let path = icon.path;
-
-                if let Ok(saved) = move_icon(path, self.app_title.clone()) {
-                    self.app_icon = saved.clone();
-
-                    if saved.ends_with(".svg") {
-                        Command::perform(svg_from_memory(saved), |result| {
-                            Message::App(AppMessage::SelectIcon(result.unwrap()))
-                        })
-                    } else {
-                        Command::perform(image_from_memory(saved), |result| {
-                            Message::App(AppMessage::SelectIcon(result.unwrap()))
-                        })
-                    }
-                } else {
-                    Command::none()
-                }
-            }
-            AppMessage::SelectIcon(ico) => {
-                self.selected_icon = Some(ico);
-
-                Command::none()
-            }
-        }
+    fn core(&self) -> &cosmic::app::Core {
+        &self.core
     }
 
+    fn core_mut(&mut self) -> &mut cosmic::app::Core {
+        &mut self.core
+    }
+
+    fn init(
+        core: cosmic::app::Core,
+        _flags: Self::Flags,
+    ) -> (
+        Self,
+        cosmic::iced::Command<cosmic::app::Message<Self::Message>>,
+    ) {
+        let browsers = get_supported_browsers();
+        let browser = &browsers[0];
+
+        let base_dir = BaseDirectories::new().expect("cant follow base directories");
+        let local_share = base_dir.get_data_home();
+        let wam_rust_path = local_share.join("wam-rust");
+
+        let manager = Wam {
+            icons_paths: Vec::new(),
+            icons: Some(Vec::new()),
+            app_codename: None,
+            app_title: String::new(),
+            app_url: String::new(),
+            app_icon: String::new(),
+            app_parameters: String::new(),
+            app_category: String::from("Web"),
+            app_browser_name: String::from("Browser"),
+            app_browser: browser.clone(),
+            app_navbar: false,
+            app_incognito: false,
+            app_isolated: true,
+            _icon_searching: String::new(),
+            selected_icon: None,
+            app_browsers: browsers,
+            _edit_mode: false,
+            _launcher: None,
+            app_base_dir: wam_rust_path,
+        };
+
+        let windows = Window {
+            windows: HashMap::from([(window::Id::MAIN, MultiWindow::App(manager))]),
+            core,
+        };
+
+        (windows, Command::none())
+    }
+
+    fn subscription(&self) -> cosmic::iced_futures::Subscription<Self::Message> {
+        event::listen_with(|event, _| {
+            if let iced::Event::Window(id, window_event) = event {
+                match window_event {
+                    window::Event::CloseRequested => Some(Message::CloseWindow(id)),
+                    window::Event::Opened { position, .. } => {
+                        Some(Message::WindowOpened(id, position))
+                    }
+                    window::Event::Closed => Some(Message::WindowClosed(id)),
+                    _ => None,
+                }
+            } else {
+                None
+            }
+        })
+    }
+
+    fn update(
+        &mut self,
+        message: Self::Message,
+    ) -> iced::Command<cosmic::app::Message<Self::Message>> {
+        match message {
+            Message::CloseWindow(id) => window::close(id),
+            Message::WindowClosed(id) => {
+                self.windows.remove(&id);
+                Command::none()
+            }
+            Message::WindowOpened(id, ..) => {
+                if let Some(window) = self.windows.get(&id) {
+                    println!("{:?}", window);
+
+                    Command::none()
+                } else {
+                    Command::none()
+                }
+            }
+            Message::OpenIconPicker => {
+                let count = self.windows.len() + 1;
+
+                let (id, spawn_window) = window::spawn(window::Settings {
+                    position: Default::default(),
+                    exit_on_close_request: count % 2 == 0,
+                    ..Default::default()
+                });
+
+                self.windows.insert(
+                    id,
+                    MultiWindow::Picker(IconPicker {
+                        input: String::from("dupa blada"),
+                    }),
+                );
+                _ = self.set_window_title(String::from("Select an Icon"), id);
+
+                spawn_window
+            }
+            Message::WamStruct(wam) => Command::none(),
+        }
+    }
+    fn view_window(&self, window_id: window::Id) -> Element<Message> {
+        let window = self.windows.get(&window_id).unwrap();
+
+        match window {
+            MultiWindow::App(main) => main.view(),
+            MultiWindow::Picker(picker) => picker.view(),
+        }
+    }
     fn view(&self) -> Element<Self::Message> {
+        self.view_window(window::Id::MAIN)
+    }
+}
+
+impl IconPicker {
+    fn view(&self) -> cosmic::prelude::Element<Message> {
+        text(self.input.to_string()).into()
+    }
+}
+
+impl Wam {
+    fn icon_picker_icon(&self, icon: Option<Icon>) -> Element<Message> {
+        let ico = if let Some(ico) = icon {
+            match ico.icon {
+                IconType::Raster(data) => Button::new(
+                    cosmic::widget::image(data)
+                        .width(Length::Fill)
+                        .height(Length::Fill),
+                )
+                .width(Length::Fixed(96.))
+                .height(Length::Fixed(96.)),
+                IconType::Svg(data) => Button::new(
+                    cosmic::widget::svg(data)
+                        .width(Length::Fill)
+                        .height(Length::Fill),
+                )
+                .width(Length::Fixed(96.))
+                .height(Length::Fixed(96.)),
+            }
+        } else {
+            let default_ico = &self.app_base_dir.join("icons/moleskine-icon.svg");
+            let default_ico = default_ico.to_str().expect("cant find needed icon");
+            let default_icon_path = String::from(default_ico);
+            let handler = cosmic::widget::svg::Handle::from_path(default_icon_path);
+            let default = cosmic::widget::svg(handler);
+
+            Button::new(default)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .width(Length::Fixed(96.))
+                .height(Length::Fixed(96.))
+                .on_press(Message::OpenIconPicker)
+        };
+
+        Container::new(ico).into()
+    }
+
+    fn view(&self) -> cosmic::prelude::Element<Message> {
         let app_title = text_input("Title", &self.app_title)
-            .on_input(AppMessage::Title)
+            .on_input(|s| Message::WamStruct(WamMessage::Title(s)))
             .padding(10)
             .width(Length::Fixed(340.));
         let app_url = text_input("URL", &self.app_url)
-            .on_input(AppMessage::Url)
+            .on_input(|s| Message::WamStruct(WamMessage::Url(s)))
             .padding(10)
             .width(Length::Fixed(340.));
 
@@ -329,7 +300,9 @@ impl Application for Wam {
                 .width(Length::Fill)
                 .height(Length::Fill),
         )
-        .on_press(AppMessage::Clicked(Buttons::SearchFavicon))
+        .on_press(Message::WamStruct(WamMessage::Clicked(
+            Buttons::SearchFavicon,
+        )))
         .width(Length::Fixed(96.))
         .height(Length::Fixed(96.));
 
@@ -346,7 +319,7 @@ impl Application for Wam {
         row = row.push(icon);
 
         let app_arguments = text_input("Non-standard arguments", &self.app_parameters)
-            .on_input(AppMessage::Arguments)
+            .on_input(|s| Message::WamStruct(WamMessage::Arguments(s)))
             .padding(10)
             .width(Length::Fill);
 
@@ -362,47 +335,45 @@ impl Application for Wam {
             String::from("Sound & Video"),
         ];
 
-        let category = pick_list(
-            categories.to_vec(),
-            Some(self.app_category.clone()),
-            AppMessage::Category,
-        )
+        let category = pick_list(categories.to_vec(), Some(self.app_category.clone()), |c| {
+            Message::WamStruct(WamMessage::Category(c))
+        })
         .width(Length::Fixed(200.))
         .padding(10);
 
         let browser_specific = match self.app_browser._type {
             crate::common::BrowserType::Firefox => {
                 toggler(String::from("Nav Bar"), self.app_navbar, |b| {
-                    AppMessage::Clicked(Buttons::Navbar(b))
+                    Message::WamStruct(WamMessage::Clicked(Buttons::Navbar(b)))
                 })
                 .width(Length::Fill)
             }
             crate::common::BrowserType::FirefoxFlatpak => {
                 toggler(String::from("Nav Bar"), self.app_navbar, |b| {
-                    AppMessage::Clicked(Buttons::Navbar(b))
+                    Message::WamStruct(WamMessage::Clicked(Buttons::Navbar(b)))
                 })
                 .width(Length::Fill)
             }
             crate::common::BrowserType::Librewolf => {
                 toggler(String::from("Nav Bar"), self.app_navbar, |b| {
-                    AppMessage::Clicked(Buttons::Navbar(b))
+                    Message::WamStruct(WamMessage::Clicked(Buttons::Navbar(b)))
                 })
                 .width(Length::Fill)
             }
             crate::common::BrowserType::WaterfoxFlatpak => {
                 toggler(String::from("Nav Bar"), self.app_navbar, |b| {
-                    AppMessage::Clicked(Buttons::Navbar(b))
+                    Message::WamStruct(WamMessage::Clicked(Buttons::Navbar(b)))
                 })
                 .width(Length::Fill)
             }
             _ => toggler(String::from("Isolated Profile"), self.app_isolated, |b| {
-                AppMessage::Clicked(Buttons::IsolatedProfile(b))
+                Message::WamStruct(WamMessage::Clicked(Buttons::IsolatedProfile(b)))
             })
             .width(Length::Fill),
         };
 
         let incognito = toggler(String::from("Private Mode"), self.app_incognito, |b| {
-            AppMessage::Clicked(Buttons::Incognito(b))
+            Message::WamStruct(WamMessage::Clicked(Buttons::Incognito(b)))
         })
         .width(Length::Fill);
 
@@ -414,13 +385,13 @@ impl Application for Wam {
         let app_browsers = pick_list(
             self.app_browsers.clone(),
             Some(self.app_browser.clone()),
-            AppMessage::Browser,
+            |b| Message::WamStruct(WamMessage::Browser(b)),
         )
         .width(Length::Fixed(200.))
         .padding(10);
 
         let app_done = Button::new("Done")
-            .on_press(AppMessage::Result)
+            .on_press(Message::WamStruct(WamMessage::Result))
             .width(Length::Fill)
             .padding(10);
 
@@ -435,10 +406,14 @@ impl Application for Wam {
             match app {
                 Ok(data) => {
                     let edit = Button::new("Edit")
-                        .on_press(AppMessage::Clicked(Buttons::Edit(Box::new(data.clone()))))
+                        .on_press(Message::WamStruct(WamMessage::Clicked(Buttons::Edit(
+                            Box::new(data.clone()),
+                        ))))
                         .width(Length::Fixed(90.));
                     let delete = Button::new("Delete")
-                        .on_press(AppMessage::Clicked(Buttons::Delete(Box::new(data.clone()))))
+                        .on_press(Message::WamStruct(WamMessage::Clicked(Buttons::Delete(
+                            Box::new(data.clone()),
+                        ))))
                         .width(Length::Fixed(90.));
 
                     let host = Url::parse(&data.url).expect("cant parse url");
@@ -478,127 +453,6 @@ impl Application for Wam {
         col2 = col2.push(installed);
 
         Container::new(col2).padding(30).into()
-    }
-
-    const APP_ID: &'static str = "webapp.manager.rust";
-
-    fn core(&self) -> &cosmic::app::Core {
-        &self.core
-    }
-
-    fn core_mut(&mut self) -> &mut cosmic::app::Core {
-        &mut self.core
-    }
-
-    fn init(
-        core: cosmic::app::Core,
-        _flags: Self::Flags,
-    ) -> (
-        Self,
-        cosmic::iced::Command<cosmic::app::Message<Self::Message>>,
-    ) {
-        let browsers = get_supported_browsers();
-        let browser = &browsers[0];
-
-        let base_dir = BaseDirectories::new().expect("cant follow base directories");
-        let local_share = base_dir.get_data_home();
-        let wam_rust_path = local_share.join("wam-rust");
-        (
-            Wam {
-                core,
-                icons_paths: Vec::new(),
-                icons: Some(Vec::new()),
-                app_codename: None,
-                app_title: String::new(),
-                app_url: String::new(),
-                app_icon: String::new(),
-                app_parameters: String::new(),
-                app_category: String::from("Web"),
-                app_browser_name: String::from("Browser"),
-                app_browser: browser.clone(),
-                app_navbar: false,
-                app_incognito: false,
-                app_isolated: true,
-                _icon_searching: String::new(),
-                selected_icon: None,
-                app_browsers: browsers,
-                edit_mode: false,
-                launcher: None,
-                app_base_dir: wam_rust_path,
-            },
-            Command::none(),
-        )
-    }
-}
-
-impl Wam {
-    // fn icons_container(&self, icons: Option<Vec<Icon>>) -> Element<'static, AppMessage> {
-    //     let search_field = TextInput::new("Search for icon", &self.icon_searching)
-    //         .on_input(AppMessage::CustomIconsSearch)
-    //         .on_submit(AppMessage::PerformIconSearch)
-    //         .padding(10)
-    //         .width(Length::Fill);
-    //
-    //     let mut container = Wrap::new().max_width(500.);
-    //
-    //     if icons.is_some() {
-    //         for ico in icons.unwrap().iter() {
-    //             let btn = match ico.clone().icon {
-    //                 IconType::Raster(icon) => Button::new(cosmic::widget::image(icon))
-    //                     .width(Length::Fixed(96.))
-    //                     .height(Length::Fixed(96.))
-    //                     .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone()))),
-    //                 IconType::Svg(icon) => Button::new(cosmic::widget::svg(icon))
-    //                     .width(Length::Fixed(96.))
-    //                     .height(Length::Fixed(96.))
-    //                     .on_press(AppMessage::Clicked(Buttons::Favicon(ico.path.clone()))),
-    //             };
-    //             container = container.push(btn);
-    //         }
-    //     }
-    //
-    //     let col = Column::new().spacing(20);
-    //     col.push(search_field);
-    //     col.push(container);
-    //
-    //     let scrollable = scrollable(col).into();
-    //
-    //     Element::from(scrollable)
-    // }
-
-    fn icon_picker_icon(&self, icon: Option<Icon>) -> Element<'static, AppMessage> {
-        let ico = if let Some(ico) = icon {
-            match ico.icon {
-                IconType::Raster(data) => Button::new(
-                    cosmic::widget::image(data)
-                        .width(Length::Fill)
-                        .height(Length::Fill),
-                )
-                .width(Length::Fixed(96.))
-                .height(Length::Fixed(96.)),
-                IconType::Svg(data) => Button::new(
-                    cosmic::widget::svg(data)
-                        .width(Length::Fill)
-                        .height(Length::Fill),
-                )
-                .width(Length::Fixed(96.))
-                .height(Length::Fixed(96.)),
-            }
-        } else {
-            let default_ico = &self.app_base_dir.join("icons/moleskine-icon.svg");
-            let default_ico = default_ico.to_str().expect("cant find needed icon");
-            let default_icon_path = String::from(default_ico);
-            let handler = cosmic::widget::svg::Handle::from_path(default_icon_path);
-            let default = cosmic::widget::svg(handler);
-
-            Button::new(default)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .width(Length::Fixed(96.))
-                .height(Length::Fixed(96.))
-        };
-
-        Container::new(ico).into()
     }
 }
 

@@ -1,13 +1,12 @@
-use cosmic::{app::Settings, iced::Size};
-use gui::Wam;
+mod common;
+mod gui;
+mod supported_browsers;
 
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 // use xdg::BaseDirectories;
 
-mod common;
-mod gui;
-mod supported_browsers;
+use gui::Window;
 
 fn main() -> cosmic::iced::Result {
     let subscriber = FmtSubscriber::builder()
@@ -22,13 +21,7 @@ fn main() -> cosmic::iced::Result {
     // let path = wam_rust_path.to_str().expect("cant get icon path");
     // let icon = load_icon(path).expect("app icon not found");
 
-    let settings = Settings::default()
-        .antialiasing(true)
-        .debug(false)
-        .default_text_size(16.0)
-        .size(Size::new(630., 630.));
-
-    cosmic::app::run::<Wam>(settings, ())
+    cosmic::app::run::<Window>(Default::default(), ())
 }
 
 // fn load_icon(path: &str) -> Result<Icon> {}

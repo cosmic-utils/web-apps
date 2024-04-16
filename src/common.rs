@@ -1,4 +1,4 @@
-#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_arguments, dead_code)]
 
 use cosmic::widget::{image, svg};
 use dircpy::copy_dir;
