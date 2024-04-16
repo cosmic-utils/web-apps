@@ -24,10 +24,9 @@ fn main() -> cosmic::iced::Result {
 
     let settings = Settings::default()
         .antialiasing(true)
-        .client_decorations(true)
         .debug(false)
         .default_text_size(16.0)
-        .size(Size::new(800., 800.));
+        .size(Size::new(630., 630.));
 
     cosmic::app::run::<Wam>(settings, ())
 }

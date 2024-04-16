@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use cosmic::{
     app::{Command, Core, Message},
     executor,
@@ -8,6 +6,7 @@ use cosmic::{
     widget::{Column, Row},
     Application, Element,
 };
+use std::path::PathBuf;
 use url::Url;
 use xdg::BaseDirectories;
 
@@ -32,13 +31,6 @@ pub enum AppMessage {
     PushIcon(Icon),
     FoundIcons(Vec<String>),
     SetIcon(Icon),
-    // modal
-    OpenModal,
-    // CloseModal,
-    // CancelButtonPressed,
-    // PerformIconSearch,
-    // CustomIconsSearch(String),
-    // common
     Result,
     Clicked(Buttons),
     Title(String),
@@ -83,7 +75,6 @@ pub struct Wam {
     pub app_navbar: bool,
     pub app_incognito: bool,
     pub app_isolated: bool,
-    show_modal: bool,
     _icon_searching: String,
     selected_icon: Option<Icon>,
     app_browsers: Vec<Browser>,
@@ -189,20 +180,6 @@ impl Application for Wam {
                             Command::none()
                         }
                     }
-                    // Buttons::Favicon(path) => {
-                    //     let is_svg = path.ends_with(".svg");
-                    //
-                    //     match is_svg {
-                    //         true => Command::perform(svg_from_memory(path), |result| match result {
-                    //             Ok(icon) => Message::App(AppMessage::SetIcon(icon)),
-                    //             Err(_) => Message::App(AppMessage::ErrorLoadingIcon),
-                    //         }),
-                    //         false => Command::perform(image_from_memory(path), |result| match result {
-                    //             Ok(icon) => Message::App(AppMessage::SetIcon(icon)),
-                    //             Err(_) => Message::App(AppMessage::ErrorLoadingIcon),
-                    //         }),
-                    //     }
-                    // }
                     Buttons::Edit(launcher) => {
                         self.edit_mode = true;
                         self.launcher = Some(launcher.clone());
@@ -302,25 +279,8 @@ impl Application for Wam {
 
                 Command::none()
             }
-            AppMessage::OpenModal => {
-                self.show_modal = true;
-
-                Command::none()
-            }
-            // AppMessage::CloseModal => {
-            //     self.show_modal = false;
-            //
-            //     Command::none()
-            // }
-            // AppMessage::CancelButtonPressed => {
-            //     self.show_modal = false;
-            //
-            //     Command::none()
-            // }
             AppMessage::ErrorLoadingIcon => Command::none(),
             AppMessage::SetIcon(icon) => {
-                self.show_modal = false;
-
                 let path = icon.path;
 
                 if let Ok(saved) = move_icon(path, self.app_title.clone()) {
@@ -343,25 +303,7 @@ impl Application for Wam {
                 self.selected_icon = Some(ico);
 
                 Command::none()
-            } // AppMessage::CustomIconsSearch(field) => {
-              //     self.icon_searching = field;
-              //
-              //     Command::none()
-              // }
-              // AppMessage::PerformIconSearch => {
-              //     if let Some(icons) = self.icons.as_mut() {
-              //         icons.clear()
-              //     };
-              //
-              //     if !self.icon_searching.is_empty() {
-              //         Command::perform(
-              //             find_icons(self.icon_searching.clone(), Some(self.app_url.clone())),
-              //             |vec| Message::App(AppMessage::FoundIcons(vec)),
-              //         )
-              //     } else {
-              //         Command::none()
-              //     }
-              // }
+            }
         }
     }
 
@@ -425,7 +367,7 @@ impl Application for Wam {
             Some(self.app_category.clone()),
             AppMessage::Category,
         )
-        .width(Length::Fill)
+        .width(Length::Fixed(200.))
         .padding(10);
 
         let browser_specific = match self.app_browser._type {
@@ -474,7 +416,7 @@ impl Application for Wam {
             Some(self.app_browser.clone()),
             AppMessage::Browser,
         )
-        .width(Length::Fill)
+        .width(Length::Fixed(200.))
         .padding(10);
 
         let app_done = Button::new("Done")
@@ -536,36 +478,6 @@ impl Application for Wam {
         col2 = col2.push(installed);
 
         Container::new(col2).padding(30).into()
-        // let underlay = Container::new(col2).padding(30);
-        //
-        // let overlay = if self.show_modal {
-        //     Some(
-        //         Card::new(
-        //             text("Icon Picker"),
-        //             self.icons_container(self.icons.clone()),
-        //         )
-        //         .foot(
-        //             Row::new().spacing(10).padding(5).width(Length::Fill).push(
-        //                 Button::new(text("Cancel").horizontal_alignment(Horizontal::Center))
-        //                     .width(Length::Fill)
-        //                     .on_press(AppMessage::CancelButtonPressed),
-        //             ),
-        //         )
-        //         .max_width(500.0)
-        //         .max_height(600.0)
-        //         .height(Length::Shrink)
-        //         .on_close(AppMessage::CloseModal),
-        //     )
-        // } else {
-        //     None
-        // };
-        //
-        // let modal = modal(underlay, overlay)
-        //     .backdrop(AppMessage::CloseModal)
-        //     .on_esc(AppMessage::CloseModal)
-        //     .align_y(cosmic::iced::alignment::Vertical::Center);
-        //
-        // Element::from(modal)
     }
 
     const APP_ID: &'static str = "webapp.manager.rust";
@@ -607,7 +519,6 @@ impl Application for Wam {
                 app_navbar: false,
                 app_incognito: false,
                 app_isolated: true,
-                show_modal: false,
                 _icon_searching: String::new(),
                 selected_icon: None,
                 app_browsers: browsers,
@@ -663,7 +574,6 @@ impl Wam {
                         .width(Length::Fill)
                         .height(Length::Fill),
                 )
-                .on_press(AppMessage::OpenModal)
                 .width(Length::Fixed(96.))
                 .height(Length::Fixed(96.)),
                 IconType::Svg(data) => Button::new(
@@ -671,7 +581,6 @@ impl Wam {
                         .width(Length::Fill)
                         .height(Length::Fill),
                 )
-                .on_press(AppMessage::OpenModal)
                 .width(Length::Fixed(96.))
                 .height(Length::Fixed(96.)),
             }
@@ -685,7 +594,6 @@ impl Wam {
             Button::new(default)
                 .width(Length::Fill)
                 .height(Length::Fill)
-                .on_press(AppMessage::OpenModal)
                 .width(Length::Fixed(96.))
                 .height(Length::Fixed(96.))
         };

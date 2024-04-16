@@ -3,8 +3,11 @@ name = "wam-rust"
 version = "0.1.1"
 edition = "2021"
 
+[profile.dev]
+opt-level = 1
+overflow-checks = false
+
 [dependencies]
-iced_aw = { version="0.8.0", features = ["card", "modal", "wrap"] }
 rand = "0.8.5"
 reqwest = { version = "0.11.23", features = ["blocking"] }
 anyhow = "1.0.77"
@@ -18,9 +21,9 @@ dircpy = "0.3.15"
 scraper = "0.18.1"
 
 [dependencies.libcosmic]
-git = "https://github.com/pop-os/libcosmic" 
+git = "https://github.com/pop-os/libcosmic"
 default-features = false
-features = ["debug", "wayland", "tokio"]
+features = ["wayland", "tokio"]
 
 [build-dependencies]
 xdg = "2.5.2"
