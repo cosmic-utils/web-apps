@@ -1,7 +1,7 @@
 #![allow(clippy::too_many_arguments)]
 
+use cosmic::widget::{image, svg};
 use dircpy::copy_dir;
-use iced::widget::{image, svg};
 use rand::{thread_rng, Rng};
 use reqwest::Client;
 use scraper::{Html, Selector};

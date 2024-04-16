@@ -3,10 +3,7 @@ name = "wam-rust"
 version = "0.1.1"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-iced = { version="0.12.1", features = ["tokio", "advanced", "image", "svg"] }
 iced_aw = { version="0.8.0", features = ["card", "modal", "wrap"] }
 rand = "0.8.5"
 reqwest = { version = "0.11.23", features = ["blocking"] }
@@ -19,6 +16,11 @@ walkdir = "2.4.0"
 dirs = "5.0"
 dircpy = "0.3.15"
 scraper = "0.18.1"
+
+[dependencies.libcosmic]
+git = "https://github.com/pop-os/libcosmic" 
+default-features = false
+features = ["debug", "wayland", "tokio"]
 
 [build-dependencies]
 xdg = "2.5.2"
