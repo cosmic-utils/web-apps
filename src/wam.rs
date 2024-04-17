@@ -1,23 +1,25 @@
-use std::path::PathBuf;
-
-use cosmic::{
-    iced::{Alignment, Length},
-    iced_widget::{PickList, Scrollable},
-    widget::{text, toggler, Button, Column, Container, Row, TextInput},
-    Element,
-};
-use url::Url;
-use xdg::BaseDirectories;
-
 use crate::{
     common::{get_supported_browsers, get_webapps, Browser, WebAppLauncher},
     gui::{Buttons, Message},
     iconpicker,
 };
 
+use cosmic::{
+    iced::{id, Alignment, Length},
+    iced_widget::{PickList, Scrollable},
+    theme,
+    widget::{text, toggler, Button, Column, Container, Row, TextInput},
+    Element,
+};
+
+use std::path::PathBuf;
+use url::Url;
+use xdg::BaseDirectories;
+
 #[derive(Debug, Clone)]
 pub struct Wam {
     pub app_codename: Option<String>,
+    pub app_title_id: id::Id,
     pub app_title: String,
     pub app_url: String,
     pub app_icon: String,
@@ -46,6 +48,7 @@ impl Wam {
 
         Wam {
             app_codename: None,
+            app_title_id: id::Id::new("app-title"),
             app_title: String::new(),
             app_url: String::new(),
             app_icon: String::new(),
@@ -104,13 +107,14 @@ impl Wam {
 
     pub fn view(&self) -> Element<Message> {
         let app_title = TextInput::new("Title", &self.app_title)
+            .id(self.app_title_id.clone())
             .on_input(Message::Title)
             .padding(10)
-            .width(Length::Fixed(340.));
+            .width(Length::Fill);
         let app_url = TextInput::new("URL", &self.app_url)
             .on_input(Message::Url)
             .padding(10)
-            .width(Length::Fixed(340.));
+            .width(Length::Fill);
 
         let mut col = Column::new().spacing(14);
         col = col.push(app_title);
@@ -220,7 +224,8 @@ impl Wam {
         let app_done = Button::new("Done")
             .on_press(Message::Result)
             .width(Length::Fill)
-            .padding(10);
+            .padding(10)
+            .style(theme::Button::Suggested);
 
         let mut browsers_row = Row::new().spacing(20);
         browsers_row = browsers_row.push(app_browsers);

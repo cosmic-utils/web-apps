@@ -1,15 +1,17 @@
+use crate::{
+    common::{find_icons, image_from_memory, move_icon, svg_from_memory, Browser, WebAppLauncher},
+    iconpicker, wam,
+};
+
 use cosmic::{
     app::Core,
     executor,
     iced::{self, event, window, Command},
     iced_core::Point,
+    iced_widget::text_input::focus,
     Element,
 };
 
-use crate::{
-    common::{find_icons, image_from_memory, move_icon, svg_from_memory, Browser, WebAppLauncher},
-    iconpicker, wam,
-};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
@@ -31,6 +33,7 @@ pub enum Message {
 
     // wam
     OpenIconPicker,
+    CloseIconPicker,
     Result,
     Clicked(Buttons),
     Title(String),
@@ -49,17 +52,12 @@ pub enum Message {
     SelectIcon(iconpicker::Icon),
 }
 
-#[derive(Debug)]
-pub enum MultiWindow {
-    App,
-    Picker,
-}
-
 pub struct Window {
     core: Core,
-    windows: HashMap<window::Id, MultiWindow>,
+    windows: HashMap<window::Id, wam::Wam>,
     main_window: wam::Wam,
-    icons_window: iconpicker::IconPicker,
+    icon_dialog: bool,
+    iconpicker: iconpicker::IconPicker,
 }
 
 impl cosmic::Application for Window {
@@ -88,9 +86,10 @@ impl cosmic::Application for Window {
         let icons_picker = iconpicker::IconPicker::new();
         let windows = Window {
             core,
-            windows: HashMap::from([(window::Id::MAIN, MultiWindow::App)]),
+            windows: HashMap::from([(window::Id::MAIN, manager.clone())]),
             main_window: manager,
-            icons_window: icons_picker,
+            icon_dialog: false,
+            iconpicker: icons_picker,
         };
 
         (windows, Command::none())
@@ -120,21 +119,24 @@ impl cosmic::Application for Window {
                 self.windows.remove(&id);
                 Command::none()
             }
-            Message::WindowOpened(_id, ..) => Command::none(),
+            Message::WindowOpened(id, ..) => {
+                if let Some(window) = self.windows.get(&id) {
+                    focus(window.app_title_id.clone())
+                } else {
+                    Command::none()
+                }
+            }
 
             // *** WAM STRUCT *** //
             Message::OpenIconPicker => {
-                let count = self.windows.len() + 1;
+                self.icon_dialog = true;
 
-                let (id, spawn_window) = window::spawn(window::Settings {
-                    position: Default::default(),
-                    exit_on_close_request: count % 2 == 0,
-                    ..Default::default()
-                });
+                focus(self.iconpicker.searching_id.clone())
+            }
+            Message::CloseIconPicker => {
+                self.icon_dialog = false;
 
-                self.windows.insert(id, MultiWindow::Picker);
-
-                spawn_window
+                focus(self.main_window.app_title_id.clone())
             }
             Message::Result => {
                 let launcher = if let Some(launcher) = self.main_window.launcher.to_owned() {
@@ -220,18 +222,18 @@ impl cosmic::Application for Window {
                 }
             }
             Message::PerformIconSearch => {
-                self.icons_window.icons.clear();
+                self.iconpicker.icons.clear();
 
                 Command::perform(
                     find_icons(
-                        self.icons_window.icon_searching.clone(),
+                        self.iconpicker.icon_searching.clone(),
                         Some(self.main_window.app_url.clone()),
                     ),
                     |icons| cosmic::app::message::app(Message::FoundIcons(icons)),
                 )
             }
             Message::CustomIconsSearch(input) => {
-                self.icons_window.icon_searching = input;
+                self.iconpicker.icon_searching = input;
 
                 Command::none()
             }
@@ -254,18 +256,7 @@ impl cosmic::Application for Window {
                 Command::batch(commands)
             }
             Message::PushIcon(icon) => {
-                // self.main_window.selected_icon = Some(icon.clone());
-                // if !&icon.path.starts_with("http") {
-                //     self.main_window.app_icon = icon.path.clone()
-                // } else {
-                //     self.main_window.app_icon = move_icon(
-                //         icon.path.clone(),
-                //         self.main_window.app_title.replace(' ', ""),
-                //     )
-                //     .expect("cant download icon")
-                // }
-
-                self.icons_window.icons.push(icon);
+                self.iconpicker.icons.push(icon);
 
                 Command::none()
             }
@@ -295,15 +286,18 @@ impl cosmic::Application for Window {
         }
     }
 
-    fn view_window(&self, window_id: window::Id) -> Element<Message> {
-        let window = self.windows.get(&window_id).unwrap();
+    fn dialog(&self) -> Option<Element<Self::Message>> {
+        if self.icon_dialog {
+            return Some(self.iconpicker.view());
+        };
 
-        match window {
-            MultiWindow::App => self.main_window.view(),
-            MultiWindow::Picker => self.icons_window.view(),
-        }
+        None
     }
-    fn view(&self) -> Element<Self::Message> {
+
+    fn view_window(&self, _window_id: window::Id) -> Element<Message> {
+        self.main_window.view()
+    }
+    fn view(&self) -> Element<Message> {
         self.view_window(window::Id::MAIN)
     }
 }

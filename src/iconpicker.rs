@@ -1,14 +1,15 @@
+use crate::gui::Message;
+
 use cosmic::{
-    iced::Length,
+    iced::{id, Length},
     iced_widget::Scrollable,
-    widget::{Button, Column, Container, TextInput},
+    widget::{dialog, Button, Column, Row, TextInput},
     Element,
 };
 
-use crate::gui::Message;
-
 #[derive(Debug, Clone)]
 pub struct IconPicker {
+    pub searching_id: id::Id,
     pub icon_searching: String,
     pub icons_paths: Vec<String>,
     pub icons: Vec<Icon>,
@@ -17,6 +18,7 @@ pub struct IconPicker {
 impl IconPicker {
     pub fn new() -> Self {
         IconPicker {
+            searching_id: id::Id::new("searching"),
             icon_searching: String::new(),
             icons_paths: Vec::new(),
             icons: Vec::new(),
@@ -25,10 +27,15 @@ impl IconPicker {
 
     pub fn view(&self) -> Element<Message> {
         let search_field = TextInput::new("Search for icon", &self.icon_searching)
+            .id(self.searching_id.clone())
             .on_input(Message::CustomIconsSearch)
             .on_submit(Message::PerformIconSearch)
             .padding(10)
-            .width(Length::Fill);
+            .width(Length::FillPortion(3));
+        let close_dialog = Button::new("Close")
+            .on_press(Message::CloseIconPicker)
+            .padding(10)
+            .width(Length::FillPortion(1));
 
         let mut container = crate::wrap::Wrap::new();
 
@@ -50,9 +57,10 @@ impl IconPicker {
             .width(Length::Fill)
             .height(Length::Fill);
 
-        let col = Column::new().push(search_field).push(scrollable);
+        let row = Row::new().push(search_field).push(close_dialog).spacing(10);
+        let col = Column::new().push(row).push(scrollable).spacing(30);
 
-        Container::new(col).into()
+        dialog("Select icon for your app").control(col).into()
     }
 }
 
