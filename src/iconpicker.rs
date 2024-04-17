@@ -11,7 +11,7 @@ use crate::gui::Message;
 pub struct IconPicker {
     pub icon_searching: String,
     pub icons_paths: Vec<String>,
-    pub icons: Option<Vec<Icon>>,
+    pub icons: Vec<Icon>,
 }
 
 impl IconPicker {
@@ -19,7 +19,7 @@ impl IconPicker {
         IconPicker {
             icon_searching: String::new(),
             icons_paths: Vec::new(),
-            icons: None,
+            icons: Vec::new(),
         }
     }
 
@@ -32,19 +32,16 @@ impl IconPicker {
 
         let mut container = Column::new().max_width(500.);
 
-        if self.icons.is_some() {
-            tracing::info!("hahaaa");
-            for ico in self.icons.as_ref().unwrap().iter() {
-                let btn = match ico.clone().icon {
-                    IconType::Raster(icon) => Button::new(cosmic::widget::image(icon))
-                        .width(Length::Fixed(96.))
-                        .height(Length::Fixed(96.)),
-                    IconType::Svg(icon) => Button::new(cosmic::widget::svg(icon))
-                        .width(Length::Fixed(96.))
-                        .height(Length::Fixed(96.)),
-                };
-                container = container.push(btn);
-            }
+        for ico in self.icons.iter() {
+            let btn = match ico.clone().icon {
+                IconType::Raster(icon) => Button::new(cosmic::widget::image(icon))
+                    .width(Length::Fixed(96.))
+                    .height(Length::Fixed(96.)),
+                IconType::Svg(icon) => Button::new(cosmic::widget::svg(icon))
+                    .width(Length::Fixed(96.))
+                    .height(Length::Fixed(96.)),
+            };
+            container = container.push(btn);
         }
 
         let col = Column::new().push(search_field).push(container).spacing(20);

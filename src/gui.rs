@@ -47,7 +47,6 @@ pub enum Message {
     PushIcon(iconpicker::Icon),
     SetIcon(iconpicker::Icon),
     SelectIcon(iconpicker::Icon),
-    ErrorLoadingIcon,
 }
 
 #[derive(Debug)]
@@ -209,9 +208,7 @@ impl cosmic::Application for Window {
             // *** ICON PICKER **** //
             Message::Favicon(_) => todo!(),
             Message::PerformIconSearch => {
-                if let Some(icons) = self.icons_window.icons.as_mut() {
-                    icons.clear()
-                };
+                self.icons_window.icons.clear();
 
                 Command::perform(
                     find_icons(
@@ -244,24 +241,21 @@ impl cosmic::Application for Window {
 
                 Command::batch(commands)
             }
-            Message::ErrorLoadingIcon => Command::none(),
             Message::PushIcon(icon) => {
-                if let Some(vec) = self.icons_window.icons.as_mut() {
-                    if vec.is_empty() {
-                        self.main_window.selected_icon = Some(icon.clone());
-                        if !&icon.path.starts_with("http") {
-                            self.main_window.app_icon = icon.path.clone()
-                        } else {
-                            self.main_window.app_icon = move_icon(
-                                icon.path.clone(),
-                                self.main_window.app_title.replace(' ', ""),
-                            )
-                            .expect("cant download icon")
-                        }
-                    }
+                // self.main_window.selected_icon = Some(icon.clone());
+                // if !&icon.path.starts_with("http") {
+                //     self.main_window.app_icon = icon.path.clone()
+                // } else {
+                //     self.main_window.app_icon = move_icon(
+                //         icon.path.clone(),
+                //         self.main_window.app_title.replace(' ', ""),
+                //     )
+                //     .expect("cant download icon")
+                // }
 
-                    vec.push(icon.clone());
-                }
+                println!("{:?}", icon);
+                self.icons_window.icons.push(icon);
+
                 Command::none()
             }
             Message::SetIcon(icon) => {
