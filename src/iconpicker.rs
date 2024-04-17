@@ -3,6 +3,7 @@ use crate::gui::Message;
 use cosmic::{
     iced::{id, Length},
     iced_widget::Scrollable,
+    theme,
     widget::{dialog, Button, Column, Row, TextInput},
     Element,
 };
@@ -37,18 +38,20 @@ impl IconPicker {
             .padding(10)
             .width(Length::FillPortion(1));
 
-        let mut container = crate::wrap::Wrap::new();
+        let mut container = crate::wrap::Wrap::new().spacing(8.);
 
         for ico in self.icons.iter() {
             let btn = match ico.clone().icon {
                 IconType::Raster(icon) => Button::new(cosmic::widget::image(icon))
                     .width(Length::Fixed(96.))
                     .height(Length::Fixed(96.))
-                    .on_press(Message::Favicon(ico.path.clone())),
+                    .on_press(Message::Favicon(ico.path.clone()))
+                    .style(theme::Button::Transparent),
                 IconType::Svg(icon) => Button::new(cosmic::widget::svg(icon))
                     .width(Length::Fixed(96.))
                     .height(Length::Fixed(96.))
-                    .on_press(Message::Favicon(ico.path.clone())),
+                    .on_press(Message::Favicon(ico.path.clone()))
+                    .style(theme::Button::Transparent),
             };
             container = container.push(btn);
         }

@@ -77,7 +77,8 @@ impl Wam {
                 )
                 .on_press(Message::OpenIconPicker)
                 .width(Length::Fixed(96.))
-                .height(Length::Fixed(96.)),
+                .height(Length::Fixed(96.))
+                .style(theme::Button::Transparent),
                 iconpicker::IconType::Svg(data) => Button::new(
                     cosmic::widget::svg(data)
                         .width(Length::Fill)
@@ -85,7 +86,8 @@ impl Wam {
                 )
                 .on_press(Message::OpenIconPicker)
                 .width(Length::Fixed(96.))
-                .height(Length::Fixed(96.)),
+                .height(Length::Fixed(96.))
+                .style(theme::Button::Transparent),
             }
         } else {
             let default_ico = &self.app_base_dir.join("icons/moleskine-icon.svg");
@@ -100,6 +102,7 @@ impl Wam {
                 .on_press(Message::OpenIconPicker)
                 .width(Length::Fixed(96.))
                 .height(Length::Fixed(96.))
+                .style(theme::Button::Transparent)
         };
 
         Container::new(ico).into()

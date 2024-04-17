@@ -264,6 +264,7 @@ impl cosmic::Application for Window {
                 let path = icon.path;
 
                 if let Ok(saved) = move_icon(path, self.main_window.app_title.clone()) {
+                    self.icon_dialog = false;
                     self.main_window.app_icon = saved.clone();
 
                     if saved.ends_with(".svg") {
