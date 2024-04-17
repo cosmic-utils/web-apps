@@ -30,7 +30,7 @@ pub struct WebAppLauncher {
     pub isolate_profile: bool,
     pub navbar: bool,
     pub is_incognito: bool,
-    app_base_dir: Option<PathBuf>,
+    pub app_base_dir: Option<PathBuf>,
 }
 
 impl WebAppLauncher {
@@ -238,8 +238,9 @@ impl WebAppLauncher {
         if self.navbar {
             match &self.app_base_dir {
                 Some(dir) => {
-                    let profile = dir.join("chrome/userChrome.css");
-                    copy(profile, profile_path.clone()).expect("cannot copy userChrome.css");
+                    let profile = dir.join("userChrome-with-navbar.css");
+                    let output = profile_path.join("chrome/userChrome.css");
+                    copy(profile, output).expect("cannot copy userChrome.css");
                 }
                 None => {}
             }
