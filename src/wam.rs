@@ -64,6 +64,44 @@ impl Wam {
         }
     }
 
+    fn icon_picker_icon(&self, icon: Option<iconpicker::Icon>) -> Element<Message> {
+        let ico = if let Some(ico) = icon {
+            match ico.icon {
+                iconpicker::IconType::Raster(data) => Button::new(
+                    cosmic::widget::image(data)
+                        .width(Length::Fill)
+                        .height(Length::Fill),
+                )
+                .on_press(Message::OpenIconPicker)
+                .width(Length::Fixed(96.))
+                .height(Length::Fixed(96.)),
+                iconpicker::IconType::Svg(data) => Button::new(
+                    cosmic::widget::svg(data)
+                        .width(Length::Fill)
+                        .height(Length::Fill),
+                )
+                .on_press(Message::OpenIconPicker)
+                .width(Length::Fixed(96.))
+                .height(Length::Fixed(96.)),
+            }
+        } else {
+            let default_ico = &self.app_base_dir.join("icons/moleskine-icon.svg");
+            let default_ico = default_ico.to_str().expect("cant find needed icon");
+            let default_icon_path = String::from(default_ico);
+            let handler = cosmic::widget::svg::Handle::from_path(default_icon_path);
+            let default = cosmic::widget::svg(handler);
+
+            Button::new(default)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .on_press(Message::OpenIconPicker)
+                .width(Length::Fixed(96.))
+                .height(Length::Fixed(96.))
+        };
+
+        Container::new(ico).into()
+    }
+
     pub fn view(&self) -> Element<Message> {
         let app_title = TextInput::new("Title", &self.app_title)
             .on_input(Message::Title)
@@ -90,13 +128,9 @@ impl Wam {
         .width(Length::Fixed(96.))
         .height(Length::Fixed(96.));
 
-        let default_ico = &self.app_base_dir.join("icons/moleskine-icon.svg");
-        let default_ico = default_ico.to_str().expect("cant find needed icon");
-        let default_icon_path = String::from(default_ico);
-        let handler = cosmic::widget::svg::Handle::from_path(default_icon_path);
-        let default = cosmic::widget::svg(handler);
+        let icon = self.icon_picker_icon(self.selected_icon.clone());
 
-        let icon = Button::new(default)
+        let icon = Button::new(icon)
             .width(Length::Fill)
             .height(Length::Fill)
             .width(Length::Fixed(96.))

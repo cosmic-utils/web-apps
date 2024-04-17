@@ -1,7 +1,7 @@
 use cosmic::{
     iced::Length,
     iced_widget::Scrollable,
-    widget::{Button, Column, TextInput},
+    widget::{Button, Column, Container, TextInput},
     Element,
 };
 
@@ -30,23 +30,29 @@ impl IconPicker {
             .padding(10)
             .width(Length::Fill);
 
-        let mut container = Column::new().max_width(500.);
+        let mut container = crate::wrap::Wrap::new();
 
         for ico in self.icons.iter() {
             let btn = match ico.clone().icon {
                 IconType::Raster(icon) => Button::new(cosmic::widget::image(icon))
                     .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.)),
+                    .height(Length::Fixed(96.))
+                    .on_press(Message::Favicon(ico.path.clone())),
                 IconType::Svg(icon) => Button::new(cosmic::widget::svg(icon))
                     .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.)),
+                    .height(Length::Fixed(96.))
+                    .on_press(Message::Favicon(ico.path.clone())),
             };
             container = container.push(btn);
         }
 
-        let col = Column::new().push(search_field).push(container).spacing(20);
+        let scrollable = Scrollable::new(container)
+            .width(Length::Fill)
+            .height(Length::Fill);
 
-        Scrollable::new(col).into()
+        let col = Column::new().push(search_field).push(scrollable);
+
+        Container::new(col).into()
     }
 }
 

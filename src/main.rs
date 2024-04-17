@@ -3,6 +3,7 @@ mod gui;
 mod iconpicker;
 mod supported_browsers;
 mod wam;
+mod wrap;
 
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;

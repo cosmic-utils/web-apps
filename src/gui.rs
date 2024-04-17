@@ -206,7 +206,19 @@ impl cosmic::Application for Window {
             }
 
             // *** ICON PICKER **** //
-            Message::Favicon(_) => todo!(),
+            Message::Favicon(path) => {
+                let is_svg = path.ends_with(".svg");
+
+                if is_svg {
+                    Command::perform(svg_from_memory(path), |result| {
+                        cosmic::app::message::app(Message::SetIcon(result))
+                    })
+                } else {
+                    Command::perform(image_from_memory(path), |result| {
+                        cosmic::app::message::app(Message::SetIcon(result))
+                    })
+                }
+            }
             Message::PerformIconSearch => {
                 self.icons_window.icons.clear();
 
@@ -253,7 +265,6 @@ impl cosmic::Application for Window {
                 //     .expect("cant download icon")
                 // }
 
-                println!("{:?}", icon);
                 self.icons_window.icons.push(icon);
 
                 Command::none()
