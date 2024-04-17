@@ -410,10 +410,7 @@ pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
     webapps
 }
 
-use crate::{
-    gui::{Icon, IconType},
-    supported_browsers::supported_browsers,
-};
+use crate::{iconpicker, supported_browsers::supported_browsers};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrowserType {
@@ -629,7 +626,7 @@ pub fn move_icon(path: String, output_name: String) -> Result<String> {
     Ok(save_path)
 }
 
-pub async fn image_from_memory(path: String) -> Result<Icon> {
+pub async fn image_from_memory(path: String) -> iconpicker::Icon {
     let img_bytes = if path.starts_with("http") {
         Client::new()
             .get(path.clone())
@@ -641,20 +638,20 @@ pub async fn image_from_memory(path: String) -> Result<Icon> {
             .expect("getting content")
             .to_vec()
     } else {
-        let mut file = File::open(path.clone())?;
+        let mut file = File::open(path.clone()).unwrap();
         let mut buffer = Vec::new();
 
-        file.read_to_end(&mut buffer)?;
+        file.read_to_end(&mut buffer).unwrap();
 
         buffer.to_vec()
     };
 
     let icon = image::Handle::from_memory(img_bytes.to_vec());
 
-    Ok(Icon::new(IconType::Raster(icon), path))
+    iconpicker::Icon::new(iconpicker::IconType::Raster(icon), path)
 }
 
-pub async fn svg_from_memory(path: String) -> Result<Icon> {
+pub async fn svg_from_memory(path: String) -> iconpicker::Icon {
     let img_bytes = if path.starts_with("http") {
         Client::new()
             .get(path.clone())
@@ -666,15 +663,15 @@ pub async fn svg_from_memory(path: String) -> Result<Icon> {
             .expect("getting content")
             .to_vec()
     } else {
-        let mut file = File::open(path.clone())?;
+        let mut file = File::open(path.clone()).unwrap();
         let mut buffer = Vec::new();
 
-        file.read_to_end(&mut buffer)?;
+        file.read_to_end(&mut buffer).unwrap();
 
         buffer.to_vec()
     };
 
     let icon = svg::Handle::from_memory(img_bytes.to_vec());
 
-    Ok(Icon::new(IconType::Svg(icon), path))
+    iconpicker::Icon::new(iconpicker::IconType::Svg(icon), path)
 }

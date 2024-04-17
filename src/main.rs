@@ -1,6 +1,8 @@
 mod common;
 mod gui;
+mod iconpicker;
 mod supported_browsers;
+mod wam;
 
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
