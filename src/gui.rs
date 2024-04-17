@@ -1,5 +1,8 @@
 use crate::{
-    common::{find_icons, image_from_memory, move_icon, svg_from_memory, Browser, WebAppLauncher},
+    common::{
+        find_icons, get_icon_name_from_url, image_from_memory, move_icon, svg_from_memory, Browser,
+        WebAppLauncher,
+    },
     iconpicker, wam,
 };
 
@@ -175,17 +178,77 @@ impl cosmic::Application for Window {
 
                 Command::none()
             }
-            Message::Clicked(_btns) => {
-                // match btns {
-                //     Buttons::SearchFavicon => todo!(),
-                //     Buttons::Edit(_) => todo!(),
-                //     Buttons::Delete(_) => todo!(),
-                //     Buttons::Navbar(_) => todo!(),
-                //     Buttons::IsolatedProfile(_) => todo!(),
-                //     Buttons::Incognito(_) => todo!(),
-                // };
-                Command::none()
-            }
+            Message::Clicked(buttons) => match buttons {
+                Buttons::SearchFavicon => {
+                    self.iconpicker.icons.clear();
+
+                    if !self.main_window.app_url.is_empty() {
+                        let url = self.main_window.app_url.clone();
+
+                        let to_find = if url.starts_with("http://") || url.starts_with("https://") {
+                            get_icon_name_from_url(url.clone())
+                        } else {
+                            let prefix = "https://";
+                            self.main_window.app_url = format!("{}{}", prefix, url);
+
+                            get_icon_name_from_url(self.main_window.app_url.clone())
+                        };
+
+                        Command::perform(
+                            find_icons(to_find, Some(self.main_window.app_url.clone())),
+                            |icons| cosmic::app::message::app(Message::FoundIcons(icons)),
+                        )
+                    } else {
+                        Command::none()
+                    }
+                }
+                Buttons::Edit(launcher) => {
+                    self.main_window.edit_mode = true;
+                    self.main_window.launcher = Some(launcher.clone());
+
+                    self.main_window.app_title = launcher.name;
+                    self.main_window.app_url = launcher.url;
+                    self.main_window.app_icon = launcher.icon.clone();
+                    self.main_window.app_parameters = launcher.custom_parameters;
+                    self.main_window.app_category = launcher.category;
+                    self.main_window.app_browser =
+                        Browser::web_browser(launcher.web_browser.name).expect("browser not found");
+                    self.main_window.app_navbar = launcher.navbar;
+                    self.main_window.app_incognito = launcher.is_incognito;
+
+                    let is_svg = launcher.icon.ends_with(".svg");
+
+                    if is_svg {
+                        Command::perform(svg_from_memory(launcher.icon), |result| {
+                            cosmic::app::message::app(Message::SetIcon(result))
+                        })
+                    } else {
+                        Command::perform(image_from_memory(launcher.icon), |result| {
+                            cosmic::app::message::app(Message::SetIcon(result))
+                        })
+                    }
+                }
+                Buttons::Delete(launcher) => {
+                    let _ = launcher.delete();
+
+                    Command::none()
+                }
+                Buttons::Navbar(selected) => {
+                    self.main_window.app_navbar = selected;
+
+                    Command::none()
+                }
+                Buttons::IsolatedProfile(selected) => {
+                    self.main_window.app_isolated = selected;
+
+                    Command::none()
+                }
+                Buttons::Incognito(selected) => {
+                    self.main_window.app_incognito = selected;
+
+                    Command::none()
+                }
+            },
             Message::Title(title) => {
                 self.main_window.app_title = title;
                 Command::none()
@@ -256,6 +319,9 @@ impl cosmic::Application for Window {
                 Command::batch(commands)
             }
             Message::PushIcon(icon) => {
+                if self.main_window.selected_icon.is_none() {
+                    self.main_window.selected_icon = Some(icon.clone());
+                }
                 self.iconpicker.icons.push(icon);
 
                 Command::none()
@@ -281,7 +347,8 @@ impl cosmic::Application for Window {
                 }
             }
             Message::SelectIcon(ico) => {
-                self.main_window.selected_icon = Some(ico);
+                self.main_window.selected_icon = Some(ico.clone());
+                self.main_window.app_icon = ico.path;
                 Command::none()
             }
         }
