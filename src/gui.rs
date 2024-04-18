@@ -68,7 +68,7 @@ impl cosmic::Application for Window {
     type Flags = ();
     type Message = Message;
 
-    const APP_ID: &'static str = "org.cosmic.WamRust";
+    const APP_ID: &'static str = "org.cosmic.Wam";
 
     fn core(&self) -> &cosmic::app::Core {
         &self.core
