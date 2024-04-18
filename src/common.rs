@@ -10,6 +10,7 @@ use std::{
     fs::{self, copy, create_dir_all, remove_dir_all, remove_file, File},
     io::{self, BufRead, Read, Result, Write},
     path::PathBuf,
+    str::FromStr,
 };
 use url::Url;
 use walkdir::WalkDir;
@@ -643,10 +644,13 @@ pub async fn image_from_memory(path: String) -> iconpicker::Icon {
             .expect("getting content")
             .to_vec()
     } else {
+        let pathbuf = PathBuf::from_str(&path).unwrap();
         let mut file = File::open(path.clone()).unwrap();
         let mut buffer = Vec::new();
 
-        file.read_to_end(&mut buffer).unwrap();
+        if pathbuf.is_file() {
+            file.read_to_end(&mut buffer).unwrap();
+        }
 
         buffer.to_vec()
     };
@@ -668,10 +672,13 @@ pub async fn svg_from_memory(path: String) -> iconpicker::Icon {
             .expect("getting content")
             .to_vec()
     } else {
+        let pathbuf = PathBuf::from_str(&path).unwrap();
         let mut file = File::open(path.clone()).unwrap();
         let mut buffer = Vec::new();
 
-        file.read_to_end(&mut buffer).unwrap();
+        if pathbuf.is_file() {
+            file.read_to_end(&mut buffer).unwrap();
+        }
 
         buffer.to_vec()
     };
