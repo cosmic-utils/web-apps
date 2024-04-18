@@ -15,6 +15,10 @@ use url::Url;
 use walkdir::WalkDir;
 use xdg::BaseDirectories;
 
+fn url_valid(url: &str) -> bool {
+    Url::parse(url).is_ok()
+}
+
 #[derive(Debug, Clone)]
 pub struct WebAppLauncher {
     pub path: PathBuf,
@@ -54,7 +58,7 @@ impl WebAppLauncher {
         };
         let filename = format!("webapp-{}.desktop", codename);
         let web_browser = browser;
-        let is_valid = !name.is_empty() && !icon.is_empty();
+        let is_valid = !name.is_empty() && !icon.is_empty() && url_valid(&url);
         let exec = web_browser.exec.clone();
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
