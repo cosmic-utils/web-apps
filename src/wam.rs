@@ -44,7 +44,7 @@ impl Wam {
 
         let base_dir = BaseDirectories::new().expect("cant follow base directories");
         let local_share = base_dir.get_data_home();
-        let wam_rust_path = local_share.join("wam-rust");
+        let cosmic_wam_path = local_share.join("cosmic-wam");
 
         Wam {
             app_codename: None,
@@ -63,7 +63,7 @@ impl Wam {
             app_browsers: browsers,
             edit_mode: false,
             launcher: None,
-            app_base_dir: wam_rust_path,
+            app_base_dir: cosmic_wam_path,
         }
     }
 
@@ -133,7 +133,8 @@ impl Wam {
         )
         .on_press(Message::Clicked(Buttons::SearchFavicon))
         .width(Length::Fixed(96.))
-        .height(Length::Fixed(96.));
+        .height(Length::Fixed(96.))
+        .style(theme::Button::Icon);
 
         let icon = self.icon_picker_icon(self.selected_icon.clone());
 
@@ -142,7 +143,8 @@ impl Wam {
             .height(Length::Fill)
             .width(Length::Fixed(96.))
             .height(Length::Fixed(96.))
-            .on_press(Message::OpenIconPicker);
+            .on_press(Message::OpenIconPicker)
+            .style(theme::Button::Icon);
 
         let mut row = Row::new().spacing(12).width(Length::Fill);
 

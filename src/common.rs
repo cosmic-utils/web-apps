@@ -66,7 +66,7 @@ impl WebAppLauncher {
 
         let base_dir = BaseDirectories::new().expect("cant follow base directories");
         let local_share = base_dir.get_data_home();
-        let app_base_dir = Some(local_share.join("wam-rust"));
+        let app_base_dir = Some(local_share.join("cosmic-wam"));
 
         Self {
             path,

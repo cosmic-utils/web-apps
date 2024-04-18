@@ -1,6 +1,6 @@
 [package]
-name = "wam-rust"
-version = "0.2.0"
+name = "cosmic-wam"
+version = "0.2.1"
 edition = "2021"
 
 [profile.dev]

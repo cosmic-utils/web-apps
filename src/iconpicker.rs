@@ -46,12 +46,12 @@ impl IconPicker {
                     .width(Length::Fixed(96.))
                     .height(Length::Fixed(96.))
                     .on_press(Message::Favicon(ico.path.clone()))
-                    .style(theme::Button::Transparent),
+                    .style(theme::Button::Icon),
                 IconType::Svg(icon) => Button::new(cosmic::widget::svg(icon))
                     .width(Length::Fixed(96.))
                     .height(Length::Fixed(96.))
                     .on_press(Message::Favicon(ico.path.clone()))
-                    .style(theme::Button::Transparent),
+                    .style(theme::Button::Icon),
             };
             container = container.push(btn);
         }
