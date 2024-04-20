@@ -1,6 +1,6 @@
 use crate::{
     common::{
-        find_icons, get_icon_name_from_url, image_handle, move_icon, Browser, WebAppLauncher,
+        self, find_icons, get_icon_name_from_url, image_handle, move_icon, Browser, WebAppLauncher,
     },
     iconpicker, wam,
 };
@@ -181,22 +181,14 @@ impl cosmic::Application for Window {
                 Buttons::SearchFavicon => {
                     self.iconpicker.icons.clear();
 
-                    if !self.main_window.app_url.is_empty() {
-                        let url = self.main_window.app_url.clone();
-
-                        let to_find = if url.starts_with("http://") || url.starts_with("https://") {
-                            get_icon_name_from_url(url.clone())
-                        } else {
-                            let prefix = "https://";
-                            self.main_window.app_url = format!("{}{}", prefix, url);
-
-                            get_icon_name_from_url(self.main_window.app_url.clone())
-                        };
-
-                        Command::perform(
-                            find_icons(to_find, Some(self.main_window.app_url.clone())),
-                            |icons| cosmic::app::message::app(Message::FoundIcons(icons)),
-                        )
+                    if common::url_valid(&self.main_window.app_url) {
+                        let icon_name = find_icons(
+                            get_icon_name_from_url(&self.main_window.app_url),
+                            &self.main_window.app_url,
+                        );
+                        Command::perform(icon_name, |icons| {
+                            cosmic::app::message::app(Message::FoundIcons(icons))
+                        })
                     } else {
                         Command::none()
                     }
@@ -267,14 +259,14 @@ impl cosmic::Application for Window {
             }),
             Message::PerformIconSearch => {
                 self.iconpicker.icons.clear();
+                let icons = find_icons(
+                    self.iconpicker.icon_searching.clone(),
+                    &self.main_window.app_url,
+                );
 
-                Command::perform(
-                    find_icons(
-                        self.iconpicker.icon_searching.clone(),
-                        Some(self.main_window.app_url.clone()),
-                    ),
-                    |icons| cosmic::app::message::app(Message::FoundIcons(icons)),
-                )
+                Command::perform(icons, |icons| {
+                    cosmic::app::message::app(Message::FoundIcons(icons))
+                })
             }
             Message::CustomIconsSearch(input) => {
                 self.iconpicker.icon_searching = input;

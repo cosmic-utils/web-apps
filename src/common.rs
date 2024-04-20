@@ -17,11 +17,11 @@ use url::Url;
 use walkdir::WalkDir;
 use xdg::BaseDirectories;
 
-fn url_valid(url: &str) -> bool {
+pub fn url_valid(url: &str) -> bool {
     Url::parse(url).is_ok()
 }
 
-fn is_svg(path: &str) -> bool {
+pub fn is_svg(path: &str) -> bool {
     !url_valid(path) && PathBuf::from_str(path).unwrap().extension() == Some(OsStr::new("svg"))
 }
 
@@ -500,8 +500,8 @@ pub fn get_supported_browsers() -> Vec<Browser> {
     browsers
 }
 
-pub fn get_icon_name_from_url(url: String) -> String {
-    match Url::parse(&url) {
+pub fn get_icon_name_from_url(url: &str) -> String {
+    match Url::parse(url) {
         Ok(url) => match url.host_str() {
             Some(host) => {
                 let parts: Vec<&str> = host.split('.').collect();
@@ -513,7 +513,7 @@ pub fn get_icon_name_from_url(url: String) -> String {
     }
 }
 
-pub async fn find_icon(path: &str, icon_name: &str) -> Vec<String> {
+pub async fn find_icon(path: PathBuf, icon_name: &str) -> Vec<String> {
     let mut icons: Vec<String> = Vec::new();
 
     for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
@@ -529,35 +529,28 @@ pub async fn find_icon(path: &str, icon_name: &str) -> Vec<String> {
     icons
 }
 
-pub async fn find_icons(icon_name: String, url: Option<String>) -> Vec<String> {
-    let base_dir = BaseDirectories::new().expect("no base directories found");
-    let mut local_dir = base_dir.get_data_home();
-    local_dir.push("icons");
-    let local_dir = local_dir
-        .to_str()
-        .expect("cant convert local path to string");
-    let system_dir = "/usr/share/icons";
+pub async fn find_icons(icon_name: String, url: &str) -> Vec<String> {
+    // ~/.icons
     let mut home_dir = dirs::home_dir().expect("cant get home directory");
     home_dir.push(".icons");
-    let home_dir = home_dir.to_str().expect("cant convert path to string");
 
-    let home_icons = find_icon(home_dir, &icon_name).await;
-    let local_icons = find_icon(local_dir, &icon_name).await;
-    let system_icons = find_icon(system_dir, &icon_name).await;
+    // ~/.local/share/icons
+    let mut local_dir = dirs::data_dir().expect("cat get ~/.local/share directory");
+    local_dir.push("icons");
+
+    let system_dir = PathBuf::from_str("/usr/share/icons").unwrap();
 
     let mut result: Vec<String> = Vec::new();
 
-    result.extend(home_icons);
-    result.extend(local_icons);
-    result.extend(system_icons);
+    result.extend(find_icon(home_dir, &icon_name).await);
+    result.extend(find_icon(local_dir, &icon_name).await);
+    result.extend(find_icon(system_dir, &icon_name).await);
 
-    if let Some(u) = url {
-        if u.starts_with("http") {
-            if let Ok(data) = download_favicon(&u).await {
-                result.extend(data)
-            }
+    if url_valid(url) {
+        if let Ok(data) = download_favicon(url).await {
+            result.extend(data)
         }
-    }
+    };
 
     result
 }
