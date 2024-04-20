@@ -1,7 +1,6 @@
 use crate::{
     common::{
-        find_icons, get_icon_name_from_url, image_from_memory, move_icon, svg_from_memory, Browser,
-        WebAppLauncher,
+        find_icons, get_icon_name_from_url, image_handle, move_icon, Browser, WebAppLauncher,
     },
     iconpicker, wam,
 };
@@ -216,17 +215,9 @@ impl cosmic::Application for Window {
                     self.main_window.app_navbar = launcher.navbar;
                     self.main_window.app_incognito = launcher.is_incognito;
 
-                    let is_svg = launcher.icon.ends_with(".svg");
-
-                    if is_svg {
-                        Command::perform(svg_from_memory(launcher.icon), |result| {
-                            cosmic::app::message::app(Message::SetIcon(result))
-                        })
-                    } else {
-                        Command::perform(image_from_memory(launcher.icon), |result| {
-                            cosmic::app::message::app(Message::SetIcon(result))
-                        })
-                    }
+                    Command::perform(image_handle(launcher.icon), |result| {
+                        cosmic::app::message::app(Message::SetIcon(result))
+                    })
                 }
                 Buttons::Delete(launcher) => {
                     let _ = launcher.delete();
@@ -271,19 +262,9 @@ impl cosmic::Application for Window {
             }
 
             // *** ICON PICKER **** //
-            Message::Favicon(path) => {
-                let is_svg = path.ends_with(".svg");
-
-                if is_svg {
-                    Command::perform(svg_from_memory(path), |result| {
-                        cosmic::app::message::app(Message::SetIcon(result))
-                    })
-                } else {
-                    Command::perform(image_from_memory(path), |result| {
-                        cosmic::app::message::app(Message::SetIcon(result))
-                    })
-                }
-            }
+            Message::Favicon(path) => Command::perform(image_handle(path), |result| {
+                cosmic::app::message::app(Message::SetIcon(result))
+            }),
             Message::PerformIconSearch => {
                 self.iconpicker.icons.clear();
 
@@ -304,16 +285,9 @@ impl cosmic::Application for Window {
                 let mut commands: Vec<iced::Command<cosmic::app::Message<Message>>> = Vec::new();
 
                 result.into_iter().for_each(|path| {
-                    let is_svg = path.ends_with(".svg");
-                    if is_svg {
-                        commands.push(Command::perform(svg_from_memory(path), |result| {
-                            cosmic::app::message::app(Message::PushIcon(result))
-                        }));
-                    } else {
-                        commands.push(Command::perform(image_from_memory(path), |result| {
-                            cosmic::app::message::app(Message::PushIcon(result))
-                        }));
-                    };
+                    commands.push(Command::perform(image_handle(path), |result| {
+                        cosmic::app::message::app(Message::PushIcon(result))
+                    }));
                 });
 
                 Command::batch(commands)
@@ -333,15 +307,9 @@ impl cosmic::Application for Window {
                     self.icon_dialog = false;
                     self.main_window.app_icon = saved.clone();
 
-                    if saved.ends_with(".svg") {
-                        Command::perform(svg_from_memory(saved), |result| {
-                            cosmic::app::message::app(Message::SelectIcon(result))
-                        })
-                    } else {
-                        Command::perform(image_from_memory(saved), |result| {
-                            cosmic::app::message::app(Message::SelectIcon(result))
-                        })
-                    }
+                    Command::perform(image_handle(saved), |result| {
+                        cosmic::app::message::app(Message::SelectIcon(result))
+                    })
                 } else {
                     Command::none()
                 }

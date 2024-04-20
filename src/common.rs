@@ -6,6 +6,7 @@ use rand::{thread_rng, Rng};
 use reqwest::Client;
 use scraper::{Html, Selector};
 use std::{
+    ffi::OsStr,
     fmt::Display,
     fs::{self, copy, create_dir_all, remove_dir_all, remove_file, File},
     io::{self, BufRead, Read, Result, Write},
@@ -632,58 +633,40 @@ pub fn move_icon(path: String, output_name: String) -> Result<String> {
     Ok(save_path)
 }
 
-pub async fn image_from_memory(path: String) -> iconpicker::Icon {
-    let img_bytes = if path.starts_with("http") {
-        Client::new()
-            .get(path.clone())
-            .send()
-            .await
-            .expect("sending request")
-            .bytes()
-            .await
-            .expect("getting content")
-            .to_vec()
-    } else {
-        let pathbuf = PathBuf::from_str(&path).unwrap();
-        let mut file = File::open(path.clone()).unwrap();
+pub async fn image_handle(path: String) -> iconpicker::Icon {
+    let mut data: Vec<_> = Vec::new();
+    let pathbuf = PathBuf::from_str(&path).unwrap();
+    let is_svg = !url_valid(&path) && pathbuf.extension() == Some(OsStr::new("svg"));
+
+    if url_valid(&path) {
+        data.extend(
+            Client::new()
+                .get(&path)
+                .send()
+                .await
+                .unwrap()
+                .bytes()
+                .await
+                .unwrap()
+                .to_vec(),
+        );
+    } else if let Ok(mut file) = File::open(&pathbuf) {
         let mut buffer = Vec::new();
 
         if pathbuf.is_file() {
             file.read_to_end(&mut buffer).unwrap();
-        }
+        };
 
-        buffer.to_vec()
+        data.extend(buffer);
     };
 
-    let icon = image::Handle::from_memory(img_bytes.to_vec());
+    if is_svg {
+        let handle = svg::Handle::from_memory(data);
 
-    iconpicker::Icon::new(iconpicker::IconType::Raster(icon), path)
-}
-
-pub async fn svg_from_memory(path: String) -> iconpicker::Icon {
-    let img_bytes = if path.starts_with("http") {
-        Client::new()
-            .get(path.clone())
-            .send()
-            .await
-            .expect("sending request")
-            .bytes()
-            .await
-            .expect("getting content")
-            .to_vec()
+        iconpicker::Icon::new(iconpicker::IconType::Svg(handle), path)
     } else {
-        let pathbuf = PathBuf::from_str(&path).unwrap();
-        let mut file = File::open(path.clone()).unwrap();
-        let mut buffer = Vec::new();
+        let handle = image::Handle::from_memory(data);
 
-        if pathbuf.is_file() {
-            file.read_to_end(&mut buffer).unwrap();
-        }
-
-        buffer.to_vec()
-    };
-
-    let icon = svg::Handle::from_memory(img_bytes.to_vec());
-
-    iconpicker::Icon::new(iconpicker::IconType::Svg(icon), path)
+        iconpicker::Icon::new(iconpicker::IconType::Raster(handle), path)
+    }
 }
