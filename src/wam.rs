@@ -134,7 +134,7 @@ impl Wam {
         .on_press(Message::Clicked(Buttons::SearchFavicon))
         .width(Length::Fixed(96.))
         .height(Length::Fixed(96.))
-        .style(theme::Button::Icon);
+        .style(theme::Button::Suggested);
 
         let icon = self.icon_picker_icon(self.selected_icon.clone());
 
@@ -144,7 +144,7 @@ impl Wam {
             .width(Length::Fixed(96.))
             .height(Length::Fixed(96.))
             .on_press(Message::OpenIconPicker)
-            .style(theme::Button::Icon);
+            .style(theme::Button::Standard);
 
         let mut row = Row::new().spacing(12).width(Length::Fill);
 
@@ -244,10 +244,12 @@ impl Wam {
                 Ok(data) => {
                     let edit = Button::new("Edit")
                         .on_press(Message::Clicked(Buttons::Edit(data.clone())))
-                        .width(Length::Fixed(90.));
+                        .width(Length::Fixed(90.))
+                        .style(theme::Button::Standard);
                     let delete = Button::new("Delete")
                         .on_press(Message::Clicked(Buttons::Delete(data.clone())))
-                        .width(Length::Fixed(90.));
+                        .width(Length::Fixed(90.))
+                        .style(theme::Button::Destructive);
 
                     let host = Url::parse(&data.url).expect("cant parse url");
                     let host = host.host().unwrap();
