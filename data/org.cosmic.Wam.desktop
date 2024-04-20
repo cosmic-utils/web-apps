@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=COSMIC Web Apps
+Exec=/usr/local/bin/cosmic-wam
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=org.cosmic.Wam
+Categories=COSMIC;Utility;Internet;
+Keywords=Internet;Tools;
+MimeType=inode/directory;

@@ -90,10 +90,8 @@ impl Wam {
                 .style(theme::Button::Transparent),
             }
         } else {
-            let default_ico = &self.app_base_dir.join("icons/moleskine-icon.svg");
-            let default_ico = default_ico.to_str().expect("cant find needed icon");
-            let default_icon_path = String::from(default_ico);
-            let handler = cosmic::widget::svg::Handle::from_path(default_icon_path);
+            let default_ico = include_bytes!("../assets/icons/moleskine-icon.svg");
+            let handler = cosmic::widget::svg::Handle::from_memory(default_ico);
             let default = cosmic::widget::svg(handler);
 
             Button::new(default)
@@ -123,11 +121,10 @@ impl Wam {
         col = col.push(app_title);
         col = col.push(app_url);
 
-        let search_ico = &self.app_base_dir.join("icons/search.svg");
-        let search_ico = search_ico.to_str().expect("cant find needed search icon");
+        let search_ico = include_bytes!("../assets/icons/search.svg");
 
         let dl_btn = Button::new(
-            cosmic::widget::svg(cosmic::widget::svg::Handle::from_path(search_ico))
+            cosmic::widget::svg(cosmic::widget::svg::Handle::from_memory(search_ico))
                 .width(Length::Fill)
                 .height(Length::Fill),
         )
