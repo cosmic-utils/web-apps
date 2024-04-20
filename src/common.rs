@@ -21,6 +21,10 @@ fn url_valid(url: &str) -> bool {
     Url::parse(url).is_ok()
 }
 
+fn is_svg(path: &str) -> bool {
+    !url_valid(path) && PathBuf::from_str(path).unwrap().extension() == Some(OsStr::new("svg"))
+}
+
 #[derive(Debug, Clone)]
 pub struct WebAppLauncher {
     pub path: PathBuf,
@@ -598,27 +602,33 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
     Ok(favs)
 }
 
-pub fn move_icon(path: String, output_name: String) -> Result<String> {
-    let base_dir = BaseDirectories::new().expect("not found base directories");
+pub fn move_icon(path: String, output_name: String) -> String {
+    let base_dir = BaseDirectories::new().unwrap();
     let mut icons_folder = base_dir.get_data_home();
     icons_folder.push("ice/icons");
 
     create_dir_all(&icons_folder).expect("cant create icons folder");
 
-    let ext = if path.ends_with(".svg") {
-        ".svg"
+    let extension = if is_svg(&path) {
+        String::from("svg")
     } else {
-        ".png"
+        PathBuf::from_str(&path)
+            .unwrap()
+            .extension()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
     };
 
     let save_path = icons_folder
-        .join(format!("{}{}", output_name.replace(' ', ""), ext))
+        .join(format!("{}.{}", output_name.replace(' ', ""), extension))
         .to_str()
         .unwrap()
         .to_string();
 
-    if path.starts_with("http") {
-        let response = reqwest::blocking::get(path).expect("sending request");
+    if url_valid(&path) {
+        let response = reqwest::blocking::get(&path).expect("sending request");
 
         if response.status().is_success() {
             let content = response.bytes().expect("getting image bytes");
@@ -630,13 +640,12 @@ pub fn move_icon(path: String, output_name: String) -> Result<String> {
         copy(&path, &save_path).expect("saving image");
     }
 
-    Ok(save_path)
+    save_path
 }
 
 pub async fn image_handle(path: String) -> iconpicker::Icon {
     let mut data: Vec<_> = Vec::new();
     let pathbuf = PathBuf::from_str(&path).unwrap();
-    let is_svg = !url_valid(&path) && pathbuf.extension() == Some(OsStr::new("svg"));
 
     if url_valid(&path) {
         data.extend(
@@ -660,7 +669,7 @@ pub async fn image_handle(path: String) -> iconpicker::Icon {
         data.extend(buffer);
     };
 
-    if is_svg {
+    if is_svg(&path) {
         let handle = svg::Handle::from_memory(data);
 
         iconpicker::Icon::new(iconpicker::IconType::Svg(handle), path)

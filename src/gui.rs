@@ -303,16 +303,13 @@ impl cosmic::Application for Window {
             Message::SetIcon(icon) => {
                 let path = icon.path;
 
-                if let Ok(saved) = move_icon(path, self.main_window.app_title.clone()) {
-                    self.icon_dialog = false;
-                    self.main_window.app_icon = saved.clone();
+                let saved = move_icon(path, self.main_window.app_title.clone());
+                self.icon_dialog = false;
+                self.main_window.app_icon = saved.clone();
 
-                    Command::perform(image_handle(saved), |result| {
-                        cosmic::app::message::app(Message::SelectIcon(result))
-                    })
-                } else {
-                    Command::none()
-                }
+                Command::perform(image_handle(saved), |result| {
+                    cosmic::app::message::app(Message::SelectIcon(result))
+                })
             }
             Message::SelectIcon(ico) => {
                 self.main_window.selected_icon = Some(ico.clone());
