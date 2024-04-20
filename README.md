@@ -38,3 +38,6 @@ App will be available via `cosmic-wam` binary from your PATH.
 # License
 Code is distributed with [GPL-3.0 license](https://github.com/elevenhsoft/cosmic-wam/blob/master/LICENSE)
 
+# Credits
+
+Special thanks to Linux Mint team for inspiration and solutions in this awesome app: [webapp-manager](https://github.com/linuxmint/webapp-manager)
