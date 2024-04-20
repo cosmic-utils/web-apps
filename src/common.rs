@@ -535,7 +535,7 @@ pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     home_dir.push(".icons");
 
     // ~/.local/share/icons
-    let mut local_dir = dirs::data_dir().expect("cat get ~/.local/share directory");
+    let mut local_dir = dirs::data_dir().expect("cant get ~/.local/share directory");
     local_dir.push("icons");
 
     let system_dir = PathBuf::from_str("/usr/share/icons").unwrap();
