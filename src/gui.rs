@@ -179,14 +179,12 @@ impl cosmic::Application for Window {
             }
             Message::Clicked(buttons) => match buttons {
                 Buttons::SearchFavicon => {
-                    self.iconpicker.icons.clear();
-
                     if common::url_valid(&self.main_window.app_url) {
-                        let icon_name = find_icons(
-                            get_icon_name_from_url(&self.main_window.app_url),
-                            &self.main_window.app_url,
-                        );
-                        Command::perform(icon_name, |icons| {
+                        self.iconpicker.icons.clear();
+
+                        let name = get_icon_name_from_url(&self.main_window.app_url);
+                        let icons = find_icons(name, self.main_window.app_url.clone());
+                        Command::perform(icons, |icons| {
                             cosmic::app::message::app(Message::FoundIcons(icons))
                         })
                     } else {
@@ -259,9 +257,10 @@ impl cosmic::Application for Window {
             }),
             Message::PerformIconSearch => {
                 self.iconpicker.icons.clear();
+
                 let icons = find_icons(
                     self.iconpicker.icon_searching.clone(),
-                    &self.main_window.app_url,
+                    self.main_window.app_url.clone(),
                 );
 
                 Command::perform(icons, |icons| {
