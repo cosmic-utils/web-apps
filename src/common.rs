@@ -74,9 +74,7 @@ impl WebAppLauncher {
         path.push("applications");
         path.push(filename);
 
-        let base_dir = BaseDirectories::new().expect("cant follow base directories");
-        let local_share = base_dir.get_data_home();
-        let app_base_dir = Some(local_share.join("cosmic-wam"));
+        let app_base_dir = Some(PathBuf::from_str("/usr/local/share/cosmic-wam").unwrap());
 
         Self {
             path,
@@ -237,23 +235,17 @@ impl WebAppLauncher {
 
         create_dir_all(profile_dir).expect("cant create profile dir");
 
-        match &self.app_base_dir {
-            Some(dir) => {
-                let profile = dir.join("profile");
-                copy_dir(profile, profile_path.clone()).expect("cant copy firefox profile dir");
-            }
-            None => {}
-        }
+        let profile = self.app_base_dir.as_ref().unwrap().join("profile");
+        copy_dir(profile, profile_path.clone()).expect("cant copy firefox profile dir");
 
         if self.navbar {
-            match &self.app_base_dir {
-                Some(dir) => {
-                    let profile = dir.join("userChrome-with-navbar.css");
-                    let output = profile_path.join("chrome/userChrome.css");
-                    copy(profile, output).expect("cannot copy userChrome.css");
-                }
-                None => {}
-            }
+            let profile = self
+                .app_base_dir
+                .as_ref()
+                .unwrap()
+                .join("profile/chrome/userChrome-with-navbar.css");
+            let output = profile_path.join("chrome/userChrome.css");
+            copy(profile, output).expect("cannot copy userChrome.css");
         }
 
         let profile_path = profile_path.to_str().unwrap();
