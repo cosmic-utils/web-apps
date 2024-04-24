@@ -5,6 +5,7 @@ mod supported_browsers;
 mod wam;
 mod wrap;
 
+use cosmic::{app::Settings, iced_core::Size};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 // use xdg::BaseDirectories;
@@ -23,8 +24,13 @@ fn main() -> cosmic::iced::Result {
     // let wam_rust_path = local_share.join("wam-rust/icons/wam-icon.png");
     // let path = wam_rust_path.to_str().expect("cant get icon path");
     // let icon = load_icon(path).expect("app icon not found");
+    let mut settings = Settings::default();
+    settings = settings.size(Size {
+        width: 640.,
+        height: 680.,
+    });
 
-    cosmic::app::run::<Window>(Default::default(), ())
+    cosmic::app::run::<Window>(settings, ())
 }
 
 // fn load_icon(path: &str) -> Result<Icon> {}

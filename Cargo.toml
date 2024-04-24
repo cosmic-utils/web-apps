@@ -23,4 +23,8 @@ scraper = "0.18.1"
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic"
 default-features = false
-features = ["tokio", "multi-window", "winit"]
+features = ["tokio", "winit"]
+
+[features]
+default = ["wgpu"]
+wgpu = ["libcosmic/wgpu"]
