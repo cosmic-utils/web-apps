@@ -248,8 +248,15 @@ impl Wam {
                         .width(Length::Fixed(90.))
                         .style(theme::Button::Destructive);
 
-                    let host = Url::parse(&data.url).expect("cant parse url");
-                    let host = host.host().unwrap();
+                    let host = if let Ok(url) = Url::parse(&data.url) {
+                        if url.host_str().is_some() {
+                            url.host_str().unwrap().to_string()
+                        } else {
+                            data.url.to_string()
+                        }
+                    } else {
+                        data.url.to_string()
+                    };
 
                     let name = Button::new(text(data.name.clone())).width(Length::FillPortion(2));
                     let url = Button::new(text(host.to_string())).width(Length::FillPortion(3));
