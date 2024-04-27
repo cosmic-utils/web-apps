@@ -131,8 +131,6 @@ impl Wam {
         let icon = self.icon_picker_icon(self.selected_icon.clone());
 
         let icon = Button::new(icon)
-            .width(Length::Fill)
-            .height(Length::Fill)
             .width(Length::Fixed(96.))
             .height(Length::Fixed(96.))
             .on_press(Message::OpenIconPicker)
