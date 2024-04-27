@@ -70,24 +70,17 @@ impl Wam {
     fn icon_picker_icon(&self, icon: Option<iconpicker::Icon>) -> Element<Message> {
         let ico = if let Some(ico) = icon {
             match ico.icon {
-                iconpicker::IconType::Raster(data) => Button::new(
-                    cosmic::widget::image(data)
-                        .width(Length::Fill)
-                        .height(Length::Fill),
-                )
-                .on_press(Message::OpenIconPicker)
-                .width(Length::Fixed(96.))
-                .height(Length::Fixed(96.))
-                .style(theme::Button::Transparent),
-                iconpicker::IconType::Svg(data) => Button::new(
-                    cosmic::widget::svg(data)
-                        .width(Length::Fill)
-                        .height(Length::Fill),
-                )
-                .on_press(Message::OpenIconPicker)
-                .width(Length::Fixed(96.))
-                .height(Length::Fixed(96.))
-                .style(theme::Button::Transparent),
+                iconpicker::IconType::Raster(data) => Button::new(cosmic::widget::image(data))
+                    .on_press(Message::OpenIconPicker)
+                    .width(Length::Fixed(64.))
+                    .height(Length::Fixed(64.))
+                    .style(theme::Button::Transparent),
+
+                iconpicker::IconType::Svg(data) => Button::new(cosmic::widget::svg(data))
+                    .on_press(Message::OpenIconPicker)
+                    .width(Length::Fixed(64.))
+                    .height(Length::Fixed(64.))
+                    .style(theme::Button::Transparent),
             }
         } else {
             let default_ico = include_bytes!("../assets/icons/moleskine-icon.svg");
@@ -95,15 +88,13 @@ impl Wam {
             let default = cosmic::widget::svg(handler);
 
             Button::new(default)
-                .width(Length::Fill)
-                .height(Length::Fill)
                 .on_press(Message::OpenIconPicker)
-                .width(Length::Fixed(96.))
-                .height(Length::Fixed(96.))
+                .width(Length::Fixed(64.))
+                .height(Length::Fixed(64.))
                 .style(theme::Button::Transparent)
         };
 
-        Container::new(ico).into()
+        Container::new(ico).center_x().center_y().into()
     }
 
     pub fn view(&self) -> Element<Message> {
@@ -122,11 +113,15 @@ impl Wam {
         col = col.push(app_url);
 
         let search_ico = include_bytes!("../assets/icons/search.svg");
+        let search_ico_handler =
+            cosmic::widget::svg(cosmic::widget::svg::Handle::from_memory(search_ico))
+                .width(Length::Fixed(64.))
+                .height(Length::Fixed(64.));
 
         let dl_btn = Button::new(
-            cosmic::widget::svg(cosmic::widget::svg::Handle::from_memory(search_ico))
-                .width(Length::Fill)
-                .height(Length::Fill),
+            Container::new(Button::new(search_ico_handler).style(theme::Button::Transparent))
+                .center_x()
+                .center_y(),
         )
         .on_press(Message::Clicked(Buttons::SearchFavicon))
         .width(Length::Fixed(96.))
