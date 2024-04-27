@@ -239,6 +239,10 @@ impl Wam {
         for app in webapps.iter() {
             match app {
                 Ok(data) => {
+                    let run = Button::new("Run")
+                        .on_press(Message::Clicked(Buttons::Run(data.clone())))
+                        .width(Length::Fixed(90.))
+                        .style(theme::Button::Suggested);
                     let edit = Button::new("Edit")
                         .on_press(Message::Clicked(Buttons::Edit(data.clone())))
                         .width(Length::Fixed(90.))
@@ -262,6 +266,7 @@ impl Wam {
                     let url = Button::new(text(host.to_string())).width(Length::FillPortion(3));
 
                     let mut row = Row::new().spacing(10).align_items(Alignment::Center);
+                    row = row.push(run);
                     row = row.push(edit);
                     row = row.push(delete);
                     row = row.push(name);

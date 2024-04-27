@@ -34,6 +34,7 @@ pub struct WebAppLauncher {
     pub icon: String,
     pub is_valid: bool,
     pub exec: String,
+    pub args: Vec<String>,
     pub category: String,
     pub url: String,
     pub custom_parameters: String,
@@ -66,6 +67,7 @@ impl WebAppLauncher {
         let web_browser = browser;
         let is_valid = !name.is_empty() && !icon.is_empty() && url_valid(&url);
         let exec = web_browser.exec.clone();
+        let args = Vec::new();
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
 
@@ -84,6 +86,7 @@ impl WebAppLauncher {
             icon,
             is_valid,
             exec,
+            args,
             category,
             url,
             custom_parameters,
@@ -101,6 +104,7 @@ impl WebAppLauncher {
         let mut icon = String::new();
         let mut is_valid = false;
         let mut exec = String::new();
+        let mut args = Vec::new();
         let mut category = String::new();
         let mut url = String::new();
         let mut custom_parameters = String::new();
@@ -176,22 +180,47 @@ impl WebAppLauncher {
         let web_browser = Browser::web_browser(browser_name);
 
         match web_browser {
-            Some(web_browser) => Ok(WebAppLauncher {
-                path,
-                codename,
-                web_browser,
-                name,
-                icon,
-                is_valid,
-                exec,
-                category,
-                url,
-                custom_parameters,
-                isolate_profile,
-                navbar,
-                is_incognito,
-                app_base_dir: None,
-            }),
+            Some(web_browser) => {
+                match web_browser._type {
+                    BrowserType::Firefox => {
+                        exec.split(' ').enumerate().for_each(|(n, arg)| {
+                            if n > 0 && !arg.is_empty() {
+                                args.push(arg.to_string())
+                            }
+                        });
+                    }
+                    BrowserType::FirefoxFlatpak => todo!(),
+                    BrowserType::Librewolf => todo!(),
+                    BrowserType::WaterfoxFlatpak => todo!(),
+                    BrowserType::Chromium => {
+                        exec.split(' ').enumerate().for_each(|(n, arg)| {
+                            if n > 0 && !arg.is_empty() {
+                                args.push(arg.to_string())
+                            }
+                        });
+                    }
+                    BrowserType::Epiphany => todo!(),
+                    BrowserType::Falkon => todo!(),
+                }
+
+                Ok(WebAppLauncher {
+                    path,
+                    codename,
+                    web_browser,
+                    name,
+                    icon,
+                    is_valid,
+                    exec,
+                    args,
+                    category,
+                    url,
+                    custom_parameters,
+                    isolate_profile,
+                    navbar,
+                    is_incognito,
+                    app_base_dir: None,
+                })
+            }
             None => {
                 let supported = get_supported_browsers();
                 let web_browser = supported[0].clone();
@@ -204,6 +233,7 @@ impl WebAppLauncher {
                     icon,
                     is_valid,
                     exec,
+                    args,
                     category,
                     url,
                     custom_parameters,
@@ -250,8 +280,8 @@ impl WebAppLauncher {
 
         let profile_path = profile_path.to_str().unwrap();
         let mut exec_string = format!(
-            r#"sh -c 'XAPP_FORCE_GTKWINDOW_ICON="{}" {} --class WebApp-{} --name WebApp-{} --profile {} --no-remote "#,
-            self.icon, self.exec, self.codename, self.codename, profile_path
+            "{} --class WebApp-{} --name WebApp-{} --profile {} --no-remote ",
+            self.exec, self.codename, self.codename, profile_path
         );
 
         if self.is_incognito {
@@ -262,7 +292,7 @@ impl WebAppLauncher {
             exec_string.push_str(&self.custom_parameters);
         }
 
-        exec_string.push_str(&format!(r#" "{}"'"#, &self.url));
+        exec_string.push_str(&format!(" {}", &self.url));
 
         exec_string
     }
@@ -280,7 +310,7 @@ impl WebAppLauncher {
             let profile_path = profile_dir.to_str().unwrap();
 
             exec_string = format!(
-                r#"{} --app="{}" --class=WebApp-{} --name=WebApp-{} --user-data-dir={} "#,
+                "{} --app={} --class=WebApp-{} --name=WebApp-{} --user-data-dir={} ",
                 self.exec, self.url, self.codename, self.codename, profile_path
             );
         }
@@ -443,20 +473,30 @@ impl Display for Browser {
 impl Browser {
     pub fn new(_type: BrowserType, name: &str, exec: &str, test_path: &str) -> Self {
         let name = name.to_string();
-        let exec = exec.to_string();
 
         let mut test = PathBuf::new();
+        let mut exe_path = PathBuf::new();
+
+        let base = BaseDirectories::new().expect("base directories not found");
+        let data_home = base.get_data_home();
+
+        if exec.starts_with(".local/share/") {
+            let flatpak_path: Vec<_> = exec.split(".local/share/").collect();
+            let path = data_home.join(flatpak_path[1]);
+            exe_path.push(path);
+        } else {
+            exe_path.push(exec)
+        }
 
         if test_path.starts_with(".local/share/") {
-            let base = BaseDirectories::new().expect("base directories not found");
-            let mut data_home = base.get_data_home();
-            let flatpak_path: Vec<_> = test_path.split(".local/share/").collect();
-            data_home.push(flatpak_path[1]);
-
-            test.push(data_home)
+            let flatpak_path: Vec<_> = exec.split(".local/share/").collect();
+            let path = data_home.join(flatpak_path[1]);
+            test.push(path);
         } else {
             test.push(test_path)
         }
+
+        let exec = exe_path.to_str().unwrap().to_string();
 
         Self {
             _type,
