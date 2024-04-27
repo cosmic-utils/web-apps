@@ -6,14 +6,13 @@ use crate::{
 
 use cosmic::{
     iced::{id, Alignment, Length},
-    iced_widget::{PickList, Scrollable},
+    iced_widget::{horizontal_rule, PickList, Scrollable},
     theme,
     widget::{text, toggler, Button, Column, Container, Row, TextInput},
     Element,
 };
 
 use std::path::PathBuf;
-use url::Url;
 use xdg::BaseDirectories;
 
 #[derive(Debug, Clone)]
@@ -216,7 +215,7 @@ impl Wam {
         .width(Length::Fixed(200.))
         .padding(10);
 
-        let app_done = Button::new("Done")
+        let app_done = Button::new(Container::new("Create").center_x().center_y())
             .on_press(Message::Result)
             .width(Length::Fill)
             .padding(10)
@@ -232,39 +231,67 @@ impl Wam {
         for app in webapps.iter() {
             match app {
                 Ok(data) => {
-                    let run = Button::new("Run")
-                        .on_press(Message::Clicked(Buttons::Run(data.clone())))
-                        .width(Length::Fixed(90.))
-                        .style(theme::Button::Suggested);
-                    let edit = Button::new("Edit")
+                    let num = Button::new(
+                        Container::new(text(data.web_browser.name.clone()).font(
+                            cosmic::iced::Font {
+                                weight: cosmic::iced::font::Weight::Semibold,
+                                ..Default::default()
+                            },
+                        ))
+                        .center_x()
+                        .center_y(),
+                    )
+                    .width(Length::FillPortion(1))
+                    .height(Length::Fixed(50.))
+                    .padding(10);
+
+                    let run = Button::new(
+                        Container::new(
+                            text(data.name.clone())
+                                .font(cosmic::iced::Font {
+                                    weight: cosmic::iced::font::Weight::Semibold,
+                                    ..Default::default()
+                                })
+                                .size(20.),
+                        )
+                        .center_x()
+                        .center_y(),
+                    )
+                    .on_press(Message::Clicked(Buttons::Run(data.clone())))
+                    .width(Length::FillPortion(3))
+                    .height(Length::Fixed(50.))
+                    .padding(10)
+                    .style(theme::Button::Suggested);
+
+                    let edit = Button::new(Container::new("Edit").center_x().center_y())
                         .on_press(Message::Clicked(Buttons::Edit(data.clone())))
                         .width(Length::Fixed(90.))
+                        .height(Length::Fixed(50.))
+                        .padding(10)
                         .style(theme::Button::Standard);
-                    let delete = Button::new("Delete")
+                    let delete = Button::new(Container::new("Delete").center_x().center_y())
                         .on_press(Message::Clicked(Buttons::Delete(data.clone())))
                         .width(Length::Fixed(90.))
+                        .height(Length::Fixed(50.))
+                        .padding(10)
                         .style(theme::Button::Destructive);
 
-                    let host = if let Ok(url) = Url::parse(&data.url) {
-                        if url.host_str().is_some() {
-                            url.host_str().unwrap().to_string()
-                        } else {
-                            data.url.to_string()
-                        }
-                    } else {
-                        data.url.to_string()
-                    };
+                    let mut row = Row::new().spacing(10).height(Length::Fixed(50.));
+                    let mut row2 = Row::new().spacing(10).height(Length::Fixed(50.));
 
-                    let name = Button::new(text(data.name.clone())).width(Length::FillPortion(2));
-                    let url = Button::new(text(host.to_string())).width(Length::FillPortion(3));
-
-                    let mut row = Row::new().spacing(10).align_items(Alignment::Center);
+                    row = row.push(num);
                     row = row.push(run);
-                    row = row.push(edit);
-                    row = row.push(delete);
-                    row = row.push(name);
-                    row = row.push(url);
-                    app_list = app_list.push(row);
+
+                    row2 = row2.push(edit);
+                    row2 = row2.push(delete);
+                    app_list = app_list.push(
+                        Row::new()
+                            .push(row)
+                            .push(row2)
+                            .width(Length::Fill)
+                            .align_items(Alignment::Center)
+                            .spacing(30),
+                    );
                 }
                 Err(e) => tracing::error!("Error reading web app: {}", e),
             }
@@ -273,7 +300,9 @@ impl Wam {
         let mut installed = Column::new();
 
         if !webapps.is_empty() {
-            installed = installed.push(text("INSTALLED").size(26.)).spacing(10);
+            installed = installed.push(text(format!("Installed #{}", webapps.len())).size(26.));
+
+            installed = installed.push(horizontal_rule(3)).spacing(30);
 
             let scrollable_list = Scrollable::new(app_list).width(Length::Fill);
 
