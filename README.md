@@ -1,6 +1,6 @@
 # COSMIC Wam
 
-![Dark themed window](https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-dark.png)
+![Dark themed window](https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-light.png)
 
 Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window of your browser of choice.
 
