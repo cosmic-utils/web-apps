@@ -1,8 +1,13 @@
-# COSMIC Wam
+<div align="center">
+  <br>
+  <img src="https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-light.png" width="150" />
+  <h1>COSMIC Web Apps</h1>
 
-![Dark themed window](https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-light.png)
+  <h3>Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window of your browser of choice.</h3>
 
-Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window of your browser of choice.
+  ![Light themed window](https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-light.png)
+  ![Dark themed window](https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-dark.png)
+</div>
 
 
 # Installation
