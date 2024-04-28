@@ -1,7 +1,7 @@
 #![allow(clippy::too_many_arguments, dead_code)]
 
-use cosmic::widget::{image, svg};
 use dircpy::copy_dir;
+use image::io::Reader as ImageReader;
 use rand::{thread_rng, Rng};
 use reqwest::Client;
 use scraper::{Html, Selector};
@@ -9,7 +9,7 @@ use std::{
     ffi::OsStr,
     fmt::Display,
     fs::{self, copy, create_dir_all, remove_dir_all, remove_file, File},
-    io::{self, BufRead, Read, Result, Write},
+    io::{self, BufRead, Cursor, Read, Result, Write},
     path::PathBuf,
     str::FromStr,
 };
@@ -668,7 +668,7 @@ pub fn move_icon(path: String, output_name: String) -> String {
     save_path
 }
 
-pub async fn image_handle(path: String) -> iconpicker::Icon {
+pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
     let mut data: Vec<_> = Vec::new();
     let pathbuf = PathBuf::from_str(&path).unwrap();
 
@@ -695,12 +695,26 @@ pub async fn image_handle(path: String) -> iconpicker::Icon {
     };
 
     if is_svg(&path) {
-        let handle = svg::Handle::from_memory(data);
+        let handle = cosmic::widget::svg::Handle::from_memory(data);
 
-        iconpicker::Icon::new(iconpicker::IconType::Svg(handle), path)
-    } else {
-        let handle = image::Handle::from_memory(data);
+        return Some(iconpicker::Icon::new(
+            iconpicker::IconType::Svg(handle),
+            path,
+        ));
+    } else if let Ok(image) = ImageReader::new(Cursor::new(&data))
+        .with_guessed_format()
+        .unwrap()
+        .decode()
+    {
+        if image.width() >= 96 && image.height() >= 96 {
+            let handle = cosmic::widget::image::Handle::from_memory(data);
 
-        iconpicker::Icon::new(iconpicker::IconType::Raster(handle), path)
-    }
+            return Some(iconpicker::Icon::new(
+                iconpicker::IconType::Raster(handle),
+                path,
+            ));
+        }
+    };
+
+    None
 }

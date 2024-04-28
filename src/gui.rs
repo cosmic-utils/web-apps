@@ -50,7 +50,7 @@ pub enum Message {
     PerformIconSearch,
     CustomIconsSearch(String),
     FoundIcons(Vec<String>),
-    PushIcon(iconpicker::Icon),
+    PushIcon(Option<iconpicker::Icon>),
     SetIcon(iconpicker::Icon),
     SelectIcon(iconpicker::Icon),
 }
@@ -220,7 +220,7 @@ impl cosmic::Application for Window {
                     self.main_window.app_incognito = launcher.is_incognito;
 
                     Command::perform(image_handle(launcher.icon), |result| {
-                        cosmic::app::message::app(Message::SetIcon(result))
+                        cosmic::app::message::app(Message::SetIcon(result.unwrap()))
                     })
                 }
                 Buttons::Delete(launcher) => {
@@ -267,7 +267,7 @@ impl cosmic::Application for Window {
 
             // *** ICON PICKER **** //
             Message::Favicon(path) => Command::perform(image_handle(path), |result| {
-                cosmic::app::message::app(Message::SetIcon(result))
+                cosmic::app::message::app(Message::SetIcon(result.unwrap()))
             }),
             Message::PerformIconSearch => {
                 self.iconpicker.icons.clear();
@@ -298,10 +298,12 @@ impl cosmic::Application for Window {
                 Command::batch(commands)
             }
             Message::PushIcon(icon) => {
-                if self.main_window.selected_icon.is_none() {
-                    self.main_window.selected_icon = Some(icon.clone());
+                if self.main_window.selected_icon.is_none() && icon.is_some() {
+                    self.main_window.selected_icon = Some(icon.as_ref().unwrap().clone());
                 }
-                self.iconpicker.icons.push(icon);
+                if let Some(ico) = icon {
+                    self.iconpicker.icons.push(ico);
+                }
 
                 Command::none()
             }
@@ -313,7 +315,7 @@ impl cosmic::Application for Window {
                 self.main_window.app_icon = saved.clone();
 
                 Command::perform(image_handle(saved), |result| {
-                    cosmic::app::message::app(Message::SelectIcon(result))
+                    cosmic::app::message::app(Message::SelectIcon(result.unwrap()))
                 })
             }
             Message::SelectIcon(ico) => {

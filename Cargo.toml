@@ -19,6 +19,7 @@ walkdir = "2.4.0"
 dirs = "5.0"
 dircpy = "0.3.15"
 scraper = "0.18.1"
+image = "0.25.1"
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic"
