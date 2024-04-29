@@ -9,6 +9,7 @@ base-dir := absolute_path(clean(rootdir / prefix))
 flatpak-base-dir := absolute_path(clean(rootdir / flatpak-prefix))
 
 export INSTALL_DIR := base-dir / 'share'
+export FLATPAK_INSTALL_DIR := flatpak-base-dir / 'share'
 
 bin-src := 'target' / 'release' / name
 bin-dst := base-dir / 'bin' / name
@@ -22,15 +23,19 @@ icon-src := 'data' / APPID + '.png'
 icon-dst := clean(rootdir / prefix) / 'share' / 'icons' / APPID + '.png'
 
 runtime-dst := INSTALL_DIR / name
+flatpak-runtime-dst := FLATPAK_INSTALL_DIR / name
 
 firefox-src := 'data' / 'runtime' / 'firefox'
 firefox-dst := runtime-dst / 'runtime' / 'firefox'
+flatpak-firefox-dst := flatpak-runtime-dst / 'runtime' / 'firefox'
 
 profile-src := 'data' / 'runtime' / 'firefox' / 'profile'
 profile-dst := runtime-dst / 'profile'
+flatpak-profile-dst := flatpak-runtime-dst / 'profile'
 
 chrome-src := profile-src / 'chrome'
 chrome-dst := profile-dst / 'chrome'
+flatpak-chrome-dst := flatpak-profile-dst / 'chrome'
 
 # Default recipe which runs `just build-release`
 default: build-release
@@ -87,11 +92,11 @@ flatpak:
 
      # install firefox profile
      for file in `ls {{profile-src}}`; do \
-     	install -Dm0644 "{{profile-src}}/$file" "{{profile-dst}}/$file"; \
+     	install -Dm0644 "{{profile-src}}/$file" "{{flatpak-profile-dst}}/$file"; \
      done
 
      for file in `ls {{chrome-src}}`; do \
-     	install -Dm0644 "{{chrome-src}}/$file" "{{chrome-dst}}/$file"; \
+     	install -Dm0644 "{{chrome-src}}/$file" "{{flatpak-chrome-dst}}/$file"; \
      done
 
 
