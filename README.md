@@ -30,6 +30,8 @@ Make sure you are in `cosmic-wam` directory. You should be already.
 
 ### Building
 
+! NOTE: Before installation you should build binary file. Run this command and after it you will be able to install app.
+
 `just`
 
 ### Installation
