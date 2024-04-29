@@ -2,7 +2,7 @@ name := 'cosmic-wam'
 export APPID := 'org.cosmic.Wam'
 
 rootdir := ''
-prefix := '/usr/local'
+prefix := '/usr'
 flatpak-prefix := '/app'
 
 base-dir := absolute_path(clean(rootdir / prefix))
