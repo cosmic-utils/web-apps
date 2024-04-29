@@ -39,8 +39,16 @@ pub struct Wam {
 impl Wam {
     pub fn new() -> Self {
         let browsers = get_supported_browsers();
-        let browser = &browsers[0];
-
+        let browser = if !browsers.is_empty() {
+            browsers[0].clone()
+        } else {
+            Browser::new(
+                crate::common::BrowserType::NotInstalled,
+                "Install some browser",
+                "",
+                "",
+            )
+        };
         let base_dir = BaseDirectories::new().expect("cant follow base directories");
         let local_share = base_dir.get_data_home();
         let cosmic_wam_path = local_share.join("cosmic-wam");
@@ -54,7 +62,7 @@ impl Wam {
             app_parameters: String::new(),
             app_category: String::from("Web"),
             app_browser_name: String::from("Browser"),
-            app_browser: browser.clone(),
+            app_browser: browser,
             app_navbar: false,
             app_incognito: false,
             app_isolated: true,

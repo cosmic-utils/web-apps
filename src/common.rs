@@ -201,6 +201,7 @@ impl WebAppLauncher {
                     }
                     BrowserType::Epiphany => todo!(),
                     BrowserType::Falkon => todo!(),
+                    _ => {}
                 }
 
                 Ok(WebAppLauncher {
@@ -339,6 +340,7 @@ impl WebAppLauncher {
             BrowserType::Chromium => self.exec_chromium(),
             BrowserType::Epiphany => todo!(),
             BrowserType::Falkon => todo!(),
+            _ => String::new(),
         }
     }
 
@@ -454,6 +456,7 @@ pub enum BrowserType {
     Chromium,
     Epiphany,
     Falkon,
+    NotInstalled,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
