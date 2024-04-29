@@ -1,2 +1,9 @@
 /target
-Cargo.lock
+/debug
+
+**/*.rs.bk
+
+*.pdb
+
+/.flatpak-builder
+/flatpak_build
