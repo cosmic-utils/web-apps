@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=COSMIC Web Apps
-Exec=/usr/local/bin/cosmic-wam
+Exec=cosmic-wam
 Terminal=false
 Type=Application
 StartupNotify=true
