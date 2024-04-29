@@ -17,10 +17,13 @@ flatpak-bin-dst := flatpak-base-dir / 'bin' / name
 
 desktop := APPID + '.desktop'
 desktop-src := 'data' / desktop
-desktop-dst := clean(rootdir / prefix) / 'share' / 'applications' / desktop
+desktop-dst := base-dir / 'share' / 'applications' / desktop
+flatpak-desktop-dst := flatpak-base-dir / 'share' / 'applications' / desktop
+
 
 icon-src := 'data' / APPID + '.png'
-icon-dst := clean(rootdir / prefix) / 'share' / 'icons' / APPID + '.png'
+icon-dst := base-dir / 'share' / 'icons' / APPID + '.png'
+flatpak-icon-dst := flatpak-base-dir / 'share' / 'icons'/ APPID + 'png'
 
 runtime-dst := INSTALL_DIR / name
 flatpak-runtime-dst := FLATPAK_INSTALL_DIR / name
@@ -87,8 +90,8 @@ install:
 
 flatpak:
      install -Dm0755 {{bin-src}} {{flatpak-bin-dst}}
-     install -Dm0644 {{desktop-src}} {{desktop-dst}}
-     install -Dm0644 {{icon-src}} {{icon-dst}}
+     install -Dm0644 {{desktop-src}} {{flatpak-desktop-dst}}
+     install -Dm0644 {{icon-src}} {{flatpak-icon-dst}}
 
      # install firefox profile
      for file in `ls {{profile-src}}`; do \
