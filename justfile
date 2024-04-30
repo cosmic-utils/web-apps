@@ -97,7 +97,7 @@ download-icons:
     wget -O /app/cache/tmp/{{APPID}} \
         "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/master.tar.gz"
     echo "Unpacking archive ..."
-    tar -xzf {{APPID}} -C /app/cache/tmp
+    tar -xzf /app/cache/tmp/{{APPID}} -C /app/cache/tmp
 
 
 # install papirus icons theme
@@ -105,7 +105,7 @@ install-icons:
         #!/usr/bin/env bash
         for theme in {{EXTRA_THEMES}}; do
             echo "Installing '$theme' ..."
-            cp -R "/tmp/papirus-icon-theme-master/$theme" {{flatpak-papirus-dst}}
+            cp -R "/app/cache/tmp/papirus-icon-theme-master/$theme" {{flatpak-papirus-dst}}
         done
 
 
