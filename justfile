@@ -123,9 +123,6 @@ flatpak:
      	install -Dm0644 "{{chrome-src}}/$file" "{{flatpak-chrome-dst}}/$file"; \
      done
 
-     download-icons
-     install-icons
-
 
 # Uninstalls installed files
 uninstall:
