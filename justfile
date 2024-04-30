@@ -25,7 +25,7 @@ flatpak-desktop-dst := flatpak-base-dir / 'share' / 'applications' / desktop
 icon-src := 'data' / APPID + '.png'
 icon-dst := base-dir / 'share' / 'icons' / APPID + '.png'
 flatpak-icon-dst := flatpak-base-dir / 'share' / 'icons'/ APPID + '.png'
-flatpak-papirus-dst := flatpak-base-dir / 'share' / 'icons'
+flatpak-papirus-dst := flatpak-base-dir / 'extra' / 'export' / 'share' / 'icons'
 
 runtime-dst := INSTALL_DIR / name
 flatpak-runtime-dst := FLATPAK_INSTALL_DIR / name
