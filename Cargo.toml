@@ -20,6 +20,7 @@ dirs = "5.0"
 dircpy = "0.3.15"
 scraper = "0.18.1"
 image = "0.25.1"
+tokio = { version = "1.37.0", features = ["full"] }
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic"

@@ -25,7 +25,6 @@ flatpak-desktop-dst := flatpak-base-dir / 'share' / 'applications' / desktop
 icon-src := 'data' / APPID + '.png'
 icon-dst := base-dir / 'share' / 'icons' / APPID + '.png'
 flatpak-icon-dst := flatpak-base-dir / 'share' / 'icons'/ APPID + '.png'
-flatpak-papirus-dst := flatpak-base-dir / 'share' / 'icons'
 
 runtime-dst := INSTALL_DIR / name
 flatpak-runtime-dst := FLATPAK_INSTALL_DIR / name
@@ -104,11 +103,11 @@ download-icons:
 install-icons:
         #!/usr/bin/env bash
 
-        mkdir -p {{flatpak-papirus-dst}}
+        mkdir -p $HOME/.local/share/icons
 
         for theme in {{EXTRA_THEMES}}; do
             echo "Installing '$theme' ..."
-            cp -R "/app/cache/tmp/papirus-icon-theme-master/$theme" {{flatpak-papirus-dst}}
+            cp -Rv "/app/cache/tmp/papirus-icon-theme-master/$theme" $HOME/.local/share/icons
         done
 
 

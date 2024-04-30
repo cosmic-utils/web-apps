@@ -1,8 +1,12 @@
 use crate::{
+    add_icon_packs_install_script,
     common::{
         self, find_icons, get_icon_name_from_url, image_handle, move_icon, Browser, WebAppLauncher,
     },
-    iconpicker, wam,
+    execute_script, icon_pack_installed,
+    iconpicker::{self, IconPicker},
+    icons_installator::{self, Installator},
+    wam,
 };
 
 use cosmic::{
@@ -13,8 +17,7 @@ use cosmic::{
     iced_widget::text_input::focus,
     Element,
 };
-
-use std::collections::HashMap;
+use std::{collections::HashMap, process::ExitStatus};
 
 #[derive(Debug, Clone)]
 pub enum Buttons {
@@ -53,14 +56,24 @@ pub enum Message {
     PushIcon(Option<iconpicker::Icon>),
     SetIcon(iconpicker::Icon),
     SelectIcon(iconpicker::Icon),
+
+    // Installator
+    InstallScript(String),
+    InstallCommand(ExitStatus),
+}
+
+#[derive(Debug)]
+pub enum Dialogs {
+    IconPicker(IconPicker),
+    IconInstallator(Installator),
 }
 
 pub struct Window {
     core: Core,
     windows: HashMap<window::Id, wam::Wam>,
     main_window: wam::Wam,
-    icon_dialog: bool,
-    iconpicker: iconpicker::IconPicker,
+    dialog_open: bool,
+    dialog_window: Dialogs,
 }
 
 impl cosmic::Application for Window {
@@ -86,16 +99,32 @@ impl cosmic::Application for Window {
         cosmic::iced::Command<cosmic::app::Message<Self::Message>>,
     ) {
         let manager = wam::Wam::new();
-        let icons_picker = iconpicker::IconPicker::new();
+
+        let mut icon_dialog = false;
+
+        let (dialog, cmd) = if !icon_pack_installed() {
+            icon_dialog = true;
+
+            let cmd = Command::perform(add_icon_packs_install_script(), |file| {
+                cosmic::app::message::app(Message::InstallScript(file))
+            });
+
+            let installator = icons_installator::Installator::new();
+            (Dialogs::IconInstallator(installator), cmd)
+        } else {
+            let icons_picker = iconpicker::IconPicker::new();
+            (Dialogs::IconPicker(icons_picker), Command::none())
+        };
+
         let windows = Window {
             core,
             windows: HashMap::from([(window::Id::MAIN, manager.clone())]),
             main_window: manager,
-            icon_dialog: false,
-            iconpicker: icons_picker,
+            dialog_open: icon_dialog,
+            dialog_window: dialog,
         };
 
-        (windows, Command::none())
+        (windows, cmd)
     }
 
     fn subscription(&self) -> cosmic::iced_futures::Subscription<Self::Message> {
@@ -132,12 +161,19 @@ impl cosmic::Application for Window {
 
             // *** WAM STRUCT *** //
             Message::OpenIconPicker => {
-                self.icon_dialog = true;
+                self.dialog_open = true;
 
-                focus(self.iconpicker.searching_id.clone())
+                let icons_picker = iconpicker::IconPicker::new();
+                self.dialog_window = Dialogs::IconPicker(icons_picker);
+
+                if let Dialogs::IconPicker(picker) = &self.dialog_window {
+                    return focus(picker.searching_id.clone());
+                };
+
+                Command::none()
             }
             Message::CloseIconPicker => {
-                self.icon_dialog = false;
+                self.dialog_open = false;
 
                 focus(self.main_window.app_title_id.clone())
             }
@@ -181,7 +217,9 @@ impl cosmic::Application for Window {
             Message::Clicked(buttons) => match buttons {
                 Buttons::SearchFavicon => {
                     if common::url_valid(&self.main_window.app_url) {
-                        self.iconpicker.icons.clear();
+                        if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
+                            picker.icons.clear();
+                        }
 
                         let name = get_icon_name_from_url(&self.main_window.app_url);
                         let icons = find_icons(name, self.main_window.app_url.clone());
@@ -270,19 +308,25 @@ impl cosmic::Application for Window {
                 cosmic::app::message::app(Message::SetIcon(result.unwrap()))
             }),
             Message::PerformIconSearch => {
-                self.iconpicker.icons.clear();
+                if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
+                    picker.icons.clear();
 
-                let icons = find_icons(
-                    self.iconpicker.icon_searching.clone(),
-                    self.main_window.app_url.clone(),
-                );
+                    let icons = find_icons(
+                        picker.icon_searching.clone(),
+                        self.main_window.app_url.clone(),
+                    );
 
-                Command::perform(icons, |icons| {
-                    cosmic::app::message::app(Message::FoundIcons(icons))
-                })
+                    return Command::perform(icons, |icons| {
+                        cosmic::app::message::app(Message::FoundIcons(icons))
+                    });
+                };
+
+                Command::none()
             }
             Message::CustomIconsSearch(input) => {
-                self.iconpicker.icon_searching = input;
+                if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
+                    picker.icon_searching = input;
+                }
 
                 Command::none()
             }
@@ -302,7 +346,9 @@ impl cosmic::Application for Window {
                     self.main_window.selected_icon = Some(icon.as_ref().unwrap().clone());
                 }
                 if let Some(ico) = icon {
-                    self.iconpicker.icons.push(ico);
+                    if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
+                        picker.icons.push(ico);
+                    }
                 }
 
                 Command::none()
@@ -311,7 +357,7 @@ impl cosmic::Application for Window {
                 let path = icon.path;
 
                 let saved = move_icon(path, self.main_window.app_title.clone());
-                self.icon_dialog = false;
+                self.dialog_open = false;
                 self.main_window.app_icon = saved.clone();
 
                 Command::perform(image_handle(saved), |result| {
@@ -323,12 +369,34 @@ impl cosmic::Application for Window {
                 self.main_window.app_icon = ico.path;
                 Command::none()
             }
+
+            // *** INSTALLATOR **** //
+            Message::InstallScript(script) => {
+                if !icon_pack_installed() {
+                    return Command::perform(execute_script(script), |status| {
+                        cosmic::app::message::app(Message::InstallCommand(status))
+                    });
+                }
+                Command::none()
+            }
+            Message::InstallCommand(exit_status) => {
+                if ExitStatus::success(&exit_status) {
+                    self.dialog_open = false;
+                }
+
+                tracing::info!("{}", exit_status);
+
+                Command::none()
+            }
         }
     }
 
     fn dialog(&self) -> Option<Element<Self::Message>> {
-        if self.icon_dialog {
-            return Some(self.iconpicker.view());
+        if self.dialog_open {
+            return match &self.dialog_window {
+                Dialogs::IconPicker(picker) => Some(picker.view()),
+                Dialogs::IconInstallator(installator) => Some(installator.view()),
+            };
         };
 
         None

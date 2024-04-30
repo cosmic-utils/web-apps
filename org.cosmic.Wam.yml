@@ -10,6 +10,8 @@ finish-args:
   - "--socket=fallback-x11"
   - "--socket=wayland"
   - "--device=dri"
+  - "--filesystem=xdg-data/icons:ro"
+  - "--filesystem=xdg-data/applications:create"
 build-options:
   append-path: "/usr/lib/sdk/rust-stable/bin"
   build-args:
@@ -33,9 +35,10 @@ modules:
       - just vendor
       - just build-vendored
       - just flatpak
-      - just download-icons
-      - just install-icons
     sources:
       - type: git
         branch: master
         url: https://github.com/elevenhsoft/cosmic-wam.git
+      # DEBUG
+      - type: dir
+        path: .
