@@ -1,5 +1,6 @@
-#![allow(clippy::too_many_arguments, dead_code)]
+#![allow(clippy::too_many_arguments)]
 
+use anyhow::{anyhow, Error, Result};
 use dircpy::copy_dir;
 use image::io::Reader as ImageReader;
 use rand::{thread_rng, Rng};
@@ -9,7 +10,7 @@ use std::{
     ffi::OsStr,
     fmt::Display,
     fs::{self, copy, create_dir_all, remove_dir_all, remove_file, File},
-    io::{self, BufRead, Cursor, Read, Result, Write},
+    io::{self, BufRead, Cursor, Read, Write},
     path::PathBuf,
     str::FromStr,
 };
@@ -97,7 +98,7 @@ impl WebAppLauncher {
         }
     }
 
-    pub fn read(path: PathBuf, codename: String) -> Result<WebAppLauncher> {
+    pub fn read(path: PathBuf, codename: String) -> Result<WebAppLauncher, Error> {
         let file = File::open(&path)?;
         let mut browser_name = String::new();
         let mut name = String::new();
@@ -223,26 +224,7 @@ impl WebAppLauncher {
                 })
             }
             None => {
-                let supported = get_supported_browsers();
-                let web_browser = supported[0].clone();
-
-                Ok(WebAppLauncher {
-                    path,
-                    codename,
-                    web_browser,
-                    name,
-                    icon,
-                    is_valid,
-                    exec,
-                    args,
-                    category,
-                    url,
-                    custom_parameters,
-                    isolate_profile,
-                    navbar,
-                    is_incognito,
-                    app_base_dir: None,
-                })
+                Err(anyhow!("Cannot read web app launcher."))
             }
         }
     }
