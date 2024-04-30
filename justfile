@@ -1,5 +1,6 @@
 name := 'cosmic-wam'
 export APPID := 'org.cosmic.Wam'
+export EXTRA_THEMES := 'Papirus Papirus-Dark Papirus-Light'
 
 rootdir := ''
 prefix := '/usr'
@@ -24,6 +25,7 @@ flatpak-desktop-dst := flatpak-base-dir / 'share' / 'applications' / desktop
 icon-src := 'data' / APPID + '.png'
 icon-dst := base-dir / 'share' / 'icons' / APPID + '.png'
 flatpak-icon-dst := flatpak-base-dir / 'share' / 'icons'/ APPID + '.png'
+flatpak-papirus-dst := flatpak-base-dir / 'share' / 'icons'
 
 runtime-dst := INSTALL_DIR / name
 flatpak-runtime-dst := FLATPAK_INSTALL_DIR / name
@@ -88,6 +90,25 @@ install:
      done
 
 
+# download papirus icons theme
+download-icons:
+    #!/usr/bin/env bash
+    echo "Getting the latest version from GitHub ..."
+    wget -O /app/cache/tmp/{{APPID}} \
+        "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/master.tar.gz"
+    echo "Unpacking archive ..."
+    tar -xzf {{APPID}} -C /app/cache/tmp
+
+
+# install papirus icons theme
+install-icons:
+        #!/usr/bin/env bash
+        for theme in {{EXTRA_THEMES}}; do
+            echo "Installing '$theme' ..."
+            cp -R "/tmp/papirus-icon-theme-master/$theme" {{flatpak-papirus-dst}}
+        done
+
+
 flatpak:
      install -Dm0755 {{bin-src}} {{flatpak-bin-dst}}
      install -Dm0644 {{desktop-src}} {{flatpak-desktop-dst}}
@@ -101,6 +122,9 @@ flatpak:
      for file in `ls {{chrome-src}}`; do \
      	install -Dm0644 "{{chrome-src}}/$file" "{{flatpak-chrome-dst}}/$file"; \
      done
+
+     download-icons
+     install-icons
 
 
 # Uninstalls installed files
