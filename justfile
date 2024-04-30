@@ -103,6 +103,9 @@ download-icons:
 # install papirus icons theme
 install-icons:
         #!/usr/bin/env bash
+
+        mkdir -p {{flatpak-papirus-dst}}
+
         for theme in {{EXTRA_THEMES}}; do
             echo "Installing '$theme' ..."
             cp -R "/app/cache/tmp/papirus-icon-theme-master/$theme" {{flatpak-papirus-dst}}
