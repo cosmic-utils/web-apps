@@ -1,7 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
 use anyhow::{anyhow, Error, Result};
-use dircpy::copy_dir;
 use image::io::Reader as ImageReader;
 use rand::{thread_rng, Rng};
 use reqwest::Client;
@@ -42,7 +41,6 @@ pub struct WebAppLauncher {
     pub isolate_profile: bool,
     pub navbar: bool,
     pub is_incognito: bool,
-    pub app_base_dir: Option<PathBuf>,
 }
 
 impl WebAppLauncher {
@@ -77,8 +75,6 @@ impl WebAppLauncher {
         path.push("applications");
         path.push(filename);
 
-        let app_base_dir = Some(PathBuf::from_str("/usr/local/share/cosmic-wam").unwrap());
-
         Self {
             path,
             codename,
@@ -94,7 +90,6 @@ impl WebAppLauncher {
             isolate_profile,
             navbar,
             is_incognito,
-            app_base_dir,
         }
     }
 
@@ -190,7 +185,13 @@ impl WebAppLauncher {
                             }
                         });
                     }
-                    BrowserType::FirefoxFlatpak => todo!(),
+                    BrowserType::FirefoxFlatpak => {
+                        exec.split(' ').enumerate().for_each(|(n, arg)| {
+                            if n > 0 && !arg.is_empty() {
+                                args.push(arg.to_string())
+                            }
+                        });
+                    }
                     BrowserType::Librewolf => todo!(),
                     BrowserType::WaterfoxFlatpak => todo!(),
                     BrowserType::Chromium => {
@@ -220,12 +221,32 @@ impl WebAppLauncher {
                     isolate_profile,
                     navbar,
                     is_incognito,
-                    app_base_dir: None,
                 })
             }
-            None => {
-                Err(anyhow!("Cannot read web app launcher."))
-            }
+            None => Err(anyhow!("Cannot read web app launcher.")),
+        }
+    }
+
+    fn create_firefox_userjs(&self, path: PathBuf) -> bool {
+        let content = include_bytes!("../data/runtime/firefox/profile/user.js");
+
+        let mut file = File::create(&path)
+            .unwrap_or_else(|_| panic!("failed to create user.js in {:?}", path));
+
+        file.write_all(content).is_ok()
+    }
+
+    fn create_user_chrome_css(&self, path: PathBuf, create_navbar: bool) -> bool {
+        let user_chrome_css =
+            include_bytes!("../data/runtime/firefox/profile/chrome/userChrome.css");
+
+        let mut file = File::create(&path)
+            .unwrap_or_else(|_| panic!("cant create userChrome.css in {:?}", path));
+
+        if create_navbar {
+            file.write_all(b"").is_ok()
+        } else {
+            file.write_all(user_chrome_css).is_ok()
         }
     }
 
@@ -244,22 +265,18 @@ impl WebAppLauncher {
         }
 
         let profile_path = profile_dir.join(&self.codename);
-        let profile_dir = profile_dir.to_str().unwrap();
+        let user_js_path = profile_path.join("user.js");
+        let mut user_chrome_css = profile_path.join("chrome");
 
-        create_dir_all(profile_dir).expect("cant create profile dir");
+        create_dir_all(&profile_path)
+            .unwrap_or_else(|_| panic!("cant create profile dir in {:?}", &profile_path));
+        create_dir_all(&user_chrome_css)
+            .unwrap_or_else(|_| panic!("cant create chrome dir in {:?}", &user_chrome_css));
 
-        let profile = self.app_base_dir.as_ref().unwrap().join("profile");
-        copy_dir(profile, profile_path.clone()).expect("cant copy firefox profile dir");
+        user_chrome_css = user_chrome_css.join("userChrome.css");
 
-        if self.navbar {
-            let profile = self
-                .app_base_dir
-                .as_ref()
-                .unwrap()
-                .join("profile/chrome/userChrome-with-navbar.css");
-            let output = profile_path.join("chrome/userChrome.css");
-            copy(profile, output).expect("cannot copy userChrome.css");
-        }
+        self.create_firefox_userjs(user_js_path);
+        self.create_user_chrome_css(user_chrome_css, self.navbar);
 
         let profile_path = profile_path.to_str().unwrap();
         let mut exec_string = format!(
