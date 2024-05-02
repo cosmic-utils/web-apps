@@ -451,8 +451,8 @@ impl Browser {
         let mut test = PathBuf::new();
         let mut exe_path = PathBuf::new();
 
-        let base = BaseDirectories::new().expect("base directories not found");
-        let data_home = base.get_data_home();
+        let base = home_dir();
+        let data_home = base.join(".local/share");
 
         if exec.starts_with(".local/share/") {
             let flatpak_path: Vec<_> = exec.split(".local/share/").collect();
