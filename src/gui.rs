@@ -22,7 +22,6 @@ use std::{collections::HashMap, process::ExitStatus};
 #[derive(Debug, Clone)]
 pub enum Buttons {
     SearchFavicon,
-    Run(WebAppLauncher),
     Edit(WebAppLauncher),
     Delete(WebAppLauncher),
     Navbar(bool),
@@ -229,19 +228,6 @@ impl cosmic::Application for Window {
                     } else {
                         Command::none()
                     }
-                }
-                Buttons::Run(launcher) => {
-                    let mut cmd = std::process::Command::new(launcher.web_browser.exec);
-
-                    for arg in launcher.args {
-                        cmd.arg(arg);
-                    }
-
-                    if cmd.output().is_ok() {
-                        return Command::none();
-                    }
-
-                    Command::none()
                 }
                 Buttons::Edit(launcher) => {
                     self.main_window.edit_mode = true;

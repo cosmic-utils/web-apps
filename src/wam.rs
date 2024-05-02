@@ -254,22 +254,16 @@ impl Wam {
                     .padding(10);
 
                     let run = Button::new(
-                        Container::new(
-                            text(data.name.clone())
-                                .font(cosmic::iced::Font {
-                                    weight: cosmic::iced::font::Weight::Semibold,
-                                    ..Default::default()
-                                })
-                                .size(20.),
-                        )
+                        Container::new(text(data.name.clone()).font(cosmic::iced::Font {
+                            weight: cosmic::iced::font::Weight::Semibold,
+                            ..Default::default()
+                        }))
                         .center_x()
                         .center_y(),
                     )
-                    .on_press(Message::Clicked(Buttons::Run(data.clone())))
                     .width(Length::FillPortion(3))
                     .height(Length::Fixed(50.))
-                    .padding(10)
-                    .style(theme::Button::Suggested);
+                    .padding(10);
 
                     let edit = Button::new(Container::new("Edit").center_x().center_y())
                         .on_press(Message::Clicked(Buttons::Edit(data.clone())))
