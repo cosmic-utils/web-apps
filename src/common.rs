@@ -25,6 +25,23 @@ pub fn is_svg(path: &str) -> bool {
     !url_valid(path) && PathBuf::from_str(path).unwrap().extension() == Some(OsStr::new("svg"))
 }
 
+pub fn home_dir() -> PathBuf {
+    let user = std::env::var("USER");
+
+    if let Ok(username) = user {
+        return PathBuf::from_str(&format!("/home/{}", username)).unwrap();
+    }
+
+    PathBuf::new()
+}
+
+pub fn desktop_filepath(filename: &str) -> PathBuf {
+    let mut home = home_dir();
+    home.push(".local/share/applications");
+
+    home.join(filename)
+}
+
 #[derive(Debug, Clone)]
 pub struct WebAppLauncher {
     pub path: PathBuf,
@@ -63,17 +80,13 @@ impl WebAppLauncher {
             format!("{}{}", name.replace(' ', ""), random_code)
         };
         let filename = format!("webapp-{}.desktop", codename);
+        let path = desktop_filepath(&filename);
         let web_browser = browser;
         let is_valid = !name.is_empty() && !icon.is_empty() && url_valid(&url);
         let exec = web_browser.exec.clone();
         let args = Vec::new();
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
-
-        let base_dir = BaseDirectories::new().expect("base directories not found");
-        let mut path = base_dir.get_data_home();
-        path.push("applications");
-        path.push(filename);
 
         Self {
             path,
@@ -177,34 +190,11 @@ impl WebAppLauncher {
 
         match web_browser {
             Some(web_browser) => {
-                match web_browser._type {
-                    BrowserType::Firefox => {
-                        exec.split(' ').enumerate().for_each(|(n, arg)| {
-                            if n > 0 && !arg.is_empty() {
-                                args.push(arg.to_string())
-                            }
-                        });
+                exec.split(' ').enumerate().for_each(|(n, arg)| {
+                    if n > 0 && !arg.is_empty() {
+                        args.push(arg.to_string())
                     }
-                    BrowserType::FirefoxFlatpak => {
-                        exec.split(' ').enumerate().for_each(|(n, arg)| {
-                            if n > 0 && !arg.is_empty() {
-                                args.push(arg.to_string())
-                            }
-                        });
-                    }
-                    BrowserType::Librewolf => todo!(),
-                    BrowserType::WaterfoxFlatpak => todo!(),
-                    BrowserType::Chromium => {
-                        exec.split(' ').enumerate().for_each(|(n, arg)| {
-                            if n > 0 && !arg.is_empty() {
-                                args.push(arg.to_string())
-                            }
-                        });
-                    }
-                    BrowserType::Epiphany => todo!(),
-                    BrowserType::Falkon => todo!(),
-                    _ => {}
-                }
+                });
 
                 Ok(WebAppLauncher {
                     path,
@@ -250,19 +240,9 @@ impl WebAppLauncher {
         }
     }
 
-    fn exec_firefox(&self, is_flatpak: bool) -> String {
-        let mut profile_dir = PathBuf::new();
-
-        if is_flatpak {
-            let home = dirs::home_dir().expect("cant get home dir");
-            profile_dir.push(home);
-            profile_dir.push(".var/app/org.mozilla.firefox/data/ice/firefox");
-        } else {
-            let base_dir = BaseDirectories::new().expect("no base directories found");
-            let ice_dir = base_dir.get_data_home().join("ice");
-            let profiles_dir = ice_dir.join("profiles").join(&self.codename);
-            profile_dir = profiles_dir.join("firefox").join(&self.codename);
-        }
+    fn exec_firefox(&self) -> String {
+        let mut profile_dir = home_dir();
+        profile_dir.push(".var/app/org.mozilla.firefox/data/ice/firefox");
 
         let profile_path = profile_dir.join(&self.codename);
         let user_js_path = profile_path.join("user.js");
@@ -279,6 +259,7 @@ impl WebAppLauncher {
         self.create_user_chrome_css(user_chrome_css, self.navbar);
 
         let profile_path = profile_path.to_str().unwrap();
+
         let mut exec_string = format!(
             "{} --class WebApp-{} --name WebApp-{} --profile {} --no-remote ",
             self.exec, self.codename, self.codename, profile_path
@@ -289,10 +270,10 @@ impl WebAppLauncher {
         }
 
         if !self.custom_parameters.is_empty() {
-            exec_string.push_str(&self.custom_parameters);
+            exec_string.push_str(&format!("{} ", self.custom_parameters));
         }
 
-        exec_string.push_str(&format!(" {}", &self.url));
+        exec_string.push_str(&self.url);
 
         exec_string
     }
@@ -332,8 +313,8 @@ impl WebAppLauncher {
 
     fn exec_string(&self) -> String {
         match self.web_browser._type {
-            BrowserType::Firefox => self.exec_firefox(false),
-            BrowserType::FirefoxFlatpak => self.exec_firefox(true),
+            BrowserType::Firefox => self.exec_firefox(),
+            BrowserType::FirefoxFlatpak => self.exec_firefox(),
             BrowserType::Librewolf => todo!(),
             BrowserType::WaterfoxFlatpak => todo!(),
             BrowserType::Chromium => self.exec_chromium(),
@@ -405,19 +386,10 @@ impl WebAppLauncher {
     }
 }
 
-fn apps_dir() -> PathBuf {
-    let base = BaseDirectories::new().expect("base directories not found");
-    let mut data_home = base.get_data_home();
-
-    data_home.push("applications");
-
-    data_home
-}
-
 pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
     let mut webapps = Vec::new();
 
-    match fs::read_dir(apps_dir()) {
+    match fs::read_dir(desktop_filepath("")) {
         Ok(entries) => {
             for entry in entries {
                 match entry {
@@ -437,7 +409,7 @@ pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
             }
         }
         Err(_) => {
-            create_dir_all(apps_dir()).expect("Cannot create local applications dir");
+            create_dir_all(desktop_filepath("")).expect("Cannot create local applications dir");
         }
     }
 

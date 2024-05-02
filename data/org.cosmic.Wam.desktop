@@ -5,6 +5,6 @@ Terminal=false
 Type=Application
 StartupNotify=true
 Icon=org.cosmic.Wam
-Categories=COSMIC;Utility;Internet;
+Categories=X-COSMIC;Utility;Internet;
 Keywords=Internet;Tools;
 MimeType=inode/directory;

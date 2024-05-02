@@ -1,6 +1,7 @@
 use crate::common::{Browser, BrowserType};
 
-pub fn supported_browsers() -> Vec<Browser> {
+#[allow(dead_code)]
+pub fn native_browsers() -> Vec<Browser> {
     vec![
         Browser::new(
             BrowserType::Firefox,
@@ -27,19 +28,6 @@ pub fn supported_browsers() -> Vec<Browser> {
             "/usr/bin/firefox-esr",
         ),
         Browser::new(
-            BrowserType::FirefoxFlatpak,
-            "Firefox (Flatpak)",
-            "/var/lib/flatpak/exports/bin/org.mozilla.firefox",
-            "/var/lib/flatpak/exports/bin/org.mozilla.firefox",
-        ),
-        Browser::new(
-            BrowserType::FirefoxFlatpak,
-            "Firefox (Flatpak)",
-            ".local/share/flatpak/exports/bin/org.mozilla.firefox",
-            ".local/share/flatpak/exports/bin/org.mozilla.firefox",
-        ),
-        Browser::new(BrowserType::Chromium, "Brave", "brave", "/usr/bin/brave"),
-        Browser::new(
             BrowserType::Chromium,
             "Brave Browser",
             "brave-browser",
@@ -62,18 +50,6 @@ pub fn supported_browsers() -> Vec<Browser> {
             "Chrome Beta",
             "google-chrome-beta",
             "/usr/bin/google-chrome-beta",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Chrome (Flatpak)",
-            "/var/lib/flatpak/exports/bin/com.google.Chrome",
-            "/var/lib/flatpak/exports/bin/com.google.Chrome",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Chrome (Flatpak)",
-            ".local/share/flatpak/exports/bin/com.google.Chrome",
-            ".local/share/flatpak/exports/bin/com.google.Chrome",
         ),
         Browser::new(
             BrowserType::Chromium,
@@ -112,18 +88,6 @@ pub fn supported_browsers() -> Vec<Browser> {
             "/usr/bin/librewolf",
         ),
         Browser::new(
-            BrowserType::Librewolf,
-            "Librewolf (Flatpak)",
-            "/var/lib/flatpak/exports/bin/io.gitlab.librewolf-community",
-            "/var/lib/flatpak/exports/bin/io.gitlab.librewolf-community",
-        ),
-        Browser::new(
-            BrowserType::Librewolf,
-            "Librewolf (Flatpak)",
-            ".local/share/flatpak/exports/bin/io.gitlab.librewolf-community",
-            ".local/share/flatpak/exports/bin/io.gitlab.librewolf-community",
-        ),
-        Browser::new(
             BrowserType::Firefox,
             "Waterfox",
             "waterfox",
@@ -154,18 +118,6 @@ pub fn supported_browsers() -> Vec<Browser> {
             "/usr/bin/waterfox-g4",
         ),
         Browser::new(
-            BrowserType::WaterfoxFlatpak,
-            "Waterfox (Flatpak)",
-            "/var/lib/flatpak/exports/bin/net.waterfox.waterfox",
-            "/var/lib/flatpak/exports/bin/net.waterfox.waterfox",
-        ),
-        Browser::new(
-            BrowserType::WaterfoxFlatpak,
-            "Waterfox (Flatpak)",
-            ".local/share/flatpak/exports/bin/net.waterfox.waterfox",
-            ".local/share/flatpak/exports/bin/net.waterfox.waterfox",
-        ),
-        Browser::new(
             BrowserType::Chromium,
             "Vivaldi",
             "vivaldi-stable",
@@ -176,18 +128,6 @@ pub fn supported_browsers() -> Vec<Browser> {
             "Vivaldi Snapshot",
             "vivaldi-snapshot",
             "/usr/bin/vivaldi-snapshot",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Vivaldi (Flatpak)",
-            "/var/lib/flatpak/exports/bin/com.vivaldi.Vivaldi",
-            "/var/lib/flatpak/exports/bin/com.vivaldi.Vivaldi",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Vivaldi (Flatpak)",
-            ".local/share/flatpak/exports/bin/com.vivaldi.Vivaldi",
-            ".local/share/flatpak/exports/bin/com.vivaldi.Vivaldi",
         ),
         Browser::new(
             BrowserType::Chromium,
@@ -215,76 +155,142 @@ pub fn supported_browsers() -> Vec<Browser> {
         ),
         Browser::new(
             BrowserType::Chromium,
-            "Ungoogled Chromium (Flatpak)",
-            "/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
-            "/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Ungoogled Chromium (Flatpak)",
-            ".local/share/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
-            ".local/share/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Chromium (Flatpak)",
-            "/var/lib/flatpak/exports/bin/org.chromium.Chromium",
-            "/var/lib/flatpak/exports/bin/org.chromium.Chromium",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Chromium (Flatpak)",
-            ".local/share/flatpak/exports/bin/org.chromium.Chromium",
-            ".local/share/flatpak/exports/bin/org.chromium.Chromium",
-        ),
-        Browser::new(BrowserType::Falkon, "Falkon", "falkon", "/usr/bin/falkon"),
-        Browser::new(
-            BrowserType::Chromium,
-            "Microsoft Edge (Flatpak)",
-            "/var/lib/flatpak/exports/bin/com.microsoft.Edge",
-            "/var/lib/flatpak/exports/bin/com.microsoft.Edge",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Microsoft Edge (Flatpak)",
-            ".local/share/flatpak/exports/bin/com.microsoft.Edge",
-            ".local/share/flatpak/exports/bin/com.microsoft.Edge",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Brave (Flatpak)",
-            "/var/lib/flatpak/exports/bin/com.brave.Browser",
-            "/var/lib/flatpak/exports/bin/com.brave.Browser",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
-            "Brave (Flatpak)",
-            ".local/share/flatpak/exports/bin/com.brave.Browser",
-            ".local/share/flatpak/exports/bin/com.brave.Browser",
-        ),
-        Browser::new(
-            BrowserType::Chromium,
             "Yandex",
             "yandex-browser",
             "/usr/bin/yandex-browser",
-        ),
-        Browser::new(
-            BrowserType::Falkon,
-            "Falkon (Flatpak)",
-            "/var/lib/flatpak/exports/bin/org.kde.falkon",
-            "/var/lib/flatpak/exports/bin/org.kde.falkon",
-        ),
-        Browser::new(
-            BrowserType::Falkon,
-            "Falkon (Flatpak)",
-            ".local/share/flatpak/exports/bin/org.kde.falkon",
-            ".local/share/flatpak/exports/bin/org.kde.falkon",
         ),
         Browser::new(
             BrowserType::Chromium,
             "Naver Whale",
             "naver-whale-stable",
             "/usr/bin/naver-whale-stable",
+        ),
+        Browser::new(BrowserType::Chromium, "Brave", "brave", "/usr/bin/brave"),
+        Browser::new(BrowserType::Falkon, "Falkon", "falkon", "/usr/bin/falkon"),
+    ]
+}
+
+pub fn supported_browsers() -> Vec<Browser> {
+    vec![
+        Browser::new(
+            BrowserType::FirefoxFlatpak,
+            "Firefox (Flatpak)",
+            "/var/lib/flatpak/exports/bin/org.mozilla.firefox",
+            "/var/lib/flatpak/exports/bin/org.mozilla.firefox",
+        ),
+        Browser::new(
+            BrowserType::FirefoxFlatpak,
+            "Firefox (Flatpak)",
+            ".local/share/flatpak/exports/bin/org.mozilla.firefox",
+            ".local/share/flatpak/exports/bin/org.mozilla.firefox",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Chrome (Flatpak)",
+            "/var/lib/flatpak/exports/bin/com.google.Chrome",
+            "/var/lib/flatpak/exports/bin/com.google.Chrome",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Chrome (Flatpak)",
+            ".local/share/flatpak/exports/bin/com.google.Chrome",
+            ".local/share/flatpak/exports/bin/com.google.Chrome",
+        ),
+        Browser::new(
+            BrowserType::Librewolf,
+            "Librewolf (Flatpak)",
+            "/var/lib/flatpak/exports/bin/io.gitlab.librewolf-community",
+            "/var/lib/flatpak/exports/bin/io.gitlab.librewolf-community",
+        ),
+        Browser::new(
+            BrowserType::Librewolf,
+            "Librewolf (Flatpak)",
+            ".local/share/flatpak/exports/bin/io.gitlab.librewolf-community",
+            ".local/share/flatpak/exports/bin/io.gitlab.librewolf-community",
+        ),
+        Browser::new(
+            BrowserType::WaterfoxFlatpak,
+            "Waterfox (Flatpak)",
+            "/var/lib/flatpak/exports/bin/net.waterfox.waterfox",
+            "/var/lib/flatpak/exports/bin/net.waterfox.waterfox",
+        ),
+        Browser::new(
+            BrowserType::WaterfoxFlatpak,
+            "Waterfox (Flatpak)",
+            ".local/share/flatpak/exports/bin/net.waterfox.waterfox",
+            ".local/share/flatpak/exports/bin/net.waterfox.waterfox",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Vivaldi (Flatpak)",
+            "/var/lib/flatpak/exports/bin/com.vivaldi.Vivaldi",
+            "/var/lib/flatpak/exports/bin/com.vivaldi.Vivaldi",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Vivaldi (Flatpak)",
+            ".local/share/flatpak/exports/bin/com.vivaldi.Vivaldi",
+            ".local/share/flatpak/exports/bin/com.vivaldi.Vivaldi",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Ungoogled Chromium (Flatpak)",
+            "/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
+            "/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Ungoogled Chromium (Flatpak)",
+            ".local/share/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
+            ".local/share/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Chromium (Flatpak)",
+            "/var/lib/flatpak/exports/bin/org.chromium.Chromium",
+            "/var/lib/flatpak/exports/bin/org.chromium.Chromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Chromium (Flatpak)",
+            ".local/share/flatpak/exports/bin/org.chromium.Chromium",
+            ".local/share/flatpak/exports/bin/org.chromium.Chromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Microsoft Edge (Flatpak)",
+            "/var/lib/flatpak/exports/bin/com.microsoft.Edge",
+            "/var/lib/flatpak/exports/bin/com.microsoft.Edge",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Microsoft Edge (Flatpak)",
+            ".local/share/flatpak/exports/bin/com.microsoft.Edge",
+            ".local/share/flatpak/exports/bin/com.microsoft.Edge",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Brave (Flatpak)",
+            "/var/lib/flatpak/exports/bin/com.brave.Browser",
+            "/var/lib/flatpak/exports/bin/com.brave.Browser",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Brave (Flatpak)",
+            ".local/share/flatpak/exports/bin/com.brave.Browser",
+            ".local/share/flatpak/exports/bin/com.brave.Browser",
+        ),
+        Browser::new(
+            BrowserType::Falkon,
+            "Falkon (Flatpak)",
+            "/var/lib/flatpak/exports/bin/org.kde.falkon",
+            "/var/lib/flatpak/exports/bin/org.kde.falkon",
+        ),
+        Browser::new(
+            BrowserType::Falkon,
+            "Falkon (Flatpak)",
+            ".local/share/flatpak/exports/bin/org.kde.falkon",
+            ".local/share/flatpak/exports/bin/org.kde.falkon",
         ),
         Browser::new(
             BrowserType::Chromium,
