@@ -15,6 +15,7 @@ finish-args:
   - "--filesystem=xdg-data/flatpak:ro"
   - "--filesystem=xdg-data/icons:create"
   - "--filesystem=xdg-data/applications:create"
+  - "--filesystem=~/.var/app:rw"
 build-options:
   append-path: "/usr/lib/sdk/rust-stable/bin"
   build-args:
@@ -43,5 +44,5 @@ modules:
         branch: master
         url: https://github.com/elevenhsoft/cosmic-wam.git
       # DEBUG
-      # - type: dir
+      # - type: git
       #   path: .
