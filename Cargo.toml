@@ -1,6 +1,6 @@
 [package]
 name = "cosmic-wam"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 
 [profile.dev]
@@ -8,19 +8,17 @@ opt-level = 1
 overflow-checks = false
 
 [dependencies]
-rand = "0.8.5"
-reqwest = { version = "0.11.23", features = ["blocking"] }
 anyhow = "1.0.77"
 tracing = "0.1"
 tracing-subscriber = "0.3.0"
-xdg = "2.5.2"
+tokio = { version = "1.37.0", features = ["full"] }
+reqwest = { version = "0.11.23", features = ["blocking"] }
+rand = "0.8.5"
 url = "2.5.0"
 walkdir = "2.4.0"
 dirs = "5.0"
-dircpy = "0.3.15"
 scraper = "0.18.1"
 image = "0.25.1"
-tokio = { version = "1.37.0", features = ["full"] }
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic"

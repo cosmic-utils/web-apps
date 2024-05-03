@@ -12,9 +12,6 @@ use cosmic::{
     Element,
 };
 
-use std::path::PathBuf;
-use xdg::BaseDirectories;
-
 #[derive(Debug, Clone)]
 pub struct Wam {
     pub app_codename: Option<String>,
@@ -33,7 +30,6 @@ pub struct Wam {
     pub app_browsers: Vec<Browser>,
     pub edit_mode: bool,
     pub launcher: Option<WebAppLauncher>,
-    pub app_base_dir: PathBuf,
 }
 
 impl Wam {
@@ -49,9 +45,6 @@ impl Wam {
                 "",
             )
         };
-        let base_dir = BaseDirectories::new().expect("cant follow base directories");
-        let local_share = base_dir.get_data_home();
-        let cosmic_wam_path = local_share.join("cosmic-wam");
 
         Wam {
             app_codename: None,
@@ -70,7 +63,6 @@ impl Wam {
             app_browsers: browsers,
             edit_mode: false,
             launcher: None,
-            app_base_dir: cosmic_wam_path,
         }
     }
 

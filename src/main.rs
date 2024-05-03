@@ -36,7 +36,8 @@ pub fn icon_pack_installed() -> bool {
     let mut directories = 0;
 
     for theme in packs.iter() {
-        let mut icons_dir = xdg::BaseDirectories::new().unwrap().get_data_home();
+        let mut icons_dir = common::home_dir();
+        icons_dir.push(".local/share");
         icons_dir.push("icons");
         icons_dir.push(theme);
 
