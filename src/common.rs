@@ -633,9 +633,9 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
 }
 
 pub fn move_icon(path: String, output_name: String) -> String {
-    let mut xdg_data_home = home_dir();
-    xdg_data_home.push(".local/share");
-    let icons_folder = xdg_data_home.join("icons");
+    let mut home = home_dir();
+    home.push(".var/app/org.cosmic.Wam/data");
+    let icons_folder = home.join("icons");
 
     create_dir_all(&icons_folder).expect("cant create icons folder");
 
