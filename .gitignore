@@ -9,5 +9,4 @@
 /.flatpak-builder
 /flatpak_build
 
-cargo-sources.json
 flatpak-cargo-generator.py
