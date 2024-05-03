@@ -15,7 +15,6 @@ use std::{
 };
 use url::Url;
 use walkdir::WalkDir;
-use xdg::BaseDirectories;
 
 pub fn url_valid(url: &str) -> bool {
     Url::parse(url).is_ok()
@@ -392,11 +391,6 @@ impl WebAppLauncher {
     }
 
     pub fn delete(&self) -> Result<()> {
-        let base_dir = BaseDirectories::new().expect("no base directories found");
-        let ice_dir = base_dir.get_data_home().join("ice");
-        let profiles_dir = ice_dir.join("profiles").join(&self.codename);
-        let firefox_profiles_dir = profiles_dir.join("firefox").join(&self.codename);
-
         let exist = self.path.as_path().exists();
 
         match exist {
@@ -408,14 +402,26 @@ impl WebAppLauncher {
             }
         }
 
-        if remove_dir_all(firefox_profiles_dir).is_ok() {
-            tracing::info!("Removed firefox profile directory.");
+        let mut profile_dir = home_dir();
 
-            match remove_dir_all(profiles_dir) {
-                Ok(_) => tracing::info!("Removed profiles directories."),
-                Err(_) => tracing::info!("Trying remove profiles directories."),
+        match self.web_browser._type {
+            BrowserType::FirefoxFlatpak => {
+                profile_dir.push(".var/app/org.mozilla.firefox/data/ice/firefox")
             }
-        }
+            BrowserType::Librewolf => {
+                profile_dir.push(".var/app/io.gitlab.librewolf-community/data/ice/librewolf")
+            }
+            BrowserType::WaterfoxFlatpak => {
+                profile_dir.push(".var/app/net.waterfox.waterfox/data/ice/waterfox")
+            }
+            _ => {}
+        };
+
+        let profile_path = profile_dir.join(&self.codename);
+
+        if remove_dir_all(&profile_path).is_ok() {
+            tracing::info!("Removed firefox profile directory.");
+        };
 
         Ok(())
     }
@@ -636,9 +642,9 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
 }
 
 pub fn move_icon(path: String, output_name: String) -> String {
-    let base_dir = BaseDirectories::new().unwrap();
-    let mut icons_folder = base_dir.get_data_home();
-    icons_folder.push("ice/icons");
+    let mut xdg_data_home = home_dir();
+    xdg_data_home.push(".local/share");
+    let icons_folder = xdg_data_home.join("icons");
 
     create_dir_all(&icons_folder).expect("cant create icons folder");
 
