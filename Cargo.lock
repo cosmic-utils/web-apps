@@ -1123,7 +1123,7 @@ dependencies = [
 
 [[package]]
 name = "cosmic-wam"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "dircpy",
