@@ -180,7 +180,7 @@ impl cosmic::Application for Window {
                 let launcher = if let Some(launcher) = self.main_window.launcher.to_owned() {
                     let _ = launcher.delete();
 
-                    Box::new(WebAppLauncher::new(
+                    WebAppLauncher::new(
                         self.main_window.app_title.clone(),
                         Some(launcher.codename),
                         self.main_window.app_url.clone(),
@@ -191,9 +191,9 @@ impl cosmic::Application for Window {
                         self.main_window.app_isolated,
                         self.main_window.app_navbar,
                         self.main_window.app_incognito,
-                    ))
+                    )
                 } else {
-                    Box::new(WebAppLauncher::new(
+                    WebAppLauncher::new(
                         self.main_window.app_title.clone(),
                         None,
                         self.main_window.app_url.clone(),
@@ -204,7 +204,7 @@ impl cosmic::Application for Window {
                         self.main_window.app_isolated,
                         self.main_window.app_navbar,
                         self.main_window.app_incognito,
-                    ))
+                    )
                 };
 
                 if launcher.is_valid {
@@ -329,7 +329,8 @@ impl cosmic::Application for Window {
             }
             Message::PushIcon(icon) => {
                 if self.main_window.selected_icon.is_none() && icon.is_some() {
-                    self.main_window.selected_icon = Some(icon.as_ref().unwrap().clone());
+                    self.main_window.app_icon = icon.as_ref().unwrap().path.clone();
+                    self.main_window.selected_icon = icon.clone();
                 }
                 if let Some(ico) = icon {
                     if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
