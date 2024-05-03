@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.cosmic.Wam</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-only</project_license>
+  <project_group>COSMIC</project_group>
+  <developer_name>elevenhsoft</developer_name>
+  <update_contact>elevenhsoft@gmail.com</update_contact>
+  <url type="homepage">https://github.com/elevenhsoft/cosmic-wam</url>
+  <url type="bugtracker">https://github.com/elevenhsoft/cosmic-wam/issues</url>
+  <name>COSMIC Web Apps</name>
+  <summary>WAM - Web App Manager written with love and libcosmic. </summary>
+  <description>
+    <p>Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window of your browser of choice.</p>
+    <ul>
+        <li>Fast and easy to use.</li>
+	<li>Allow you to create simple web apps from given url.</li>
+	<li>Papirus icon pack installer in app for icon chooser.</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">org.cosmic.Wam.desktop</launchable>
+  <icon type="remote" height="256" width="256">https://raw.githubusercontent.com/elevenhsoft/cosmic-wam/master/data/org.cosmic.Wam.png</icon>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/elevenhsoft/cosmic-wam/master/res/screenshots/window-light.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/elevenhsoft/cosmic-wam/master/res/screenshots/window-dark.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/elevenhsoft/cosmic-wam/master/res/screenshots/window-icon-picker.png</image>
+    </screenshot>
+  </screenshots>
+  <provides>
+    <mimetypes>
+      <mimetype>text/plain</mimetype>
+    </mimetypes>
+    <binaries>
+      <binary>cosmic-wam</binary>
+    </binaries>
+  </provides>
+</component>

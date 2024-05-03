@@ -21,6 +21,10 @@ desktop-src := 'data' / desktop
 desktop-dst := base-dir / 'share' / 'applications' / desktop
 flatpak-desktop-dst := flatpak-base-dir / 'share' / 'applications' / desktop
 
+metainfo := APPID + '.metainfo.xml'
+metainfo-src := 'data' / metainfo
+metainfo-dst := base-dir / 'share' / 'metainfo' / metainfo
+flatpak-metainfo-dst := flatpak-base-dir / 'share' / 'metainfo' / metainfo
 
 icon-src := 'data' / APPID + '.png'
 icon-dst := base-dir / 'share' / 'icons' / APPID + '.png'
@@ -77,6 +81,7 @@ run *args:
 install:
      install -Dm0755 {{bin-src}} {{bin-dst}}
      install -Dm0644 {{desktop-src}} {{desktop-dst}}
+     install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
      install -Dm0644 {{icon-src}} {{icon-dst}}
 
      # install firefox profile
@@ -89,31 +94,10 @@ install:
      done
 
 
-# download papirus icons theme
-download-icons:
-    #!/usr/bin/env bash
-    echo "Getting the latest version from GitHub ..."
-    wget -O /app/cache/tmp/{{APPID}} \
-        "https://github.com/PapirusDevelopmentTeam/papirus-icon-theme/archive/master.tar.gz"
-    echo "Unpacking archive ..."
-    tar -xzf /app/cache/tmp/{{APPID}} -C /app/cache/tmp
-
-
-# install papirus icons theme
-install-icons:
-        #!/usr/bin/env bash
-
-        mkdir -p $HOME/.local/share/icons
-
-        for theme in {{EXTRA_THEMES}}; do
-            echo "Installing '$theme' ..."
-            cp -Rv "/app/cache/tmp/papirus-icon-theme-master/$theme" $HOME/.local/share/icons
-        done
-
-
 flatpak:
      install -Dm0755 {{bin-src}} {{flatpak-bin-dst}}
      install -Dm0644 {{desktop-src}} {{flatpak-desktop-dst}}
+     install -Dm0644 {{metainfo-src}} {{flatpak-metainfo-dst}}
      install -Dm0644 {{icon-src}} {{flatpak-icon-dst}}
 
      # install firefox profile
@@ -130,6 +114,7 @@ flatpak:
 uninstall:
     rm {{bin-dst}}
     rm {{desktop-dst}}
+    rm {{metainfo-dst}}
     rm {{icon-dst}}
     rm -r {{runtime-dst}}
 
