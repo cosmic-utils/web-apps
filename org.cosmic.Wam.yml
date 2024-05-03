@@ -18,31 +18,25 @@ finish-args:
   - "--filesystem=~/.var/app:rw"
 build-options:
   append-path: "/usr/lib/sdk/rust-stable/bin"
-  build-args:
-    - "--share=network"
-  env:
-    CARGO_HOME: "/run/build/cosmic-wam/cargo"
 modules:
-  - name: just
-    buildsystem: simple
-    build-commands:
-      - install -Dm0755 just /app/bin/just
-    sources:
-      - type: archive
-        strip-components: 0
-        dest-filename: just.tar.gz
-        url: https://github.com/casey/just/releases/download/1.25.2/just-1.25.2-x86_64-unknown-linux-musl.tar.gz
-        sha256: ad56bf1a804243b51ef2c2eec4b3a8177f970ccc414cbbee219c2e5c06f7bcc9
   - name: cosmic-wam
     buildsystem: simple
+    build-options:
+      env:
+        CARGO_HOME: "/run/build/cosmic-wam/cargo"
     build-commands:
-      - just vendor
-      - just build-vendored
-      - just flatpak
+      - cargo --offline fetch --manifest-path Cargo.toml --verbose
+      - cargo --offline build --release --verbose 
+      - install -Dm0755 ./target/release/cosmic-wam -t /app/bin
+      - install -Dm0644 ./data/org.cosmic.Wam.desktop -t /app/share/applications
+      - install -Dm0644 ./data/org.cosmic.Wam.metainfo.xml -t /app/share/metainfo
+      - install -Dm0644 ./data/org.cosmic.Wam.png -t /app/share/icons
     sources:
       - type: git
         branch: master
         url: https://github.com/elevenhsoft/cosmic-wam.git
+      - ./cargo-sources.json
       # DEBUG
-      # - type: git
+      # - type: dir
       #   path: .
+      # - cargo-sources.json

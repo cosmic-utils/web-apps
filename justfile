@@ -1,6 +1,5 @@
 name := 'cosmic-wam'
 export APPID := 'org.cosmic.Wam'
-export EXTRA_THEMES := 'Papirus Papirus-Dark Papirus-Light'
 
 rootdir := ''
 prefix := '/usr'
@@ -8,9 +7,6 @@ flatpak-prefix := '/app'
 
 base-dir := absolute_path(clean(rootdir / prefix))
 flatpak-base-dir := absolute_path(clean(rootdir / flatpak-prefix))
-
-export INSTALL_DIR := base-dir / 'share'
-export FLATPAK_INSTALL_DIR := flatpak-base-dir / 'share'
 
 bin-src := 'target' / 'release' / name
 bin-dst := base-dir / 'bin' / name
@@ -29,21 +25,6 @@ flatpak-metainfo-dst := flatpak-base-dir / 'share' / 'metainfo' / metainfo
 icon-src := 'data' / APPID + '.png'
 icon-dst := base-dir / 'share' / 'icons' / APPID + '.png'
 flatpak-icon-dst := flatpak-base-dir / 'share' / 'icons'/ APPID + '.png'
-
-runtime-dst := INSTALL_DIR / name
-flatpak-runtime-dst := FLATPAK_INSTALL_DIR / name
-
-firefox-src := 'data' / 'runtime' / 'firefox'
-firefox-dst := runtime-dst / 'runtime' / 'firefox'
-flatpak-firefox-dst := flatpak-runtime-dst / 'runtime' / 'firefox'
-
-profile-src := 'data' / 'runtime' / 'firefox' / 'profile'
-profile-dst := runtime-dst / 'profile'
-flatpak-profile-dst := flatpak-runtime-dst / 'profile'
-
-chrome-src := profile-src / 'chrome'
-chrome-dst := profile-dst / 'chrome'
-flatpak-chrome-dst := flatpak-profile-dst / 'chrome'
 
 # Default recipe which runs `just build-release`
 default: build-release
@@ -84,30 +65,12 @@ install:
      install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
      install -Dm0644 {{icon-src}} {{icon-dst}}
 
-     # install firefox profile
-     for file in `ls {{profile-src}}`; do \
-     	install -Dm0644 "{{profile-src}}/$file" "{{profile-dst}}/$file"; \
-     done
-
-     for file in `ls {{chrome-src}}`; do \
-     	install -Dm0644 "{{chrome-src}}/$file" "{{chrome-dst}}/$file"; \
-     done
-
 
 flatpak:
      install -Dm0755 {{bin-src}} {{flatpak-bin-dst}}
      install -Dm0644 {{desktop-src}} {{flatpak-desktop-dst}}
      install -Dm0644 {{metainfo-src}} {{flatpak-metainfo-dst}}
      install -Dm0644 {{icon-src}} {{flatpak-icon-dst}}
-
-     # install firefox profile
-     for file in `ls {{profile-src}}`; do \
-     	install -Dm0644 "{{profile-src}}/$file" "{{flatpak-profile-dst}}/$file"; \
-     done
-
-     for file in `ls {{chrome-src}}`; do \
-     	install -Dm0644 "{{chrome-src}}/$file" "{{flatpak-chrome-dst}}/$file"; \
-     done
 
 
 # Uninstalls installed files
@@ -116,7 +79,6 @@ uninstall:
     rm {{desktop-dst}}
     rm {{metainfo-dst}}
     rm {{icon-dst}}
-    rm -r {{runtime-dst}}
 
 
 # Vendor dependencies locally
