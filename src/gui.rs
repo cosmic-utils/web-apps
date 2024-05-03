@@ -329,7 +329,10 @@ impl cosmic::Application for Window {
             }
             Message::PushIcon(icon) => {
                 if self.main_window.selected_icon.is_none() && icon.is_some() {
-                    self.main_window.app_icon = icon.as_ref().unwrap().path.clone();
+                    let path = icon.as_ref().unwrap().path.clone();
+                    let saved = move_icon(path, self.main_window.app_title.clone());
+                    self.main_window.app_icon = saved.clone();
+                    self.main_window.app_icon = saved;
                     self.main_window.selected_icon = icon.clone();
                 }
                 if let Some(ico) = icon {
