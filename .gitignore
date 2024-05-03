@@ -5,8 +5,10 @@
 
 *.pdb
 
+/build
 /build-dir
 /.flatpak-builder
 /flatpak_build
+/repo
 
 flatpak-cargo-generator.py
