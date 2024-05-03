@@ -576,21 +576,12 @@ pub async fn find_icon(path: PathBuf, icon_name: &str) -> Vec<String> {
 }
 
 pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
-    // ~/.icons
-    let mut home_dir = dirs::home_dir().expect("cant get home directory");
-    home_dir.push(".icons");
-
-    // ~/.local/share/icons
-    let mut local_dir = dirs::data_dir().expect("cant get ~/.local/share directory");
-    local_dir.push("icons");
-
-    let system_dir = PathBuf::from_str("/usr/share/icons").unwrap();
+    let mut home = home_dir();
+    home.push(".var/app/org.cosmic.Wam/data/icons");
 
     let mut result: Vec<String> = Vec::new();
 
-    result.extend(find_icon(home_dir, &icon_name).await);
-    result.extend(find_icon(local_dir, &icon_name).await);
-    result.extend(find_icon(system_dir, &icon_name).await);
+    result.extend(find_icon(home, &icon_name).await);
 
     if url_valid(&url) {
         if let Ok(data) = download_favicon(&url).await {

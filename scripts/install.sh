@@ -24,7 +24,7 @@ cat <<- EOF
 
 EOF
 
-: "${DESTDIR:=$HOME/.local/share/icons}"
+: "${DESTDIR:=$HOME/.var/app/org.cosmic.Wam/data/icons}"
 : "${EXTRA_THEMES=ePapirus ePapirus-Dark Papirus-Dark Papirus-Light}"
 : "${TAG:=master}"
 : "${uninstall:=false}"

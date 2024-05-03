@@ -37,7 +37,7 @@ pub fn icon_pack_installed() -> bool {
 
     for theme in packs.iter() {
         let mut icons_dir = common::home_dir();
-        icons_dir.push(".local/share");
+        icons_dir.push(".var/app/org.cosmic.Wam/data");
         icons_dir.push("icons");
         icons_dir.push(theme);
 
