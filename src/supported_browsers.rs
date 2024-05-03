@@ -76,12 +76,6 @@ pub fn native_browsers() -> Vec<Browser> {
             "/usr/bin/chromium-bin-browser",
         ),
         Browser::new(
-            BrowserType::Epiphany,
-            "Epiphany",
-            "epiphany",
-            "/usr/bin/epiphany",
-        ),
-        Browser::new(
             BrowserType::Firefox,
             "Librewolf",
             "librewolf",

@@ -240,9 +240,15 @@ impl WebAppLauncher {
         }
     }
 
-    fn exec_firefox(&self) -> String {
+    fn exec_firefox(&self, fork: &str) -> String {
         let mut profile_dir = home_dir();
-        profile_dir.push(".var/app/org.mozilla.firefox/data/ice/firefox");
+        if fork == "firefox" {
+            profile_dir.push(".var/app/org.mozilla.firefox/data/ice/firefox");
+        } else if fork == "librewolf" {
+            profile_dir.push(".var/app/io.gitlab.librewolf-community/data/ice/librewolf");
+        } else if fork == "waterfox" {
+            profile_dir.push(".var/app/net.waterfox.waterfox/data/ice/waterfox");
+        };
 
         let profile_path = profile_dir.join(&self.codename);
         let user_js_path = profile_path.join("user.js");
@@ -279,21 +285,21 @@ impl WebAppLauncher {
     }
 
     fn exec_chromium(&self) -> String {
-        let mut exec_string = String::new();
+        let mut exec_string = format!(
+            "{} --app={} --class=WebApp-{} --name=WebApp-{} ",
+            self.exec, self.url, self.codename, self.codename
+        );
 
         if self.isolate_profile {
             let mut profile_dir = PathBuf::new();
 
-            let base_dir = BaseDirectories::new().expect("no base directories found");
-            let ice_dir = base_dir.get_data_home().join("ice");
+            let mut xdg_data_home = home_dir();
+            xdg_data_home.push(".local/share");
+            let ice_dir = xdg_data_home.join("ice");
             profile_dir.push(ice_dir.join("profiles").join(&self.codename));
 
             let profile_path = profile_dir.to_str().unwrap();
-
-            exec_string = format!(
-                "{} --app={} --class=WebApp-{} --name=WebApp-{} --user-data-dir={} ",
-                self.exec, self.url, self.codename, self.codename, profile_path
-            );
+            exec_string.push_str(&format!("--user-data-dir={} ", profile_path));
         }
 
         if self.is_incognito {
@@ -311,15 +317,46 @@ impl WebAppLauncher {
         exec_string
     }
 
+    fn exec_falkon(&self) -> String {
+        let mut exec_string = String::new();
+
+        if self.isolate_profile {
+            let mut profile_dir = PathBuf::new();
+
+            let mut xdg_data_home = home_dir();
+            xdg_data_home.push(".local/share");
+            let ice_dir = xdg_data_home.join("ice");
+            profile_dir.push(ice_dir.join("profiles").join(&self.codename));
+
+            let profile_path = profile_dir.to_str().unwrap();
+
+            exec_string = format!(
+                "{} --portable --wmclass WebApp-{} --profile {} ",
+                self.exec, self.codename, profile_path
+            );
+        }
+
+        if self.is_incognito {
+            exec_string.push_str("--private-browsing ");
+        }
+
+        if !self.custom_parameters.is_empty() {
+            exec_string.push_str(&format!("{} ", self.custom_parameters));
+        }
+
+        exec_string.push_str(&format!("--no-remote --current-tab {}", self.url));
+
+        exec_string
+    }
+
     fn exec_string(&self) -> String {
         match self.web_browser._type {
-            BrowserType::Firefox => self.exec_firefox(),
-            BrowserType::FirefoxFlatpak => self.exec_firefox(),
-            BrowserType::Librewolf => todo!(),
-            BrowserType::WaterfoxFlatpak => todo!(),
+            BrowserType::Firefox => self.exec_firefox("firefox"),
+            BrowserType::FirefoxFlatpak => self.exec_firefox("firefox"),
+            BrowserType::Librewolf => self.exec_firefox("librewolf"),
+            BrowserType::WaterfoxFlatpak => self.exec_firefox("waterfox"),
             BrowserType::Chromium => self.exec_chromium(),
-            BrowserType::Epiphany => todo!(),
-            BrowserType::Falkon => todo!(),
+            BrowserType::Falkon => self.exec_falkon(),
             _ => String::new(),
         }
     }
@@ -380,8 +417,6 @@ impl WebAppLauncher {
             }
         }
 
-        // TODO: Implement epiphany deletion
-
         Ok(())
     }
 }
@@ -425,7 +460,6 @@ pub enum BrowserType {
     Librewolf,
     WaterfoxFlatpak,
     Chromium,
-    Epiphany,
     Falkon,
     NotInstalled,
 }
