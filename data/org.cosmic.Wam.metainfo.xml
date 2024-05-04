@@ -7,7 +7,7 @@
 	<url type="homepage">https://github.com/elevenhsoft/cosmic-wam</url>
 
 	<name>COSMIC Web Apps</name>
-	<summary>WAM - Web App Manager written with love and libcosmic</summary>
+	<summary>Web App Manager written in rust</summary>
 
 	<metadata_license>MIT</metadata_license>
 	<project_license>GPL-3.0-only</project_license>
