@@ -1122,24 +1122,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cosmic-wam"
-version = "0.3.3"
-dependencies = [
- "anyhow",
- "dirs",
- "image 0.25.1",
- "libcosmic",
- "rand",
- "reqwest",
- "scraper",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "url",
- "walkdir",
-]
-
-[[package]]
 name = "cpufeatures"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5842,6 +5824,24 @@ checksum = "aa30049b1c872b72c89866d458eae9f20380ab280ffd1b1e18df2d3e2d98cfe0"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webapps"
+version = "0.3.3"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "image 0.25.1",
+ "libcosmic",
+ "rand",
+ "reqwest",
+ "scraper",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "walkdir",
 ]
 
 [[package]]
