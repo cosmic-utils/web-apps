@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-	<id>org.cosmic.Wam</id>
+	<id>io.github.elevenhsoft.WebApps</id>
 	<developer id="io.github.elevenhsoft">
 		<name>elevenhsoft</name>
 	</developer>
@@ -27,7 +27,7 @@
 		</ul>
 	</description>
 
-	<launchable type="desktop-id">org.cosmic.Wam.desktop</launchable>
+	<launchable type="desktop-id">io.github.elevenhsoft.WebApps.desktop</launchable>
 	<content_rating type="oars-1.1" />
 	<screenshots>
 		<screenshot type="default">

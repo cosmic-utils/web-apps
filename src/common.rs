@@ -577,7 +577,7 @@ pub async fn find_icon(path: PathBuf, icon_name: &str) -> Vec<String> {
 
 pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     let mut home = home_dir();
-    home.push(".var/app/org.cosmic.Wam/data/icons");
+    home.push(".var/app/io.github.elevenhsoft.WebApps/data/icons");
 
     let mut result: Vec<String> = Vec::new();
 
@@ -634,7 +634,7 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
 
 pub fn move_icon(path: String, output_name: String) -> String {
     let mut home = home_dir();
-    home.push(".var/app/org.cosmic.Wam/data");
+    home.push(".var/app/io.github.elevenhsoft.WebApps/data");
     let icons_folder = home.join("icons");
 
     create_dir_all(&icons_folder).expect("cant create icons folder");

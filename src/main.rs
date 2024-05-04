@@ -37,7 +37,7 @@ pub fn icon_pack_installed() -> bool {
 
     for theme in packs.iter() {
         let mut icons_dir = common::home_dir();
-        icons_dir.push(".var/app/org.cosmic.Wam/data");
+        icons_dir.push(".var/app/io.github.elevenhsoft.WebApps/data");
         icons_dir.push("icons");
         icons_dir.push(theme);
 
@@ -51,7 +51,7 @@ pub fn icon_pack_installed() -> bool {
 
 pub async fn add_icon_packs_install_script() -> String {
     let install_script = include_bytes!("../scripts/install.sh");
-    let temp_file = "/tmp/org.cosmic.Wam.install-icons.sh";
+    let temp_file = "/tmp/io.github.elevenhsoft.WebApps.install-icons.sh";
 
     // Create a temporary file
     let mut file = File::create(temp_file).await.unwrap();

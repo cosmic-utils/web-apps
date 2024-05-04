@@ -80,7 +80,7 @@ impl cosmic::Application for Window {
     type Flags = ();
     type Message = Message;
 
-    const APP_ID: &'static str = "org.cosmic.Wam";
+    const APP_ID: &'static str = "io.github.elevenhsoft.WebApps";
 
     fn core(&self) -> &cosmic::app::Core {
         &self.core

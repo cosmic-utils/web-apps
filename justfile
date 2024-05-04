@@ -1,5 +1,5 @@
 name := 'cosmic-wam'
-export APPID := 'org.cosmic.Wam'
+export APPID := 'io.github.elevenhsoft.WebApps'
 
 rootdir := ''
 prefix := '/usr'
