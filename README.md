@@ -1,12 +1,12 @@
 <div align="center">
   <br>
-  <img src="https://raw.githubusercontent.com/elevenhsoft/cosmic-wam/master/data/io.github.elevenhsoft.WebApps.png" width="192" />
+  <img src="https://raw.githubusercontent.com/elevenhsoft/WebApps/master/data/io.github.elevenhsoft.WebApps.png" width="192" />
   <h1>COSMIC Web Apps</h1>
 
   <h3>Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window of your browser of choice.</h3>
 
-  ![Light themed window](https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-light.png)
-  ![Dark themed window](https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-dark.png)
+  ![Light themed window](https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-light.png)
+  ![Dark themed window](https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-dark.png)
 </div>
 
 
@@ -14,11 +14,11 @@
 
 Clone the repository:
 
-`git clone https://github.com/elevenhsoft/cosmic-wam.git`
+`git clone https://github.com/elevenhsoft/WebApps.git`
 
 cd into folder
 
-`cd cosmic-wam`
+`cd WebApps`
 
 ## Just use [just](https://github.com/casey/just)
 
@@ -26,7 +26,7 @@ For Pop OS make sure you have [just](https://github.com/casey/just) installed.
 
 `sudo apt install just`
 
-Make sure you are in `cosmic-wam` directory. You should be already.
+Make sure you are in `WebApps` directory. You should be already.
 
 ### Building
 
@@ -45,7 +45,7 @@ That's all. You can run `COSMIC Web Apps` from you app launcher.
 `sudo just uninstall`
 
 # License
-Code is distributed with [GPL-3.0 license](https://github.com/elevenhsoft/cosmic-wam/blob/master/LICENSE)
+Code is distributed with [GPL-3.0 license](https://github.com/elevenhsoft/WebApps/blob/master/LICENSE)
 
 # Credits
 

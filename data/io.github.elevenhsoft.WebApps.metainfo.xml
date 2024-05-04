@@ -4,7 +4,7 @@
 	<developer id="io.github.elevenhsoft">
 		<name>elevenhsoft</name>
 	</developer>
-	<url type="homepage">https://github.com/elevenhsoft/cosmic-wam</url>
+	<url type="homepage">https://github.com/elevenhsoft/WebApps</url>
 
 	<name>COSMIC Web Apps</name>
 	<summary>Web App Manager written in rust</summary>
@@ -32,15 +32,15 @@
 	<screenshots>
 		<screenshot type="default">
 			<image>
-				https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-light.png</image>
+				https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-light.png</image>
 		</screenshot>
 		<screenshot>
 			<image>
-				https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-icon-picker.png</image>
+				https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-icon-picker.png</image>
 		</screenshot>
 		<screenshot>
 			<image>
-				https://github.com/elevenhsoft/cosmic-wam/blob/master/res/screenshots/window-dark.png</image>
+				https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-dark.png</image>
 		</screenshot>
 	</screenshots>
 
