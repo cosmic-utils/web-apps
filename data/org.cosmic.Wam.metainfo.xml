@@ -45,6 +45,10 @@
 	</screenshots>
 
 	<releases>
-		<release version="0.3.2" date="2024-05-04" />
+		<release version="0.3.3" date="2024-05-04">
+			<description>
+				<p>Initial release</p>
+			</description>
+		</release>
 	</releases>
 </component>
