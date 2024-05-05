@@ -32,15 +32,18 @@
 	<screenshots>
 		<screenshot type="default">
 			<image>
-				https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-light.png</image>
+				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.4/res/screenshots/window-light.png</image>
+			<caption>Light theme</caption>
 		</screenshot>
 		<screenshot>
 			<image>
-				https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-icon-picker.png</image>
+				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.4/res/screenshots/window-icon-picker.png</image>
+			<caption>Icon Picker in app</caption>
 		</screenshot>
 		<screenshot>
 			<image>
-				https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-dark.png</image>
+				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.4/res/screenshots/window-dark.png</image>
+			<caption>Dark theme</caption>
 		</screenshot>
 	</screenshots>
 
