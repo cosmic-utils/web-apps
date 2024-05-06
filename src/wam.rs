@@ -8,7 +8,7 @@ use cosmic::{
     iced::{id, Alignment, Length},
     iced_widget::{horizontal_rule, PickList, Scrollable},
     theme,
-    widget::{text, toggler, Button, Column, Container, Row, TextInput},
+    widget::{text, toggler, warning, Button, Column, Container, Row, TextInput},
     Element,
 };
 
@@ -29,6 +29,7 @@ pub struct Wam {
     pub selected_icon: Option<iconpicker::Icon>,
     pub app_browsers: Vec<Browser>,
     pub edit_mode: bool,
+    pub warning: Warning,
     pub launcher: Option<WebAppLauncher>,
 }
 
@@ -46,6 +47,16 @@ impl Wam {
             )
         };
 
+        let starting_warns = vec![
+            WarnMessages::Info,
+            WarnMessages::AppName,
+            WarnMessages::AppUrl,
+            WarnMessages::AppIcon,
+            WarnMessages::AppBrowser,
+        ];
+
+        let warn_element = Warning::new(starting_warns, true);
+
         Wam {
             app_codename: None,
             app_title_id: id::Id::new("app-title"),
@@ -62,6 +73,7 @@ impl Wam {
             selected_icon: None,
             app_browsers: browsers,
             edit_mode: false,
+            warning: warn_element,
             launcher: None,
         }
     }
@@ -304,6 +316,21 @@ impl Wam {
         }
 
         let mut col = Column::new().spacing(20);
+
+        // if self.warning {
+        //     let warn = warning(
+        //         "You don't meet requirements
+        //     - App must have name.\n
+        //     - App must have valid URL starting with http:// or https://\n
+        //     - App must have selected icon.\n
+        //     - You must have installed browser via flatpak.",
+        //     );
+        //     col = col.push(warn);
+        // }
+        if self.warning.show {
+            col = col.push(self.warning.view());
+        }
+
         col = col.push(row);
         col = col.push(app_arguments);
         col = col.push(cat_row);
@@ -313,5 +340,80 @@ impl Wam {
         col2 = col2.push(installed);
 
         Container::new(col2).padding(30).into()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum WarnMessages {
+    Info,
+    AppName,
+    AppUrl,
+    AppIcon,
+    AppBrowser,
+}
+
+impl std::fmt::Display for WarnMessages {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            WarnMessages::Info => write!(f, "You don't meet requirements"),
+            WarnMessages::AppName => write!(f, "  - App name must be longer than 3 characters"),
+            WarnMessages::AppUrl => write!(
+                f,
+                "  - You must provide valid URL starting with http:// or https://"
+            ),
+            WarnMessages::AppIcon => write!(f, "  - You must select and Icon for your launcher"),
+            WarnMessages::AppBrowser => {
+                write!(f, "  - Please select a browser installed via Flatpak")
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Warning {
+    pub messages: Vec<WarnMessages>,
+    pub show: bool,
+}
+
+impl Default for Warning {
+    fn default() -> Self {
+        Self {
+            messages: Vec::new(),
+            show: false,
+        }
+    }
+}
+
+impl Warning {
+    pub fn new(messages: Vec<WarnMessages>, show: bool) -> Self {
+        Self { messages, show }
+    }
+
+    pub fn push_warn(&mut self, message: WarnMessages) -> &mut Self {
+        if !self.messages.contains(&message) {
+            self.messages.push(message);
+        }
+        self
+    }
+
+    pub fn remove_warn(&mut self, message: WarnMessages) -> &mut Self {
+        self.messages.retain(|m| *m != message);
+        self
+    }
+
+    pub fn view(&self) -> Element<Message> {
+        let mut content = String::new();
+
+        for line in &self.messages {
+            content.push_str(&format!("{}\n", line));
+        }
+
+        let warn = warning(content);
+
+        if self.show {
+            Container::new(warn).into()
+        } else {
+            Container::new(Column::new()).into()
+        }
     }
 }

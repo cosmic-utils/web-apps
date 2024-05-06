@@ -1,7 +1,8 @@
 use crate::{
     add_icon_packs_install_script,
     common::{
-        self, find_icons, get_icon_name_from_url, image_handle, move_icon, Browser, WebAppLauncher,
+        self, find_icons, get_icon_name_from_url, image_handle, move_icon, url_valid, Browser,
+        BrowserType, WebAppLauncher,
     },
     execute_script, icon_pack_installed,
     iconpicker::{self, IconPicker},
@@ -209,6 +210,8 @@ impl cosmic::Application for Window {
 
                 if launcher.is_valid {
                     let _ = launcher.create();
+                } else {
+                    self.main_window.warning.show = true;
                 }
 
                 Command::none()
@@ -269,10 +272,31 @@ impl cosmic::Application for Window {
                 }
             },
             Message::Title(title) => {
-                self.main_window.app_title = title;
+                if title.len() >= 3 {
+                    self.main_window.app_title = title;
+
+                    self.main_window
+                        .warning
+                        .remove_warn(wam::WarnMessages::AppName);
+                } else {
+                    self.main_window
+                        .warning
+                        .push_warn(wam::WarnMessages::AppName);
+                }
+
                 Command::none()
             }
             Message::Url(url) => {
+                if url_valid(&url) {
+                    self.main_window
+                        .warning
+                        .remove_warn(wam::WarnMessages::AppUrl);
+                } else {
+                    self.main_window
+                        .warning
+                        .push_warn(wam::WarnMessages::AppUrl);
+                }
+
                 self.main_window.app_url = url;
                 Command::none()
             }
@@ -281,6 +305,17 @@ impl cosmic::Application for Window {
                 Command::none()
             }
             Message::Browser(browser) => {
+                match browser._type {
+                    BrowserType::NotInstalled => self
+                        .main_window
+                        .warning
+                        .push_warn(wam::WarnMessages::AppBrowser),
+                    _ => self
+                        .main_window
+                        .warning
+                        .remove_warn(wam::WarnMessages::AppBrowser),
+                };
+
                 self.main_window.app_browser = browser;
                 Command::none()
             }
@@ -334,6 +369,18 @@ impl cosmic::Application for Window {
                     self.main_window.app_icon = saved.clone();
                     self.main_window.app_icon = saved;
                     self.main_window.selected_icon = icon.clone();
+
+                    if self.main_window.selected_icon.is_some()
+                        && !self.main_window.app_icon.is_empty()
+                    {
+                        self.main_window
+                            .warning
+                            .remove_warn(wam::WarnMessages::AppIcon);
+                    } else {
+                        self.main_window
+                            .warning
+                            .push_warn(wam::WarnMessages::AppIcon);
+                    }
                 }
                 if let Some(ico) = icon {
                     if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
@@ -357,6 +404,18 @@ impl cosmic::Application for Window {
             Message::SelectIcon(ico) => {
                 self.main_window.selected_icon = Some(ico.clone());
                 self.main_window.app_icon = ico.path;
+
+                if self.main_window.selected_icon.is_some() && !self.main_window.app_icon.is_empty()
+                {
+                    self.main_window
+                        .warning
+                        .remove_warn(wam::WarnMessages::AppIcon);
+                } else {
+                    self.main_window
+                        .warning
+                        .push_warn(wam::WarnMessages::AppIcon);
+                }
+
                 Command::none()
             }
 
