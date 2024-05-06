@@ -94,7 +94,7 @@ impl Wam {
                     .style(theme::Button::Transparent),
             }
         } else {
-            let default_ico = include_bytes!("../assets/icons/moleskine-icon.svg");
+            let default_ico: &'static [u8] = include_bytes!("../assets/icons/moleskine-icon.svg");
             let handler = cosmic::widget::svg::Handle::from_memory(default_ico);
             let default = cosmic::widget::svg(handler);
 
@@ -123,7 +123,7 @@ impl Wam {
         col = col.push(app_title);
         col = col.push(app_url);
 
-        let search_ico = include_bytes!("../assets/icons/search.svg");
+        let search_ico: &'static [u8] = include_bytes!("../assets/icons/search.svg");
         let search_ico_handler =
             cosmic::widget::svg(cosmic::widget::svg::Handle::from_memory(search_ico))
                 .width(Length::Fixed(64.))
