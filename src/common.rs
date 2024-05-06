@@ -81,11 +81,20 @@ impl WebAppLauncher {
         let filename = format!("webapp-{}.desktop", codename);
         let path = desktop_filepath(&filename);
         let web_browser = browser;
-        let is_valid = !name.is_empty() && !icon.is_empty() && url_valid(&url);
         let exec = web_browser.exec.clone();
         let args = Vec::new();
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
+
+        let is_valid = if !name.is_empty()
+            && !icon.is_empty()
+            && url_valid(&url)
+            && web_browser.is_installed()
+        {
+            true
+        } else {
+            false
+        };
 
         Self {
             path,
@@ -523,6 +532,13 @@ impl Browser {
     pub fn web_browser(name: String) -> Option<Browser> {
         let supported = get_supported_browsers();
         supported.into_iter().find(|b| b.name == name)
+    }
+
+    pub fn is_installed(&self) -> bool {
+        match self._type {
+            BrowserType::NotInstalled => false,
+            _ => true,
+        }
     }
 }
 
