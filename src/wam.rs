@@ -317,16 +317,6 @@ impl Wam {
 
         let mut col = Column::new().spacing(20);
 
-        // if self.warning {
-        //     let warn = warning(
-        //         "You don't meet requirements
-        //     - App must have name.\n
-        //     - App must have valid URL starting with http:// or https://\n
-        //     - App must have selected icon.\n
-        //     - You must have installed browser via flatpak.",
-        //     );
-        //     col = col.push(warn);
-        // }
         if self.warning.show {
             col = col.push(self.warning.view());
         }
