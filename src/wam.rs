@@ -361,7 +361,7 @@ impl std::fmt::Display for WarnMessages {
                 f,
                 "  - You must provide valid URL starting with http:// or https://"
             ),
-            WarnMessages::AppIcon => write!(f, "  - You must select and Icon for your launcher"),
+            WarnMessages::AppIcon => write!(f, "  - You must select an Icon for your launcher"),
             WarnMessages::AppBrowser => {
                 write!(f, "  - Please select a browser installed via Flatpak")
             }
