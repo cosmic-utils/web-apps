@@ -50,8 +50,8 @@ pub fn icon_pack_installed() -> bool {
 }
 
 pub async fn add_icon_packs_install_script() -> String {
-    let install_script = include_bytes!("../scripts/install.sh");
-    let temp_file = "/tmp/io.github.elevenhsoft.WebApps.install-icons.sh";
+    let install_script = include_bytes!("../scripts/icon-installer.sh");
+    let temp_file = "/tmp/io.github.elevenhsoft.WebApps.icon-installer.sh";
 
     // Create a temporary file
     let mut file = File::create(temp_file).await.unwrap();
