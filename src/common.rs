@@ -485,7 +485,10 @@ pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
     webapps
 }
 
-use crate::{iconpicker, supported_browsers::supported_browsers};
+use crate::{
+    iconpicker,
+    supported_browsers::{flatpak_browsers, native_browsers},
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrowserType {
@@ -562,7 +565,13 @@ impl Browser {
 }
 
 pub fn get_supported_browsers() -> Vec<Browser> {
-    let test_browsers = supported_browsers();
+    let mut test_browsers: Vec<Browser> = Vec::new();
+
+    let native_browsers = native_browsers();
+    let flatpak_browsers = flatpak_browsers();
+
+    test_browsers.extend(native_browsers);
+    test_browsers.extend(flatpak_browsers);
 
     let mut browsers = Vec::new();
 

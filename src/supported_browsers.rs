@@ -164,7 +164,7 @@ pub fn native_browsers() -> Vec<Browser> {
     ]
 }
 
-pub fn supported_browsers() -> Vec<Browser> {
+pub fn flatpak_browsers() -> Vec<Browser> {
     vec![
         Browser::new(
             BrowserType::FirefoxFlatpak,
