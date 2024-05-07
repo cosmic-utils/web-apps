@@ -41,6 +41,25 @@ pub fn desktop_filepath(filename: &str) -> PathBuf {
     home.join(filename)
 }
 
+pub fn icons_location() -> PathBuf {
+    let mut test_path = home_dir();
+    test_path.push(".local/share/icons");
+    let test_file = test_path.join(".io.github.elevenhsoft.WebApps.tmp");
+
+    match File::create(&test_file) {
+        Ok(_) => {
+            std::fs::remove_file(&test_file).unwrap();
+            test_path
+        }
+        Err(_) => {
+            let mut icons_dir = home_dir();
+            icons_dir.push(".var/app/io.github.elevenhsoft.WebApps/data");
+            icons_dir.push("icons");
+            icons_dir
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct WebAppLauncher {
     pub path: PathBuf,
@@ -592,12 +611,9 @@ pub async fn find_icon(path: PathBuf, icon_name: &str) -> Vec<String> {
 }
 
 pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
-    let mut home = home_dir();
-    home.push(".var/app/io.github.elevenhsoft.WebApps/data/icons");
-
     let mut result: Vec<String> = Vec::new();
 
-    result.extend(find_icon(home, &icon_name).await);
+    result.extend(find_icon(icons_location(), &icon_name).await);
 
     if url_valid(&url) {
         if let Ok(data) = download_favicon(&url).await {
@@ -649,11 +665,7 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
 }
 
 pub fn move_icon(path: String, output_name: String) -> String {
-    let mut home = home_dir();
-    home.push(".var/app/io.github.elevenhsoft.WebApps/data");
-    let icons_folder = home.join("icons");
-
-    create_dir_all(&icons_folder).expect("cant create icons folder");
+    create_dir_all(&icons_location()).expect("cant create icons folder");
 
     let extension = if is_svg(&path) {
         String::from("svg")
@@ -667,7 +679,7 @@ pub fn move_icon(path: String, output_name: String) -> String {
             .to_string()
     };
 
-    let save_path = icons_folder
+    let save_path = icons_location()
         .join(format!("{}.{}", output_name.replace(' ', ""), extension))
         .to_str()
         .unwrap()
