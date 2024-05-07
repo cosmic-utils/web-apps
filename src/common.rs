@@ -42,20 +42,16 @@ pub fn desktop_filepath(filename: &str) -> PathBuf {
 }
 
 pub fn icons_location() -> PathBuf {
-    let mut test_path = home_dir();
-    test_path.push(".local/share/icons");
-    let test_file = test_path.join(".io.github.elevenhsoft.WebApps.tmp");
-
-    match File::create(&test_file) {
+    match std::env::var("FLATPAK_ID") {
         Ok(_) => {
-            std::fs::remove_file(&test_file).unwrap();
-            test_path
+            let mut icons_dir = home_dir();
+            icons_dir.push(".var/app/io.github.elevenhsoft.WebApps/data/icons");
+            icons_dir
         }
         Err(_) => {
-            let mut icons_dir = home_dir();
-            icons_dir.push(".var/app/io.github.elevenhsoft.WebApps/data");
-            icons_dir.push("icons");
-            icons_dir
+            let mut test_path = home_dir();
+            test_path.push(".local/share/icons");
+            test_path
         }
     }
 }
