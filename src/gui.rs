@@ -272,9 +272,9 @@ impl cosmic::Application for Window {
                 }
             },
             Message::Title(title) => {
-                if title.len() >= 3 {
-                    self.main_window.app_title = title;
+                self.main_window.app_title = title;
 
+                if self.main_window.app_title.len() >= 3 {
                     self.main_window
                         .warning
                         .remove_warn(wam::WarnMessages::AppName);
