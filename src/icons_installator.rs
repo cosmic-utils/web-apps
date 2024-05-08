@@ -14,9 +14,9 @@ impl Installator {
     }
 
     pub fn view(&self) -> Element<Message> {
-        let info_message = text("Please wait patiently. Currently installing Papirus icon theme in background to your local directory.");
+        let info_message = text("This app requires icons to work with. In case we don't have access to your installed icons, we are installing Papirus icon pack to local directory so you can choose one icon for your web app from this pack.");
 
-        dialog("Please wait. Installing icons locally...")
+        dialog("Please wait. Downloading icons...")
             .control(info_message)
             .into()
     }

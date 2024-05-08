@@ -10,6 +10,7 @@ mod wrap;
 
 use std::{os::unix::fs::PermissionsExt, process::ExitStatus};
 
+use common::icons_location;
 use cosmic::{app::Settings, iced_core::Size};
 use tokio::{fs::File, io::AsyncWriteExt};
 use tracing::Level;
@@ -38,9 +39,7 @@ pub fn icon_pack_installed() -> bool {
     let mut directories = 0;
 
     for theme in packs.iter() {
-        let mut icons_dir = common::home_dir();
-        icons_dir.push(".var/app/io.github.elevenhsoft.WebApps/data");
-        icons_dir.push("icons");
+        let mut icons_dir = icons_location();
         icons_dir.push(theme);
 
         if icons_dir.exists() {
