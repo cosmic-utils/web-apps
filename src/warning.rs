@@ -25,7 +25,7 @@ impl std::fmt::Display for WarnMessages {
             ),
             WarnMessages::AppIcon => write!(f, "  - You must select an Icon for your launcher"),
             WarnMessages::AppBrowser => {
-                write!(f, "  - Please select a browser installed via Flatpak")
+                write!(f, "  - Please select a browser. Make sure at least one is installed system-wide or via flatpak.")
             }
         }
     }

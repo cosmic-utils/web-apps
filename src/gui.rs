@@ -3,11 +3,11 @@ use crate::{
     common::{
         self, find_icons, get_icon_name_from_url, image_handle, move_icon, Browser, WebAppLauncher,
     },
-    creator::{self},
-    execute_script, icon_pack_installed,
+    creator, execute_script,
+    home_screen::Home,
+    icon_pack_installed,
     iconpicker::{self, IconPicker},
     icons_installator::{self, Installator},
-    wam,
     warning::WarnMessages,
 };
 
@@ -70,8 +70,8 @@ pub enum Dialogs {
 
 pub struct Window {
     core: Core,
-    windows: HashMap<window::Id, wam::Wam>,
-    main_window: wam::Wam,
+    windows: HashMap<window::Id, Home>,
+    main_window: Home,
     creator_window: creator::AppCreator,
     dialog_window: Dialogs,
 }
@@ -98,7 +98,7 @@ impl cosmic::Application for Window {
         Self,
         cosmic::iced::Command<cosmic::app::Message<Self::Message>>,
     ) {
-        let manager = wam::Wam::new();
+        let manager = Home::new();
         let creator = creator::AppCreator::new();
 
         let (dialog, cmd) = if !icon_pack_installed() {

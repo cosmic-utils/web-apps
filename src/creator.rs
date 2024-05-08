@@ -7,7 +7,6 @@ use crate::{
 
 use cosmic::{
     iced::{id, Alignment, Length},
-    iced_widget::PickList,
     theme,
     widget::{dialog, dropdown, toggler, Button, Column, Container, Row, TextInput},
     Command, Element,
@@ -40,8 +39,8 @@ pub enum Message {
     Title(String),
     Url(String),
     Arguments(String),
-    Browser(Browser),
-    Category(String),
+    Browser(usize),
+    Category(usize),
 
     Clicked(Buttons),
 }
@@ -55,17 +54,18 @@ pub enum Buttons {
 
 impl AppCreator {
     pub fn new() -> Self {
-        let browsers = get_supported_browsers();
-        let browser = if !browsers.is_empty() {
-            browsers[0].clone()
-        } else {
+        let mut browsers = get_supported_browsers();
+        browsers.insert(
+            0,
             Browser::new(
-                crate::common::BrowserType::NotInstalled,
+                crate::common::BrowserType::SelectOne,
                 "Select browser",
                 "",
                 "",
-            )
-        };
+            ),
+        );
+
+        let browser = &browsers[0];
 
         let starting_warns = vec![
             WarnMessages::Info,
@@ -99,7 +99,7 @@ impl AppCreator {
             app_categories: categories.to_vec(),
             app_category: String::from("Web"),
             app_browser_name: String::from("Browser"),
-            app_browser: browser,
+            app_browser: browser.clone(),
             app_navbar: false,
             app_incognito: false,
             app_isolated: true,
@@ -138,17 +138,18 @@ impl AppCreator {
                 self.app_parameters = args;
                 Command::none()
             }
-            Message::Browser(browser) => {
+            Message::Browser(idx) => {
+                let browser = &self.app_browsers[idx];
                 match browser._type {
-                    BrowserType::NotInstalled => self.warning.push_warn(WarnMessages::AppBrowser),
+                    BrowserType::SelectOne => self.warning.push_warn(WarnMessages::AppBrowser),
                     _ => self.warning.remove_warn(WarnMessages::AppBrowser),
                 };
 
-                self.app_browser = browser;
+                self.app_browser = browser.clone();
                 Command::none()
             }
-            Message::Category(cat) => {
-                self.app_category = cat;
+            Message::Category(idx) => {
+                self.app_category = self.app_categories[idx].clone();
                 Command::none()
             }
 
@@ -177,14 +178,14 @@ impl AppCreator {
             match ico.icon {
                 iconpicker::IconType::Raster(data) => Button::new(cosmic::widget::image(data))
                     .on_press(gui::Message::OpenIconPicker)
-                    .width(Length::Fixed(64.))
-                    .height(Length::Fixed(64.))
+                    .width(Length::Fixed(48.))
+                    .height(Length::Fixed(48.))
                     .style(theme::Button::Transparent),
 
                 iconpicker::IconType::Svg(data) => Button::new(cosmic::widget::svg(data))
                     .on_press(gui::Message::OpenIconPicker)
-                    .width(Length::Fixed(64.))
-                    .height(Length::Fixed(64.))
+                    .width(Length::Fixed(48.))
+                    .height(Length::Fixed(48.))
                     .style(theme::Button::Transparent),
             }
         } else {
@@ -194,8 +195,8 @@ impl AppCreator {
 
             Button::new(default)
                 .on_press(gui::Message::OpenIconPicker)
-                .width(Length::Fixed(64.))
-                .height(Length::Fixed(64.))
+                .width(Length::Fixed(48.))
+                .height(Length::Fixed(48.))
                 .style(theme::Button::Transparent)
         };
 
@@ -206,11 +207,9 @@ impl AppCreator {
         let app_title = TextInput::new("Title", &self.app_title)
             .id(self.app_title_id.clone())
             .on_input(|s| gui::Message::Creator(Message::Title(s)))
-            .padding(10)
             .width(Length::Fill);
         let app_url = TextInput::new("URL", &self.app_url)
             .on_input(|s| gui::Message::Creator(Message::Url(s)))
-            .padding(10)
             .width(Length::Fill);
 
         let mut col = Column::new().spacing(14);
@@ -220,8 +219,8 @@ impl AppCreator {
         let search_ico: &'static [u8] = include_bytes!("../assets/icons/search.svg");
         let search_ico_handler =
             cosmic::widget::svg(cosmic::widget::svg::Handle::from_memory(search_ico))
-                .width(Length::Fixed(64.))
-                .height(Length::Fixed(64.));
+                .width(Length::Fixed(48.))
+                .height(Length::Fixed(48.));
 
         let dl_btn = Button::new(
             Container::new(Button::new(search_ico_handler).style(theme::Button::Transparent))
@@ -229,15 +228,15 @@ impl AppCreator {
                 .center_y(),
         )
         .on_press(gui::Message::Clicked(gui::Buttons::SearchFavicon))
-        .width(Length::Fixed(96.))
-        .height(Length::Fixed(96.))
+        .width(Length::Fixed(82.))
+        .height(Length::Fixed(82.))
         .style(theme::Button::Suggested);
 
         let icon = self.icon_picker_icon(self.selected_icon.clone());
 
         let icon = Button::new(icon)
-            .width(Length::Fixed(96.))
-            .height(Length::Fixed(96.))
+            .width(Length::Fixed(82.))
+            .height(Length::Fixed(82.))
             .on_press(gui::Message::OpenIconPicker)
             .style(theme::Button::Standard);
 
@@ -249,11 +248,10 @@ impl AppCreator {
 
         let app_arguments = TextInput::new("Non-standard arguments", &self.app_parameters)
             .on_input(|s| gui::Message::Creator(Message::Arguments(s)))
-            .padding(10)
             .width(Length::Fill);
 
         let category = dropdown(&self.app_categories, Some(0), move |index| {
-            gui::Message::Creator(Message::Category(index.to_string()))
+            gui::Message::Creator(Message::Category(index))
         })
         .width(Length::Fixed(200.));
 
@@ -298,25 +296,20 @@ impl AppCreator {
         cat_row = cat_row.push(incognito);
         cat_row = cat_row.push(browser_specific);
 
-        let app_browsers = PickList::new(
-            self.app_browsers.clone(),
-            Some(self.app_browser.clone()),
-            |s| gui::Message::Creator(Message::Browser(s)),
-        )
-        .width(Length::Fixed(200.))
-        .padding(10);
+        let app_browsers = dropdown(&self.app_browsers, Some(0), |idx| {
+            gui::Message::Creator(Message::Browser(idx))
+        })
+        .width(Length::Fixed(200.));
 
         let app_done_btn_text = if self.edit_mode { "Edit" } else { "Create" };
 
         let app_done = Button::new(Container::new(app_done_btn_text).center_x().center_y())
             .on_press(gui::Message::Result)
             .width(Length::Fill)
-            .padding(10)
             .style(theme::Button::Suggested);
         let creator_close = Button::new(Container::new("Close").center_x().center_y())
             .on_press(gui::Message::CloseCreator)
             .width(Length::Fill)
-            .padding(10)
             .style(theme::Button::Destructive);
 
         let mut browsers_row = Row::new().spacing(20);
@@ -324,10 +317,7 @@ impl AppCreator {
         browsers_row = browsers_row.push(app_done);
         browsers_row = browsers_row.push(creator_close);
 
-        let mut col = Column::new()
-            .spacing(20)
-            .width(Length::Fill)
-            .height(Length::Fill);
+        let mut col = Column::new().spacing(20);
 
         if self.warning.show {
             col = col.push(self.warning.view());

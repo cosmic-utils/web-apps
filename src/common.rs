@@ -7,7 +7,6 @@ use reqwest::Client;
 use scraper::{Html, Selector};
 use std::{
     ffi::OsStr,
-    fmt::Display,
     fs::{self, copy, create_dir_all, remove_dir_all, remove_file, File},
     io::{self, BufRead, Cursor, Read, Write},
     path::PathBuf,
@@ -489,13 +488,13 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrowserType {
+    SelectOne,
     Firefox,
     FirefoxFlatpak,
     Librewolf,
     WaterfoxFlatpak,
     Chromium,
     Falkon,
-    NotInstalled,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -506,9 +505,9 @@ pub struct Browser {
     test: PathBuf,
 }
 
-impl Display for Browser {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+impl AsRef<str> for Browser {
+    fn as_ref(&self) -> &str {
+        &self.name
     }
 }
 
@@ -555,7 +554,7 @@ impl Browser {
 
     pub fn is_installed(&self) -> bool {
         match self._type {
-            BrowserType::NotInstalled => false,
+            BrowserType::SelectOne => false,
             _ => true,
         }
     }

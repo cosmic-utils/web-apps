@@ -1,10 +1,10 @@
 mod common;
 mod creator;
 mod gui;
+mod home_screen;
 mod iconpicker;
 mod icons_installator;
 mod supported_browsers;
-mod wam;
 mod warning;
 mod wrap;
 
