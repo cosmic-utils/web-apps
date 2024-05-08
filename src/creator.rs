@@ -9,7 +9,7 @@ use cosmic::{
     iced::{id, Alignment, Length},
     iced_widget::PickList,
     theme,
-    widget::{dialog, toggler, Button, Column, Container, Row, TextInput},
+    widget::{dialog, dropdown, toggler, Button, Column, Container, Row, TextInput},
     Command, Element,
 };
 
@@ -21,6 +21,7 @@ pub struct AppCreator {
     pub app_url: String,
     pub app_icon: String,
     pub app_parameters: String,
+    pub app_categories: Vec<String>,
     pub app_category: String,
     pub app_browser_name: String,
     pub app_browser: Browser,
@@ -74,6 +75,19 @@ impl AppCreator {
         ];
 
         let warn_element = Warning::new(starting_warns, true);
+
+        let categories = [
+            String::from("Web"),
+            String::from("Accesories"),
+            String::from("Education"),
+            String::from("Games"),
+            String::from("Graphics"),
+            String::from("Internet"),
+            String::from("Office"),
+            String::from("Programming"),
+            String::from("Sound & Video"),
+        ];
+
         AppCreator {
             app_codename: None,
             app_title_id: id::Id::new("app-title"),
@@ -81,6 +95,7 @@ impl AppCreator {
             app_url: String::new(),
             app_icon: String::new(),
             app_parameters: String::new(),
+            app_categories: categories.to_vec(),
             app_category: String::from("Web"),
             app_browser_name: String::from("Browser"),
             app_browser: browser,
@@ -235,23 +250,10 @@ impl AppCreator {
             .padding(10)
             .width(Length::Fill);
 
-        let categories = [
-            String::from("Web"),
-            String::from("Accesories"),
-            String::from("Education"),
-            String::from("Games"),
-            String::from("Graphics"),
-            String::from("Internet"),
-            String::from("Office"),
-            String::from("Programming"),
-            String::from("Sound & Video"),
-        ];
-
-        let category = PickList::new(categories.to_vec(), Some(self.app_category.clone()), |s| {
-            gui::Message::Creator(Message::Category(s))
+        let category = dropdown(&self.app_categories, Some(0), move |index| {
+            gui::Message::Creator(Message::Category(index.to_string()))
         })
-        .width(Length::Fixed(200.))
-        .padding(10);
+        .width(Length::Fixed(200.));
 
         let browser_specific = match self.app_browser._type {
             crate::common::BrowserType::Firefox => {
@@ -318,7 +320,10 @@ impl AppCreator {
         browsers_row = browsers_row.push(app_done);
         browsers_row = browsers_row.push(creator_close);
 
-        let mut col = Column::new().spacing(20);
+        let mut col = Column::new()
+            .spacing(20)
+            .width(Length::Fill)
+            .height(Length::Fill);
 
         if self.warning.show {
             col = col.push(self.warning.view());
