@@ -1,4 +1,4 @@
-use crate::gui::Message;
+use crate::gui::{self, Message};
 
 use cosmic::{
     iced::{id, Length},
@@ -29,12 +29,12 @@ impl IconPicker {
     pub fn view(&self) -> Element<Message> {
         let search_field = TextInput::new("Search for icon", &self.icon_searching)
             .id(self.searching_id.clone())
-            .on_input(Message::CustomIconsSearch)
-            .on_submit(Message::PerformIconSearch)
+            .on_input(gui::Message::CustomIconsSearch)
+            .on_submit(gui::Message::PerformIconSearch)
             .padding(10)
             .width(Length::FillPortion(3));
         let close_dialog = Button::new("Close")
-            .on_press(Message::CloseIconPicker)
+            .on_press(gui::Message::CloseIconPicker)
             .padding(10)
             .width(Length::FillPortion(1));
 

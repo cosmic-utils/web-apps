@@ -14,6 +14,7 @@ use std::{
     str::FromStr,
 };
 use url::Url;
+use usvg::fontdb;
 use walkdir::WalkDir;
 
 pub fn url_valid(url: &str) -> bool {
@@ -606,7 +607,17 @@ pub async fn find_icon(path: PathBuf, icon_name: &str) -> Vec<String> {
         if let Some(filename) = entry.file_name().to_str() {
             if filename.contains(icon_name) {
                 if let Some(path) = entry.path().to_str() {
-                    icons.push(path.to_string())
+                    if let Ok(buffer) = tokio::fs::read_to_string(&mut path.to_string()).await {
+                        let options = usvg::Options::default();
+                        if let Ok(parsed) =
+                            usvg::Tree::from_str(&buffer, &options, &fontdb::Database::new())
+                        {
+                            let size = parsed.size();
+                            if size.width() >= 64.0 && size.height() >= 64.0 {
+                                icons.push(path.to_string())
+                            }
+                        }
+                    }
                 }
             }
         }

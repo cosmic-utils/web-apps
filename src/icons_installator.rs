@@ -5,8 +5,8 @@ use cosmic::{
     Element,
 };
 
-#[derive(Debug)]
-pub struct Installator {}
+#[derive(Debug, Clone)]
+pub struct Installator;
 
 impl Installator {
     pub fn new() -> Self {

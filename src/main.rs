@@ -1,9 +1,11 @@
 mod common;
+mod creator;
 mod gui;
 mod iconpicker;
 mod icons_installator;
 mod supported_browsers;
 mod wam;
+mod warning;
 mod wrap;
 
 use std::{os::unix::fs::PermissionsExt, process::ExitStatus};
