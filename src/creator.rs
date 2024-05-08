@@ -32,6 +32,7 @@ pub struct AppCreator {
     pub app_browsers: Vec<Browser>,
     pub warning: Warning,
     pub dialog_open: bool,
+    pub edit_mode: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -106,6 +107,7 @@ impl AppCreator {
             app_browsers: browsers,
             warning: warn_element,
             dialog_open: false,
+            edit_mode: false,
         }
     }
 
@@ -304,7 +306,9 @@ impl AppCreator {
         .width(Length::Fixed(200.))
         .padding(10);
 
-        let app_done = Button::new(Container::new("Create").center_x().center_y())
+        let app_done_btn_text = if self.edit_mode { "Edit" } else { "Create" };
+
+        let app_done = Button::new(Container::new(app_done_btn_text).center_x().center_y())
             .on_press(gui::Message::Result)
             .width(Length::Fill)
             .padding(10)
@@ -334,6 +338,11 @@ impl AppCreator {
         col = col.push(cat_row);
         col = col.push(browsers_row);
 
-        dialog("Create new launcher").control(col).into()
+        let dialog_header = if self.edit_mode {
+            format!("Edit {}", self.app_title)
+        } else {
+            "Create new Web App".to_string()
+        };
+        dialog(dialog_header).control(col).into()
     }
 }

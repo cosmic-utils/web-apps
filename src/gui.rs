@@ -156,6 +156,7 @@ impl cosmic::Application for Window {
             }
             Message::CloseCreator => {
                 self.dialog_window = Dialogs::MainWindow;
+                self.creator_window.edit_mode = false;
 
                 Command::none()
             }
@@ -214,6 +215,8 @@ impl cosmic::Application for Window {
 
                 if launcher.is_valid {
                     let _ = launcher.create();
+                    self.creator_window.edit_mode = false;
+                    self.dialog_window = Dialogs::MainWindow;
                 } else {
                     self.creator_window.warning.show = true;
                 }
@@ -235,6 +238,7 @@ impl cosmic::Application for Window {
                         Browser::web_browser(launcher.web_browser.name).expect("browser not found");
                     self.creator_window.app_navbar = launcher.navbar;
                     self.creator_window.app_incognito = launcher.is_incognito;
+                    self.creator_window.edit_mode = true;
 
                     Command::perform(image_handle(launcher.icon), |result| {
                         app(Message::SetIcon(result.unwrap()))
