@@ -84,8 +84,10 @@ impl Home {
 
             installed = installed.push(scrollable_list);
         } else {
-            installed = installed
-                .push(text("You don't have any web app installed. Please press create button and create one.").size(20));
+            installed = installed.push(
+                text("You don't have any web app installed.\nPlease, press create button and create one.")
+                    .size(20),
+            );
         };
 
         Container::new(installed).padding(30).into()

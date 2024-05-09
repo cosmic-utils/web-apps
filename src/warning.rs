@@ -60,6 +60,11 @@ impl Warning {
 
     pub fn remove_warn(&mut self, message: WarnMessages) -> &mut Self {
         self.messages.retain(|m| *m != message);
+
+        if self.messages.contains(&WarnMessages::Info) && self.messages.len() <= 1 {
+            self.show = false;
+        };
+
         self
     }
 
