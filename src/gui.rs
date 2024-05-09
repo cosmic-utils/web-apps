@@ -19,7 +19,7 @@ use cosmic::{
     executor,
     iced::{self, event, window},
     iced_core::Point,
-    widget::{self, focus},
+    widget::{self, focus, text},
     Command, Element,
 };
 use std::{collections::HashMap, process::ExitStatus};
@@ -38,10 +38,10 @@ pub enum Message {
     CloseWindow(window::Id),
     WindowClosed(window::Id),
 
+    OpenHome,
     OpenCreator,
     CloseCreator,
     OpenIconPicker,
-    CloseIconPicker,
     Creator(creator::Message),
     Result,
 
@@ -61,7 +61,7 @@ pub enum Message {
 }
 
 #[derive(Debug, Clone)]
-pub enum Dialogs {
+pub enum Pages {
     MainWindow,
     AppCreator,
     IconPicker(IconPicker),
@@ -73,7 +73,7 @@ pub struct Window {
     windows: HashMap<window::Id, Home>,
     main_window: Home,
     creator_window: creator::AppCreator,
-    dialog_window: Dialogs,
+    current_page: Pages,
 }
 
 impl cosmic::Application for Window {
@@ -101,15 +101,15 @@ impl cosmic::Application for Window {
         let manager = Home::new();
         let creator = creator::AppCreator::new();
 
-        let (dialog, cmd) = if !icon_pack_installed() {
+        let (page, cmd) = if !icon_pack_installed() {
             let cmd = Command::perform(add_icon_packs_install_script(), |file| {
                 cosmic::app::message::app(Message::InstallScript(file))
             });
 
             let installator = icons_installator::Installator::new();
-            (Dialogs::IconInstallator(installator), cmd)
+            (Pages::IconInstallator(installator), cmd)
         } else {
-            (Dialogs::MainWindow, Command::none())
+            (Pages::MainWindow, Command::none())
         };
 
         let windows = Window {
@@ -117,7 +117,7 @@ impl cosmic::Application for Window {
             windows: HashMap::from([(window::Id::MAIN, manager.clone())]),
             main_window: manager,
             creator_window: creator,
-            dialog_window: dialog,
+            current_page: page,
         };
 
         (windows, cmd)
@@ -149,13 +149,19 @@ impl cosmic::Application for Window {
             }
             Message::WindowOpened(_id, ..) => Command::none(),
 
+            Message::OpenHome => {
+                self.current_page = Pages::MainWindow;
+
+                Command::none()
+            }
+
             Message::OpenCreator => {
-                self.dialog_window = Dialogs::AppCreator;
+                self.current_page = Pages::AppCreator;
 
                 Command::none()
             }
             Message::CloseCreator => {
-                self.dialog_window = Dialogs::MainWindow;
+                self.current_page = Pages::MainWindow;
                 self.creator_window.edit_mode = false;
 
                 Command::none()
@@ -167,17 +173,11 @@ impl cosmic::Application for Window {
             }
             Message::OpenIconPicker => {
                 let icons_picker = iconpicker::IconPicker::new();
-                self.dialog_window = Dialogs::IconPicker(icons_picker);
+                self.current_page = Pages::IconPicker(icons_picker);
 
-                if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
+                if let Pages::IconPicker(ref mut picker) = self.current_page {
                     return focus(picker.searching_id.clone());
                 };
-
-                Command::none()
-            }
-
-            Message::CloseIconPicker => {
-                self.dialog_window = Dialogs::AppCreator;
 
                 Command::none()
             }
@@ -216,7 +216,7 @@ impl cosmic::Application for Window {
                 if launcher.is_valid {
                     let _ = launcher.create();
                     self.creator_window.edit_mode = false;
-                    self.dialog_window = Dialogs::MainWindow;
+                    self.current_page = Pages::MainWindow;
                 } else {
                     self.creator_window.warning.show = true;
                 }
@@ -251,7 +251,7 @@ impl cosmic::Application for Window {
                 }
                 Buttons::SearchFavicon => {
                     if common::url_valid(&self.creator_window.app_url) {
-                        if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
+                        if let Pages::IconPicker(ref mut picker) = self.current_page {
                             picker.icons.clear();
                         }
 
@@ -268,7 +268,7 @@ impl cosmic::Application for Window {
                 app(Message::SetIcon(result.unwrap()))
             }),
             Message::PerformIconSearch => {
-                if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
+                if let Pages::IconPicker(ref mut picker) = self.current_page {
                     picker.icons.clear();
 
                     let icons = find_icons(
@@ -282,7 +282,7 @@ impl cosmic::Application for Window {
                 Command::none()
             }
             Message::CustomIconsSearch(input) => {
-                if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
+                if let Pages::IconPicker(ref mut picker) = self.current_page {
                     picker.icon_searching = input;
                 }
 
@@ -318,7 +318,7 @@ impl cosmic::Application for Window {
                     }
                 }
                 if let Some(ico) = icon {
-                    if let Dialogs::IconPicker(ref mut picker) = self.dialog_window {
+                    if let Pages::IconPicker(ref mut picker) = self.current_page {
                         picker.icons.push(ico);
                     }
                 }
@@ -329,7 +329,7 @@ impl cosmic::Application for Window {
                 let path = icon.path;
 
                 let saved = move_icon(path, self.creator_window.app_title.clone());
-                self.dialog_window = Dialogs::AppCreator;
+                self.current_page = Pages::AppCreator;
                 self.creator_window.app_icon = saved.clone();
 
                 Command::perform(image_handle(saved), |result| {
@@ -367,7 +367,7 @@ impl cosmic::Application for Window {
             }
             Message::InstallCommand(exit_status) => {
                 if ExitStatus::success(&exit_status) {
-                    self.dialog_window = Dialogs::MainWindow;
+                    self.current_page = Pages::MainWindow;
                 }
 
                 Command::none()
@@ -375,17 +375,13 @@ impl cosmic::Application for Window {
         }
     }
 
-    fn dialog(&self) -> Option<Element<Message>> {
-        match &self.dialog_window {
-            Dialogs::MainWindow => None,
-            Dialogs::AppCreator => Some(self.creator_window.view()),
-            Dialogs::IconPicker(picker) => Some(picker.view()),
-            Dialogs::IconInstallator(installator) => Some(installator.view()),
-        }
-    }
-
     fn view_window(&self, _window_id: window::Id) -> Element<Message> {
-        self.main_window.view()
+        match &self.current_page {
+            Pages::MainWindow => self.main_window.view(),
+            Pages::AppCreator => self.creator_window.view(),
+            Pages::IconPicker(picker) => picker.view(),
+            Pages::IconInstallator(installator) => installator.view(),
+        }
     }
     fn view(&self) -> Element<Message> {
         self.view_window(window::Id::MAIN)
@@ -393,9 +389,28 @@ impl cosmic::Application for Window {
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
         vec![
+            widget::button::icon(widget::icon::from_name("go-home-symbolic"))
+                .on_press(Message::OpenHome)
+                .into(),
             widget::button::icon(widget::icon::from_name("document-new-symbolic"))
                 .on_press(Message::OpenCreator)
                 .into(),
         ]
+    }
+
+    fn header_center(&self) -> Vec<Element<Self::Message>> {
+        match self.current_page {
+            Pages::MainWindow => vec![text("COSMIC Web Apps").into()],
+            Pages::AppCreator => {
+                let title = if self.creator_window.edit_mode {
+                    format!("Edit {}", self.creator_window.app_title)
+                } else {
+                    "Create new Web App".to_string()
+                };
+                vec![text(title).into()]
+            }
+            Pages::IconPicker(_) => vec![text("Icon selector").into()],
+            Pages::IconInstallator(_) => vec![text("Papirus Icons installator").into()],
+        }
     }
 }

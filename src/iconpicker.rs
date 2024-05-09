@@ -4,7 +4,7 @@ use cosmic::{
     iced::{id, Length},
     iced_widget::Scrollable,
     theme,
-    widget::{dialog, Button, Column, Row, TextInput},
+    widget::{Button, Column, Container, TextInput},
     Element,
 };
 
@@ -31,39 +31,37 @@ impl IconPicker {
             .id(self.searching_id.clone())
             .on_input(gui::Message::CustomIconsSearch)
             .on_submit(gui::Message::PerformIconSearch)
-            .padding(10)
             .width(Length::FillPortion(3));
-        let close_dialog = Button::new("Close")
-            .on_press(gui::Message::CloseIconPicker)
-            .padding(10)
-            .width(Length::FillPortion(1));
 
-        let mut container = crate::wrap::Wrap::new().spacing(8.);
+        let mut wrapper = crate::wrap::Wrap::new().spacing(8.);
 
         for ico in self.icons.iter() {
             let btn = match ico.clone().icon {
                 IconType::Raster(icon) => Button::new(cosmic::widget::image(icon))
-                    .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.))
+                    .width(Length::Fixed(64.))
+                    .height(Length::Fixed(64.))
                     .on_press(Message::Favicon(ico.path.clone()))
                     .style(theme::Button::Icon),
                 IconType::Svg(icon) => Button::new(cosmic::widget::svg(icon))
-                    .width(Length::Fixed(96.))
-                    .height(Length::Fixed(96.))
+                    .width(Length::Fixed(64.))
+                    .height(Length::Fixed(64.))
                     .on_press(Message::Favicon(ico.path.clone()))
                     .style(theme::Button::Icon),
             };
-            container = container.push(btn);
+            wrapper = wrapper.push(btn);
         }
+
+        let container = Container::new(wrapper).center_x();
 
         let scrollable = Scrollable::new(container)
             .width(Length::Fill)
             .height(Length::Fill);
 
-        let row = Row::new().push(search_field).push(close_dialog).spacing(10);
-        let col = Column::new().push(row).push(scrollable).spacing(30);
-
-        dialog("Select icon for your app").control(col).into()
+        Column::new()
+            .push(search_field)
+            .push(scrollable)
+            .spacing(16)
+            .into()
     }
 }
 

@@ -8,7 +8,7 @@ use crate::{
 use cosmic::{
     iced::{id, Alignment, Length},
     theme,
-    widget::{dialog, dropdown, toggler, Button, Column, Container, Row, TextInput},
+    widget::{dropdown, toggler, Button, Column, Container, Row, TextInput},
     Command, Element,
 };
 
@@ -22,6 +22,7 @@ pub struct AppCreator {
     pub app_parameters: String,
     pub app_categories: Vec<String>,
     pub app_category: String,
+    pub selected_category: usize,
     pub app_browser_name: String,
     pub app_browser: Browser,
     pub app_navbar: bool,
@@ -29,6 +30,7 @@ pub struct AppCreator {
     pub app_isolated: bool,
     pub selected_icon: Option<iconpicker::Icon>,
     pub app_browsers: Vec<Browser>,
+    pub selected_browser: usize,
     pub warning: Warning,
     pub dialog_open: bool,
     pub edit_mode: bool,
@@ -98,6 +100,7 @@ impl AppCreator {
             app_parameters: String::new(),
             app_categories: categories.to_vec(),
             app_category: String::from("Web"),
+            selected_category: 0,
             app_browser_name: String::from("Browser"),
             app_browser: browser.clone(),
             app_navbar: false,
@@ -105,6 +108,7 @@ impl AppCreator {
             app_isolated: true,
             selected_icon: None,
             app_browsers: browsers,
+            selected_browser: 0,
             warning: warn_element,
             dialog_open: false,
             edit_mode: false,
@@ -140,6 +144,7 @@ impl AppCreator {
             }
             Message::Browser(idx) => {
                 let browser = &self.app_browsers[idx];
+                self.selected_browser = idx;
                 match browser._type {
                     BrowserType::SelectOne => self.warning.push_warn(WarnMessages::AppBrowser),
                     _ => self.warning.remove_warn(WarnMessages::AppBrowser),
@@ -150,6 +155,7 @@ impl AppCreator {
             }
             Message::Category(idx) => {
                 self.app_category = self.app_categories[idx].clone();
+                self.selected_category = idx;
                 Command::none()
             }
 
@@ -250,9 +256,11 @@ impl AppCreator {
             .on_input(|s| gui::Message::Creator(Message::Arguments(s)))
             .width(Length::Fill);
 
-        let category = dropdown(&self.app_categories, Some(0), move |index| {
-            gui::Message::Creator(Message::Category(index))
-        })
+        let category = dropdown(
+            &self.app_categories,
+            Some(self.selected_category),
+            move |index| gui::Message::Creator(Message::Category(index)),
+        )
         .width(Length::Fixed(200.));
 
         let browser_specific = match self.app_browser._type {
@@ -296,7 +304,7 @@ impl AppCreator {
         cat_row = cat_row.push(incognito);
         cat_row = cat_row.push(browser_specific);
 
-        let app_browsers = dropdown(&self.app_browsers, Some(0), |idx| {
+        let app_browsers = dropdown(&self.app_browsers, Some(self.selected_browser), |idx| {
             gui::Message::Creator(Message::Browser(idx))
         })
         .width(Length::Fixed(200.));
@@ -328,11 +336,6 @@ impl AppCreator {
         col = col.push(cat_row);
         col = col.push(browsers_row);
 
-        let dialog_header = if self.edit_mode {
-            format!("Edit {}", self.app_title)
-        } else {
-            "Create new Web App".to_string()
-        };
-        dialog(dialog_header).control(col).into()
+        col.into()
     }
 }
