@@ -25,10 +25,10 @@ pub fn is_svg(path: &str) -> bool {
 }
 
 pub fn home_dir() -> PathBuf {
-    let user = std::env::var("USER");
+    let home = std::env::var("HOME");
 
-    if let Ok(username) = user {
-        return PathBuf::from_str(&format!("/home/{}", username)).unwrap();
+    if let Ok(path) = home {
+        return PathBuf::from_str(&path).unwrap();
     }
 
     PathBuf::new()
