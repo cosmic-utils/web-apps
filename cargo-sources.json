@@ -50,8 +50,8 @@
     {
         "type": "git",
         "url": "https://github.com/pop-os/smithay-clipboard",
-        "commit": "9b995a33a88c496a90259dd207367a998c95ac98",
-        "dest": "flatpak-cargo/git/smithay-clipboard-9b995a3"
+        "commit": "ab422ddcc95a9a1717df094f9c8fe69e2fdb2a27",
+        "dest": "flatpak-cargo/git/smithay-clipboard-ab422dd"
     },
     {
         "type": "git",
@@ -74,14 +74,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/ab_glyph/ab_glyph-0.2.25.crate",
-        "sha256": "6f90148830dac590fac7ccfe78ec4a8ea404c60f75a24e16407a71f0f40de775",
-        "dest": "cargo/vendor/ab_glyph-0.2.25"
+        "url": "https://static.crates.io/crates/ab_glyph/ab_glyph-0.2.26.crate",
+        "sha256": "2e53b0a3d5760cd2ba9b787ae0c6440ad18ee294ff71b05e3381c900a7d16cfd",
+        "dest": "cargo/vendor/ab_glyph-0.2.26"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"6f90148830dac590fac7ccfe78ec4a8ea404c60f75a24e16407a71f0f40de775\", \"files\": {}}",
-        "dest": "cargo/vendor/ab_glyph-0.2.25",
+        "contents": "{\"package\": \"2e53b0a3d5760cd2ba9b787ae0c6440ad18ee294ff71b05e3381c900a7d16cfd\", \"files\": {}}",
+        "dest": "cargo/vendor/ab_glyph-0.2.26",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -2156,14 +2156,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/errno/errno-0.3.8.crate",
-        "sha256": "a258e46cdc063eb8519c00b9fc845fc47bcfca4130e2f08e88665ceda8474245",
-        "dest": "cargo/vendor/errno-0.3.8"
+        "url": "https://static.crates.io/crates/errno/errno-0.3.9.crate",
+        "sha256": "534c5cf6194dfab3db3242765c03bbe257cf92f22b38f6bc0c58d59108a820ba",
+        "dest": "cargo/vendor/errno-0.3.9"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"a258e46cdc063eb8519c00b9fc845fc47bcfca4130e2f08e88665ceda8474245\", \"files\": {}}",
-        "dest": "cargo/vendor/errno-0.3.8",
+        "contents": "{\"package\": \"534c5cf6194dfab3db3242765c03bbe257cf92f22b38f6bc0c58d59108a820ba\", \"files\": {}}",
+        "dest": "cargo/vendor/errno-0.3.9",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4576,14 +4576,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/num/num-0.4.2.crate",
-        "sha256": "3135b08af27d103b0a51f2ae0f8632117b7b185ccf931445affa8df530576a41",
-        "dest": "cargo/vendor/num-0.4.2"
+        "url": "https://static.crates.io/crates/num/num-0.4.3.crate",
+        "sha256": "35bd024e8b2ff75562e5f34e7f4905839deb4b22955ef5e73d2fea1b9813cb23",
+        "dest": "cargo/vendor/num-0.4.3"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"3135b08af27d103b0a51f2ae0f8632117b7b185ccf931445affa8df530576a41\", \"files\": {}}",
-        "dest": "cargo/vendor/num-0.4.2",
+        "contents": "{\"package\": \"35bd024e8b2ff75562e5f34e7f4905839deb4b22955ef5e73d2fea1b9813cb23\", \"files\": {}}",
+        "dest": "cargo/vendor/num-0.4.3",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -5005,14 +5005,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/owned_ttf_parser/owned_ttf_parser-0.20.0.crate",
-        "sha256": "d4586edfe4c648c71797a74c84bacb32b52b212eff5dfe2bb9f2c599844023e7",
-        "dest": "cargo/vendor/owned_ttf_parser-0.20.0"
+        "url": "https://static.crates.io/crates/owned_ttf_parser/owned_ttf_parser-0.21.0.crate",
+        "sha256": "6b41438d2fc63c46c74a2203bf5ccd82c41ba04347b2fcf5754f230b167067d5",
+        "dest": "cargo/vendor/owned_ttf_parser-0.21.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"d4586edfe4c648c71797a74c84bacb32b52b212eff5dfe2bb9f2c599844023e7\", \"files\": {}}",
-        "dest": "cargo/vendor/owned_ttf_parser-0.20.0",
+        "contents": "{\"package\": \"6b41438d2fc63c46c74a2203bf5ccd82c41ba04347b2fcf5754f230b167067d5\", \"files\": {}}",
+        "dest": "cargo/vendor/owned_ttf_parser-0.21.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -6414,7 +6414,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/smithay-clipboard-9b995a3/.\" \"cargo/vendor/smithay-clipboard\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/smithay-clipboard-ab422dd/.\" \"cargo/vendor/smithay-clipboard\""
         ]
     },
     {
@@ -7152,6 +7152,19 @@
         "type": "inline",
         "contents": "{\"package\": \"17f77d76d837a7830fe1d4f12b7b4ba4192c1888001c7164257e4bc6d21d96b4\", \"files\": {}}",
         "dest": "cargo/vendor/ttf-parser-0.20.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/ttf-parser/ttf-parser-0.21.0.crate",
+        "sha256": "eb71ffab0ca84cecd986dd52e873c8d0b013f3d5d9ce25a6f7d0513ed933d562",
+        "dest": "cargo/vendor/ttf-parser-0.21.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"eb71ffab0ca84cecd986dd52e873c8d0b013f3d5d9ce25a6f7d0513ed933d562\", \"files\": {}}",
+        "dest": "cargo/vendor/ttf-parser-0.21.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
