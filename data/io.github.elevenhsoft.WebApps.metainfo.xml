@@ -31,19 +31,18 @@
 	<content_rating type="oars-1.1" />
 	<screenshots>
 		<screenshot type="default">
-			<image>
-				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.4/res/screenshots/window-light.png</image>
-			<caption>Light theme</caption>
+			<image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-dark.png</image>
+			<caption>Installed apps</caption>
 		</screenshot>
 		<screenshot>
 			<image>
-				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.4/res/screenshots/window-icon-picker.png</image>
-			<caption>Icon Picker in app</caption>
+				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-creator.png</image>
+			<caption>Creator</caption>
 		</screenshot>
 		<screenshot>
 			<image>
-				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.4/res/screenshots/window-dark.png</image>
-			<caption>Dark theme</caption>
+				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-icon-picker.png</image>
+			<caption>Icon Picker</caption>
 		</screenshot>
 	</screenshots>
 
