@@ -101,15 +101,8 @@ impl WebAppLauncher {
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
 
-        let is_valid = if !name.is_empty()
-            && !icon.is_empty()
-            && url_valid(&url)
-            && web_browser.is_installed()
-        {
-            true
-        } else {
-            false
-        };
+        let is_valid =
+            !name.is_empty() && !icon.is_empty() && url_valid(&url) && web_browser.is_installed();
 
         Self {
             path,
@@ -443,7 +436,7 @@ impl WebAppLauncher {
 
         let profile_path = profile_dir.join(&self.codename);
 
-        if remove_dir_all(&profile_path).is_ok() {
+        if remove_dir_all(profile_path).is_ok() {
             tracing::info!("Removed firefox profile directory.");
         };
 
@@ -553,10 +546,7 @@ impl Browser {
     }
 
     pub fn is_installed(&self) -> bool {
-        match self._type {
-            BrowserType::SelectOne => false,
-            _ => true,
-        }
+        !matches!(self._type, BrowserType::SelectOne)
     }
 }
 
@@ -680,7 +670,7 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
 }
 
 pub fn move_icon(path: String, output_name: String) -> String {
-    create_dir_all(&icons_location()).expect("cant create icons folder");
+    create_dir_all(icons_location()).expect("cant create icons folder");
 
     let extension = if is_svg(&path) {
         String::from("svg")
