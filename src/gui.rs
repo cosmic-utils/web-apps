@@ -226,6 +226,7 @@ impl cosmic::Application for Window {
 
             Message::Clicked(buttons) => match buttons {
                 Buttons::Edit(launcher) => {
+                    self.creator_window.warning.remove_all_warns();
                     self.main_window.edit_mode = true;
                     self.main_window.launcher = Some(launcher.clone());
 

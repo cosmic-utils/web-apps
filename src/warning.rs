@@ -31,19 +31,10 @@ impl std::fmt::Display for WarnMessages {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Warning {
     pub messages: Vec<WarnMessages>,
     pub show: bool,
-}
-
-impl Default for Warning {
-    fn default() -> Self {
-        Self {
-            messages: Vec::new(),
-            show: false,
-        }
-    }
 }
 
 impl Warning {
@@ -52,6 +43,12 @@ impl Warning {
     }
 
     pub fn push_warn(&mut self, message: WarnMessages) -> &mut Self {
+        self.show = true;
+
+        if !self.messages.contains(&WarnMessages::Info) {
+            self.messages.insert(0, WarnMessages::Info);
+        }
+
         if !self.messages.contains(&message) {
             self.messages.push(message);
         }
@@ -65,6 +62,12 @@ impl Warning {
             self.show = false;
         };
 
+        self
+    }
+
+    pub fn remove_all_warns(&mut self) -> &mut Self {
+        self.messages.clear();
+        self.show = false;
         self
     }
 

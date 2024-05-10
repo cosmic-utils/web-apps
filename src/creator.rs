@@ -154,7 +154,7 @@ impl AppCreator {
                 Command::none()
             }
             Message::Category(idx) => {
-                self.app_category = self.app_categories[idx].clone();
+                self.app_category.clone_from(&self.app_categories[idx]);
                 self.selected_category = idx;
                 Command::none()
             }
