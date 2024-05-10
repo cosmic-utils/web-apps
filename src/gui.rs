@@ -231,7 +231,7 @@ impl cosmic::Application for Window {
 
                     self.creator_window.app_title = launcher.name;
                     self.creator_window.app_url = launcher.url;
-                    self.creator_window.app_icon = launcher.icon.clone();
+                    self.creator_window.app_icon.clone_from(&launcher.icon);
                     self.creator_window.app_parameters = launcher.custom_parameters;
                     self.creator_window.app_category = launcher.category;
                     self.creator_window.app_browser =
@@ -303,9 +303,9 @@ impl cosmic::Application for Window {
                 if self.creator_window.selected_icon.is_none() && icon.is_some() {
                     let path = icon.as_ref().unwrap().path.clone();
                     let saved = move_icon(path, self.creator_window.app_title.clone());
-                    self.creator_window.app_icon = saved.clone();
+                    self.creator_window.app_icon.clone_from(&saved);
                     self.creator_window.app_icon = saved;
-                    self.creator_window.selected_icon = icon.clone();
+                    self.creator_window.selected_icon.clone_from(&icon);
 
                     if self.creator_window.selected_icon.is_some()
                         && !self.creator_window.app_icon.is_empty()
@@ -330,7 +330,7 @@ impl cosmic::Application for Window {
 
                 let saved = move_icon(path, self.creator_window.app_title.clone());
                 self.current_page = Pages::AppCreator;
-                self.creator_window.app_icon = saved.clone();
+                self.creator_window.app_icon.clone_from(&saved);
 
                 Command::perform(image_handle(saved), |result| {
                     if let Some(res) = result {
