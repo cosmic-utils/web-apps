@@ -1,7 +1,8 @@
 use crate::{
     add_icon_packs_install_script,
     common::{
-        self, find_icons, get_icon_name_from_url, image_handle, move_icon, Browser, WebAppLauncher,
+        self, find_icons, get_icon_name_from_url, get_supported_browsers, image_handle, move_icon,
+        Browser, WebAppLauncher,
     },
     creator, execute_script,
     home_screen::Home,
@@ -226,6 +227,10 @@ impl cosmic::Application for Window {
 
             Message::Clicked(buttons) => match buttons {
                 Buttons::Edit(launcher) => {
+                    let selected_browser = get_supported_browsers()
+                        .iter()
+                        .position(|b| b.name == launcher.web_browser.name);
+
                     self.creator_window.warning.remove_all_warns();
                     self.main_window.edit_mode = true;
                     self.main_window.launcher = Some(launcher.clone());
@@ -237,6 +242,7 @@ impl cosmic::Application for Window {
                     self.creator_window.app_category = launcher.category;
                     self.creator_window.app_browser =
                         Browser::web_browser(launcher.web_browser.name).expect("browser not found");
+                    self.creator_window.selected_browser = selected_browser;
                     self.creator_window.app_navbar = launcher.navbar;
                     self.creator_window.app_incognito = launcher.is_incognito;
                     self.creator_window.edit_mode = true;

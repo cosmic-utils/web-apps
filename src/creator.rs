@@ -30,7 +30,7 @@ pub struct AppCreator {
     pub app_isolated: bool,
     pub selected_icon: Option<iconpicker::Icon>,
     pub app_browsers: Vec<Browser>,
-    pub selected_browser: usize,
+    pub selected_browser: Option<usize>,
     pub warning: Warning,
     pub dialog_open: bool,
     pub edit_mode: bool,
@@ -56,17 +56,7 @@ pub enum Buttons {
 
 impl AppCreator {
     pub fn new() -> Self {
-        let mut browsers = get_supported_browsers();
-        browsers.insert(
-            0,
-            Browser::new(
-                crate::common::BrowserType::SelectOne,
-                "Select browser",
-                "",
-                "",
-            ),
-        );
-
+        let browsers = get_supported_browsers();
         let browser = &browsers[0];
 
         let starting_warns = vec![
@@ -108,7 +98,7 @@ impl AppCreator {
             app_isolated: true,
             selected_icon: None,
             app_browsers: browsers,
-            selected_browser: 0,
+            selected_browser: Some(0),
             warning: warn_element,
             dialog_open: false,
             edit_mode: false,
@@ -144,9 +134,9 @@ impl AppCreator {
             }
             Message::Browser(idx) => {
                 let browser = &self.app_browsers[idx];
-                self.selected_browser = idx;
+                self.selected_browser = Some(idx);
                 match browser._type {
-                    BrowserType::SelectOne => self.warning.push_warn(WarnMessages::AppBrowser),
+                    BrowserType::NoBrowser => self.warning.push_warn(WarnMessages::AppBrowser),
                     _ => self.warning.remove_warn(WarnMessages::AppBrowser),
                 };
 
@@ -304,7 +294,7 @@ impl AppCreator {
         cat_row = cat_row.push(incognito);
         cat_row = cat_row.push(browser_specific);
 
-        let app_browsers = dropdown(&self.app_browsers, Some(self.selected_browser), |idx| {
+        let app_browsers = dropdown(&self.app_browsers, self.selected_browser, |idx| {
             gui::Message::Creator(Message::Browser(idx))
         })
         .width(Length::Fixed(200.));

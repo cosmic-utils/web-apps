@@ -481,7 +481,7 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrowserType {
-    SelectOne,
+    NoBrowser,
     Firefox,
     FirefoxFlatpak,
     Librewolf,
@@ -546,7 +546,7 @@ impl Browser {
     }
 
     pub fn is_installed(&self) -> bool {
-        !matches!(self._type, BrowserType::SelectOne)
+        !matches!(self._type, BrowserType::NoBrowser)
     }
 }
 
@@ -572,6 +572,15 @@ pub fn get_supported_browsers() -> Vec<Browser> {
             Err(_) => continue,
         }
     }
+    browsers.insert(
+        0,
+        Browser::new(
+            crate::common::BrowserType::NoBrowser,
+            "Select browser",
+            "",
+            "",
+        ),
+    );
 
     browsers
 }
