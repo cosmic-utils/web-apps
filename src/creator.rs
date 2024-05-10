@@ -7,7 +7,7 @@ use crate::{
 use cosmic::{
     iced::{id, Alignment, Length},
     style, theme,
-    widget::{self, dropdown, toggler, Button, Column, Container, Row, TextInput},
+    widget::{self, dropdown, focus, toggler, Button, Column, Container, Row, TextInput},
     Command, Element,
 };
 
@@ -17,6 +17,7 @@ pub struct AppCreator {
     pub app_title_id: id::Id,
     pub app_title: String,
     pub app_url: String,
+    pub app_url_id: id::Id,
     pub app_icon: String,
     pub app_parameters: String,
     pub app_categories: Vec<String>,
@@ -85,6 +86,7 @@ impl AppCreator {
             app_title_id: id::Id::new("app-title"),
             app_title: String::new(),
             app_url: String::new(),
+            app_url_id: id::Id::new("app-url"),
             app_icon: String::new(),
             app_parameters: String::new(),
             app_categories: categories.to_vec(),
@@ -111,21 +113,22 @@ impl AppCreator {
 
                 if self.app_title.len() >= 3 {
                     self.warning.remove_warn(WarnMessages::AppName);
+                    focus(self.app_title_id.clone())
                 } else {
                     self.warning.push_warn(WarnMessages::AppName);
+                    focus(self.app_title_id.clone())
                 }
-
-                Command::none()
             }
             Message::Url(url) => {
-                if url_valid(&url) {
+                self.app_url = url;
+
+                if url_valid(&self.app_url) {
                     self.warning.remove_warn(WarnMessages::AppUrl);
+                    focus(self.app_url_id.clone())
                 } else {
                     self.warning.push_warn(WarnMessages::AppUrl);
+                    focus(self.app_url_id.clone())
                 }
-
-                self.app_url = url;
-                Command::none()
             }
             Message::Arguments(args) => {
                 self.app_parameters = args;
@@ -209,6 +212,7 @@ impl AppCreator {
             .on_input(|s| gui::Message::Creator(Message::Title(s)))
             .width(Length::Fill);
         let app_url = TextInput::new("URL", &self.app_url)
+            .id(self.app_url_id.clone())
             .on_input(|s| gui::Message::Creator(Message::Url(s)))
             .width(Length::Fill);
 
