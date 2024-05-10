@@ -1,11 +1,12 @@
 use crate::{
-    common::{get_webapps, WebAppLauncher},
+    common::{get_webapps, icon_cache_get, WebAppLauncher},
     gui::{Buttons, Message},
 };
 
 use cosmic::{
     iced::{Alignment, Length},
     iced_widget::Scrollable,
+    style,
     widget::{self, text, Button, Column, Container, Row},
     Element,
 };
@@ -46,12 +47,15 @@ impl Home {
                     .width(Length::FillPortion(4))
                     .style(cosmic::theme::Button::Suggested);
 
-                    let edit = widget::button::icon(widget::icon::from_name("edit-symbolic"))
-                        .on_press(Message::Clicked(Buttons::Edit(data.clone())));
+                    let edit = widget::button(icon_cache_get("edit-symbolic", 16))
+                        .on_press(Message::Clicked(Buttons::Edit(data.clone())))
+                        .padding(8)
+                        .style(style::Button::Icon);
 
-                    let delete =
-                        widget::button::icon(widget::icon::from_name("edit-delete-symbolic"))
-                            .on_press(Message::Clicked(Buttons::Delete(data.clone())));
+                    let delete = widget::button(icon_cache_get("edit-delete-symbolic", 16))
+                        .on_press(Message::Clicked(Buttons::Delete(data.clone())))
+                        .padding(8)
+                        .style(style::Button::Icon);
 
                     let mut row = Row::new().spacing(10).height(Length::Fixed(50.));
                     let mut row2 = Row::new().spacing(10).height(Length::Fixed(50.));

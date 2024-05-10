@@ -1,14 +1,13 @@
 use crate::{
-    common::{get_supported_browsers, url_valid, Browser, BrowserType},
-    gui::{self},
-    iconpicker,
+    common::{get_supported_browsers, icon_cache_get, url_valid, Browser, BrowserType},
+    gui, iconpicker,
     warning::{WarnMessages, Warning},
 };
 
 use cosmic::{
     iced::{id, Alignment, Length},
-    theme,
-    widget::{dropdown, toggler, Button, Column, Container, Row, TextInput},
+    style, theme,
+    widget::{self, dropdown, toggler, Button, Column, Container, Row, TextInput},
     Command, Element,
 };
 
@@ -172,31 +171,36 @@ impl AppCreator {
     fn icon_picker_icon(&self, icon: Option<iconpicker::Icon>) -> Element<gui::Message> {
         let ico = if let Some(ico) = icon {
             match ico.icon {
-                iconpicker::IconType::Raster(data) => Button::new(cosmic::widget::image(data))
-                    .on_press(gui::Message::OpenIconPicker)
+                iconpicker::IconType::Raster(data) => widget::button(cosmic::widget::image(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
-                    .style(theme::Button::Transparent),
+                    .style(style::Button::Icon),
 
-                iconpicker::IconType::Svg(data) => Button::new(cosmic::widget::svg(data))
-                    .on_press(gui::Message::OpenIconPicker)
+                iconpicker::IconType::Svg(data) => widget::button(cosmic::widget::svg(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
-                    .style(theme::Button::Transparent),
+                    .style(style::Button::Icon),
             }
         } else {
-            let default_ico: &'static [u8] = include_bytes!("../assets/icons/moleskine-icon.svg");
-            let handler = cosmic::widget::svg::Handle::from_memory(default_ico);
-            let default = cosmic::widget::svg(handler);
-
-            Button::new(default)
-                .on_press(gui::Message::OpenIconPicker)
+            widget::button(icon_cache_get("folder-pictures-symbolic", 16))
                 .width(Length::Fixed(48.))
                 .height(Length::Fixed(48.))
-                .style(theme::Button::Transparent)
+                .style(style::Button::Icon)
         };
 
         Container::new(ico).center_x().center_y().into()
+    }
+
+    fn download_button(&self) -> Element<gui::Message> {
+        Container::new(
+            widget::button(icon_cache_get("folder-download-symbolic", 16))
+                .width(Length::Fixed(48.))
+                .height(Length::Fixed(48.))
+                .style(style::Button::Icon),
+        )
+        .center_x()
+        .center_y()
+        .into()
     }
 
     pub fn view(&self) -> Element<gui::Message> {
@@ -212,34 +216,22 @@ impl AppCreator {
         col = col.push(app_title);
         col = col.push(app_url);
 
-        let search_ico: &'static [u8] = include_bytes!("../assets/icons/search.svg");
-        let search_ico_handler =
-            cosmic::widget::svg(cosmic::widget::svg::Handle::from_memory(search_ico))
-                .width(Length::Fixed(48.))
-                .height(Length::Fixed(48.));
-
-        let dl_btn = Button::new(
-            Container::new(Button::new(search_ico_handler).style(theme::Button::Transparent))
-                .center_x()
-                .center_y(),
-        )
-        .on_press(gui::Message::Clicked(gui::Buttons::SearchFavicon))
-        .width(Length::Fixed(82.))
-        .height(Length::Fixed(82.))
-        .style(theme::Button::Suggested);
+        let download_button = self.download_button();
+        let download_button = widget::button(download_button)
+            .width(82.)
+            .height(82.)
+            .on_press(gui::Message::Clicked(gui::Buttons::SearchFavicon));
 
         let icon = self.icon_picker_icon(self.selected_icon.clone());
-
-        let icon = Button::new(icon)
+        let icon = widget::button(icon)
             .width(Length::Fixed(82.))
             .height(Length::Fixed(82.))
-            .on_press(gui::Message::OpenIconPicker)
-            .style(theme::Button::Standard);
+            .on_press(gui::Message::OpenIconPicker);
 
         let mut row = Row::new().spacing(12).width(Length::Fill);
 
         row = row.push(col);
-        row = row.push(dl_btn);
+        row = row.push(download_button);
         row = row.push(icon);
 
         let app_arguments = TextInput::new("Non-standard arguments", &self.app_parameters)
@@ -315,7 +307,7 @@ impl AppCreator {
         browsers_row = browsers_row.push(app_done);
         browsers_row = browsers_row.push(creator_close);
 
-        let mut col = Column::new().spacing(20);
+        let mut col = Column::new().spacing(20).padding(30);
 
         if self.warning.show {
             col = col.push(self.warning.view());

@@ -20,6 +20,7 @@ dirs = "5.0"
 scraper = "0.18.1"
 image = "0.25.1"
 usvg = "0.41.0"
+lazy_static = "1.4.0"
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic"

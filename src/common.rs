@@ -1,6 +1,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use anyhow::{anyhow, Error, Result};
+use cosmic::widget;
 use image::io::Reader as ImageReader;
 use rand::{thread_rng, Rng};
 use reqwest::Client;
@@ -11,10 +12,20 @@ use std::{
     io::{self, BufRead, Cursor, Read, Write},
     path::PathBuf,
     str::FromStr,
+    sync::Mutex,
 };
 use url::Url;
 use usvg::fontdb;
 use walkdir::WalkDir;
+
+lazy_static::lazy_static! {
+    static ref ICON_CACHE: Mutex<IconCache> = Mutex::new(IconCache::new());
+}
+
+pub fn icon_cache_get(name: &'static str, size: u16) -> widget::icon::Icon {
+    let mut icon_cache = ICON_CACHE.lock().unwrap();
+    icon_cache.get(name, size)
+}
 
 pub fn url_valid(url: &str) -> bool {
     Url::parse(url).is_ok()
@@ -475,6 +486,7 @@ pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
 }
 
 use crate::{
+    icon_cache::IconCache,
     iconpicker,
     supported_browsers::{flatpak_browsers, native_browsers},
 };

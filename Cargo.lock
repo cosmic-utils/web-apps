@@ -5912,11 +5912,12 @@ dependencies = [
 
 [[package]]
 name = "webapps"
-version = "0.3.4"
+version = "0.3.5"
 dependencies = [
  "anyhow",
  "dirs",
  "image 0.25.1",
+ "lazy_static",
  "libcosmic",
  "rand",
  "reqwest",

@@ -13,12 +13,9 @@
 	<project_license>GPL-3.0-only</project_license>
 
 	<description>
-		<p>COSMIC Web Apps written with love and libcosmic. Allow you
-			to simply create web applications from given URL working inside separate
-			window of
-			your browser of choice. Works on most mainstream desktop environments with
-			all the
-			mainstream web browsers installed via flatpak.</p>
+		<p>COSMIC Web Apps written with love and libcosmic.
+			Allow you to simply create web applications from given URL working inside separate window of your browser of choice.
+			Works on most mainstream desktop environments with all the mainstream web browsers installed via flatpak.</p>
 		<ul>
 			<li>Fast and easay to use</li>
 			<li>Works out of the box</li>

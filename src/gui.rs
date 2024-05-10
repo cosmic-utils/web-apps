@@ -1,8 +1,8 @@
 use crate::{
     add_icon_packs_install_script,
     common::{
-        self, find_icons, get_icon_name_from_url, get_supported_browsers, image_handle, move_icon,
-        Browser, WebAppLauncher,
+        self, find_icons, get_icon_name_from_url, get_supported_browsers, icon_cache_get,
+        image_handle, move_icon, Browser, WebAppLauncher,
     },
     creator, execute_script,
     home_screen::Home,
@@ -17,9 +17,10 @@ use cosmic::{
         message::{self, app},
         Core, Message as CosmicMessage,
     },
-    executor,
+    cosmic_theme, executor,
     iced::{self, event, window},
     iced_core::Point,
+    style,
     widget::{self, focus, text},
     Command, Element,
 };
@@ -395,12 +396,20 @@ impl cosmic::Application for Window {
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
+        let go_home_icon = icon_cache_get("go-home-symbolic", 16);
+        let go_creator = icon_cache_get("document-new-symbolic", 16);
+        let cosmic_theme::Spacing { space_xxs, .. } = self.core().system_theme().cosmic().spacing;
+
         vec![
-            widget::button::icon(widget::icon::from_name("go-home-symbolic"))
+            widget::button(go_home_icon)
                 .on_press(Message::OpenHome)
+                .padding(space_xxs)
+                .style(style::Button::Icon)
                 .into(),
-            widget::button::icon(widget::icon::from_name("document-new-symbolic"))
+            widget::button(go_creator)
                 .on_press(Message::OpenCreator)
+                .padding(space_xxs)
+                .style(style::Button::Icon)
                 .into(),
         ]
     }

@@ -2,6 +2,7 @@ mod common;
 mod creator;
 mod gui;
 mod home_screen;
+mod icon_cache;
 mod iconpicker;
 mod icons_installator;
 mod supported_browsers;
