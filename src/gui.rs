@@ -2,7 +2,7 @@ use crate::{
     add_icon_packs_install_script,
     common::{
         self, find_icons, get_icon_name_from_url, get_supported_browsers, icon_cache_get,
-        image_handle, move_icon, Browser, WebAppLauncher,
+        image_handle, move_icon, search_user_icons, Browser, WebAppLauncher,
     },
     creator, execute_script,
     home_screen::Home,
@@ -17,10 +17,14 @@ use cosmic::{
         message::{self, app},
         Core, Message as CosmicMessage,
     },
-    cosmic_theme, executor, style,
+    cosmic_theme, executor,
+    iced::window,
+    style,
     widget::{self, focus, text},
     Command, Element,
 };
+use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
+
 use std::process::ExitStatus;
 
 #[derive(Debug, Clone)]
@@ -37,6 +41,9 @@ pub enum Message {
     OpenCreator,
     CloseCreator,
     OpenIconPicker,
+    OpenIconPickerDialog,
+    DialogMessage(DialogMessage),
+    OpenFileResult(DialogResult),
     Creator(creator::Message),
     Result,
 
@@ -68,6 +75,7 @@ pub struct Window {
     main_window: Home,
     current_page: Pages,
     creator_window: creator::AppCreator,
+    dialog_opt: Option<Dialog<Message>>,
 }
 
 impl cosmic::Application for Window {
@@ -111,6 +119,7 @@ impl cosmic::Application for Window {
             main_window: manager,
             current_page: page,
             creator_window: creator,
+            dialog_opt: None,
         };
 
         (windows, cmd)
@@ -150,7 +159,49 @@ impl cosmic::Application for Window {
 
                 Command::none()
             }
+            Message::OpenIconPickerDialog => {
+                if self.dialog_opt.is_none() {
+                    let (dialog, command) = Dialog::new(
+                        DialogKind::OpenMultipleFiles,
+                        None,
+                        Message::DialogMessage,
+                        Message::OpenFileResult,
+                    );
+                    self.dialog_opt = Some(dialog);
+                    return command;
+                }
+                Command::none()
+            }
+            Message::DialogMessage(message) => {
+                if let Some(dialog) = &mut self.dialog_opt {
+                    return dialog.update(message);
+                }
+                Command::none()
+            }
+            Message::OpenFileResult(result) => {
+                self.dialog_opt = None;
+                match result {
+                    DialogResult::Cancel => {}
+                    DialogResult::Open(paths) => {
+                        for path in paths {
+                            if let Some(str) = path.to_str() {
+                                let icon_name = path.file_stem();
+                                if let Some(file_stem) = icon_name {
+                                    move_icon(
+                                        str.to_string(),
+                                        file_stem.to_str().unwrap().to_string(),
+                                    );
 
+                                    return Command::perform(search_user_icons(), |result| {
+                                        app(Message::FoundIcons(result))
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                Command::none()
+            }
             Message::Result => {
                 let launcher = if let Some(launcher) = self.main_window.launcher.to_owned() {
                     let _ = launcher.delete();
@@ -347,6 +398,13 @@ impl cosmic::Application for Window {
 
                 Command::none()
             }
+        }
+    }
+
+    fn view_window(&self, window_id: window::Id) -> Element<Message> {
+        match &self.dialog_opt {
+            Some(dialog) => dialog.view(window_id),
+            None => widget::text("Unknown window ID").into(),
         }
     }
 

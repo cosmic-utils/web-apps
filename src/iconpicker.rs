@@ -4,7 +4,7 @@ use cosmic::{
     iced::{id, Length},
     iced_widget::Scrollable,
     theme,
-    widget::{Button, Column, Container, TextInput},
+    widget::{self, Button, Column, Container, Row, TextInput},
     Element,
 };
 
@@ -33,6 +33,15 @@ impl IconPicker {
             .on_submit(gui::Message::PerformIconSearch)
             .width(Length::FillPortion(3));
 
+        let custom_icon_btn = widget::button("Open")
+            .on_press(gui::Message::OpenIconPickerDialog)
+            .padding(8)
+            .width(Length::FillPortion(1));
+
+        let mut controls = Row::new().spacing(10);
+        controls = controls.push(search_field);
+        controls = controls.push(custom_icon_btn);
+
         let mut wrapper = crate::wrap::Wrap::new().spacing(8.);
 
         for ico in self.icons.iter() {
@@ -58,7 +67,7 @@ impl IconPicker {
             .height(Length::Fill);
 
         Column::new()
-            .push(search_field)
+            .push(controls)
             .push(scrollable)
             .spacing(16)
             .into()

@@ -650,6 +650,21 @@ pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     result
 }
 
+pub async fn search_user_icons() -> Vec<String> {
+    let mut result: Vec<String> = Vec::new();
+    let user_folder = icons_location().join("MyIcons");
+
+    if let Ok(mut entries) = tokio::fs::read_dir(user_folder).await {
+        while let Some(entry) = entries.next_entry().await.unwrap() {
+            // Iterate over each entry asynchronously
+            let path = entry.path();
+            if path.is_file() {
+                result.push(path.to_str().unwrap().to_string());
+            }
+        }
+    }
+    result
+}
 pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
     let mut favs = Vec::new();
 
@@ -691,7 +706,8 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
 }
 
 pub fn move_icon(path: String, output_name: String) -> String {
-    create_dir_all(icons_location()).expect("cant create icons folder");
+    let user_icons = icons_location().join("MyIcons");
+    create_dir_all(user_icons.clone()).expect("cant create icons folder");
 
     let extension = if is_svg(&path) {
         String::from("svg")
@@ -705,7 +721,7 @@ pub fn move_icon(path: String, output_name: String) -> String {
             .to_string()
     };
 
-    let save_path = icons_location()
+    let save_path = user_icons
         .join(format!("{}.{}", output_name.replace(' ', ""), extension))
         .to_str()
         .unwrap()
