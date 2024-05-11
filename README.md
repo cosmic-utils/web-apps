@@ -4,13 +4,13 @@
   <img alt="COSMIC Web Apps" src="https://raw.githubusercontent.com/elevenhsoft/WebApps/master/data/io.github.elevenhsoft.WebApps.png" width="192" />
   <h1>COSMIC Web Apps</h1>
 
-  <h3>Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window of your browser of choice.</h3>
+<h3>Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from
+given url working inside separate window of your browser of choice.</h3>
 
-  ![Dark themed window](https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-dark.png)
-  ![Creator window](https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-creator.png)
-  ![Icon picker window](https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-icon-picker.png)
+  <img alt="COSMIC Web Apps Dark window" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-dark.png" width="192">
+  <img alt="COSMIC Web Apps Creator" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-creator.png" width="192">
+  <img alt="COSMIC Web Apps Icon selector" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-icon-picker.png" width="192">
 </div>
-
 
 # Installation
 
@@ -32,7 +32,8 @@ Make sure you are in `WebApps` directory. You should be already.
 
 ### Building
 
-! NOTE: Before installation you should build binary file. Run this command and after it, you will be able to install app.
+**NOTE:** Before installation you should build binary file. Run this command and after it, you will be able to install
+app.
 
 `just`
 
@@ -47,8 +48,10 @@ That's all. You can run `COSMIC Web Apps` from you app launcher.
 `sudo just uninstall`
 
 # License
+
 Code is distributed with [GPL-3.0 license](https://github.com/elevenhsoft/WebApps/blob/master/LICENSE)
 
 # Credits
 
-Special thanks to Linux Mint team for inspiration and solutions in this awesome app: [webapp-manager](https://github.com/linuxmint/webapp-manager)
+Special thanks to Linux Mint team for inspiration and solutions in this awesome
+app: [webapp-manager](https://github.com/linuxmint/webapp-manager)
