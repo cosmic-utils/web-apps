@@ -3,28 +3,22 @@ export APPID := 'io.github.elevenhsoft.WebApps'
 
 rootdir := ''
 prefix := '/usr'
-flatpak-prefix := '/app'
 
 base-dir := absolute_path(clean(rootdir / prefix))
-flatpak-base-dir := absolute_path(clean(rootdir / flatpak-prefix))
 
 bin-src := 'target' / 'release' / name
 bin-dst := base-dir / 'bin' / name
-flatpak-bin-dst := flatpak-base-dir / 'bin' / name
 
 desktop := APPID + '.desktop'
 desktop-src := 'data' / desktop
 desktop-dst := base-dir / 'share' / 'applications' / desktop
-flatpak-desktop-dst := flatpak-base-dir / 'share' / 'applications' / desktop
 
 metainfo := APPID + '.metainfo.xml'
 metainfo-src := 'data' / metainfo
 metainfo-dst := base-dir / 'share' / 'metainfo' / metainfo
-flatpak-metainfo-dst := flatpak-base-dir / 'share' / 'metainfo' / metainfo
 
 icon-src := 'data' / APPID + '.png'
 icon-dst := base-dir / 'share' / 'icons' / APPID + '.png'
-flatpak-icon-dst := flatpak-base-dir / 'share' / 'icons'/ APPID + '.png'
 
 # Default recipe which runs `just build-release`
 default: build-release
@@ -64,13 +58,6 @@ install:
      install -Dm0644 {{desktop-src}} {{desktop-dst}}
      install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
      install -Dm0644 {{icon-src}} {{icon-dst}}
-
-
-flatpak:
-     install -Dm0755 {{bin-src}} {{flatpak-bin-dst}}
-     install -Dm0644 {{desktop-src}} {{flatpak-desktop-dst}}
-     install -Dm0644 {{metainfo-src}} {{flatpak-metainfo-dst}}
-     install -Dm0644 {{icon-src}} {{flatpak-icon-dst}}
 
 
 # Uninstalls installed files
