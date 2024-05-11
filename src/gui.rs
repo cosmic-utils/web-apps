@@ -49,11 +49,11 @@ pub enum Message {
 
     Clicked(Buttons),
     // icons
-    Favicon(String),
     PerformIconSearch,
     CustomIconsSearch(String),
     FoundIcons(Vec<String>),
     PushIcon(Option<iconpicker::Icon>),
+    ChangeIcon(iconpicker::Icon),
     SetIcon(iconpicker::Icon),
     SelectIcon(iconpicker::Icon),
 
@@ -234,6 +234,11 @@ impl cosmic::Application for Window {
                 };
 
                 if launcher.is_valid {
+                    let _ = move_icon(
+                        self.creator_window.app_icon.clone(),
+                        self.creator_window.app_title.clone(),
+                    );
+
                     let _ = launcher.create();
                     self.creator_window.edit_mode = false;
                     self.current_page = Pages::MainWindow;
@@ -290,9 +295,6 @@ impl cosmic::Application for Window {
                 }
             },
 
-            Message::Favicon(path) => Command::perform(image_handle(path), |result| {
-                app(Message::SetIcon(result.unwrap()))
-            }),
             Message::PerformIconSearch => {
                 if let Pages::IconPicker(ref mut picker) = self.current_page {
                     picker.icons.clear();
@@ -348,6 +350,15 @@ impl cosmic::Application for Window {
                         picker.icons.push(ico);
                     }
                 }
+
+                Command::none()
+            }
+            Message::ChangeIcon(icon) => {
+                let path = icon.path.clone();
+                let saved = move_icon(path, self.creator_window.app_title.clone());
+                self.creator_window.selected_icon = Some(icon.clone());
+                self.creator_window.app_icon = saved;
+                self.current_page = Pages::AppCreator;
 
                 Command::none()
             }

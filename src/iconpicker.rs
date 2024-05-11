@@ -49,12 +49,12 @@ impl IconPicker {
                 IconType::Raster(icon) => Button::new(cosmic::widget::image(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
-                    .on_press(Message::Favicon(ico.path.clone()))
+                    .on_press(Message::ChangeIcon(ico.clone()))
                     .style(theme::Button::Icon),
                 IconType::Svg(icon) => Button::new(cosmic::widget::svg(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
-                    .on_press(Message::Favicon(ico.path.clone()))
+                    .on_press(Message::ChangeIcon(ico.clone()))
                     .style(theme::Button::Icon),
             };
             wrapper = wrapper.push(btn);
