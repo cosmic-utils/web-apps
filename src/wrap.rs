@@ -3,19 +3,20 @@
 //! A widget that displays its children in multiple horizontal or vertical runs.
 //!
 //! *This API requires the following crate features to be activated: `wrap`*
+use std::marker::PhantomData;
+
 use cosmic::iced;
 use iced::{
     advanced::{
-        layout::{Limits, Node},
-        overlay, renderer,
-        widget::Tree,
-        Clipboard, Layout, Shell, Widget,
+        Clipboard,
+        layout::{Limits, Node}, Layout,
+        overlay,
+        renderer, Shell, Widget, widget::Tree,
     },
-    event,
-    mouse::{self, Cursor},
-    Alignment, Element, Event, Length, Padding, Point, Rectangle, Size,
+    Alignment,
+    Element,
+    event, Event, Length, mouse::{self, Cursor}, Padding, Point, Rectangle, Size,
 };
-use std::marker::PhantomData;
 
 /// A container that distributes its contents horizontally.
 #[allow(missing_debug_implementations)]
@@ -165,6 +166,36 @@ where
     Self: WrapLayout<Renderer>,
     Renderer: renderer::Renderer,
 {
+    fn size(&self) -> Size<Length> {
+        Size::new(self.width, self.height)
+    }
+
+    fn layout(&self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) -> Node {
+        self.inner_layout(tree, renderer, limits)
+    }
+
+    fn draw(
+        &self,
+        state: &Tree,
+        renderer: &mut Renderer,
+        theme: &Theme,
+        style: &renderer::Style,
+        layout: Layout<'_>,
+        cursor: Cursor,
+        viewport: &Rectangle,
+    ) {
+        for ((child, state), layout) in self
+            .elements
+            .iter()
+            .zip(&state.children)
+            .zip(layout.children())
+        {
+            child
+                .as_widget()
+                .draw(state, renderer, theme, style, layout, cursor, viewport);
+        }
+    }
+
     fn children(&self) -> Vec<Tree> {
         self.elements.iter().map(Tree::new).collect()
     }
@@ -173,12 +204,25 @@ where
         tree.diff_children(&mut self.elements);
     }
 
-    fn size(&self) -> Size<Length> {
-        Size::new(self.width, self.height)
-    }
-
-    fn layout(&self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) -> Node {
-        self.inner_layout(tree, renderer, limits)
+    fn operate(
+        &self,
+        state: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn cosmic::widget::Operation<
+            cosmic::iced_core::widget::OperationOutputWrapper<Message>,
+        >,
+    ) {
+        for ((element, state), layout) in self
+            .elements
+            .iter()
+            .zip(&mut state.children)
+            .zip(layout.children())
+        {
+            element
+                .as_widget()
+                .operate(state, layout, renderer, operation);
+        }
     }
 
     fn on_event(
@@ -211,21 +255,6 @@ where
             .fold(event::Status::Ignored, event::Status::merge)
     }
 
-    fn overlay<'b>(
-        &'b mut self,
-        state: &'b mut Tree,
-        layout: Layout<'_>,
-        renderer: &Renderer,
-    ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
-        self.elements
-            .iter_mut()
-            .zip(&mut state.children)
-            .zip(layout.children())
-            .find_map(|((child, state), layout)| {
-                child.as_widget_mut().overlay(state, layout, renderer)
-            })
-    }
-
     fn mouse_interaction(
         &self,
         state: &Tree,
@@ -247,47 +276,19 @@ where
             .unwrap_or_default()
     }
 
-    fn draw(
-        &self,
-        state: &Tree,
-        renderer: &mut Renderer,
-        theme: &Theme,
-        style: &renderer::Style,
-        layout: Layout<'_>,
-        cursor: Cursor,
-        viewport: &Rectangle,
-    ) {
-        for ((child, state), layout) in self
-            .elements
-            .iter()
-            .zip(&state.children)
-            .zip(layout.children())
-        {
-            child
-                .as_widget()
-                .draw(state, renderer, theme, style, layout, cursor, viewport);
-        }
-    }
-
-    fn operate(
-        &self,
-        state: &mut Tree,
+    fn overlay<'b>(
+        &'b mut self,
+        state: &'b mut Tree,
         layout: Layout<'_>,
         renderer: &Renderer,
-        operation: &mut dyn cosmic::widget::Operation<
-            cosmic::iced_core::widget::OperationOutputWrapper<Message>,
-        >,
-    ) {
-        for ((element, state), layout) in self
-            .elements
-            .iter()
+    ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
+        self.elements
+            .iter_mut()
             .zip(&mut state.children)
             .zip(layout.children())
-        {
-            element
-                .as_widget()
-                .operate(state, layout, renderer, operation);
-        }
+            .find_map(|((child, state), layout)| {
+                child.as_widget_mut().overlay(state, layout, renderer)
+            })
     }
 }
 
@@ -525,10 +526,10 @@ where
 
 /// An optional directional attribute of the [`Wrap`](crate::Wrap).
 pub mod direction {
-    /// An vertical direction of the [`Wrap`](crate::Wrap).
+    /// A vertical direction of the [`Wrap`](crate::Wrap).
     #[derive(Debug)]
     pub struct Vertical;
-    /// An horizontal direction of the [`Wrap`](crate::Wrap).
+    /// A horizontal direction of the [`Wrap`](crate::Wrap).
     #[derive(Debug)]
     pub struct Horizontal;
 }

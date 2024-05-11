@@ -1,22 +1,29 @@
 #![allow(clippy::too_many_arguments)]
 
-use anyhow::{anyhow, Error, Result};
-use cosmic::widget;
-use image::io::Reader as ImageReader;
-use rand::{thread_rng, Rng};
-use reqwest::Client;
-use scraper::{Html, Selector};
 use std::{
     ffi::OsStr,
-    fs::{self, copy, create_dir_all, remove_dir_all, remove_file, File},
+    fs::{self, copy, create_dir_all, File, remove_dir_all, remove_file},
     io::{self, BufRead, Cursor, Read, Write},
     path::PathBuf,
     str::FromStr,
     sync::Mutex,
 };
+
+use anyhow::{anyhow, Error, Result};
+use cosmic::widget;
+use image::io::Reader as ImageReader;
+use rand::{Rng, thread_rng};
+use reqwest::Client;
+use scraper::{Html, Selector};
 use url::Url;
 use usvg::fontdb;
 use walkdir::WalkDir;
+
+use crate::{
+    icon_cache::IconCache,
+    iconpicker,
+    supported_browsers::{flatpak_browsers, native_browsers},
+};
 
 lazy_static::lazy_static! {
     static ref ICON_CACHE: Mutex<IconCache> = Mutex::new(IconCache::new());
@@ -485,12 +492,6 @@ pub fn get_webapps() -> Vec<Result<WebAppLauncher>> {
     webapps
 }
 
-use crate::{
-    icon_cache::IconCache,
-    iconpicker,
-    supported_browsers::{flatpak_browsers, native_browsers},
-};
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrowserType {
     NoBrowser,
@@ -527,15 +528,15 @@ impl Browser {
         let data_home = base.join(".local/share");
 
         if exec.starts_with(".local/share/") {
-            let flatpak_path: Vec<_> = exec.split(".local/share/").collect();
+            let flatpak_path: Vec<&str> = exec.split(".local/share/").collect();
             let path = data_home.join(flatpak_path[1]);
             exe_path.push(path);
         } else {
             exe_path.push(exec)
         }
 
-        if test_path.starts_with(".local/share/") {
-            let flatpak_path: Vec<_> = exec.split(".local/share/").collect();
+        if test_path.starts_with(".local/share") {
+            let flatpak_path: Vec<&str> = test_path.split(".local/share/").collect();
             let path = data_home.join(flatpak_path[1]);
             test.push(path);
         } else {
@@ -586,12 +587,7 @@ pub fn get_supported_browsers() -> Vec<Browser> {
     }
     browsers.insert(
         0,
-        Browser::new(
-            crate::common::BrowserType::NoBrowser,
-            "Select browser",
-            "",
-            "",
-        ),
+        Browser::new(BrowserType::NoBrowser, "Select browser", "", ""),
     );
 
     browsers
@@ -666,7 +662,7 @@ pub async fn search_user_icons() -> Vec<String> {
     result
 }
 pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
-    let mut favs = Vec::new();
+    let mut favicons = Vec::new();
 
     let content = Client::new()
         .get(url)
@@ -689,7 +685,7 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
             if link.attr("rel") == Some("icon") {
                 let val = link.value().attr("href").unwrap();
 
-                favs.push(val.to_string());
+                favicons.push(val.to_string());
             }
         }
 
@@ -697,12 +693,12 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
             if meta.value().attr("property") == Some("og:image") {
                 let val = meta.value().attr("content").unwrap();
 
-                favs.push(val.to_string());
+                favicons.push(val.to_string());
             }
         }
     }
 
-    Ok(favs)
+    Ok(favicons)
 }
 
 pub fn move_icon(path: String, output_name: String) -> String {
@@ -770,7 +766,7 @@ pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
     };
 
     if is_svg(&path) {
-        let handle = cosmic::widget::svg::Handle::from_memory(data);
+        let handle = widget::svg::Handle::from_memory(data);
 
         return Some(iconpicker::Icon::new(
             iconpicker::IconType::Svg(handle),
@@ -782,7 +778,7 @@ pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
         .decode()
     {
         if image.width() >= 96 && image.height() >= 96 {
-            let handle = cosmic::widget::image::Handle::from_memory(data);
+            let handle = widget::image::Handle::from_memory(data);
 
             return Some(iconpicker::Icon::new(
                 iconpicker::IconType::Raster(handle),

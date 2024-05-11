@@ -1,58 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-	<id>io.github.elevenhsoft.WebApps</id>
-	<developer id="io.github.elevenhsoft">
-		<name>elevenhsoft</name>
-	</developer>
-	<url type="homepage">https://github.com/elevenhsoft/WebApps</url>
+    <id>io.github.elevenhsoft.WebApps</id>
+    <developer id="io.github.elevenhsoft">
+        <name>elevenhsoft</name>
+    </developer>
+    <url type="homepage">https://github.com/elevenhsoft/WebApps</url>
 
-	<name>COSMIC Web Apps</name>
-	<summary>Web App Manager written in rust</summary>
+    <name>COSMIC Web Apps</name>
+    <summary>Web App Manager written in rust</summary>
 
-	<metadata_license>MIT</metadata_license>
-	<project_license>GPL-3.0-only</project_license>
+    <metadata_license>MIT</metadata_license>
+    <project_license>GPL-3.0-only</project_license>
 
-	<description>
-		<p>COSMIC Web Apps written with love and libcosmic.
-			Allow you to simply create web applications from given URL working inside separate window of your browser of choice.
-			Works on most mainstream desktop environments with all the mainstream web browsers installed via flatpak.</p>
-		<ul>
-			<li>Fast and easay to use</li>
-			<li>Works out of the box</li>
-			<li>In-app icon pack installer</li>
-			<li>Supports most mainsteam browsers</li>
-		</ul>
-	</description>
+    <description>
+        <p>COSMIC Web Apps written with love and libcosmic.
+            Allow you to simply create web applications from given URL working inside separate window of your browser of
+            choice.
+            Works on most mainstream desktop environments with all the mainstream web browsers installed via flatpak.
+        </p>
+        <ul>
+            <li>Fast and easy to use</li>
+            <li>Works out of the box</li>
+            <li>In-app icon pack installer</li>
+            <li>Supports most mainstream browsers</li>
+        </ul>
+    </description>
 
-	<launchable type="desktop-id">io.github.elevenhsoft.WebApps.desktop</launchable>
-	<content_rating type="oars-1.1" />
-	<screenshots>
-		<screenshot type="default">
-			<image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-dark.png</image>
-			<caption>Installed apps</caption>
-		</screenshot>
-		<screenshot>
-			<image>
-				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-creator.png</image>
-			<caption>Creator</caption>
-		</screenshot>
-		<screenshot>
-			<image>
-				https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-icon-picker.png</image>
-			<caption>Icon Picker</caption>
-		</screenshot>
-	</screenshots>
+    <launchable type="desktop-id">io.github.elevenhsoft.WebApps.desktop</launchable>
+    <content_rating type="oars-1.1"/>
+    <screenshots>
+        <screenshot type="default">
+            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-dark.png</image>
+            <caption>Installed apps</caption>
+        </screenshot>
+        <screenshot>
+            <image>
+                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-creator.png
+            </image>
+            <caption>Creator</caption>
+        </screenshot>
+        <screenshot>
+            <image>
+                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-icon-picker.png
+            </image>
+            <caption>Icon Picker</caption>
+        </screenshot>
+    </screenshots>
 
-	<releases>
-		<release version="0.3.4" date="2024-05-04">
-			<description>
-				<p>Rename repo and binary</p>
-			</description>
-		</release>
-		<release version="0.3.3" date="2024-05-04">
-			<description>
-				<p>Initial release</p>
-			</description>
-		</release>
-	</releases>
+    <releases>
+        <release version="0.3.4" date="2024-05-04">
+            <description>
+                <p>Rename repo and binary</p>
+            </description>
+        </release>
+        <release version="0.3.3" date="2024-05-04">
+            <description>
+                <p>Initial release</p>
+            </description>
+        </release>
+    </releases>
 </component>

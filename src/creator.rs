@@ -1,14 +1,14 @@
-use crate::{
-    common::{get_supported_browsers, icon_cache_get, url_valid, Browser, BrowserType},
-    gui, iconpicker,
-    warning::{WarnMessages, Warning},
+use cosmic::{
+    Command,
+    Element, iced::{Alignment, id, Length},
+    style,
+    theme, widget::{self, Button, Column, Container, dropdown, focus, Row, TextInput, toggler},
 };
 
-use cosmic::{
-    iced::{id, Alignment, Length},
-    style, theme,
-    widget::{self, dropdown, focus, toggler, Button, Column, Container, Row, TextInput},
-    Command, Element,
+use crate::{
+    common::{Browser, BrowserType, get_supported_browsers, icon_cache_get, url_valid},
+    gui, iconpicker,
+    warning::{Warning, WarnMessages},
 };
 
 #[derive(Debug, Clone)]
@@ -151,7 +151,7 @@ impl AppCreator {
                 Command::none()
             }
 
-            Message::Clicked(btns) => match btns {
+            Message::Clicked(buttons) => match buttons {
                 Buttons::Navbar(selected) => {
                     self.app_navbar = selected;
 
@@ -249,31 +249,17 @@ impl AppCreator {
         )
         .width(Length::Fixed(200.));
 
+        let navbar_toggle = toggler(String::from("Nav Bar"), self.app_navbar, |b| {
+            gui::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
+        })
+        .width(Length::Fill);
+
         let browser_specific = match self.app_browser._type {
-            crate::common::BrowserType::Firefox => {
-                toggler(String::from("Nav Bar"), self.app_navbar, |b| {
-                    gui::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
-                })
-                .width(Length::Fill)
-            }
-            crate::common::BrowserType::FirefoxFlatpak => {
-                toggler(String::from("Nav Bar"), self.app_navbar, |b| {
-                    gui::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
-                })
-                .width(Length::Fill)
-            }
-            crate::common::BrowserType::Librewolf => {
-                toggler(String::from("Nav Bar"), self.app_navbar, |b| {
-                    gui::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
-                })
-                .width(Length::Fill)
-            }
-            crate::common::BrowserType::WaterfoxFlatpak => {
-                toggler(String::from("Nav Bar"), self.app_navbar, |b| {
-                    gui::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
-                })
-                .width(Length::Fill)
-            }
+            BrowserType::Firefox => navbar_toggle,
+            BrowserType::FirefoxFlatpak => navbar_toggle,
+            BrowserType::Librewolf => navbar_toggle,
+            BrowserType::WaterfoxFlatpak => navbar_toggle,
+
             _ => toggler(String::from("Isolated Profile"), self.app_isolated, |b| {
                 gui::Message::Creator(Message::Clicked(Buttons::IsolatedProfile(b)))
             })

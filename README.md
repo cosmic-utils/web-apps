@@ -1,6 +1,7 @@
+<!--suppress HtmlDeprecatedAttribute -->
 <div align="center">
   <br>
-  <img src="https://raw.githubusercontent.com/elevenhsoft/WebApps/master/data/io.github.elevenhsoft.WebApps.png" width="192" />
+  <img alt="COSMIC Web Apps" src="https://raw.githubusercontent.com/elevenhsoft/WebApps/master/data/io.github.elevenhsoft.WebApps.png" width="192" />
   <h1>COSMIC Web Apps</h1>
 
   <h3>Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window of your browser of choice.</h3>
@@ -21,7 +22,7 @@ cd into folder
 
 `cd WebApps`
 
-## Just use [just](https://github.com/casey/just)
+## Just use, [just](https://github.com/casey/just)
 
 For Pop OS make sure you have [just](https://github.com/casey/just) installed.
 
@@ -31,7 +32,7 @@ Make sure you are in `WebApps` directory. You should be already.
 
 ### Building
 
-! NOTE: Before installation you should build binary file. Run this command and after it you will be able to install app.
+! NOTE: Before installation you should build binary file. Run this command and after it, you will be able to install app.
 
 `just`
 

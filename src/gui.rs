@@ -1,31 +1,31 @@
+use std::process::ExitStatus;
+
+use cosmic::{
+    app::{
+        Core,
+        message::{self, app}, Message as CosmicMessage,
+    },
+    Command, cosmic_theme,
+    Element,
+    executor,
+    iced::window,
+    style, widget::{self, focus, text},
+};
+use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
+
 use crate::{
     add_icon_packs_install_script,
     common::{
-        self, find_icons, get_icon_name_from_url, get_supported_browsers, icon_cache_get,
-        image_handle, move_icon, search_user_icons, Browser, WebAppLauncher,
+        self, Browser, find_icons, get_icon_name_from_url, get_supported_browsers,
+        icon_cache_get, image_handle, move_icon, search_user_icons, WebAppLauncher,
     },
     creator, execute_script,
     home_screen::Home,
     icon_pack_installed,
     iconpicker::{self, IconPicker},
-    icons_installator::{self, Installator},
+    icons_installator::Installator,
     warning::WarnMessages,
 };
-
-use cosmic::{
-    app::{
-        message::{self, app},
-        Core, Message as CosmicMessage,
-    },
-    cosmic_theme, executor,
-    iced::window,
-    style,
-    widget::{self, focus, text},
-    Command, Element,
-};
-use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
-
-use std::process::ExitStatus;
 
 #[derive(Debug, Clone)]
 pub enum Buttons {
@@ -85,30 +85,27 @@ impl cosmic::Application for Window {
 
     const APP_ID: &'static str = "io.github.elevenhsoft.WebApps";
 
-    fn core(&self) -> &cosmic::app::Core {
+    fn core(&self) -> &Core {
         &self.core
     }
 
-    fn core_mut(&mut self) -> &mut cosmic::app::Core {
+    fn core_mut(&mut self) -> &mut Core {
         &mut self.core
     }
 
     fn init(
-        core: cosmic::app::Core,
+        core: Core,
         _flags: Self::Flags,
-    ) -> (
-        Self,
-        cosmic::iced::Command<cosmic::app::Message<Self::Message>>,
-    ) {
+    ) -> (Self, Command<cosmic::app::Message<Self::Message>>) {
         let manager = Home::new();
         let creator = creator::AppCreator::new();
 
         let (page, cmd) = if !icon_pack_installed() {
             let cmd = Command::perform(add_icon_packs_install_script(), |file| {
-                cosmic::app::message::app(Message::InstallScript(file))
+                app(Message::InstallScript(file))
             });
 
-            let installator = icons_installator::Installator::new();
+            let installator = Installator::new();
             (Pages::IconInstallator(installator), cmd)
         } else {
             (Pages::MainWindow, Command::none())
@@ -123,6 +120,41 @@ impl cosmic::Application for Window {
         };
 
         (windows, cmd)
+    }
+
+    fn header_start(&self) -> Vec<Element<Self::Message>> {
+        let go_home_icon = icon_cache_get("go-home-symbolic", 16);
+        let go_creator = icon_cache_get("document-new-symbolic", 16);
+        let cosmic_theme::Spacing { space_xxs, .. } = self.core().system_theme().cosmic().spacing;
+
+        vec![
+            widget::button(go_home_icon)
+                .on_press(Message::OpenHome)
+                .padding(space_xxs)
+                .style(style::Button::Icon)
+                .into(),
+            widget::button(go_creator)
+                .on_press(Message::OpenCreator)
+                .padding(space_xxs)
+                .style(style::Button::Icon)
+                .into(),
+        ]
+    }
+
+    fn header_center(&self) -> Vec<Element<Self::Message>> {
+        match self.current_page {
+            Pages::MainWindow => vec![text("COSMIC Web Apps").into()],
+            Pages::AppCreator => {
+                let title = if self.creator_window.edit_mode {
+                    format!("Edit {}", self.creator_window.app_title)
+                } else {
+                    "Create new Web App".to_string()
+                };
+                vec![text(title).into()]
+            }
+            Pages::IconPicker(_) => vec![text("Icon selector").into()],
+            Pages::IconInstallator(_) => vec![text("Papirus Icons installator").into()],
+        }
     }
 
     fn update(&mut self, message: Self::Message) -> Command<CosmicMessage<Message>> {
@@ -150,7 +182,7 @@ impl cosmic::Application for Window {
                 command.map(|mess| app(Message::Creator(mess)))
             }
             Message::OpenIconPicker => {
-                let icons_picker = iconpicker::IconPicker::new();
+                let icons_picker = IconPicker::new();
                 self.current_page = Pages::IconPicker(icons_picker);
 
                 if let Pages::IconPicker(ref mut picker) = self.current_page {
@@ -412,13 +444,6 @@ impl cosmic::Application for Window {
         }
     }
 
-    fn view_window(&self, window_id: window::Id) -> Element<Message> {
-        match &self.dialog_opt {
-            Some(dialog) => dialog.view(window_id),
-            None => widget::text("Unknown window ID").into(),
-        }
-    }
-
     fn view(&self) -> Element<Message> {
         match &self.current_page {
             Pages::MainWindow => self.main_window.view(),
@@ -428,38 +453,10 @@ impl cosmic::Application for Window {
         }
     }
 
-    fn header_start(&self) -> Vec<Element<Self::Message>> {
-        let go_home_icon = icon_cache_get("go-home-symbolic", 16);
-        let go_creator = icon_cache_get("document-new-symbolic", 16);
-        let cosmic_theme::Spacing { space_xxs, .. } = self.core().system_theme().cosmic().spacing;
-
-        vec![
-            widget::button(go_home_icon)
-                .on_press(Message::OpenHome)
-                .padding(space_xxs)
-                .style(style::Button::Icon)
-                .into(),
-            widget::button(go_creator)
-                .on_press(Message::OpenCreator)
-                .padding(space_xxs)
-                .style(style::Button::Icon)
-                .into(),
-        ]
-    }
-
-    fn header_center(&self) -> Vec<Element<Self::Message>> {
-        match self.current_page {
-            Pages::MainWindow => vec![text("COSMIC Web Apps").into()],
-            Pages::AppCreator => {
-                let title = if self.creator_window.edit_mode {
-                    format!("Edit {}", self.creator_window.app_title)
-                } else {
-                    "Create new Web App".to_string()
-                };
-                vec![text(title).into()]
-            }
-            Pages::IconPicker(_) => vec![text("Icon selector").into()],
-            Pages::IconInstallator(_) => vec![text("Papirus Icons installator").into()],
+    fn view_window(&self, window_id: window::Id) -> Element<Message> {
+        match &self.dialog_opt {
+            Some(dialog) => dialog.view(window_id),
+            None => widget::text("Unknown window ID").into(),
         }
     }
 }

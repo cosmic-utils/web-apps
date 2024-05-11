@@ -1,12 +1,12 @@
-use crate::gui::{self, Message};
-
 use cosmic::{
+    Element,
     iced::{id, Length},
     iced_widget::Scrollable,
     theme,
     widget::{self, Button, Column, Container, Row, TextInput},
-    Element,
 };
+
+use crate::gui::Message;
 
 #[derive(Debug, Clone)]
 pub struct IconPicker {
@@ -29,12 +29,12 @@ impl IconPicker {
     pub fn view(&self) -> Element<Message> {
         let search_field = TextInput::new("Search for icon", &self.icon_searching)
             .id(self.searching_id.clone())
-            .on_input(gui::Message::CustomIconsSearch)
-            .on_submit(gui::Message::PerformIconSearch)
+            .on_input(Message::CustomIconsSearch)
+            .on_submit(Message::PerformIconSearch)
             .width(Length::FillPortion(3));
 
         let custom_icon_btn = widget::button("Open")
-            .on_press(gui::Message::OpenIconPickerDialog)
+            .on_press(Message::OpenIconPickerDialog)
             .padding(8)
             .width(Length::FillPortion(1));
 
@@ -76,8 +76,8 @@ impl IconPicker {
 
 #[derive(Debug, Clone)]
 pub enum IconType {
-    Raster(cosmic::widget::image::Handle),
-    Svg(cosmic::widget::svg::Handle),
+    Raster(widget::image::Handle),
+    Svg(widget::svg::Handle),
 }
 
 #[derive(Debug, Clone)]
