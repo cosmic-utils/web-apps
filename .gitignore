@@ -12,3 +12,7 @@
 /repo
 
 flatpak-cargo-generator.py
+
+# ides
+.lapce
+.idea
