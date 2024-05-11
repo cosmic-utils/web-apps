@@ -30,3 +30,7 @@ features = ["tokio", "winit"]
 [features]
 default = ["wgpu"]
 wgpu = ["libcosmic/wgpu"]
+
+[dependencies.cosmic-files]
+git = "https://github.com/pop-os/cosmic-files.git"
+default-features = false
