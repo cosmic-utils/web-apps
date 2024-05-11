@@ -17,14 +17,11 @@ use cosmic::{
         message::{self, app},
         Core, Message as CosmicMessage,
     },
-    cosmic_theme, executor,
-    iced::{self, event, window},
-    iced_core::Point,
-    style,
+    cosmic_theme, executor, style,
     widget::{self, focus, text},
     Command, Element,
 };
-use std::{collections::HashMap, process::ExitStatus};
+use std::process::ExitStatus;
 
 #[derive(Debug, Clone)]
 pub enum Buttons {
@@ -36,10 +33,6 @@ pub enum Buttons {
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum Message {
-    WindowOpened(window::Id, Option<Point>),
-    CloseWindow(window::Id),
-    WindowClosed(window::Id),
-
     OpenHome,
     OpenCreator,
     CloseCreator,
@@ -72,10 +65,9 @@ pub enum Pages {
 
 pub struct Window {
     core: Core,
-    windows: HashMap<window::Id, Home>,
     main_window: Home,
-    creator_window: creator::AppCreator,
     current_page: Pages,
+    creator_window: creator::AppCreator,
 }
 
 impl cosmic::Application for Window {
@@ -116,41 +108,16 @@ impl cosmic::Application for Window {
 
         let windows = Window {
             core,
-            windows: HashMap::from([(window::Id::MAIN, manager.clone())]),
             main_window: manager,
-            creator_window: creator,
             current_page: page,
+            creator_window: creator,
         };
 
         (windows, cmd)
     }
 
-    fn subscription(&self) -> cosmic::iced_futures::Subscription<Self::Message> {
-        event::listen_with(|event, _| {
-            if let iced::Event::Window(id, window_event) = event {
-                match window_event {
-                    window::Event::CloseRequested => Some(Message::CloseWindow(id)),
-                    window::Event::Opened { position, .. } => {
-                        Some(Message::WindowOpened(id, position))
-                    }
-                    window::Event::Closed => Some(Message::WindowClosed(id)),
-                    _ => None,
-                }
-            } else {
-                None
-            }
-        })
-    }
-
     fn update(&mut self, message: Self::Message) -> Command<CosmicMessage<Message>> {
         match message {
-            Message::CloseWindow(id) => window::close(id),
-            Message::WindowClosed(id) => {
-                self.windows.remove(&id);
-                Command::none()
-            }
-            Message::WindowOpened(_id, ..) => Command::none(),
-
             Message::OpenHome => {
                 self.current_page = Pages::MainWindow;
 
@@ -383,16 +350,13 @@ impl cosmic::Application for Window {
         }
     }
 
-    fn view_window(&self, _window_id: window::Id) -> Element<Message> {
+    fn view(&self) -> Element<Message> {
         match &self.current_page {
             Pages::MainWindow => self.main_window.view(),
             Pages::AppCreator => self.creator_window.view(),
             Pages::IconPicker(picker) => picker.view(),
             Pages::IconInstallator(installator) => installator.view(),
         }
-    }
-    fn view(&self) -> Element<Message> {
-        self.view_window(window::Id::MAIN)
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
