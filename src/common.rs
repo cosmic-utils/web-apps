@@ -620,7 +620,9 @@ pub async fn find_icon(path: PathBuf, icon_name: &str) -> Vec<String> {
                         {
                             let size = parsed.size();
                             if size.width() >= 64.0 && size.height() >= 64.0 {
-                                icons.push(path.to_string())
+                                if !icons.contains(&path.to_string()) {
+                                    icons.push(path.to_string())
+                                }
                             }
                         }
                     }
