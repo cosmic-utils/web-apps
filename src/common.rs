@@ -606,12 +606,12 @@ pub fn get_icon_name_from_url(url: &str) -> String {
     }
 }
 
-pub async fn find_icon(path: PathBuf, icon_name: &str) -> Vec<String> {
+pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
     let mut icons: Vec<String> = Vec::new();
 
     for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
         if let Some(filename) = entry.file_name().to_str() {
-            if filename.contains(icon_name) {
+            if filename.contains(&icon_name) {
                 if let Some(path) = entry.path().to_str() {
                     if let Ok(buffer) = tokio::fs::read_to_string(&mut path.to_string()).await {
                         let options = usvg::Options::default();
@@ -637,7 +637,7 @@ pub async fn find_icon(path: PathBuf, icon_name: &str) -> Vec<String> {
 pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     let mut result: Vec<String> = Vec::new();
 
-    result.extend(find_icon(icons_location(), &icon_name).await);
+    result.extend(find_icon(icons_location(), icon_name).await);
 
     if url_valid(&url) {
         if let Ok(data) = download_favicon(&url).await {
@@ -648,21 +648,6 @@ pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     result
 }
 
-pub async fn search_user_icons() -> Vec<String> {
-    let mut result: Vec<String> = Vec::new();
-    let user_folder = icons_location().join("MyIcons");
-
-    if let Ok(mut entries) = tokio::fs::read_dir(user_folder).await {
-        while let Some(entry) = entries.next_entry().await.unwrap() {
-            // Iterate over each entry asynchronously
-            let path = entry.path();
-            if path.is_file() {
-                result.push(path.to_str().unwrap().to_string());
-            }
-        }
-    }
-    result
-}
 pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
     let mut favicons = Vec::new();
 

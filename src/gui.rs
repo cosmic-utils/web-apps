@@ -2,22 +2,23 @@ use std::process::ExitStatus;
 
 use cosmic::{
     app::{
-        Core,
-        message::{self, app}, Message as CosmicMessage,
+        message::{self, app},
+        Core, Message as CosmicMessage,
     },
-    Command, cosmic_theme,
-    Element,
-    executor,
+    cosmic_theme, executor,
     iced::window,
-    style, widget::{self, text},
+    style,
+    widget::{self, text},
+    Command, Element,
 };
 use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
 
+use crate::common::{find_icon, icons_location};
 use crate::{
     add_icon_packs_install_script,
     common::{
-        self, Browser, find_icons, get_icon_name_from_url, get_supported_browsers,
-        icon_cache_get, image_handle, move_icon, search_user_icons, WebAppLauncher,
+        self, find_icons, get_icon_name_from_url, get_supported_browsers, icon_cache_get,
+        image_handle, move_icon, Browser, WebAppLauncher,
     },
     creator, execute_script,
     home_screen::Home,
@@ -49,11 +50,12 @@ pub enum Message {
 
     Clicked(Buttons),
     // icons
-    PerformIconSearch,
     CustomIconsSearch(String),
+    ChangeIcon(iconpicker::Icon),
+    MyIcons,
+    PerformIconSearch,
     FoundIcons(Vec<String>),
     PushIcon(Option<iconpicker::Icon>),
-    ChangeIcon(iconpicker::Icon),
     SetIcon(iconpicker::Icon),
     SelectIcon(iconpicker::Icon),
 
@@ -66,7 +68,7 @@ pub enum Message {
 pub enum Pages {
     MainWindow,
     AppCreator,
-    IconPicker(IconPicker),
+    IconPicker,
     IconInstallator(Installator),
 }
 
@@ -75,6 +77,7 @@ pub struct Window {
     main_window: Home,
     current_page: Pages,
     creator_window: creator::AppCreator,
+    icon_selector: IconPicker,
     dialog_opt: Option<Dialog<Message>>,
 }
 
@@ -99,6 +102,7 @@ impl cosmic::Application for Window {
     ) -> (Self, Command<cosmic::app::Message<Self::Message>>) {
         let manager = Home::new();
         let creator = creator::AppCreator::new();
+        let selector = IconPicker::default();
 
         let (page, cmd) = if !icon_pack_installed() {
             let cmd = Command::perform(add_icon_packs_install_script(), |file| {
@@ -116,6 +120,7 @@ impl cosmic::Application for Window {
             main_window: manager,
             current_page: page,
             creator_window: creator,
+            icon_selector: selector,
             dialog_opt: None,
         };
 
@@ -152,7 +157,7 @@ impl cosmic::Application for Window {
                 };
                 vec![text(title).into()]
             }
-            Pages::IconPicker(_) => vec![text("Icon selector").into()],
+            Pages::IconPicker => vec![text("Icon selector").into()],
             Pages::IconInstallator(_) => vec![text("Papirus Icons installator").into()],
         }
     }
@@ -182,8 +187,7 @@ impl cosmic::Application for Window {
                 command.map(|mess| app(Message::Creator(mess)))
             }
             Message::OpenIconPicker => {
-                let icons_picker = IconPicker::new();
-                self.current_page = Pages::IconPicker(icons_picker);
+                self.current_page = Pages::IconPicker;
 
                 Command::perform(async {}, |_| app(Message::PerformIconSearch))
             }
@@ -220,9 +224,10 @@ impl cosmic::Application for Window {
                                         file_stem.to_str().unwrap().to_string(),
                                     );
 
-                                    return Command::perform(search_user_icons(), |result| {
-                                        app(Message::FoundIcons(result))
-                                    });
+                                    return Command::perform(
+                                        find_icon(icons_location().join("MyIcons"), String::new()),
+                                        |result| app(Message::FoundIcons(result)),
+                                    );
                                 }
                             }
                         }
@@ -310,9 +315,7 @@ impl cosmic::Application for Window {
                 }
                 Buttons::SearchFavicon => {
                     if common::url_valid(&self.creator_window.app_url) {
-                        if let Pages::IconPicker(ref mut picker) = self.current_page {
-                            picker.icons.clear();
-                        }
+                        self.icon_selector.icons.clear();
 
                         let name = get_icon_name_from_url(&self.creator_window.app_url);
                         let icons = find_icons(name, self.creator_window.app_url.clone());
@@ -322,37 +325,41 @@ impl cosmic::Application for Window {
                     }
                 }
             },
-
+            Message::MyIcons => {
+                let icon_name = self.icon_selector.icon_searching.clone();
+                return Command::perform(
+                    find_icon(icons_location().join("MyIcons"), icon_name),
+                    |result| app(Message::FoundIcons(result)),
+                );
+            }
             Message::PerformIconSearch => {
-                if let Pages::IconPicker(ref mut picker) = self.current_page {
-                    picker.icons.clear();
+                self.icon_selector.icons.clear();
 
-                    let name = if picker.icon_searching.is_empty()
-                        && !self.creator_window.app_url.is_empty()
-                    {
-                        get_icon_name_from_url(&self.creator_window.app_url)
-                    } else {
-                        picker.icon_searching.clone()
-                    };
-
-                    let icons = find_icons(name, self.creator_window.app_url.clone());
-
-                    if !self.creator_window.app_url.is_empty() || !picker.icon_searching.is_empty()
-                    {
-                        return Command::perform(icons, |icons| app(Message::FoundIcons(icons)));
-                    }
+                let name = if self.icon_selector.icon_searching.is_empty()
+                    && !self.creator_window.app_url.is_empty()
+                {
+                    get_icon_name_from_url(&self.creator_window.app_url)
+                } else {
+                    self.icon_selector.icon_searching.clone()
                 };
 
-                Command::none()
-            }
-            Message::CustomIconsSearch(input) => {
-                if let Pages::IconPicker(ref mut picker) = self.current_page {
-                    picker.icon_searching = input;
+                let icons = find_icons(name, self.creator_window.app_url.clone());
+
+                if !self.creator_window.app_url.is_empty()
+                    || !self.icon_selector.icon_searching.is_empty()
+                {
+                    return Command::perform(icons, |icons| app(Message::FoundIcons(icons)));
                 }
 
                 Command::none()
             }
+            Message::CustomIconsSearch(input) => {
+                self.icon_selector.icon_searching = input;
+
+                Command::none()
+            }
             Message::FoundIcons(result) => {
+                self.icon_selector.icons.clear();
                 let mut commands: Vec<Command<CosmicMessage<Message>>> = Vec::new();
 
                 result.into_iter().for_each(|path| {
@@ -376,10 +383,8 @@ impl cosmic::Application for Window {
                         .remove_warn(WarnMessages::AppIcon);
                 }
                 if let Some(ico) = icon {
-                    if let Pages::IconPicker(ref mut picker) = self.current_page {
-                        if !picker.icons.contains(&ico) {
-                            picker.icons.push(ico);
-                        }
+                    if !self.icon_selector.icons.contains(&ico) {
+                        self.icon_selector.icons.push(ico);
                     }
                 }
 
@@ -448,7 +453,7 @@ impl cosmic::Application for Window {
         match &self.current_page {
             Pages::MainWindow => self.main_window.view(),
             Pages::AppCreator => self.creator_window.view(),
-            Pages::IconPicker(picker) => picker.view(),
+            Pages::IconPicker => self.icon_selector.view(),
             Pages::IconInstallator(installator) => installator.view(),
         }
     }
