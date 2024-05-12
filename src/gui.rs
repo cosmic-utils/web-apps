@@ -9,7 +9,7 @@ use cosmic::{
     Element,
     executor,
     iced::window,
-    style, widget::{self, focus, text},
+    style, widget::{self, text},
 };
 use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
 
@@ -185,11 +185,7 @@ impl cosmic::Application for Window {
                 let icons_picker = IconPicker::new();
                 self.current_page = Pages::IconPicker(icons_picker);
 
-                if let Pages::IconPicker(ref mut picker) = self.current_page {
-                    return focus(picker.searching_id.clone());
-                };
-
-                Command::none()
+                Command::perform(async {}, |_| app(Message::PerformIconSearch))
             }
             Message::OpenIconPickerDialog => {
                 if self.dialog_opt.is_none() {
@@ -331,10 +327,13 @@ impl cosmic::Application for Window {
                 if let Pages::IconPicker(ref mut picker) = self.current_page {
                     picker.icons.clear();
 
-                    let icons = find_icons(
-                        picker.icon_searching.clone(),
-                        self.creator_window.app_url.clone(),
-                    );
+                    let name = if picker.icon_searching.is_empty() {
+                        get_icon_name_from_url(&self.creator_window.app_url)
+                    } else {
+                        picker.icon_searching.clone()
+                    };
+
+                    let icons = find_icons(name, self.creator_window.app_url.clone());
 
                     return Command::perform(icons, |icons| app(Message::FoundIcons(icons)));
                 };
@@ -367,15 +366,9 @@ impl cosmic::Application for Window {
                     self.creator_window.app_icon = saved;
                     self.creator_window.selected_icon.clone_from(&icon);
 
-                    if self.creator_window.selected_icon.is_some()
-                        && !self.creator_window.app_icon.is_empty()
-                    {
-                        self.creator_window
-                            .warning
-                            .remove_warn(WarnMessages::AppIcon);
-                    } else {
-                        self.creator_window.warning.push_warn(WarnMessages::AppIcon);
-                    }
+                    self.creator_window
+                        .warning
+                        .remove_warn(WarnMessages::AppIcon);
                 }
                 if let Some(ico) = icon {
                     if let Pages::IconPicker(ref mut picker) = self.current_page {
@@ -391,6 +384,16 @@ impl cosmic::Application for Window {
                 self.creator_window.selected_icon = Some(icon.clone());
                 self.creator_window.app_icon = saved;
                 self.current_page = Pages::AppCreator;
+
+                if self.creator_window.selected_icon.is_some()
+                    && !self.creator_window.app_icon.is_empty()
+                {
+                    self.creator_window
+                        .warning
+                        .remove_warn(WarnMessages::AppIcon);
+                } else {
+                    self.creator_window.warning.push_warn(WarnMessages::AppIcon);
+                }
 
                 Command::none()
             }
@@ -412,16 +415,6 @@ impl cosmic::Application for Window {
             Message::SelectIcon(ico) => {
                 self.creator_window.selected_icon = Some(ico.clone());
                 self.creator_window.app_icon = ico.path;
-
-                if self.creator_window.selected_icon.is_some()
-                    && !self.creator_window.app_icon.is_empty()
-                {
-                    self.creator_window
-                        .warning
-                        .remove_warn(WarnMessages::AppIcon);
-                } else {
-                    self.creator_window.warning.push_warn(WarnMessages::AppIcon);
-                }
 
                 Command::none()
             }
