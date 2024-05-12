@@ -327,7 +327,9 @@ impl cosmic::Application for Window {
                 if let Pages::IconPicker(ref mut picker) = self.current_page {
                     picker.icons.clear();
 
-                    let name = if picker.icon_searching.is_empty() {
+                    let name = if picker.icon_searching.is_empty()
+                        && !self.creator_window.app_url.is_empty()
+                    {
                         get_icon_name_from_url(&self.creator_window.app_url)
                     } else {
                         picker.icon_searching.clone()
@@ -335,7 +337,10 @@ impl cosmic::Application for Window {
 
                     let icons = find_icons(name, self.creator_window.app_url.clone());
 
-                    return Command::perform(icons, |icons| app(Message::FoundIcons(icons)));
+                    if !self.creator_window.app_url.is_empty() || !picker.icon_searching.is_empty()
+                    {
+                        return Command::perform(icons, |icons| app(Message::FoundIcons(icons)));
+                    }
                 };
 
                 Command::none()
