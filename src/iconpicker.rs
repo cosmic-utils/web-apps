@@ -1,6 +1,6 @@
 use cosmic::{
     Element,
-    iced::{id, Length},
+    iced::{ Length},
     iced_widget::Scrollable,
     theme,
     widget::{self, Button, Column, Container, Row, TextInput},
@@ -10,28 +10,32 @@ use crate::gui::Message;
 
 #[derive(Debug, Clone)]
 pub struct IconPicker {
-    pub searching_id: id::Id,
     pub icon_searching: String,
     pub icons_paths: Vec<String>,
     pub icons: Vec<Icon>,
 }
 
-impl IconPicker {
-    pub fn new() -> Self {
+impl Default for IconPicker {
+    fn default() -> Self {
         IconPicker {
-            searching_id: id::Id::new("searching"),
             icon_searching: String::new(),
             icons_paths: Vec::new(),
             icons: Vec::new(),
         }
     }
+}
 
+impl IconPicker {
     pub fn view(&self) -> Element<Message> {
         let search_field = TextInput::new("Icon name to find", &self.icon_searching)
-            .id(self.searching_id.clone())
             .on_input(Message::CustomIconsSearch)
             .on_submit(Message::PerformIconSearch)
             .width(Length::FillPortion(3));
+
+        let my_icons_btn = widget::button("My Icons")
+            .on_press(Message::MyIcons)
+            .padding(8)
+            .width(Length::FillPortion(1));
 
         let custom_icon_btn = widget::button("Open")
             .on_press(Message::OpenIconPickerDialog)
@@ -40,6 +44,7 @@ impl IconPicker {
 
         let mut controls = Row::new().spacing(10);
         controls = controls.push(search_field);
+        controls = controls.push(my_icons_btn);
         controls = controls.push(custom_icon_btn);
 
         let mut wrapper = crate::wrap::Wrap::new().spacing(8.);
