@@ -74,13 +74,13 @@ impl IconPicker {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum IconType {
     Raster(widget::image::Handle),
     Svg(widget::svg::Handle),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Icon {
     pub icon: IconType,
     pub path: String,

@@ -377,7 +377,9 @@ impl cosmic::Application for Window {
                 }
                 if let Some(ico) = icon {
                     if let Pages::IconPicker(ref mut picker) = self.current_page {
-                        picker.icons.push(ico);
+                        if !picker.icons.contains(&ico) {
+                            picker.icons.push(ico);
+                        }
                     }
                 }
 
