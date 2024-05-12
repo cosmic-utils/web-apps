@@ -27,7 +27,7 @@ impl IconPicker {
     }
 
     pub fn view(&self) -> Element<Message> {
-        let search_field = TextInput::new("Search for icon", &self.icon_searching)
+        let search_field = TextInput::new("Icon name to find", &self.icon_searching)
             .id(self.searching_id.clone())
             .on_input(Message::CustomIconsSearch)
             .on_submit(Message::PerformIconSearch)
