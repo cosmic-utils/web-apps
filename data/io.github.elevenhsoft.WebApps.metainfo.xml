@@ -5,6 +5,8 @@
         <name>elevenhsoft</name>
     </developer>
     <url type="homepage">https://github.com/elevenhsoft/WebApps</url>
+    <url type="bugtracker">https://github.com/elevenhsoft/WebApps/issues</url>
+    <url type="donation">https://ko-fi.com/elevenhsoft</url>
 
     <name>COSMIC Web Apps</name>
     <summary>Web App Manager written in rust</summary>
@@ -28,27 +30,34 @@
 
     <launchable type="desktop-id">io.github.elevenhsoft.WebApps.desktop</launchable>
     <content_rating type="oars-1.1"/>
+
     <screenshots>
-        <screenshot type="default">
+        <screenshot type="default" xml:lang="en">
             <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-dark.png</image>
             <caption>Installed apps</caption>
         </screenshot>
         <screenshot>
-            <image>
+            <image xml:lang="en">
                 https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-creator.png
             </image>
             <caption>Creator</caption>
         </screenshot>
         <screenshot>
-            <image>
+            <image xml:lang="en">
                 https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-icon-picker.png
             </image>
             <caption>Icon Picker</caption>
         </screenshot>
     </screenshots>
 
+    <branding>
+        <color type="primary" scheme_preference="light">#f9f06b</color>
+        <color type="primary" scheme_preference="dark">#f9f06b</color>
+    </branding>
+
     <releases>
-        <release version="0.4.0" date="2024-05-013">
+        <release version="0.4.1" date="2024-05-13"/>
+        <release version="0.4.0" date="2024-05-13">
             <description>
                 <p>First stable release</p>
             </description>
