@@ -194,7 +194,7 @@ impl cosmic::Application for Window {
             Message::OpenIconPickerDialog => {
                 if self.dialog_opt.is_none() {
                     let (dialog, command) = Dialog::new(
-                        DialogKind::OpenMultipleFiles,
+                        DialogKind::OpenFile,
                         None,
                         Message::DialogMessage,
                         Message::OpenFileResult,
