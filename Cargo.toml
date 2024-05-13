@@ -3,6 +3,10 @@ name = "webapps"
 version = "0.3.6"
 edition = "2021"
 
+[[bin]]
+path = "src/main.rs"
+name = "cosmic-webapps"
+
 [profile.dev]
 opt-level = 1
 overflow-checks = false

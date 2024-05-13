@@ -1,4 +1,4 @@
-name := 'webapps'
+name := 'cosmic-webapps'
 export APPID := 'io.github.elevenhsoft.WebApps'
 
 rootdir := ''
