@@ -13,7 +13,7 @@ given url working inside separate window of your browser of choice.</h3>
   <img alt="COSMIC Web Apps Creator" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-creator.png" width="192">
   <img alt="COSMIC Web Apps Icon selector" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-icon-picker.png" width="192">
 
-  <br>
+  <br><br><br>
 
   <a href='https://flathub.org/apps/io.github.elevenhsoft.WebApps'>
     <img width='240' alt='Download on Flathub' src='https://flathub.org/api/badge?locale=en'/>
