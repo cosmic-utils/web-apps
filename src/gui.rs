@@ -43,10 +43,11 @@ pub enum Message {
     CloseCreator,
     OpenIconPicker,
     OpenIconPickerDialog,
-    DialogMessage(DialogMessage),
+    DialogIconPicker(DialogMessage),
     OpenFileResult(DialogResult),
     Creator(creator::Message),
     Result,
+    LoadingDone,
 
     Clicked(Buttons),
     // icons
@@ -189,14 +190,15 @@ impl cosmic::Application for Window {
             Message::OpenIconPicker => {
                 self.current_page = Pages::IconPicker;
 
-                Command::perform(async {}, |_| app(Message::PerformIconSearch))
+                // Command::perform(async {}, |_| app(Message::PerformIconSearch))
+                Command::none()
             }
             Message::OpenIconPickerDialog => {
                 if self.dialog_opt.is_none() {
                     let (dialog, command) = Dialog::new(
                         DialogKind::OpenFile,
                         None,
-                        Message::DialogMessage,
+                        Message::DialogIconPicker,
                         Message::OpenFileResult,
                     );
                     self.dialog_opt = Some(dialog);
@@ -204,7 +206,7 @@ impl cosmic::Application for Window {
                 }
                 Command::none()
             }
-            Message::DialogMessage(message) => {
+            Message::DialogIconPicker(message) => {
                 if let Some(dialog) = &mut self.dialog_opt {
                     return dialog.update(message);
                 }
@@ -327,13 +329,17 @@ impl cosmic::Application for Window {
             },
             Message::MyIcons => {
                 let icon_name = self.icon_selector.icon_searching.clone();
-                return Command::perform(
+                
+                self.icon_selector.loading = true;
+                
+                Command::perform(
                     find_icon(icons_location().join("MyIcons"), icon_name),
                     |result| app(Message::FoundIcons(result)),
-                );
+                )
             }
             Message::PerformIconSearch => {
                 self.icon_selector.icons.clear();
+                self.icon_selector.loading = true;
 
                 let name = if self.icon_selector.icon_searching.is_empty()
                     && !self.creator_window.app_url.is_empty()
@@ -355,6 +361,7 @@ impl cosmic::Application for Window {
             }
             Message::CustomIconsSearch(input) => {
                 self.icon_selector.icon_searching = input;
+                self.icon_selector.loading = false;
 
                 Command::none()
             }
@@ -388,6 +395,11 @@ impl cosmic::Application for Window {
                     }
                 }
 
+                Command::perform(async {}, |_| app(Message::LoadingDone))
+            }
+            Message::LoadingDone => {
+                self.icon_selector.loading = false;
+                
                 Command::none()
             }
             Message::ChangeIcon(icon) => {
