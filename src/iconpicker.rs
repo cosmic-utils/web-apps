@@ -1,28 +1,19 @@
+use cosmic::widget::flex_row;
 use cosmic::{
-    Element,
-    iced::{ Length},
+    iced::Length,
     iced_widget::Scrollable,
     theme,
     widget::{self, Button, Column, Container, Row, TextInput},
+    Element,
 };
 
 use crate::gui::Message;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct IconPicker {
     pub icon_searching: String,
     pub icons_paths: Vec<String>,
     pub icons: Vec<Icon>,
-}
-
-impl Default for IconPicker {
-    fn default() -> Self {
-        IconPicker {
-            icon_searching: String::new(),
-            icons_paths: Vec::new(),
-            icons: Vec::new(),
-        }
-    }
 }
 
 impl IconPicker {
@@ -47,7 +38,7 @@ impl IconPicker {
         controls = controls.push(my_icons_btn);
         controls = controls.push(custom_icon_btn);
 
-        let mut wrapper = crate::wrap::Wrap::new().spacing(8.);
+        let mut items: Vec<Element<Message>> = Vec::new();
 
         for ico in self.icons.iter() {
             let btn = match ico.clone().icon {
@@ -62,10 +53,10 @@ impl IconPicker {
                     .on_press(Message::ChangeIcon(ico.clone()))
                     .style(theme::Button::Icon),
             };
-            wrapper = wrapper.push(btn);
+            items.push(btn.into());
         }
 
-        let container = Container::new(wrapper).center_x();
+        let container = Container::new(flex_row(items)).center_x();
 
         let scrollable = Scrollable::new(container)
             .width(Length::Fill)

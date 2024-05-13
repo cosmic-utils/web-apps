@@ -7,7 +7,6 @@ mod iconpicker;
 mod icons_installator;
 mod supported_browsers;
 mod warning;
-mod wrap;
 
 use std::{os::unix::fs::PermissionsExt, process::ExitStatus};
 
@@ -28,7 +27,7 @@ fn main() -> cosmic::iced::Result {
 
     let mut settings = Settings::default();
     settings = settings.size(Size {
-        width: 600.,
+        width: 575.,
         height: 680.,
     });
 
