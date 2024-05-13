@@ -30,32 +30,27 @@
     <content_rating type="oars-1.1"/>
     <screenshots>
         <screenshot type="default">
-            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-dark.png</image>
+            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-dark.png</image>
             <caption>Installed apps</caption>
         </screenshot>
         <screenshot>
             <image>
-                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-creator.png
+                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-creator.png
             </image>
             <caption>Creator</caption>
         </screenshot>
         <screenshot>
             <image>
-                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.3.5/res/screenshots/window-icon-picker.png
+                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-icon-picker.png
             </image>
             <caption>Icon Picker</caption>
         </screenshot>
     </screenshots>
 
     <releases>
-        <release version="0.3.4" date="2024-05-04">
+        <release version="0.4.0" date="2024-05-013">
             <description>
-                <p>Rename repo and binary</p>
-            </description>
-        </release>
-        <release version="0.3.3" date="2024-05-04">
-            <description>
-                <p>Initial release</p>
+                <p>First stable release</p>
             </description>
         </release>
     </releases>
