@@ -1,14 +1,15 @@
+use cosmic::widget::text;
 use cosmic::{
-    Command,
-    Element, iced::{Alignment, id, Length},
-    style,
-    theme, widget::{self, Button, Column, Container, dropdown, focus, Row, TextInput, toggler},
+    iced::{id, Alignment, Length},
+    style, theme,
+    widget::{self, dropdown, focus, toggler, Button, Column, Container, Row, TextInput},
+    Command, Element,
 };
 
 use crate::{
-    common::{Browser, BrowserType, get_supported_browsers, icon_cache_get, url_valid},
-    gui, iconpicker,
-    warning::{Warning, WarnMessages},
+    common::{get_supported_browsers, icon_cache_get, url_valid, Browser, BrowserType},
+    fl, gui, iconpicker,
+    warning::{WarnMessages, Warning},
 };
 
 #[derive(Debug, Clone)]
@@ -70,15 +71,15 @@ impl AppCreator {
         let warn_element = Warning::new(starting_warns, true);
 
         let categories = [
-            String::from("Web"),
-            String::from("Accesories"),
-            String::from("Education"),
-            String::from("Games"),
-            String::from("Graphics"),
-            String::from("Internet"),
-            String::from("Office"),
-            String::from("Programming"),
-            String::from("Sound & Video"),
+            fl!("web"),
+            fl!("accessories"),
+            fl!("education"),
+            fl!("games"),
+            fl!("graphics"),
+            fl!("internet"),
+            fl!("office"),
+            fl!("programming"),
+            fl!("sound-and-video"),
         ];
 
         AppCreator {
@@ -90,9 +91,9 @@ impl AppCreator {
             app_icon: String::new(),
             app_parameters: String::new(),
             app_categories: categories.to_vec(),
-            app_category: String::from("Web"),
+            app_category: categories[0].clone(),
             selected_category: 0,
-            app_browser_name: String::from("Browser"),
+            app_browser_name: fl!("browser"),
             app_browser: browser.clone(),
             app_navbar: false,
             app_incognito: false,
@@ -207,11 +208,11 @@ impl AppCreator {
     }
 
     pub fn view(&self) -> Element<gui::Message> {
-        let app_title = TextInput::new("Title", &self.app_title)
+        let app_title = TextInput::new(fl!("title"), &self.app_title)
             .id(self.app_title_id.clone())
             .on_input(|s| gui::Message::Creator(Message::Title(s)))
             .width(Length::Fill);
-        let app_url = TextInput::new("URL", &self.app_url)
+        let app_url = TextInput::new(fl!("url"), &self.app_url)
             .id(self.app_url_id.clone())
             .on_input(|s| gui::Message::Creator(Message::Url(s)))
             .width(Length::Fill);
@@ -238,7 +239,7 @@ impl AppCreator {
         row = row.push(download_button);
         row = row.push(icon);
 
-        let app_arguments = TextInput::new("Non-standard arguments", &self.app_parameters)
+        let app_arguments = TextInput::new(fl!("non-standard-arguments"), &self.app_parameters)
             .on_input(|s| gui::Message::Creator(Message::Arguments(s)))
             .width(Length::Fill);
 
@@ -249,7 +250,7 @@ impl AppCreator {
         )
         .width(Length::Fixed(200.));
 
-        let navbar_toggle = toggler(String::from("Nav Bar"), self.app_navbar, |b| {
+        let navbar_toggle = toggler(fl!("navbar"), self.app_navbar, |b| {
             gui::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
         })
         .width(Length::Fill);
@@ -260,13 +261,13 @@ impl AppCreator {
             BrowserType::Librewolf => navbar_toggle,
             BrowserType::WaterfoxFlatpak => navbar_toggle,
 
-            _ => toggler(String::from("Isolated Profile"), self.app_isolated, |b| {
+            _ => toggler(fl!("isolated-profile"), self.app_isolated, |b| {
                 gui::Message::Creator(Message::Clicked(Buttons::IsolatedProfile(b)))
             })
             .width(Length::Fill),
         };
 
-        let incognito = toggler(String::from("Private Mode"), self.app_incognito, |b| {
+        let incognito = toggler(fl!("private-mode"), self.app_incognito, |b| {
             gui::Message::Creator(Message::Clicked(Buttons::Incognito(b)))
         })
         .width(Length::Fill);
@@ -281,13 +282,21 @@ impl AppCreator {
         })
         .width(Length::Fixed(200.));
 
-        let app_done_btn_text = if self.edit_mode { "Edit" } else { "Create" };
+        let app_done_btn_text = if self.edit_mode {
+            fl!("edit")
+        } else {
+            fl!("create")
+        };
 
-        let app_done = Button::new(Container::new(app_done_btn_text).center_x().center_y())
-            .on_press(gui::Message::Result)
-            .width(Length::Fill)
-            .style(theme::Button::Suggested);
-        let creator_close = Button::new(Container::new("Close").center_x().center_y())
+        let app_done = Button::new(
+            Container::new(text(app_done_btn_text))
+                .center_x()
+                .center_y(),
+        )
+        .on_press(gui::Message::Result)
+        .width(Length::Fill)
+        .style(theme::Button::Suggested);
+        let creator_close = Button::new(Container::new(text(fl!("close"))).center_x().center_y())
             .on_press(gui::Message::CloseCreator)
             .width(Length::Fill)
             .style(theme::Button::Destructive);

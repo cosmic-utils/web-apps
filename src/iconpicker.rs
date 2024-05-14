@@ -1,3 +1,4 @@
+use crate::fl;
 use cosmic::widget::text;
 use cosmic::{
     iced::Length,
@@ -19,23 +20,23 @@ pub struct IconPicker {
 
 impl IconPicker {
     pub fn view(&self) -> Element<Message> {
-        let search_field = TextInput::new("Icon name to find", &self.icon_searching)
+        let search_field = TextInput::new(fl!("icon-name-to-find"), &self.icon_searching)
             .on_input(Message::CustomIconsSearch)
             .on_submit(Message::PerformIconSearch)
             .width(Length::FillPortion(3));
 
         let loading_state_text = if !self.loading {
-            text("My icons")
+            text(fl!("my-icons"))
         } else {
-            text("Loading...")
+            text(fl!("loading"))
         };
-        
+
         let my_icons_btn = widget::button(loading_state_text)
             .on_press(Message::MyIcons)
             .padding(8)
             .width(Length::FillPortion(1));
 
-        let custom_icon_btn = widget::button("Open")
+        let custom_icon_btn = widget::button(text(fl!("open")))
             .on_press(Message::OpenIconPickerDialog)
             .padding(8)
             .width(Length::FillPortion(1));
@@ -63,7 +64,7 @@ impl IconPicker {
             items.push(btn.into());
         }
 
-        let container =  {
+        let container = {
             let content = Container::new(flex_row(items)).center_x();
 
             Column::new().push(

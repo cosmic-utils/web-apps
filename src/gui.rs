@@ -20,7 +20,7 @@ use crate::{
         self, find_icons, get_icon_name_from_url, get_supported_browsers, icon_cache_get,
         image_handle, move_icon, Browser, WebAppLauncher,
     },
-    creator, execute_script,
+    creator, execute_script, fl,
     home_screen::Home,
     icon_pack_installed,
     iconpicker::{self, IconPicker},
@@ -149,17 +149,17 @@ impl cosmic::Application for Window {
 
     fn header_center(&self) -> Vec<Element<Self::Message>> {
         match self.current_page {
-            Pages::MainWindow => vec![text("COSMIC Web Apps").into()],
+            Pages::MainWindow => vec![text(fl!("app")).into()],
             Pages::AppCreator => {
                 let title = if self.creator_window.edit_mode {
-                    format!("Edit {}", self.creator_window.app_title)
+                    format!("{} {}", fl!("edit"), self.creator_window.app_title)
                 } else {
-                    "Create new Web App".to_string()
+                    fl!("create-new-webapp")
                 };
                 vec![text(title).into()]
             }
-            Pages::IconPicker => vec![text("Icon selector").into()],
-            Pages::IconInstallator(_) => vec![text("Papirus Icons installator").into()],
+            Pages::IconPicker => vec![text(fl!("icon-selector")).into()],
+            Pages::IconInstallator(_) => vec![text(fl!("icon-installer")).into()],
         }
     }
 
@@ -329,9 +329,9 @@ impl cosmic::Application for Window {
             },
             Message::MyIcons => {
                 let icon_name = self.icon_selector.icon_searching.clone();
-                
+
                 self.icon_selector.loading = true;
-                
+
                 Command::perform(
                     find_icon(icons_location().join("MyIcons"), icon_name),
                     |result| app(Message::FoundIcons(result)),
@@ -399,7 +399,7 @@ impl cosmic::Application for Window {
             }
             Message::LoadingDone => {
                 self.icon_selector.loading = false;
-                
+
                 Command::none()
             }
             Message::ChangeIcon(icon) => {

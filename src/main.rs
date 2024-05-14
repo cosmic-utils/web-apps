@@ -5,6 +5,7 @@ mod home_screen;
 mod icon_cache;
 mod iconpicker;
 mod icons_installator;
+mod localize;
 mod supported_browsers;
 mod warning;
 
@@ -12,6 +13,7 @@ use std::{os::unix::fs::PermissionsExt, process::ExitStatus};
 
 use common::icons_location;
 use cosmic::{app::Settings, iced_core::Size};
+use i18n_embed::DesktopLanguageRequester;
 use tokio::{fs::File, io::AsyncWriteExt};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
@@ -25,6 +27,8 @@ fn main() -> cosmic::iced::Result {
 
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
+    init_localizer();
+
     let mut settings = Settings::default();
     settings = settings.size(Size {
         width: 575.,
@@ -32,6 +36,15 @@ fn main() -> cosmic::iced::Result {
     });
 
     cosmic::app::run::<Window>(settings, ())
+}
+
+fn init_localizer() {
+    let localizer = localize::localizer();
+    let requested_languages = DesktopLanguageRequester::requested_languages();
+
+    if let Err(why) = localizer.select(&requested_languages) {
+        tracing::error!(%why, "error while loading fluent localizations");
+    }
 }
 
 pub fn icon_pack_installed() -> bool {

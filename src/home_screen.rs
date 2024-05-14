@@ -1,5 +1,6 @@
 use crate::{
     common::{get_webapps, icon_cache_get, WebAppLauncher},
+    fl,
     gui::{Buttons, Message},
 };
 
@@ -81,17 +82,14 @@ impl Home {
         let mut installed = Column::new().spacing(20);
 
         if !webapps.is_empty() {
-            installed = installed
-                .push(text(format!("You have {} web apps installed:", webapps.len())).size(20));
+            installed =
+                installed.push(text(fl!("installed-header", number = webapps.len())).size(20));
 
             let scrollable_list = Scrollable::new(app_list).width(Length::Fill);
 
             installed = installed.push(scrollable_list);
         } else {
-            installed = installed.push(
-                text("You don't have any web app installed.\nPlease, press create button and create one.")
-                    .size(20),
-            );
+            installed = installed.push(text(fl!("not-installed-header")).size(20));
         };
 
         Container::new(installed).padding(30).into()

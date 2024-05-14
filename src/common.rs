@@ -2,7 +2,7 @@
 
 use std::{
     ffi::OsStr,
-    fs::{self, copy, create_dir_all, File, remove_dir_all, remove_file},
+    fs::{self, copy, create_dir_all, remove_dir_all, remove_file, File},
     io::{self, BufRead, Cursor, Read, Write},
     path::PathBuf,
     str::FromStr,
@@ -12,7 +12,7 @@ use std::{
 use anyhow::{anyhow, Error, Result};
 use cosmic::widget;
 use image::io::Reader as ImageReader;
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 use reqwest::Client;
 use scraper::{Html, Selector};
 use url::Url;
@@ -20,6 +20,7 @@ use usvg::fontdb;
 use walkdir::WalkDir;
 
 use crate::{
+    fl,
     icon_cache::IconCache,
     iconpicker,
     supported_browsers::{flatpak_browsers, native_browsers},
@@ -587,7 +588,7 @@ pub fn get_supported_browsers() -> Vec<Browser> {
     }
     browsers.insert(
         0,
-        Browser::new(BrowserType::NoBrowser, "Select browser", "", ""),
+        Browser::new(BrowserType::NoBrowser, &fl!("select-browser"), "", ""),
     );
 
     browsers

@@ -1,3 +1,4 @@
+use crate::fl;
 use cosmic::{
     widget::{warning, Column, Container},
     Element,
@@ -17,15 +18,12 @@ pub enum WarnMessages {
 impl std::fmt::Display for WarnMessages {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            WarnMessages::Info => write!(f, "You don't meet requirements"),
-            WarnMessages::AppName => write!(f, "  - App name must be longer than 3 characters"),
-            WarnMessages::AppUrl => write!(
-                f,
-                "  - You must provide valid URL starting with http:// or https://"
-            ),
-            WarnMessages::AppIcon => write!(f, "  - You must select an Icon for your launcher"),
+            WarnMessages::Info => write!(f, "{}", fl!("warning")),
+            WarnMessages::AppName => write!(f, "{}", fl!("warning", "app-name")),
+            WarnMessages::AppUrl => write!(f, "{}", fl!("warning", "app-url")),
+            WarnMessages::AppIcon => write!(f, "{}", fl!("warning", "app-icon")),
             WarnMessages::AppBrowser => {
-                write!(f, "  - Please select a browser. Make sure at least one is installed system-wide or via flatpak.")
+                write!(f, "{}", fl!("warning", "app-browser"))
             }
         }
     }
