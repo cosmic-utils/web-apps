@@ -53,4 +53,4 @@ warning=Proszę spełnić poniższe wymagania
     .app-name=  - Nazwa musi być dłuższa niż 3 znaki
     .app-url=  - Proszę podać poprawny link zaczynający się od http:// lub https://
     .app-icon=  - Musisz wybrać ikonę aplikacji
-    .app-browser=  - Proszę wybrać przeglądarke. Upewnij się, że chociaż jedna jest zainstalowana systemowo, bądź poprzez Flatpak.
+    .app-browser=  - Proszę wybrać przeglądarke. Upewnij się, że chociaż jedna jest zainstalowana systemowo, bądź poprzez Flatpak

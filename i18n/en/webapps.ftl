@@ -53,4 +53,4 @@ warning=You don't meet requirements
     .app-name=  - App name must be longer than 3 characters
     .app-url=  - You must provide valid URL starting with http:// or https://
     .app-icon=  - You must select an Icon for your launcher
-    .app-browser=  - Please select a browser. Make sure at least one is installed system-wide or via flatpak.
+    .app-browser=  - Please select a browser. Make sure at least one is installed system-wide or via Flatpak
