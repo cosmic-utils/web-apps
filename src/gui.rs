@@ -46,7 +46,8 @@ pub enum Message {
     DialogIconPicker(DialogMessage),
     OpenFileResult(DialogResult),
     Creator(creator::Message),
-    Result,
+    DoneEdit,
+    DoneCreate,
     LoadingDone,
 
     Clicked(Buttons),
@@ -258,11 +259,32 @@ impl cosmic::Application for Window {
                 }
                 Command::none()
             }
-            Message::Result => {
-                let launcher = if let Some(launcher) = self.main_window.launcher.to_owned() {
-                    let _ = launcher.delete();
+            Message::DoneCreate => {
+                let new_entry = WebAppLauncher::new(
+                    self.creator_window.app_title.clone(),
+                    None,
+                    self.creator_window.app_url.clone(),
+                    self.creator_window.app_icon.clone(),
+                    self.creator_window.app_category.clone(),
+                    self.creator_window.app_browser.clone(),
+                    self.creator_window.app_parameters.clone(),
+                    self.creator_window.app_isolated,
+                    self.creator_window.app_navbar,
+                    self.creator_window.app_incognito,
+                );
 
-                    WebAppLauncher::new(
+                if new_entry.is_valid {
+                    self.create_valid_launcher(new_entry).unwrap();
+                } else {
+                    self.warning.show = true;
+                }
+
+                Command::none()
+            }
+            Message::DoneEdit => {
+                if let Some(launcher) = self.main_window.launcher.to_owned() {
+                    let _deleted = launcher.delete();
+                    let edited_entry = WebAppLauncher::new(
                         self.creator_window.app_title.clone(),
                         Some(launcher.codename),
                         self.creator_window.app_url.clone(),
@@ -273,38 +295,16 @@ impl cosmic::Application for Window {
                         self.creator_window.app_isolated,
                         self.creator_window.app_navbar,
                         self.creator_window.app_incognito,
-                    )
-                } else {
-                    WebAppLauncher::new(
-                        self.creator_window.app_title.clone(),
-                        None,
-                        self.creator_window.app_url.clone(),
-                        self.creator_window.app_icon.clone(),
-                        self.creator_window.app_category.clone(),
-                        self.creator_window.app_browser.clone(),
-                        self.creator_window.app_parameters.clone(),
-                        self.creator_window.app_isolated,
-                        self.creator_window.app_navbar,
-                        self.creator_window.app_incognito,
-                    )
-                };
-
-                if launcher.is_valid {
-                    let _ = move_icon(
-                        self.creator_window.app_icon.clone(),
-                        self.creator_window.app_title.clone(),
                     );
 
-                    let _ = launcher.create();
-                    self.creator_window.edit_mode = false;
-                    self.current_page = Pages::MainWindow;
-                } else {
-                    self.warning.show = true;
+                    if edited_entry.is_valid {
+                        self.create_valid_launcher(edited_entry).unwrap();
+                    } else {
+                        self.warning.show = true;
+                    }
                 }
-
                 Command::none()
             }
-
             Message::Clicked(buttons) => match buttons {
                 Buttons::Edit(launcher) => {
                     let selected_browser = get_supported_browsers()
@@ -507,5 +507,20 @@ impl cosmic::Application for Window {
             Some(dialog) => dialog.view(window_id),
             None => widget::text("Unknown window ID").into(),
         }
+    }
+}
+
+impl Window {
+    fn create_valid_launcher(&mut self, entry: WebAppLauncher) -> anyhow::Result<()> {
+        move_icon(
+            self.creator_window.app_icon.clone(),
+            self.creator_window.app_title.clone(),
+        );
+
+        entry.create().unwrap();
+        self.creator_window.edit_mode = false;
+        self.current_page = Pages::MainWindow;
+
+        Ok(())
     }
 }

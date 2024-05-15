@@ -296,20 +296,18 @@ impl AppCreator {
         })
         .width(Length::Fixed(200.));
 
-        let app_done_btn_text = if self.edit_mode {
-            fl!("edit")
+        let save_btn = if self.edit_mode {
+            Button::new(Container::new(text(fl!("edit"))).center_x().center_y())
+                .on_press(gui::Message::DoneEdit)
+                .width(Length::Fill)
+                .style(theme::Button::Suggested)
         } else {
-            fl!("create")
+            Button::new(Container::new(text(fl!("create"))).center_x().center_y())
+                .on_press(gui::Message::DoneCreate)
+                .width(Length::Fill)
+                .style(theme::Button::Suggested)
         };
 
-        let app_done = Button::new(
-            Container::new(text(app_done_btn_text))
-                .center_x()
-                .center_y(),
-        )
-        .on_press(gui::Message::Result)
-        .width(Length::Fill)
-        .style(theme::Button::Suggested);
         let creator_close = Button::new(Container::new(text(fl!("close"))).center_x().center_y())
             .on_press(gui::Message::CloseCreator)
             .width(Length::Fill)
@@ -317,7 +315,7 @@ impl AppCreator {
 
         let mut browsers_row = Row::new().spacing(20);
         browsers_row = browsers_row.push(app_browsers);
-        browsers_row = browsers_row.push(app_done);
+        browsers_row = browsers_row.push(save_btn);
         browsers_row = browsers_row.push(creator_close);
 
         let mut col = Column::new().spacing(20).padding(30);
