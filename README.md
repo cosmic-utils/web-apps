@@ -46,6 +46,8 @@ Make sure you are in `WebApps` directory. You should be already.
 
 Before compilation please add needed dependencies to your system, or make sure they are installed.
 
+- rustc
+- cargo
 - pkg-config
 - libssl-dev
 
