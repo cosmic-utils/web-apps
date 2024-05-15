@@ -653,10 +653,11 @@ pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
                             usvg::Tree::from_str(&buffer, &options, &fontdb::Database::new())
                         {
                             let size = parsed.size();
-                            if size.width() >= 64.0 && size.height() >= 64.0 {
-                                if !icons.contains(&path.to_string()) {
-                                    icons.push(path.to_string())
-                                }
+                            if size.width() >= 64.0
+                                && size.height() >= 64.0
+                                && !icons.contains(&path.to_string())
+                            {
+                                icons.push(path.to_string())
                             }
                         }
                     }
