@@ -685,36 +685,31 @@ pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
 pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
     let mut favicons = Vec::new();
 
-    let content = Client::new()
-        .get(url)
-        .send()
-        .await
-        .expect("sending request")
-        .text()
-        .await
-        .expect("getting content");
+    if let Ok(request) = Client::new().get(url).send().await {
+        if let Ok(content) = request.text().await {
+            let document = Html::parse_document(&content);
+            let head = Selector::parse("head").unwrap();
+            let link = Selector::parse("link").unwrap();
+            let meta = Selector::parse("meta").unwrap();
 
-    let document = Html::parse_document(&content);
-    let head = Selector::parse("head").unwrap();
-    let link = Selector::parse("link").unwrap();
-    let meta = Selector::parse("meta").unwrap();
+            for head in document.select(&head) {
+                let fragment = Html::parse_document(&head.html());
 
-    for head in document.select(&head) {
-        let fragment = Html::parse_document(&head.html());
+                for link in fragment.select(&link) {
+                    if link.attr("rel") == Some("icon") {
+                        let val = link.value().attr("href").unwrap();
 
-        for link in fragment.select(&link) {
-            if link.attr("rel") == Some("icon") {
-                let val = link.value().attr("href").unwrap();
+                        favicons.push(val.to_string());
+                    }
+                }
 
-                favicons.push(val.to_string());
-            }
-        }
+                for meta in fragment.select(&meta) {
+                    if meta.value().attr("property") == Some("og:image") {
+                        let val = meta.value().attr("content").unwrap();
 
-        for meta in fragment.select(&meta) {
-            if meta.value().attr("property") == Some("og:image") {
-                let val = meta.value().attr("content").unwrap();
-
-                favicons.push(val.to_string());
+                        favicons.push(val.to_string());
+                    }
+                }
             }
         }
     }
