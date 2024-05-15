@@ -2,7 +2,8 @@ use crate::fl;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum WarnMessages {
-    Info,
+    Warning,
+    Sucess,
     AppName,
     AppUrl,
     AppIcon,
@@ -18,7 +19,8 @@ pub enum WarnAction {
 impl std::fmt::Display for WarnMessages {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            WarnMessages::Info => write!(f, "{}", fl!("warning")),
+            WarnMessages::Warning => write!(f, "{}", fl!("warning")),
+            WarnMessages::Sucess => write!(f, "{}", fl!("warning", "success")),
             WarnMessages::AppName => write!(f, "{}", fl!("warning", "app-name")),
             WarnMessages::AppUrl => write!(f, "{}", fl!("warning", "app-url")),
             WarnMessages::AppIcon => write!(f, "{}", fl!("warning", "app-icon")),
@@ -29,48 +31,56 @@ impl std::fmt::Display for WarnMessages {
     }
 }
 
+impl Default for WarnMessages {
+    fn default() -> Self {
+        Self::Warning
+    }
+}
+
 #[derive(Default, Debug, Clone)]
 pub struct Warning {
+    pub header: WarnMessages,
     pub messages: Vec<WarnMessages>,
-    pub show: bool,
 }
 
 impl Warning {
-    pub fn new(messages: Vec<WarnMessages>, show: bool) -> Self {
-        Self { messages, show }
+    pub fn new(messages: Vec<WarnMessages>) -> Self {
+        let header = if !messages.is_empty() {
+            WarnMessages::Warning
+        } else {
+            WarnMessages::Sucess
+        };
+
+        Self { header, messages }
     }
 
-    pub fn push_warn(&mut self, message: WarnMessages) -> &mut Self {
-        self.show = true;
-
-        if !self.messages.contains(&WarnMessages::Info) {
-            self.messages.insert(0, WarnMessages::Info);
+    pub fn switch_header(&mut self) {
+        if self.messages.is_empty() {
+            self.header = WarnMessages::Sucess
+        } else {
+            self.header = WarnMessages::Warning
         }
+    }
 
+    pub fn push_warn(&mut self, message: WarnMessages) {
         if !self.messages.contains(&message) {
             self.messages.push(message);
         }
-        self
+        self.switch_header();
     }
 
-    pub fn remove_warn(&mut self, message: WarnMessages) -> &mut Self {
+    pub fn remove_warn(&mut self, message: WarnMessages) {
         self.messages.retain(|m| *m != message);
-
-        if self.messages.contains(&WarnMessages::Info) && self.messages.len() <= 1 {
-            self.show = false;
-        };
-
-        self
+        self.switch_header();
     }
 
-    pub fn remove_all_warns(&mut self) -> &mut Self {
+    pub fn remove_all_warns(&mut self) {
         self.messages.clear();
-        self.show = false;
-        self
+        self.switch_header();
     }
 
     pub fn messages(&self) -> String {
-        let mut content = String::new();
+        let mut content = format!("{}\n", self.header);
 
         for line in &self.messages {
             content.push_str(&format!("{}\n", line));

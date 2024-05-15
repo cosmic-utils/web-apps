@@ -50,6 +50,7 @@ icons-installer-message=Ta aplikacja potrzebuje ikon do działania. W przypadku 
 
 # warning.rs
 warning=Proszę spełnić poniższe wymagania
+    .success=Spełniasz wymagania do utworzenia Web Appki
     .app-name=  - Nazwa musi być dłuższa niż 3 znaki
     .app-url=  - Proszę podać poprawny link zaczynający się od http:// lub https://
     .app-icon=  - Musisz wybrać ikonę aplikacji

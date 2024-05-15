@@ -221,7 +221,7 @@ impl AppCreator {
         .into()
     }
 
-    pub fn view(&self, show_warn: bool, warnings: String) -> Element<gui::Message> {
+    pub fn view(&self, warnings: String) -> Element<gui::Message> {
         let app_title = TextInput::new(fl!("title"), &self.app_title)
             .id(self.app_title_id.clone())
             .on_input(|s| gui::Message::Creator(Message::Title(s)))
@@ -320,9 +320,7 @@ impl AppCreator {
 
         let mut col = Column::new().spacing(20).padding(30);
 
-        if show_warn {
-            col = col.push(warning(warnings));
-        }
+        col = col.push(warning(warnings));
 
         col = col.push(row);
         col = col.push(app_arguments);

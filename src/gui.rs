@@ -13,6 +13,7 @@ use cosmic::{
 };
 use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
 
+use crate::common::BrowserType;
 use crate::{
     add_icon_packs_install_script,
     common::{
@@ -120,15 +121,7 @@ impl cosmic::Application for Window {
             (Pages::MainWindow, Command::none())
         };
 
-        let starting_warns = vec![
-            WarnMessages::Info,
-            WarnMessages::AppName,
-            WarnMessages::AppUrl,
-            WarnMessages::AppIcon,
-            WarnMessages::AppBrowser,
-        ];
-
-        let warn_element = Warning::new(starting_warns, true);
+        let warn_element = Warning::new(Vec::new());
 
         let windows = Window {
             core,
@@ -188,6 +181,7 @@ impl cosmic::Application for Window {
 
             Message::OpenCreator => {
                 self.current_page = Pages::AppCreator;
+                self.init_warning_box();
 
                 Command::none()
             }
@@ -275,8 +269,6 @@ impl cosmic::Application for Window {
 
                 if new_entry.is_valid {
                     self.create_valid_launcher(new_entry).unwrap();
-                } else {
-                    self.warning.show = true;
                 }
 
                 Command::none()
@@ -299,8 +291,6 @@ impl cosmic::Application for Window {
 
                     if edited_entry.is_valid {
                         self.create_valid_launcher(edited_entry).unwrap();
-                    } else {
-                        self.warning.show = true;
                     }
                 }
                 Command::none()
@@ -494,9 +484,7 @@ impl cosmic::Application for Window {
     fn view(&self) -> Element<Message> {
         match &self.current_page {
             Pages::MainWindow => self.main_window.view(),
-            Pages::AppCreator => self
-                .creator_window
-                .view(self.warning.show, self.warning.messages()),
+            Pages::AppCreator => self.creator_window.view(self.warning.messages()),
             Pages::IconPicker => self.icon_selector.view(),
             Pages::IconInstallator(installator) => installator.view(),
         }
@@ -522,5 +510,22 @@ impl Window {
         self.current_page = Pages::MainWindow;
 
         Ok(())
+    }
+
+    fn init_warning_box(&mut self) {
+        self.warning.remove_all_warns();
+
+        if self.creator_window.app_title.is_empty() || self.creator_window.app_title.len() <= 3 {
+            self.warning.push_warn(WarnMessages::AppName)
+        }
+        if self.creator_window.app_url.is_empty() {
+            self.warning.push_warn(WarnMessages::AppUrl)
+        }
+        if self.creator_window.app_icon.is_empty() {
+            self.warning.push_warn(WarnMessages::AppIcon)
+        }
+        if self.creator_window.app_browser._type == BrowserType::NoBrowser {
+            self.warning.push_warn(WarnMessages::AppBrowser)
+        }
     }
 }
