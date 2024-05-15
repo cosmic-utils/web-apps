@@ -10,11 +10,17 @@ use std::{
 };
 
 use anyhow::{anyhow, Error, Result};
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
+use bytes::Bytes;
 use cosmic::widget;
 use image::io::Reader as ImageReader;
+use image::GenericImageView;
 use rand::{thread_rng, Rng};
 use reqwest::Client;
 use scraper::{Html, Selector};
+use svg::node::element::Image;
+use svg::Document;
 use url::Url;
 use usvg::fontdb;
 use walkdir::WalkDir;
@@ -693,23 +699,37 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
     Ok(favicons)
 }
 
+pub fn convert_raster_to_svg_format(img_slice: Bytes, save_path: &str) -> Result<()> {
+    let encoded_img = BASE64_STANDARD.encode(&img_slice);
+
+    if let Ok(image) = image::load_from_memory(&img_slice) {
+        let (width, height) = image.dimensions();
+
+        // Create an SVG document and embed the image
+        let image_element = Image::new()
+            .set("x", 0)
+            .set("y", 0)
+            .set("width", width)
+            .set("height", height)
+            .set("href", format!("data:image/png;base64,{}", encoded_img));
+
+        let document = Document::new()
+            .set("width", width)
+            .set("height", height)
+            .add(image_element);
+
+        // Save the SVG document
+        svg::save(save_path, &document)?;
+    }
+
+    Ok(())
+}
+
 pub fn move_icon(path: String, output_name: String) -> String {
     create_dir_all(my_icons_location()).expect("cant create folder for your icons");
 
-    let extension = if is_svg(&path) {
-        String::from("svg")
-    } else {
-        PathBuf::from_str(&path)
-            .unwrap()
-            .extension()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_string()
-    };
-
     let save_path = my_icons_location()
-        .join(format!("{}.{}", output_name.replace(' ', ""), extension))
+        .join(format!("{}.svg", output_name.replace(' ', "")))
         .to_str()
         .unwrap()
         .to_string();
@@ -718,10 +738,12 @@ pub fn move_icon(path: String, output_name: String) -> String {
         let response = reqwest::blocking::get(&path).expect("sending request");
 
         if response.status().is_success() {
-            let content = response.bytes().expect("getting image bytes");
+            let content: Bytes = response.bytes().expect("getting image bytes");
 
-            let mut file = File::create(&save_path).expect("creating file");
-            file.write_all(&content).expect("saving image");
+            let _ = convert_raster_to_svg_format(content, &save_path);
+
+            // let mut file = File::create(&save_path).expect("creating file");
+            // file.write_all(&content).expect("saving image");
         }
     } else if !path.contains(&save_path) {
         copy(&path, &save_path).expect("saving image");

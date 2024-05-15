@@ -389,13 +389,7 @@ impl cosmic::Application for Window {
             }
             Message::PushIcon(icon) => {
                 let mut cmd = Command::none();
-                if self.creator_window.selected_icon.is_none() && icon.is_some() {
-                    let path = icon.as_ref().unwrap().path.clone();
-                    let saved = move_icon(path, self.creator_window.app_title.clone());
-                    self.creator_window.app_icon.clone_from(&saved);
-                    self.creator_window.app_icon = saved;
-                    self.creator_window.selected_icon.clone_from(&icon);
-
+                if icon.is_some() {
                     cmd = Command::perform(async {}, |_| {
                         app(Message::Warning((
                             WarnAction::Remove,
@@ -416,6 +410,14 @@ impl cosmic::Application for Window {
             }
             Message::LoadingDone => {
                 self.icon_selector.loading = false;
+
+                if !self.icon_selector.icons.is_empty() {
+                    let path = self.icon_selector.icons[0].path.clone();
+                    let saved = move_icon(path, self.creator_window.app_title.clone());
+                    self.creator_window.app_icon.clone_from(&saved);
+                    self.creator_window.app_icon = saved;
+                    self.creator_window.selected_icon = Some(self.icon_selector.icons[0].clone());
+                }
 
                 Command::none()
             }
