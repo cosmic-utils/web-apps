@@ -50,6 +50,8 @@ icons-installer-message=Bu uygulama çalışmak için ikon gerektirir. Kurulu ik
 
 # warning.rs
 warning=Gereksinimleri sağlamıyorsunuz
+    .success=Yeni bir web uygulaması oluşturabilirsiniz
+    .duplicate=  - Web uygulaması geçersiz. Bu web uygulamasını daha önce oluşturmuş olabilir misiniz ?
     .app-name=  - Uygulama adı 3 karakterden uzun olmalı
     .app-url=  - http:// ya da https:// ile başlayan gerçek bir URL sağlamalısınız
     .app-icon=  - Başlatıcı için bir ikon seçmelisiniz
