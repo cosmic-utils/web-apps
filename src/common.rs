@@ -85,6 +85,30 @@ pub fn my_icons_location() -> PathBuf {
     icons_location().join("MyIcons")
 }
 
+pub fn webapplauncher_is_valid(
+    webbrowser: &Browser,
+    icon: &str,
+    codename: &str,
+    name: &str,
+    url: &str,
+) -> bool {
+    let installed = get_webapps();
+
+    for app in installed.iter().flatten() {
+        if !url_valid(url)
+            || !webbrowser.is_installed()
+            || (name.is_empty() || app.name == name)
+            || icon.is_empty()
+            || (codename.is_empty() || app.codename == codename)
+            || url.is_empty()
+        {
+            return false;
+        }
+    }
+
+    true
+}
+
 #[derive(Debug, Clone)]
 pub struct WebAppLauncher {
     pub path: PathBuf,
@@ -130,8 +154,7 @@ impl WebAppLauncher {
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
 
-        let is_valid =
-            !name.is_empty() && !icon.is_empty() && url_valid(&url) && web_browser.is_installed();
+        let is_valid = webapplauncher_is_valid(&web_browser, &icon, &codename, &name, &url);
 
         Self {
             path,
