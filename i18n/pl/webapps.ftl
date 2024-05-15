@@ -44,6 +44,10 @@ private-mode=Tryb prywatny
 icon-name-to-find=Nazwa ikony do znalezienia
 my-icons=Moje ikony
 
+# icons_installator.rs
+icons-installer-header=Proszę czekać. Trwa pobieranie ikon...
+icons-installer-message=Ta aplikacja potrzebuje ikon do działania. W przypadku braku dostępu do ikon systemowych, zainstalujemy lokalnie pakiet ikon Papirus.
+
 # warning.rs
 warning=Proszę spełnić poniższe wymagania
     .app-name=  - Nazwa musi być dłuższa niż 3 znaki
