@@ -1,15 +1,16 @@
-use cosmic::widget::text;
+use cosmic::widget::{text, warning};
 use cosmic::{
+    app::{message::app, Message as CosmicMessage},
     iced::{id, Alignment, Length},
     style, theme,
-    widget::{self, dropdown, focus, toggler, Button, Column, Container, Row, TextInput},
+    widget::{self, dropdown, toggler, Button, Column, Container, Row, TextInput},
     Command, Element,
 };
 
 use crate::{
     common::{get_supported_browsers, icon_cache_get, url_valid, Browser, BrowserType},
     fl, gui, iconpicker,
-    warning::{WarnMessages, Warning},
+    warning::{WarnMessages, WarnAction}
 };
 
 #[derive(Debug, Clone)]
@@ -32,7 +33,6 @@ pub struct AppCreator {
     pub selected_icon: Option<iconpicker::Icon>,
     pub app_browsers: Vec<Browser>,
     pub selected_browser: Option<usize>,
-    pub warning: Warning,
     pub dialog_open: bool,
     pub edit_mode: bool,
 }
@@ -59,16 +59,6 @@ impl AppCreator {
     pub fn new() -> Self {
         let browsers = get_supported_browsers();
         let browser = &browsers[0];
-
-        let starting_warns = vec![
-            WarnMessages::Info,
-            WarnMessages::AppName,
-            WarnMessages::AppUrl,
-            WarnMessages::AppIcon,
-            WarnMessages::AppBrowser,
-        ];
-
-        let warn_element = Warning::new(starting_warns, true);
 
         let categories = [
             fl!("web"),
@@ -101,34 +91,49 @@ impl AppCreator {
             selected_icon: None,
             app_browsers: browsers,
             selected_browser: Some(0),
-            warning: warn_element,
             dialog_open: false,
             edit_mode: false,
         }
     }
 
-    pub fn update(&mut self, message: Message) -> Command<Message> {
+    pub fn update(&mut self, message: Message) -> Command<CosmicMessage<gui::Message>> {
         match message {
             Message::Title(title) => {
                 self.app_title = title;
 
                 if self.app_title.len() >= 3 {
-                    self.warning.remove_warn(WarnMessages::AppName);
-                    focus(self.app_title_id.clone())
+                    Command::perform(async {}, |_| {
+                        app(gui::Message::Warning((
+                            WarnAction::Remove,
+                            WarnMessages::AppName,
+                        )))
+                    })
                 } else {
-                    self.warning.push_warn(WarnMessages::AppName);
-                    focus(self.app_title_id.clone())
+                    Command::perform(async {}, |_| {
+                        app(gui::Message::Warning((
+                            WarnAction::Add,
+                            WarnMessages::AppName,
+                        )))
+                    })
                 }
             }
             Message::Url(url) => {
                 self.app_url = url;
 
                 if url_valid(&self.app_url) {
-                    self.warning.remove_warn(WarnMessages::AppUrl);
-                    focus(self.app_url_id.clone())
+                    Command::perform(async {}, |_| {
+                        app(gui::Message::Warning((
+                            WarnAction::Remove,
+                            WarnMessages::AppUrl,
+                        )))
+                    })
                 } else {
-                    self.warning.push_warn(WarnMessages::AppUrl);
-                    focus(self.app_url_id.clone())
+                    Command::perform(async {}, |_| {
+                        app(gui::Message::Warning((
+                            WarnAction::Add,
+                            WarnMessages::AppUrl,
+                        )))
+                    })
                 }
             }
             Message::Arguments(args) => {
@@ -138,13 +143,22 @@ impl AppCreator {
             Message::Browser(idx) => {
                 let browser = &self.app_browsers[idx];
                 self.selected_browser = Some(idx);
-                match browser._type {
-                    BrowserType::NoBrowser => self.warning.push_warn(WarnMessages::AppBrowser),
-                    _ => self.warning.remove_warn(WarnMessages::AppBrowser),
-                };
-
                 self.app_browser = browser.clone();
-                Command::none()
+
+                match browser._type {
+                    BrowserType::NoBrowser => Command::perform(async {}, |_| {
+                        app(gui::Message::Warning((
+                            WarnAction::Add,
+                            WarnMessages::AppBrowser,
+                        )))
+                    }),
+                    _ => Command::perform(async {}, |_| {
+                        app(gui::Message::Warning((
+                            WarnAction::Remove,
+                            WarnMessages::AppBrowser,
+                        )))
+                    }),
+                }
             }
             Message::Category(idx) => {
                 self.app_category.clone_from(&self.app_categories[idx]);
@@ -207,7 +221,7 @@ impl AppCreator {
         .into()
     }
 
-    pub fn view(&self) -> Element<gui::Message> {
+    pub fn view(&self, show_warn: bool, warnings: String) -> Element<gui::Message> {
         let app_title = TextInput::new(fl!("title"), &self.app_title)
             .id(self.app_title_id.clone())
             .on_input(|s| gui::Message::Creator(Message::Title(s)))
@@ -308,8 +322,8 @@ impl AppCreator {
 
         let mut col = Column::new().spacing(20).padding(30);
 
-        if self.warning.show {
-            col = col.push(self.warning.view());
+        if show_warn {
+            col = col.push(warning(warnings));
         }
 
         col = col.push(row);

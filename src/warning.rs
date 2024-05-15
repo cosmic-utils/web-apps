@@ -1,10 +1,4 @@
 use crate::fl;
-use cosmic::{
-    widget::{warning, Column, Container},
-    Element,
-};
-
-use crate::gui::Message;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum WarnMessages {
@@ -13,6 +7,12 @@ pub enum WarnMessages {
     AppUrl,
     AppIcon,
     AppBrowser,
+}
+
+#[derive(Debug, Clone)]
+pub enum WarnAction {
+    Remove,
+    Add,
 }
 
 impl std::fmt::Display for WarnMessages {
@@ -69,19 +69,13 @@ impl Warning {
         self
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn messages(&self) -> String {
         let mut content = String::new();
 
         for line in &self.messages {
             content.push_str(&format!("{}\n", line));
         }
 
-        let warn = warning(content);
-
-        if self.show {
-            Container::new(warn).into()
-        } else {
-            Container::new(Column::new()).into()
-        }
+        content
     }
 }

@@ -13,9 +13,10 @@ use cosmic::{
 };
 use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
 
-use crate::common::{find_icon, icons_location};
 use crate::{
     add_icon_packs_install_script,
+    common::{find_icon, icons_location},
+    warning::{WarnAction, Warning},
     common::{
         self, find_icons, get_icon_name_from_url, get_supported_browsers, icon_cache_get,
         image_handle, move_icon, Browser, WebAppLauncher,
@@ -60,6 +61,8 @@ pub enum Message {
     SetIcon(iconpicker::Icon),
     SelectIcon(iconpicker::Icon),
 
+    Warning((WarnAction, WarnMessages)),
+
     // Installator
     InstallScript(String),
     InstallCommand(ExitStatus),
@@ -80,6 +83,7 @@ pub struct Window {
     creator_window: creator::AppCreator,
     icon_selector: IconPicker,
     dialog_opt: Option<Dialog<Message>>,
+    warning: Warning,
 }
 
 impl cosmic::Application for Window {
@@ -116,6 +120,16 @@ impl cosmic::Application for Window {
             (Pages::MainWindow, Command::none())
         };
 
+        let starting_warns = vec![
+            WarnMessages::Info,
+            WarnMessages::AppName,
+            WarnMessages::AppUrl,
+            WarnMessages::AppIcon,
+            WarnMessages::AppBrowser,
+        ];
+
+        let warn_element = Warning::new(starting_warns, true);
+
         let windows = Window {
             core,
             main_window: manager,
@@ -123,6 +137,7 @@ impl cosmic::Application for Window {
             creator_window: creator,
             icon_selector: selector,
             dialog_opt: None,
+            warning: warn_element,
         };
 
         (windows, cmd)
@@ -185,7 +200,14 @@ impl cosmic::Application for Window {
             Message::Creator(message) => {
                 let command = self.creator_window.update(message);
 
-                command.map(|mess| app(Message::Creator(mess)))
+                command.map(|mess| mess)
+            }
+            Message::Warning((action, message)) => {
+                match action {
+                    WarnAction::Add => self.warning.push_warn(message),
+                    WarnAction::Remove => self.warning.remove_warn(message),
+                };
+                Command::none()
             }
             Message::OpenIconPicker => {
                 self.current_page = Pages::IconPicker;
@@ -278,7 +300,7 @@ impl cosmic::Application for Window {
                     self.creator_window.edit_mode = false;
                     self.current_page = Pages::MainWindow;
                 } else {
-                    self.creator_window.warning.show = true;
+                    self.warning.show = true;
                 }
 
                 Command::none()
@@ -290,7 +312,7 @@ impl cosmic::Application for Window {
                         .iter()
                         .position(|b| b.name == launcher.web_browser.name);
 
-                    self.creator_window.warning.remove_all_warns();
+                    self.warning.remove_all_warns();
                     self.main_window.edit_mode = true;
                     self.main_window.launcher = Some(launcher.clone());
 
@@ -378,6 +400,7 @@ impl cosmic::Application for Window {
                 Command::batch(commands)
             }
             Message::PushIcon(icon) => {
+                let mut cmd = Command::none();
                 if self.creator_window.selected_icon.is_none() && icon.is_some() {
                     let path = icon.as_ref().unwrap().path.clone();
                     let saved = move_icon(path, self.creator_window.app_title.clone());
@@ -385,17 +408,23 @@ impl cosmic::Application for Window {
                     self.creator_window.app_icon = saved;
                     self.creator_window.selected_icon.clone_from(&icon);
 
-                    self.creator_window
-                        .warning
-                        .remove_warn(WarnMessages::AppIcon);
-                }
+                    cmd = Command::perform(async {}, |_| {
+                        app(Message::Warning((
+                            WarnAction::Remove,
+                            WarnMessages::AppIcon,
+                        )))
+                    })
+                };
+
                 if let Some(ico) = icon {
                     if !self.icon_selector.icons.contains(&ico) {
                         self.icon_selector.icons.push(ico);
                     }
-                }
+                };
 
-                Command::perform(async {}, |_| app(Message::LoadingDone))
+                let done = Command::perform(async {}, |_| app(Message::LoadingDone));
+
+                Command::batch(vec![cmd, done])
             }
             Message::LoadingDone => {
                 self.icon_selector.loading = false;
@@ -412,14 +441,17 @@ impl cosmic::Application for Window {
                 if self.creator_window.selected_icon.is_some()
                     && !self.creator_window.app_icon.is_empty()
                 {
-                    self.creator_window
-                        .warning
-                        .remove_warn(WarnMessages::AppIcon);
+                    Command::perform(async {}, |_| {
+                        app(Message::Warning((
+                            WarnAction::Remove,
+                            WarnMessages::AppIcon,
+                        )))
+                    })
                 } else {
-                    self.creator_window.warning.push_warn(WarnMessages::AppIcon);
+                    Command::perform(async {}, |_| {
+                        app(Message::Warning((WarnAction::Add, WarnMessages::AppIcon)))
+                    })
                 }
-
-                Command::none()
             }
             Message::SetIcon(icon) => {
                 let path = icon.path;
@@ -464,7 +496,9 @@ impl cosmic::Application for Window {
     fn view(&self) -> Element<Message> {
         match &self.current_page {
             Pages::MainWindow => self.main_window.view(),
-            Pages::AppCreator => self.creator_window.view(),
+            Pages::AppCreator => self
+                .creator_window
+                .view(self.warning.show, self.warning.messages()),
             Pages::IconPicker => self.icon_selector.view(),
             Pages::IconInstallator(installator) => installator.view(),
         }
