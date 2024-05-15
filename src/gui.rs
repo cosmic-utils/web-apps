@@ -15,11 +15,9 @@ use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
 
 use crate::{
     add_icon_packs_install_script,
-    common::{find_icon, icons_location},
-    warning::{WarnAction, Warning},
     common::{
-        self, find_icons, get_icon_name_from_url, get_supported_browsers, icon_cache_get,
-        image_handle, move_icon, Browser, WebAppLauncher,
+        self, find_icon, find_icons, get_icon_name_from_url, get_supported_browsers,
+        icon_cache_get, image_handle, move_icon, my_icons_location, Browser, WebAppLauncher,
     },
     creator, execute_script, fl,
     home_screen::Home,
@@ -27,6 +25,7 @@ use crate::{
     iconpicker::{self, IconPicker},
     icons_installator::Installator,
     warning::WarnMessages,
+    warning::{WarnAction, Warning},
 };
 
 #[derive(Debug, Clone)]
@@ -249,7 +248,7 @@ impl cosmic::Application for Window {
                                     );
 
                                     return Command::perform(
-                                        find_icon(icons_location().join("MyIcons"), String::new()),
+                                        find_icon(my_icons_location(), String::new()),
                                         |result| app(Message::FoundIcons(result)),
                                     );
                                 }
@@ -354,10 +353,9 @@ impl cosmic::Application for Window {
 
                 self.icon_selector.loading = true;
 
-                Command::perform(
-                    find_icon(icons_location().join("MyIcons"), icon_name),
-                    |result| app(Message::FoundIcons(result)),
-                )
+                Command::perform(find_icon(my_icons_location(), icon_name), |result| {
+                    app(Message::FoundIcons(result))
+                })
             }
             Message::PerformIconSearch => {
                 self.icon_selector.icons.clear();

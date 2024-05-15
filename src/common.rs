@@ -75,6 +75,10 @@ pub fn icons_location() -> PathBuf {
     }
 }
 
+pub fn my_icons_location() -> PathBuf {
+    icons_location().join("MyIcons")
+}
+
 #[derive(Debug, Clone)]
 pub struct WebAppLauncher {
     pub path: PathBuf,
@@ -690,8 +694,7 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
 }
 
 pub fn move_icon(path: String, output_name: String) -> String {
-    let user_icons = icons_location().join("MyIcons");
-    create_dir_all(user_icons.clone()).expect("cant create icons folder");
+    create_dir_all(my_icons_location()).expect("cant create folder for your icons");
 
     let extension = if is_svg(&path) {
         String::from("svg")
@@ -705,7 +708,7 @@ pub fn move_icon(path: String, output_name: String) -> String {
             .to_string()
     };
 
-    let save_path = user_icons
+    let save_path = my_icons_location()
         .join(format!("{}.{}", output_name.replace(' ', ""), extension))
         .to_str()
         .unwrap()
