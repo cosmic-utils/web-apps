@@ -40,7 +40,20 @@ Make sure you are in `WebApps` directory. You should be already.
 
 ### Building
 
-**NOTE:** Before installation you should build binary file. Run this command and after it, you will be able to install
+**NOTE:** Before installation you should build binary file.
+
+### Build prerequisites
+
+Before compilation please add needed dependencies to your system, or make sure they are installed.
+
+- pkg-config
+- libssl-dev
+
+for Pop OS you can install them via this command:
+
+`sudo apt install pkg-config libssl-dev`
+
+**Run** this command and after it, you will be able to install
 app.
 
 `just`
