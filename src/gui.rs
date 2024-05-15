@@ -293,6 +293,7 @@ impl cosmic::Application for Window {
                         self.create_valid_launcher(edited_entry).unwrap();
                     }
                 }
+                self.creator_window.edit_mode = false;
                 Command::none()
             }
             Message::Clicked(buttons) => match buttons {
