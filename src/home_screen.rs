@@ -30,60 +30,53 @@ impl Home {
         let mut app_list = Column::new();
         let webapps = get_webapps();
 
-        for app in webapps.iter() {
-            match app {
-                Ok(data) => {
-                    let num = Button::new(
-                        Container::new(text(data.web_browser.name.clone()))
-                            .center_x()
-                            .center_y(),
-                    )
-                    .width(Length::FillPortion(1));
+        for app in webapps.iter().flatten() {
+            let num = Button::new(
+                Container::new(text(app.web_browser.name.clone()))
+                    .center_x()
+                    .center_y(),
+            )
+            .width(Length::FillPortion(1));
 
-                    let app_name = Button::new(
-                        Container::new(text(data.name.clone()))
-                            .center_x()
-                            .center_y(),
-                    )
+            let app_name =
+                Button::new(Container::new(text(app.name.clone())).center_x().center_y())
                     .width(Length::FillPortion(4))
                     .style(cosmic::theme::Button::Suggested);
 
-                    let edit = widget::button(icon_cache_get("edit-symbolic", 16))
-                        .on_press(Message::Clicked(Buttons::Edit(data.clone())))
-                        .padding(8)
-                        .style(style::Button::Icon);
+            let edit = widget::button(icon_cache_get("edit-symbolic", 16))
+                .on_press(Message::Clicked(Buttons::Edit(app.clone())))
+                .padding(8)
+                .style(style::Button::Icon);
 
-                    let delete = widget::button(icon_cache_get("edit-delete-symbolic", 16))
-                        .on_press(Message::Clicked(Buttons::Delete(data.clone())))
-                        .padding(8)
-                        .style(style::Button::Icon);
+            let delete = widget::button(icon_cache_get("edit-delete-symbolic", 16))
+                .on_press(Message::Clicked(Buttons::Delete(app.clone())))
+                .padding(8)
+                .style(style::Button::Icon);
 
-                    let mut row = Row::new().spacing(10).height(Length::Fixed(50.));
-                    let mut row2 = Row::new().spacing(10).height(Length::Fixed(50.));
+            let mut row = Row::new().spacing(10).height(Length::Fixed(50.));
+            let mut row2 = Row::new().spacing(10).height(Length::Fixed(50.));
 
-                    row = row.push(num);
-                    row = row.push(app_name);
+            row = row.push(num);
+            row = row.push(app_name);
 
-                    row2 = row2.push(edit);
-                    row2 = row2.push(delete);
-                    app_list = app_list.push(
-                        Row::new()
-                            .push(row)
-                            .push(row2)
-                            .width(Length::Fill)
-                            .align_items(Alignment::Center)
-                            .spacing(30),
-                    );
-                }
-                Err(e) => tracing::error!("Error reading web app: {}", e),
-            }
+            row2 = row2.push(edit);
+            row2 = row2.push(delete);
+            app_list = app_list.push(
+                Row::new()
+                    .push(row)
+                    .push(row2)
+                    .width(Length::Fill)
+                    .align_items(Alignment::Center)
+                    .spacing(30),
+            );
         }
 
         let mut installed = Column::new().spacing(20);
 
         if !webapps.is_empty() {
-            installed =
-                installed.push(text(fl!("installed-header", number = webapps.len())).size(20));
+            let apps_number = webapps.len();
+            let installed_header = text(fl!("installed-header", number = apps_number)).size(20);
+            installed = installed.push(installed_header);
 
             let scrollable_list = Scrollable::new(app_list).width(Length::Fill);
 
