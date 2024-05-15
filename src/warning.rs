@@ -4,6 +4,7 @@ use crate::fl;
 pub enum WarnMessages {
     Warning,
     Sucess,
+    Duplicate,
     AppName,
     AppUrl,
     AppIcon,
@@ -21,6 +22,7 @@ impl std::fmt::Display for WarnMessages {
         match &self {
             WarnMessages::Warning => write!(f, "{}", fl!("warning")),
             WarnMessages::Sucess => write!(f, "{}", fl!("warning", "success")),
+            WarnMessages::Duplicate => write!(f, "{}", fl!("warning", "duplicate")),
             WarnMessages::AppName => write!(f, "{}", fl!("warning", "app-name")),
             WarnMessages::AppUrl => write!(f, "{}", fl!("warning", "app-url")),
             WarnMessages::AppIcon => write!(f, "{}", fl!("warning", "app-icon")),

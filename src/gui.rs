@@ -269,6 +269,8 @@ impl cosmic::Application for Window {
 
                 if new_entry.is_valid {
                     self.create_valid_launcher(new_entry).unwrap();
+                } else {
+                    self.warning.push_warn(WarnMessages::Duplicate);
                 }
 
                 Command::none()
@@ -291,6 +293,8 @@ impl cosmic::Application for Window {
 
                     if edited_entry.is_valid {
                         self.create_valid_launcher(edited_entry).unwrap();
+                    } else {
+                        self.warning.push_warn(WarnMessages::Duplicate);
                     }
                 }
                 self.creator_window.edit_mode = false;
