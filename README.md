@@ -53,7 +53,7 @@ Before compilation please add needed dependencies to your system, or make sure t
 
 for Pop OS you can install them via this command:
 
-`sudo apt install pkg-config libssl-dev`
+`sudo apt install rustc cargo pkg-config libssl-dev`
 
 **Run** this command and after it, you will be able to install
 app.
