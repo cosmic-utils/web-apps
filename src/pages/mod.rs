@@ -14,7 +14,7 @@ use cosmic::{
     iced::window,
     style,
     widget::{self, text},
-    Command, Element,
+    Application, ApplicationExt, Command, Element,
 };
 use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
 
@@ -91,7 +91,7 @@ pub struct Window {
     warning: Warning,
 }
 
-impl cosmic::Application for Window {
+impl Application for Window {
     type Executor = executor::Default;
     type Flags = ();
     type Message = Message;
@@ -127,7 +127,7 @@ impl cosmic::Application for Window {
 
         let warn_element = Warning::new(Vec::new());
 
-        let windows = Window {
+        let mut windows = Window {
             core,
             main_window: manager,
             current_page: page,
@@ -137,7 +137,9 @@ impl cosmic::Application for Window {
             warning: warn_element,
         };
 
-        (windows, cmd)
+        let commands = Command::batch(vec![windows.set_title(), cmd]);
+
+        (windows, commands)
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
@@ -510,6 +512,9 @@ impl cosmic::Application for Window {
 }
 
 impl Window {
+    fn set_title(&mut self) -> Command<CosmicMessage<Message>> {
+        self.set_window_title(fl!("app"), self.main_window_id())
+    }
     fn create_valid_launcher(&mut self, entry: WebAppLauncher) -> anyhow::Result<()> {
         move_icon(
             self.creator_window.app_icon.clone(),
