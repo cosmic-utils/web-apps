@@ -619,10 +619,15 @@ pub fn get_supported_browsers() -> Vec<Browser> {
             Err(_) => continue,
         }
     }
-    browsers.insert(
-        0,
-        Browser::new(BrowserType::NoBrowser, &fl!("select-browser"), "", ""),
-    );
+
+    if browsers.is_empty() {
+        browsers.push(Browser::new(
+            BrowserType::NoBrowser,
+            &fl!("select-browser"),
+            "",
+            "",
+        ));
+    }
 
     browsers
 }
