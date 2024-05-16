@@ -63,19 +63,18 @@ impl IconPicker {
         }
 
         let container = {
-            let content = Container::new(flex_row(items)).center_x();
+            let content = Container::new(flex_row(items));
 
-            Column::new().push(
-                Scrollable::new(content)
-                    .width(Length::Fill)
-                    .height(Length::Fill),
-            )
+            Scrollable::new(content)
+                .width(Length::Fill)
+                .height(Length::Fill)
         };
 
-        Column::new()
-            .push(controls)
-            .push(container)
-            .spacing(10)
+        let final_column = Column::new().push(controls).push(container).spacing(10);
+
+        Container::new(final_column)
+            .padding(30)
+            .max_width(1000)
             .into()
     }
 }

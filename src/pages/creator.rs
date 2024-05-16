@@ -287,16 +287,6 @@ impl AppCreator {
         })
         .width(Length::Fill);
 
-        let mut cat_row = Row::new().spacing(20).align_items(Alignment::Center);
-        cat_row = cat_row.push(category);
-        cat_row = cat_row.push(incognito);
-        cat_row = cat_row.push(browser_specific);
-
-        let app_browsers = dropdown(&self.app_browsers, self.selected_browser, |idx| {
-            pages::Message::Creator(Message::Browser(idx))
-        })
-        .width(Length::Fixed(200.));
-
         let save_btn = if self.edit_mode {
             Button::new(Container::new(text(fl!("edit"))).center_x().center_y())
                 .on_press(pages::Message::DoneEdit)
@@ -309,14 +299,23 @@ impl AppCreator {
                 .style(theme::Button::Suggested)
         };
 
+        let mut cat_row = Row::new().spacing(20).align_items(Alignment::Center);
+        cat_row = cat_row.push(category);
+        cat_row = cat_row.push(browser_specific);
+        cat_row = cat_row.push(save_btn);
+
+        let app_browsers = dropdown(&self.app_browsers, self.selected_browser, |idx| {
+            pages::Message::Creator(Message::Browser(idx))
+        })
+        .width(Length::Fixed(200.));
+
         let creator_close = Button::new(Container::new(text(fl!("close"))).center_x().center_y())
             .on_press(pages::Message::CloseCreator)
-            .width(Length::Fill)
-            .style(theme::Button::Destructive);
+            .width(Length::Fill);
 
         let mut browsers_row = Row::new().spacing(20);
         browsers_row = browsers_row.push(app_browsers);
-        browsers_row = browsers_row.push(save_btn);
+        browsers_row = browsers_row.push(incognito);
         browsers_row = browsers_row.push(creator_close);
 
         let mut col = Column::new().spacing(20).padding(30);
@@ -328,6 +327,6 @@ impl AppCreator {
         col = col.push(cat_row);
         col = col.push(browsers_row);
 
-        col.into()
+        Container::new(col).max_width(1000).into()
     }
 }

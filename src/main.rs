@@ -27,8 +27,8 @@ fn main() -> cosmic::iced::Result {
 
     let mut settings = Settings::default();
     settings = settings.size(Size {
-        width: 575.,
-        height: 680.,
+        width: 700.,
+        height: 700.,
     });
 
     cosmic::app::run::<Window>(settings, ())

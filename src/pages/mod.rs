@@ -5,6 +5,9 @@ pub mod icons_installator;
 
 use std::process::ExitStatus;
 
+use cosmic::iced::alignment::Horizontal;
+use cosmic::iced::Length;
+use cosmic::widget::Container;
 use cosmic::{
     app::{
         message::{self, app},
@@ -495,12 +498,19 @@ impl Application for Window {
     }
 
     fn view(&self) -> Element<Message> {
-        match &self.current_page {
+        let view = match &self.current_page {
             Pages::MainWindow => self.main_window.view(),
             Pages::AppCreator => self.creator_window.view(self.warning.messages()),
             Pages::IconPicker => self.icon_selector.view(),
             Pages::IconInstallator(installator) => installator.view(),
-        }
+        };
+
+        Container::new(view)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .align_x(Horizontal::Center)
+            .center_x()
+            .into()
     }
 
     fn view_window(&self, window_id: window::Id) -> Element<Message> {

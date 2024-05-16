@@ -22,6 +22,6 @@ impl Installator {
         column = column.push(header);
         column = column.push(info_message);
 
-        Container::new(column).into()
+        Container::new(column).padding(30).max_width(1000).into()
     }
 }
