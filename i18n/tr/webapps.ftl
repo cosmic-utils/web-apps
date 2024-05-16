@@ -41,16 +41,18 @@ isolated-profile=İzole Profil
 private-mode=Gizli Mod
 
 # iconpicker.rs
-icon-name-to-find=Bulmak için ikon adı
+icon-name-to-find=Arama yapmak için ikon adı
 my-icons=Benim ikonlarım
 
 # icons_installator.rs
 icons-installer-header=Lütfen bekleyin. İkonlar indiriliyor...
-icons-installer-message=Bu uygulama çalışmak için ikon gerektirir. Kurulu ikonlarınıza erişemediğimiz için, web uygulamanıza ikon seçebilin diye Papirus ikon paketini yerel klasöre indiriyoruz.
+icons-installer-message=Bu uygulama çalışmak için ikon gerektirir. Kurulu ikonlarınıza erişemediğimiz durumlarda web uygulamanıza ikon seçebilin diye Papirus ikon paketini yerel klasöre indiriyoruz.
 
 # warning.rs
 warning=Gereksinimleri sağlamıyorsunuz
+    .success=Yeni bir web uygulaması oluşturabilirsiniz
+    .duplicate=  - Web uygulaması geçersiz. Bu web uygulamasını daha önce oluşturmuş olabilir misiniz ?
     .app-name=  - Uygulama adı 3 karakterden uzun olmalı
     .app-url=  - http:// ya da https:// ile başlayan gerçek bir URL sağlamalısınız
     .app-icon=  - Başlatıcı için bir ikon seçmelisiniz
-    .app-browser=  - Lütfen bir tarayıcı seçin. En azından bir tanesinin flatpak ya da sistem genelinde kurulu olduğundan emin olun.
+    .app-browser=  - Lütfen bir tarayıcı seçin. En azından bir tarayıcının flatpak ya da sistem genelinde kurulu olduğundan emin olun.
