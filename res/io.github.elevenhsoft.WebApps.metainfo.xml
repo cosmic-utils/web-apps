@@ -33,18 +33,18 @@
 
     <screenshots>
         <screenshot type="default" xml:lang="en">
-            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-dark.png</image>
+            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.1/res/screenshots/window-dark.png</image>
             <caption>Installed apps</caption>
         </screenshot>
         <screenshot xml:lang="en">
             <image>
-                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-creator.png
+                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.1/res/screenshots/window-creator.png
             </image>
             <caption>Creator</caption>
         </screenshot>
         <screenshot xml:lang="en">
             <image>
-                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-icon-picker.png
+                https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.1/res/screenshots/window-icon-picker.png
             </image>
             <caption>Icon Picker</caption>
         </screenshot>
@@ -56,7 +56,14 @@
     </branding>
 
     <releases>
-        <release version="0.4.1" date="2024-05-13"/>
+        <release version="0.4.1" date="2024-05-16">
+            <description>
+                <p>Bug fixes</p>
+                <p>Improvements</p>
+                <p>Cleanup code</p>
+                <p>New translations</p>
+            </description>
+        </release>
         <release version="0.4.0" date="2024-05-13">
             <description>
                 <p>First stable release</p>
