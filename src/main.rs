@@ -1,11 +1,8 @@
 mod common;
-mod creator;
 mod gui;
-mod home_screen;
 mod icon_cache;
-mod iconpicker;
-mod icons_installator;
 mod localize;
+mod pages;
 mod supported_browsers;
 mod warning;
 

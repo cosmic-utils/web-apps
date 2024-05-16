@@ -28,7 +28,7 @@ use walkdir::WalkDir;
 use crate::{
     fl,
     icon_cache::IconCache,
-    iconpicker,
+    pages,
     supported_browsers::{flatpak_browsers, native_browsers},
 };
 
@@ -771,7 +771,7 @@ pub fn move_icon(path: String, output_name: String) -> String {
     save_path
 }
 
-pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
+pub async fn image_handle(path: String) -> Option<pages::iconpicker::Icon> {
     let mut data: Vec<_> = Vec::new();
     let pathbuf = PathBuf::from_str(&path).unwrap();
 
@@ -800,8 +800,8 @@ pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
     if is_svg(&path) {
         let handle = widget::svg::Handle::from_memory(data);
 
-        return Some(iconpicker::Icon::new(
-            iconpicker::IconType::Svg(handle),
+        return Some(pages::iconpicker::Icon::new(
+            pages::iconpicker::IconType::Svg(handle),
             path,
         ));
     } else if let Ok(image) = ImageReader::new(Cursor::new(&data))
@@ -812,8 +812,8 @@ pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
         if image.width() >= 96 && image.height() >= 96 {
             let handle = widget::image::Handle::from_memory(data);
 
-            return Some(iconpicker::Icon::new(
-                iconpicker::IconType::Raster(handle),
+            return Some(pages::iconpicker::Icon::new(
+                pages::iconpicker::IconType::Raster(handle),
                 path,
             ));
         }

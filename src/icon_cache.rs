@@ -20,8 +20,7 @@ impl IconCache {
 
         macro_rules! bundle {
             ($name:expr, $size:expr) => {
-                let data: &'static [u8] =
-                    include_bytes!(concat!("../res/icons/", $name, ".svg"));
+                let data: &'static [u8] = include_bytes!(concat!("../res/icons/", $name, ".svg"));
                 cache.insert(
                     IconCacheKey {
                         name: $name,

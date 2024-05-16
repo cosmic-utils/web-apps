@@ -7,9 +7,10 @@ use cosmic::{
     Command, Element,
 };
 
+use crate::pages::iconpicker::IconType;
 use crate::{
     common::{get_supported_browsers, icon_cache_get, url_valid, Browser, BrowserType},
-    fl, gui, iconpicker,
+    fl, gui, pages,
     warning::{WarnAction, WarnMessages},
 };
 
@@ -30,7 +31,7 @@ pub struct AppCreator {
     pub app_navbar: bool,
     pub app_incognito: bool,
     pub app_isolated: bool,
-    pub selected_icon: Option<iconpicker::Icon>,
+    pub selected_icon: Option<pages::iconpicker::Icon>,
     pub app_browsers: Vec<Browser>,
     pub selected_browser: Option<usize>,
     pub dialog_open: bool,
@@ -186,15 +187,15 @@ impl AppCreator {
         }
     }
 
-    fn icon_picker_icon(&self, icon: Option<iconpicker::Icon>) -> Element<gui::Message> {
+    fn icon_picker_icon(&self, icon: Option<pages::iconpicker::Icon>) -> Element<gui::Message> {
         let ico = if let Some(ico) = icon {
             match ico.icon {
-                iconpicker::IconType::Raster(data) => widget::button(cosmic::widget::image(data))
+                IconType::Raster(data) => widget::button(cosmic::widget::image(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
                     .style(style::Button::Icon),
 
-                iconpicker::IconType::Svg(data) => widget::button(cosmic::widget::svg(data))
+                IconType::Svg(data) => widget::button(cosmic::widget::svg(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
                     .style(style::Button::Icon),
