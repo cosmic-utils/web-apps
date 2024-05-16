@@ -1,14 +1,12 @@
-use crate::fl;
-use cosmic::widget::text;
 use cosmic::{
     iced::Length,
     iced_widget::Scrollable,
     theme,
-    widget::{self, flex_row, Button, Column, Container, Row, TextInput},
+    widget::{self, flex_row, text, Button, Column, Container, Row, TextInput},
     Element,
 };
 
-use crate::gui::Message;
+use crate::{fl, pages::Message};
 
 #[derive(Debug, Clone, Default)]
 pub struct IconPicker {

@@ -1,7 +1,7 @@
 use crate::{
     common::{get_webapps, icon_cache_get, WebAppLauncher},
     fl,
-    gui::{Buttons, Message},
+    pages::{Buttons, Message},
 };
 
 use cosmic::{

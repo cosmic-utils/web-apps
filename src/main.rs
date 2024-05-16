@@ -1,5 +1,4 @@
 mod common;
-mod gui;
 mod icon_cache;
 mod localize;
 mod pages;
@@ -15,7 +14,7 @@ use tokio::{fs::File, io::AsyncWriteExt};
 use tracing::Level;
 use tracing_subscriber::FmtSubscriber;
 
-use gui::Window;
+use pages::Window;
 
 fn main() -> cosmic::iced::Result {
     let subscriber = FmtSubscriber::builder()

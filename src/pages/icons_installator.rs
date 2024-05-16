@@ -1,6 +1,5 @@
-use crate::gui::Message;
+use crate::{fl, pages::Message};
 
-use crate::fl;
 use cosmic::{
     widget::{text, Column, Container},
     Element,
