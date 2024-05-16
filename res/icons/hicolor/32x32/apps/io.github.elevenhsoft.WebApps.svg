@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" viewBox="0 0 32 32" version="1.1">
+<defs>
+<linearGradient id="linear0" gradientUnits="userSpaceOnUse" x1="9.6836" y1="33.999001" x2="57.308998" y2="33.999001" gradientTransform="matrix(0.472443,0,0,0.472443,0,0)">
+<stop offset="0" style="stop-color:rgb(87.843138%,76.47059%,53.725493%);stop-opacity:1;"/>
+<stop offset="1" style="stop-color:rgb(94.901961%,84.705883%,65.490198%);stop-opacity:1;"/>
+</linearGradient>
+<linearGradient id="linear1" gradientUnits="userSpaceOnUse" x1="9.6104" y1="34.396" x2="58.125" y2="34.396" gradientTransform="matrix(0.472443,0,0,0.472443,0,0)">
+<stop offset="0" style="stop-color:rgb(75.686276%,87.843138%,80.784315%);stop-opacity:1;"/>
+<stop offset="1" style="stop-color:rgb(62.352943%,87.843138%,71.372551%);stop-opacity:1;"/>
+</linearGradient>
+<linearGradient id="linear2" gradientUnits="userSpaceOnUse" x1="6.4499" y1="34.396" x2="61.813999" y2="34.396" >
+<stop offset="0" style="stop-color:rgb(3.137255%,38.82353%,38.431373%);stop-opacity:1;"/>
+<stop offset="1" style="stop-color:rgb(2.745098%,38.82353%,38.039216%);stop-opacity:1;"/>
+</linearGradient>
+<linearGradient id="linear3" gradientUnits="userSpaceOnUse" x1="6.4499" y1="34.396" x2="61.813999" y2="34.396" >
+<stop offset="0" style="stop-color:rgb(75.686276%,87.843138%,80.784315%);stop-opacity:0;"/>
+<stop offset="1" style="stop-color:rgb(75.686276%,87.843138%,80.784315%);stop-opacity:1;"/>
+</linearGradient>
+</defs>
+<g id="surface1">
+<path style=" stroke:none;fill-rule:nonzero;fill:url(#linear0);" d="M 6.875 7.144531 C 11.050781 2.898438 24.773438 7.144531 24.773438 7.144531 C 24.773438 7.144531 28.953125 20.734375 24.773438 24.980469 C 20.597656 29.226562 6.875 24.980469 6.875 24.980469 C 6.875 24.980469 2.699219 11.390625 6.875 7.144531 Z M 6.875 7.144531 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:url(#linear1);" d="M 10.640625 4.808594 C 16.019531 2.246094 27.460938 10.929688 27.460938 10.929688 C 27.460938 10.929688 26.738281 25.128906 21.359375 27.691406 C 15.980469 30.253906 4.539062 21.570312 4.539062 21.570312 C 4.539062 21.570312 5.261719 7.371094 10.640625 4.808594 Z M 10.640625 4.808594 "/>
+<path style="fill-rule:nonzero;fill:url(#linear2);stroke-width:1.8768;stroke-linecap:round;stroke-linejoin:round;stroke:url(#linear3);stroke-miterlimit:4;" d="M 34.081474 7.648075 C 46.690462 7.548856 60.878673 34.445274 60.878673 34.445274 C 60.878673 34.445274 46.78968 61.035769 34.180692 61.143255 C 21.571704 61.242474 7.391761 34.354324 7.391761 34.354324 C 7.391761 34.354324 21.480754 7.755561 34.081474 7.648075 Z M 34.081474 7.648075 " transform="matrix(0.472443,0,0,0.472443,0,0)"/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 15.976562 21.445312 C 15.519531 20.992188 15.125 20.480469 14.800781 19.925781 C 13.960938 18.484375 13.816406 17.070312 13.792969 16.277344 C 13.792969 16.277344 13.90625 12.800781 15.933594 11.035156 L 15 10.101562 C 15 10.101562 12.472656 13.0625 12.472656 15.65625 C 12.421875 16.429688 12.476562 17.207031 12.632812 17.96875 C 13.101562 20.199219 14.355469 21.679688 15.046875 22.375 Z M 15.976562 21.445312 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 18.027344 19.390625 L 17.113281 20.308594 C 17.113281 20.308594 15.125 18.5625 15.453125 15.59375 C 15.453125 15.59375 15.496094 13.882812 17.085938 12.1875 L 17.996094 13.097656 C 17.996094 13.097656 16.613281 14.382812 16.746094 16.539062 C 16.746094 16.539062 16.789062 18.152344 18.027344 19.390625 Z M 18.027344 19.390625 "/>
+<path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 18.386719 15.355469 C 18.875 14.871094 19.660156 14.871094 20.148438 15.355469 C 20.632812 15.84375 20.632812 16.628906 20.148438 17.117188 C 19.660156 17.601562 18.875 17.601562 18.386719 17.117188 C 17.902344 16.628906 17.902344 15.84375 18.386719 15.355469 Z M 18.386719 15.355469 "/>
+</g>
+</svg>

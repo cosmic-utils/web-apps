@@ -9,7 +9,7 @@
     <url type="donation">https://ko-fi.com/elevenhsoft</url>
 
     <name>COSMIC Web Apps</name>
-    <summary>Web App Manager written in rust</summary>
+    <summary>Web applications at your fingertips</summary>
 
     <metadata_license>MIT</metadata_license>
     <project_license>GPL-3.0-only</project_license>
@@ -36,14 +36,14 @@
             <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-dark.png</image>
             <caption>Installed apps</caption>
         </screenshot>
-        <screenshot>
-            <image xml:lang="en">
+        <screenshot xml:lang="en">
+            <image>
                 https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-creator.png
             </image>
             <caption>Creator</caption>
         </screenshot>
-        <screenshot>
-            <image xml:lang="en">
+        <screenshot xml:lang="en">
+            <image>
                 https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.0/res/screenshots/window-icon-picker.png
             </image>
             <caption>Icon Picker</caption>

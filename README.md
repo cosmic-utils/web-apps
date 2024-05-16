@@ -1,7 +1,7 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <div align="center">
   <br>
-  <img alt="COSMIC Web Apps" src="https://raw.githubusercontent.com/elevenhsoft/WebApps/master/data/io.github.elevenhsoft.WebApps.png" width="192" />
+  <img alt="COSMIC Web Apps" src="https://raw.githubusercontent.com/elevenhsoft/WebApps/master/res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.svg" width="192" />
   <h1>COSMIC Web Apps</h1>
 
   <h3>Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from

@@ -10,15 +10,15 @@ bin-src := 'target' / 'release' / name
 bin-dst := base-dir / 'bin' / name
 
 desktop := APPID + '.desktop'
-desktop-src := 'data' / desktop
+desktop-src := 'res' / desktop
 desktop-dst := base-dir / 'share' / 'applications' / desktop
 
 metainfo := APPID + '.metainfo.xml'
-metainfo-src := 'data' / metainfo
+metainfo-src := 'res' / metainfo
 metainfo-dst := base-dir / 'share' / 'metainfo' / metainfo
 
-icon-src := 'data' / APPID + '.png'
-icon-dst := base-dir / 'share' / 'icons' / APPID + '.png'
+icons-src := 'res' / 'icons' / 'hicolor'
+icons-dst := clean(rootdir / prefix) / 'share' / 'icons' / 'hicolor'
 
 # Default recipe which runs `just build-release`
 default: build-release
@@ -54,10 +54,13 @@ run *args:
 
 # Installs files
 install:
-     install -Dm0755 {{bin-src}} {{bin-dst}}
-     install -Dm0644 {{desktop-src}} {{desktop-dst}}
-     install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
-     install -Dm0644 {{icon-src}} {{icon-dst}}
+    install -Dm0755 {{bin-src}} {{bin-dst}}
+    install -Dm0644 {{desktop-src}} {{desktop-dst}}
+    install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
+
+    for size in `ls {{icons-src}}`; do \
+        install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.svg" "{{icons-dst}}/$size/apps/{{APPID}}.svg"; \
+    done
 
 
 # Uninstalls installed files
@@ -65,7 +68,6 @@ uninstall:
     rm {{bin-dst}}
     rm {{desktop-dst}}
     rm {{metainfo-dst}}
-    rm {{icon-dst}}
 
 
 # Vendor dependencies locally
