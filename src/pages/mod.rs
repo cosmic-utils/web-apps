@@ -281,7 +281,7 @@ impl Application for Window {
                 } else {
                     self.warning.push_warn(WarnMessages::Duplicate);
                 }
-
+                self.creator_window.edit_mode = false;
                 Command::none()
             }
             Message::DoneEdit => {
