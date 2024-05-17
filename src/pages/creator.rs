@@ -1,16 +1,16 @@
 use cosmic::widget::{text, warning};
 use cosmic::{
     app::{message::app, Message as CosmicMessage},
-    iced::{id, Alignment, Length},
+    iced::{id, Length},
     style, theme,
-    widget::{self, dropdown, toggler, Button, Column, Container, Row, TextInput},
+    widget::{self, dropdown, toggler, Container},
     Command, Element,
 };
 
-use crate::pages::iconpicker::IconType;
 use crate::{
     common::{get_supported_browsers, icon_cache_get, url_valid, Browser, BrowserType},
-    fl, pages,
+    fl,
+    pages::{self, iconpicker::IconType},
     warning::{WarnAction, WarnMessages},
 };
 
@@ -190,12 +190,12 @@ impl AppCreator {
     fn icon_picker_icon(&self, icon: Option<pages::iconpicker::Icon>) -> Element<pages::Message> {
         let ico = if let Some(ico) = icon {
             match ico.icon {
-                IconType::Raster(data) => widget::button(cosmic::widget::image(data))
+                IconType::Raster(data) => widget::button(widget::image(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
                     .style(style::Button::Icon),
 
-                IconType::Svg(data) => widget::button(cosmic::widget::svg(data))
+                IconType::Svg(data) => widget::button(widget::svg(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
                     .style(style::Button::Icon),
@@ -223,18 +223,16 @@ impl AppCreator {
     }
 
     pub fn view(&self, warnings: String) -> Element<pages::Message> {
-        let app_title = TextInput::new(fl!("title"), &self.app_title)
+        let app_title = widget::text_input(fl!("title"), &self.app_title)
             .id(self.app_title_id.clone())
             .on_input(|s| pages::Message::Creator(Message::Title(s)))
             .width(Length::Fill);
-        let app_url = TextInput::new(fl!("url"), &self.app_url)
+        let app_url = widget::text_input(fl!("url"), &self.app_url)
             .id(self.app_url_id.clone())
             .on_input(|s| pages::Message::Creator(Message::Url(s)))
             .width(Length::Fill);
 
-        let mut col = Column::new().spacing(14);
-        col = col.push(app_title);
-        col = col.push(app_url);
+        let app_data_inputs = widget::column().push(app_title).push(app_url).spacing(10);
 
         let download_button = self.download_button();
         let download_button = widget::button(download_button)
@@ -248,17 +246,18 @@ impl AppCreator {
             .height(Length::Fixed(82.))
             .on_press(pages::Message::OpenIconPicker);
 
-        let mut row = Row::new().spacing(12).width(Length::Fill);
+        let row = widget::row()
+            .push(app_data_inputs)
+            .push(download_button)
+            .push(icon)
+            .spacing(10)
+            .width(Length::Fill);
 
-        row = row.push(col);
-        row = row.push(download_button);
-        row = row.push(icon);
-
-        let app_arguments = TextInput::new(fl!("non-standard-arguments"), &self.app_parameters)
+        let app_arguments = widget::text_input(fl!("non-standard-arguments"), &self.app_parameters)
             .on_input(|s| pages::Message::Creator(Message::Arguments(s)))
             .width(Length::Fill);
 
-        let category = dropdown(
+        let categories_dropdown = dropdown(
             &self.app_categories,
             Some(self.selected_category),
             move |index| pages::Message::Creator(Message::Category(index)),
@@ -288,45 +287,47 @@ impl AppCreator {
         .width(Length::Fill);
 
         let save_btn = if self.edit_mode {
-            Button::new(Container::new(text(fl!("edit"))).center_x().center_y())
+            widget::button(Container::new(text(fl!("edit"))).center_x())
                 .on_press(pages::Message::DoneEdit)
                 .width(Length::Fill)
                 .style(theme::Button::Suggested)
         } else {
-            Button::new(Container::new(text(fl!("create"))).center_x().center_y())
+            widget::button(Container::new(text(fl!("create"))).center_x())
                 .on_press(pages::Message::DoneCreate)
                 .width(Length::Fill)
                 .style(theme::Button::Suggested)
         };
 
-        let mut cat_row = Row::new().spacing(20).align_items(Alignment::Center);
-        cat_row = cat_row.push(category);
-        cat_row = cat_row.push(browser_specific);
-        cat_row = cat_row.push(save_btn);
+        let first_row = widget::row()
+            .push(categories_dropdown)
+            .push(browser_specific)
+            .push(save_btn)
+            .spacing(10);
 
         let app_browsers = dropdown(&self.app_browsers, self.selected_browser, |idx| {
             pages::Message::Creator(Message::Browser(idx))
         })
         .width(Length::Fixed(200.));
 
-        let creator_close = Button::new(Container::new(text(fl!("close"))).center_x().center_y())
+        let creator_close = widget::button(Container::new(text(fl!("close"))).center_x())
             .on_press(pages::Message::CloseCreator)
             .width(Length::Fill);
 
-        let mut browsers_row = Row::new().spacing(20);
-        browsers_row = browsers_row.push(app_browsers);
-        browsers_row = browsers_row.push(incognito);
-        browsers_row = browsers_row.push(creator_close);
+        let end_row = widget::row()
+            .push(app_browsers)
+            .push(incognito)
+            .push(creator_close)
+            .spacing(10);
 
-        let mut col = Column::new().spacing(20).padding(30);
+        let view_column = widget::column()
+            .push(warning(warnings))
+            .push(row)
+            .push(app_arguments)
+            .push(first_row)
+            .push(end_row)
+            .spacing(10)
+            .padding(30);
 
-        col = col.push(warning(warnings));
-
-        col = col.push(row);
-        col = col.push(app_arguments);
-        col = col.push(cat_row);
-        col = col.push(browsers_row);
-
-        Container::new(col).max_width(1000).into()
+        Container::new(view_column).max_width(1000).into()
     }
 }

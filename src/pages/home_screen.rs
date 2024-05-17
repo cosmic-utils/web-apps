@@ -4,12 +4,12 @@ use crate::{
     pages::{Buttons, Message},
 };
 
-use cosmic::widget::inline_input;
+use cosmic::widget::{column, inline_input};
 use cosmic::{
     iced::Alignment,
     iced_widget::Scrollable,
     style, theme,
-    widget::{self, text, Column, Container, Row},
+    widget::{self, text, Container},
     Element,
 };
 
@@ -28,11 +28,12 @@ impl Home {
     }
 
     pub fn view(&self) -> Element<Message> {
-        let mut app_list = Column::new().spacing(12).align_items(Alignment::Center);
+        let mut app_list = column().spacing(12).align_items(Alignment::Center);
         let webapps = get_webapps();
 
         for app in webapps.iter().flatten() {
-            let num = Container::new(inline_input(app.web_browser.name.clone()).width(120));
+            let used_browser =
+                Container::new(inline_input(app.web_browser.name.clone()).width(120));
 
             let app_name = Container::new(inline_input(app.name.clone()));
 
@@ -46,24 +47,22 @@ impl Home {
                 .padding(8)
                 .style(style::Button::Icon);
 
-            let mut row = Row::new().spacing(10);
-            let mut row2 = Row::new().spacing(10);
+            let row = cosmic::widget::row()
+                .spacing(10)
+                .push(used_browser)
+                .push(app_name);
+            let row2 = cosmic::widget::row().spacing(10).push(edit).push(delete);
 
-            row = row.push(num);
-            row = row.push(app_name);
-
-            row2 = row2.push(edit);
-            row2 = row2.push(delete);
             app_list = app_list.push(
-                Container::new(Row::new().push(row).push(row2)).style(theme::Container::List),
+                Container::new(cosmic::widget::row().push(row).push(row2))
+                    .style(theme::Container::List),
             );
         }
 
-        let mut final_content = Column::new().spacing(20).align_items(Alignment::Center);
+        let mut final_content = column().spacing(20).align_items(Alignment::Center);
 
         if !webapps.is_empty() {
-            let scrollable_list = Container::new(Scrollable::new(app_list));
-            final_content = final_content.push(scrollable_list);
+            final_content = final_content.push(Scrollable::new(app_list));
         } else {
             final_content = final_content.push(text(fl!("not-installed-header")).size(20));
         };

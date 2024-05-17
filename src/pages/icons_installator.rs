@@ -1,7 +1,7 @@
 use crate::{fl, pages::Message};
 
 use cosmic::{
-    widget::{text, Column, Container},
+    widget::{self, text, Container},
     Element,
 };
 
@@ -17,10 +17,7 @@ impl Installator {
         let header = text(fl!("icons-installer-header")).size(20);
         let info_message = text(fl!("icons-installer-message"));
 
-        let mut column = Column::new().spacing(10);
-
-        column = column.push(header);
-        column = column.push(info_message);
+        let column = widget::column().spacing(10).push(header).push(info_message);
 
         Container::new(column).padding(30).max_width(1000).into()
     }

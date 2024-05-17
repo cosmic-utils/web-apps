@@ -2,7 +2,7 @@ use cosmic::{
     iced::Length,
     iced_widget::Scrollable,
     theme,
-    widget::{self, flex_row, text, Button, Column, Container, Row, TextInput},
+    widget::{self, flex_row, text, text_input, Container},
     Element,
 };
 
@@ -18,7 +18,7 @@ pub struct IconPicker {
 
 impl IconPicker {
     pub fn view(&self) -> Element<Message> {
-        let search_field = TextInput::new(fl!("icon-name-to-find"), &self.icon_searching)
+        let search_field = text_input(fl!("icon-name-to-find"), &self.icon_searching)
             .on_input(Message::CustomIconsSearch)
             .on_submit(Message::PerformIconSearch)
             .width(Length::FillPortion(3));
@@ -39,21 +39,22 @@ impl IconPicker {
             .padding(8)
             .width(Length::FillPortion(1));
 
-        let mut controls = Row::new().spacing(10);
-        controls = controls.push(search_field);
-        controls = controls.push(my_icons_btn);
-        controls = controls.push(custom_icon_btn);
+        let controls = widget::row()
+            .spacing(10)
+            .push(search_field)
+            .push(my_icons_btn)
+            .push(custom_icon_btn);
 
         let mut items: Vec<Element<Message>> = Vec::new();
 
         for ico in self.icons.iter() {
             let btn = match ico.clone().icon {
-                IconType::Raster(icon) => Button::new(cosmic::widget::image(icon))
+                IconType::Raster(icon) => widget::button(widget::image(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
                     .on_press(Message::ChangeIcon(ico.clone()))
                     .style(theme::Button::Icon),
-                IconType::Svg(icon) => Button::new(cosmic::widget::svg(icon))
+                IconType::Svg(icon) => widget::button(widget::svg(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
                     .on_press(Message::ChangeIcon(ico.clone()))
@@ -70,7 +71,7 @@ impl IconPicker {
                 .height(Length::Fill)
         };
 
-        let final_column = Column::new().push(controls).push(container).spacing(10);
+        let final_column = widget::column().push(controls).push(container).spacing(10);
 
         Container::new(final_column)
             .padding(30)
