@@ -56,7 +56,7 @@ pub fn icon_pack_installed() -> bool {
         };
     }
 
-    directories > 2
+    directories > 0
 }
 
 pub async fn add_icon_packs_install_script() -> String {
