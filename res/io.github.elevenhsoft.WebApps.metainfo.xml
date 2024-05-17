@@ -51,8 +51,8 @@
     </screenshots>
 
     <branding>
-        <color type="primary" scheme_preference="light">#578383</color>
-        <color type="primary" scheme_preference="dark">#417676</color>
+        <color type="primary" scheme_preference="light">#94ebeb</color>
+        <color type="primary" scheme_preference="dark">#578383</color>
     </branding>
 
     <releases>
