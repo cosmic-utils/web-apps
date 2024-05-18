@@ -19,7 +19,7 @@ select-browser=Изабери Претраживач
 installed-header=Имаш { $number } Веб Апликација инсталирано:
 not-installed-header=Немаш инсталираних Веб Апликација. Користи дугме "Креирај" да додаш једну.
 
-#creator.rs
+# creator.rs
 web=Веб
 accessories=Accessories
 education=Образовање
