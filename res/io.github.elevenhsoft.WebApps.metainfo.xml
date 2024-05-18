@@ -20,6 +20,12 @@
             choice.
             Works on most mainstream desktop environments with all the mainstream web browsers installed via flatpak.
         </p>
+        <p>Important!</p>
+        <p>Starting from version 0.4.2 we moved some locations. What did it change? It breaks current created apps (only once, I promise!). Also requires some manual intervention to makes web apps working with flatpak browsers. You need to allow your flatpak browser of choice for read/write permission to our COSMIC Web Apps directory for creating browser profiles. If you don't know how to do it. Use Flatseal for adding filesystem permissions, or use flatpak overrides.</p>
+        <p>For firefox you would run command:</p>
+        <p>flatpak --user override --filesystem=~/.local/share/cosmic-webapps org.mozilla.firefox</p>
+        <p>For others, this is the same command, but different browser ID</p>
+        <p>That's all! Sorry for this change but it was required</p>
         <ul>
             <li>Fast and easy to use</li>
             <li>Works out of the box</li>
