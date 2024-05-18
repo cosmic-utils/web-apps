@@ -32,6 +32,12 @@ For Mozilla Firefox, run this command:
 
 `flatpak override --filesystem=~/.local/share/cosmic-webapps org.mozilla.firefox`
 
+or 
+
+`flatpak --user override --filesystem=~/.local/share/cosmic-webapps org.mozilla.firefox`
+
+for user installation.
+
 If you aren't familiar with cli and terminal, still you can use GUI for this process, just use this awesome tool: [Flatseal](https://github.com/tchx84/Flatseal)
 
 
