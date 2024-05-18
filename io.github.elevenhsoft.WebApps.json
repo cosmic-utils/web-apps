@@ -16,7 +16,8 @@
         "--filesystem=/var/lib/flatpak:ro",
         "--filesystem=~/.local/share/flatpak:ro",
         "--filesystem=~/.local/share/applications:rw",
-        "--filesystem=~/.var/app:rw"
+        "--filesystem=~/.local/share/icons:create",
+        "--filesystem=~/.local/share/cosmic-webapps:create"
     ],
     "build-options": {
         "append-path": "/usr/lib/sdk/rust-stable/bin"
