@@ -88,6 +88,12 @@ pub fn my_icons_location() -> PathBuf {
     icons_location().join("CosmicWebApps")
 }
 
+pub fn ice_profiles_directory() -> PathBuf {
+    let mut home_dir = home_dir();
+    home_dir.push(".local/share");
+    home_dir.join("cosmic-webapps")
+}
+
 pub fn webapplauncher_is_valid(
     webbrowser: &Browser,
     icon: &str,
@@ -311,18 +317,10 @@ impl WebAppLauncher {
         }
     }
 
-    fn exec_firefox(&self, fork: &str) -> String {
-        let mut profile_dir = home_dir();
+    fn exec_firefox(&self) -> String {
+        let mut profile_dir = ice_profiles_directory();
+        profile_dir.push("firefox");
 
-        if fork == "firefox" {
-            profile_dir.push(".var/app/org.mozilla.firefox/data/ice/firefox");
-        } else if fork == "librewolf" {
-            profile_dir.push(".var/app/io.gitlab.librewolf-community/data/ice/librewolf");
-        } else if fork == "waterfox" {
-            profile_dir.push(".var/app/net.waterfox.waterfox/data/ice/waterfox");
-        } else if fork == "floorp" {
-            profile_dir.push(".var/app/one.ablaze.floorp/data/ice/floorp");
-        };
 
         let profile_path = profile_dir.join(&self.codename);
         let user_js_path = profile_path.join("user.js");
@@ -365,13 +363,11 @@ impl WebAppLauncher {
         );
 
         if self.isolate_profile {
-            let mut profile_dir = PathBuf::new();
+            let mut profile_dir = ice_profiles_directory();
+            profile_dir.push("chromium");
+            profile_dir.push(&self.codename);
 
-            let mut xdg_data_home = home_dir();
-            xdg_data_home.push(".local/share");
-            let ice_dir = xdg_data_home.join("ice");
-            profile_dir.push(ice_dir.join("profiles").join(&self.codename));
-
+            let _ = create_dir_all(&profile_dir);
             let profile_path = profile_dir.to_str().unwrap();
             exec_string.push_str(&format!("--user-data-dir={} ", profile_path));
         }
@@ -395,12 +391,11 @@ impl WebAppLauncher {
         let mut exec_string = String::new();
 
         if self.isolate_profile {
-            let mut profile_dir = PathBuf::new();
+            let mut profile_dir = ice_profiles_directory();
+            profile_dir.push("falkon");
+            profile_dir.push(&self.codename);
 
-            let mut xdg_data_home = home_dir();
-            xdg_data_home.push(".local/share");
-            let ice_dir = xdg_data_home.join("ice");
-            profile_dir.push(ice_dir.join("profiles").join(&self.codename));
+            let _ = create_dir_all(&profile_dir);
 
             let profile_path = profile_dir.to_str().unwrap();
 
@@ -425,11 +420,11 @@ impl WebAppLauncher {
 
     fn exec_string(&self) -> String {
         match self.web_browser._type {
-            BrowserType::Firefox => self.exec_firefox("firefox"),
-            BrowserType::FirefoxFlatpak => self.exec_firefox("firefox"),
-            BrowserType::Librewolf => self.exec_firefox("librewolf"),
-            BrowserType::WaterfoxFlatpak => self.exec_firefox("waterfox"),
-            BrowserType::Floorp => self.exec_firefox("floorp"),
+            BrowserType::Firefox => self.exec_firefox(),
+            BrowserType::FirefoxFlatpak => self.exec_firefox(),
+            BrowserType::Librewolf => self.exec_firefox(),
+            BrowserType::WaterfoxFlatpak => self.exec_firefox(),
+            BrowserType::Floorp => self.exec_firefox(),
             BrowserType::Chromium => self.exec_chromium(),
             BrowserType::Falkon => self.exec_falkon(),
             _ => String::new(),
