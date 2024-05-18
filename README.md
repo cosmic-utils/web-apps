@@ -24,7 +24,7 @@ given url working inside separate window of your browser of choice.</h3>
 
 Starting with version `0.4.2` we moved some locations. Icons are now stored (and also downloaded) to `~/.local/share/icons` directory, COSMIC Web Apps specific directory for storing icons for will be placed in `~/.local/share/icons/CosmicWebApps` path. The pros of this change is that, this location is standard for Linux to user-wide icons installation, so if you have more icons pack installed on your system, they can be used in COSMIC Web Apps.
 
-Profiles directories are now stored also in one place. This is `~/.local/share/cosmic-webapps path`. There will be created directory for browser (firefox/chromium) and there will be stored profiles for your web apps. Unfortunately, this require some manual intervention. Since, flatpak is sandboxed, it's require permissions for everything. We can't control others app permissions, so user must run one command, to allow reading and writing to our directory.
+Profiles directories are now stored also in one place. This is `~/.local/share/cosmic-webapps` path. There will be created directory for browser (firefox/chromium) and there will be stored profiles for your web apps. Unfortunately, this require some manual intervention. Since, flatpak is sandboxed, it's require permissions for everything. We can't control others app permissions, so user must run one command, to allow reading and writing to our directory.
 
 ## Example
 
