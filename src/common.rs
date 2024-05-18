@@ -310,12 +310,15 @@ impl WebAppLauncher {
 
     fn exec_firefox(&self, fork: &str) -> String {
         let mut profile_dir = home_dir();
+
         if fork == "firefox" {
             profile_dir.push(".var/app/org.mozilla.firefox/data/ice/firefox");
         } else if fork == "librewolf" {
             profile_dir.push(".var/app/io.gitlab.librewolf-community/data/ice/librewolf");
         } else if fork == "waterfox" {
             profile_dir.push(".var/app/net.waterfox.waterfox/data/ice/waterfox");
+        } else if fork == "floorp" {
+            profile_dir.push(".var/app/one.ablaze.floorp/data/ice/floorp");
         };
 
         let profile_path = profile_dir.join(&self.codename);
@@ -423,6 +426,7 @@ impl WebAppLauncher {
             BrowserType::FirefoxFlatpak => self.exec_firefox("firefox"),
             BrowserType::Librewolf => self.exec_firefox("librewolf"),
             BrowserType::WaterfoxFlatpak => self.exec_firefox("waterfox"),
+            BrowserType::Floorp => self.exec_firefox("floorp"),
             BrowserType::Chromium => self.exec_chromium(),
             BrowserType::Falkon => self.exec_falkon(),
             _ => String::new(),
@@ -533,6 +537,7 @@ pub enum BrowserType {
     FirefoxFlatpak,
     Librewolf,
     WaterfoxFlatpak,
+    Floorp,
     Chromium,
     Falkon,
 }

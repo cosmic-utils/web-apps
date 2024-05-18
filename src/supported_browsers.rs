@@ -229,14 +229,14 @@ pub fn flatpak_browsers() -> Vec<Browser> {
         Browser::new(
             BrowserType::Chromium,
             "Ungoogled Chromium",
-            "/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
-            "/var/lib/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
+            "/var/lib/flatpak/exports/bin/io.github.ungoogled_software.ungoogled_chromium",
+            "/var/lib/flatpak/exports/bin/io.github.ungoogled_software.ungoogled_chromium",
         ),
         Browser::new(
             BrowserType::Chromium,
             "Ungoogled Chromium",
-            ".local/share/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
-            ".local/share/flatpak/exports/bin/com.github.Eloston.UngoogledChromium",
+            ".local/share/flatpak/exports/bin/io.github.ungoogled_software.ungoogled_chromium",
+            ".local/share/flatpak/exports/bin/io.github.ungoogled_software.ungoogled_chromium",
         ),
         Browser::new(
             BrowserType::Chromium,
@@ -297,6 +297,18 @@ pub fn flatpak_browsers() -> Vec<Browser> {
             "Yandex",
             ".local/share/flatpak/exports/bin/ru.yandex.Browser",
             ".local/share/flatpak/exports/bin/ru.yandex.Browser",
+        ),
+        Browser::new(
+            BrowserType::Floorp,
+            "Floorp",
+            "/var/lib/flatpak/exports/bin/one.ablaze.floorp",
+            "/var/lib/flatpak/exports/bin/one.ablaze.floorp",
+        ),
+        Browser::new(
+            BrowserType::Floorp,
+            "Floorp",
+            ".local/share/flatpak/exports/bin/one.ablaze.floorp",
+            ".local/share/flatpak/exports/bin/one.ablaze.floorp",
         ),
     ]
 }

@@ -274,6 +274,7 @@ impl AppCreator {
             BrowserType::FirefoxFlatpak => navbar_toggle,
             BrowserType::Librewolf => navbar_toggle,
             BrowserType::WaterfoxFlatpak => navbar_toggle,
+            BrowserType::Floorp => navbar_toggle,
 
             _ => toggler(fl!("isolated-profile"), self.app_isolated, |b| {
                 pages::Message::Creator(Message::Clicked(Buttons::IsolatedProfile(b)))
