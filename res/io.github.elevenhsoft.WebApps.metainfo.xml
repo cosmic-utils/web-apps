@@ -58,6 +58,15 @@
     </branding>
 
     <releases>
+        <release version="0.4.2" date="2024-05-18">
+            <description>
+                <p>Layout and styling changes and improvements</p>
+                <p>Breaking change related to locations, please read description or github repo</p>
+                <p>Bug fixes</p>
+                <p>Improvements</p>
+                <p>New translations</p>
+            </description>
+        </release>
         <release version="0.4.1" date="2024-05-16">
             <description>
                 <p>Bug fixes</p>
