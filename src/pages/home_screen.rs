@@ -33,7 +33,7 @@ impl Home {
 
         for app in webapps.iter().flatten() {
             let used_browser =
-                Container::new(inline_input(app.web_browser.name.clone()).width(160));
+                Container::new(inline_input(app.web_browser.name.clone()).width(200));
 
             let app_name = Container::new(inline_input(app.name.clone()));
 
