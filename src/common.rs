@@ -62,27 +62,30 @@ pub fn home_dir() -> PathBuf {
 pub fn desktop_filepath(filename: &str) -> PathBuf {
     let mut home = home_dir();
     home.push(".local/share/applications");
-
     home.join(filename)
 }
 
 pub fn icons_location() -> PathBuf {
-    match std::env::var("FLATPAK_ID") {
-        Ok(_) => {
-            let mut icons_dir = home_dir();
-            icons_dir.push(".var/app/io.github.elevenhsoft.WebApps/data/icons");
-            icons_dir
-        }
-        Err(_) => {
-            let mut test_path = home_dir();
-            test_path.push(".local/share/icons");
-            test_path
-        }
-    }
+    // match std::env::var("FLATPAK_ID") {
+    //     Ok(_) => {
+    //         let mut icons_dir = home_dir();
+    //         icons_dir.push(".var/app/io.github.elevenhsoft.WebApps/data/icons");
+    //         icons_dir
+    //     }
+    //     Err(_) => {
+    //         let mut test_path = home_dir();
+    //         test_path.push(".local/share/icons");
+    //         test_path
+    //     }
+    // }
+
+    let mut test_path = home_dir();
+    test_path.push(".local/share/icons");
+    test_path
 }
 
 pub fn my_icons_location() -> PathBuf {
-    icons_location().join("MyIcons")
+    icons_location().join("CosmicWebApps")
 }
 
 pub fn webapplauncher_is_valid(
