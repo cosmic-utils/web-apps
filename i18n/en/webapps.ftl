@@ -19,7 +19,7 @@ select-browser=Select Browser
 installed-header=You have { $number } web apps installed:
 not-installed-header=You don't have any web app installed. Please, press create button and create one.
 
-#creator.rs
+# creator.rs
 web=Web
 accessories=Accessories
 education=Education
