@@ -88,12 +88,6 @@ pub fn my_icons_location() -> PathBuf {
     icons_location().join("CosmicWebApps")
 }
 
-pub fn ice_profiles_directory() -> PathBuf {
-    let mut home_dir = home_dir();
-    home_dir.push(".local/share");
-    home_dir.join("cosmic-webapps")
-}
-
 pub fn webapplauncher_is_valid(
     webbrowser: &Browser,
     icon: &str,
@@ -318,14 +312,11 @@ impl WebAppLauncher {
     }
 
     fn exec_firefox(&self) -> String {
-        let mut profile_dir = ice_profiles_directory();
-        profile_dir.push("firefox");
-
-
-        let profile_path = profile_dir.join(&self.codename);
+        let profile_path = self.web_browser.profile_path.join(&self.codename);
         let user_js_path = profile_path.join("user.js");
         let mut user_chrome_css = profile_path.join("chrome");
 
+        tracing::info!("Creating profile directory in: {:?}", &profile_path);
         create_dir_all(&profile_path)
             .unwrap_or_else(|_| panic!("cant create profile dir in {:?}", &profile_path));
         create_dir_all(&user_chrome_css)
@@ -363,10 +354,9 @@ impl WebAppLauncher {
         );
 
         if self.isolate_profile {
-            let mut profile_dir = ice_profiles_directory();
-            profile_dir.push("chromium");
-            profile_dir.push(&self.codename);
+            let profile_dir = self.web_browser.profile_path.join(&self.codename);
 
+            tracing::info!("Creating profile directory in: {:?}", &profile_dir);
             let _ = create_dir_all(&profile_dir);
             let profile_path = profile_dir.to_str().unwrap();
             exec_string.push_str(&format!("--user-data-dir={} ", profile_path));
@@ -391,10 +381,8 @@ impl WebAppLauncher {
         let mut exec_string = String::new();
 
         if self.isolate_profile {
-            let mut profile_dir = ice_profiles_directory();
-            profile_dir.push("falkon");
-            profile_dir.push(&self.codename);
-
+            let profile_dir = self.web_browser.profile_path.join(&self.codename);
+            tracing::info!("Creating profile directory in: {:?}", &profile_dir);
             let _ = create_dir_all(&profile_dir);
 
             let profile_path = profile_dir.to_str().unwrap();
@@ -422,12 +410,11 @@ impl WebAppLauncher {
         match self.web_browser._type {
             BrowserType::Firefox => self.exec_firefox(),
             BrowserType::FirefoxFlatpak => self.exec_firefox(),
-            BrowserType::Librewolf => self.exec_firefox(),
-            BrowserType::WaterfoxFlatpak => self.exec_firefox(),
-            BrowserType::Floorp => self.exec_firefox(),
             BrowserType::Chromium => self.exec_chromium(),
+            BrowserType::ChromiumFlatpak => self.exec_chromium(),
             BrowserType::Falkon => self.exec_falkon(),
-            _ => String::new(),
+            BrowserType::FalkonFlatpak => self.exec_falkon(),
+            BrowserType::NoBrowser => String::new(),
         }
     }
 
@@ -473,25 +460,13 @@ impl WebAppLauncher {
             }
         }
 
-        let mut profile_dir = home_dir();
+        let profile_path = self.web_browser.profile_path.join(&self.codename);
 
-        match self.web_browser._type {
-            BrowserType::FirefoxFlatpak => {
-                profile_dir.push(".var/app/org.mozilla.firefox/data/ice/firefox")
-            }
-            BrowserType::Librewolf => {
-                profile_dir.push(".var/app/io.gitlab.librewolf-community/data/ice/librewolf")
-            }
-            BrowserType::WaterfoxFlatpak => {
-                profile_dir.push(".var/app/net.waterfox.waterfox/data/ice/waterfox")
-            }
-            _ => {}
-        };
-
-        let profile_path = profile_dir.join(&self.codename);
-
-        if remove_dir_all(profile_path).is_ok() {
-            tracing::info!("Removed firefox profile directory.");
+        if remove_dir_all(&profile_path).is_ok() {
+            tracing::info!(
+                "Removed profile directory, from: {}",
+                profile_path.to_str().unwrap()
+            );
         };
 
         Ok(())
@@ -533,11 +508,10 @@ pub enum BrowserType {
     NoBrowser,
     Firefox,
     FirefoxFlatpak,
-    Librewolf,
-    WaterfoxFlatpak,
-    Floorp,
     Chromium,
+    ChromiumFlatpak,
     Falkon,
+    FalkonFlatpak,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -545,7 +519,8 @@ pub struct Browser {
     pub _type: BrowserType,
     pub name: String,
     pub exec: String,
-    test: PathBuf,
+    pub test: PathBuf,
+    pub profile_path: PathBuf,
 }
 
 impl AsRef<str> for Browser {
@@ -555,7 +530,13 @@ impl AsRef<str> for Browser {
 }
 
 impl Browser {
-    pub fn new(_type: BrowserType, name: &str, exec: &str, test_path: &str) -> Self {
+    pub fn new(
+        _type: BrowserType,
+        name: &str,
+        exec: &str,
+        test_path: &str,
+        profile_path: &str,
+    ) -> Self {
         let name = name.to_string();
 
         let mut test = PathBuf::new();
@@ -582,11 +563,14 @@ impl Browser {
 
         let exec = exe_path.to_str().unwrap().to_string();
 
+        let profile_path = base.join(profile_path);
+
         Self {
             _type,
             name,
             exec,
             test,
+            profile_path,
         }
     }
 
@@ -627,6 +611,7 @@ pub fn get_supported_browsers() -> Vec<Browser> {
         browsers.push(Browser::new(
             BrowserType::NoBrowser,
             &fl!("select-browser"),
+            "",
             "",
             "",
         ));
