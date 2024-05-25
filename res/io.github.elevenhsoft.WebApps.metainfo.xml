@@ -52,6 +52,11 @@
     </branding>
 
     <releases>
+        <release version="0.4.5" date="2024-05-25">
+            <description>
+                <p>Add spanish translation</p>
+            </description>
+        </release>
         <release version="0.4.4" date="2024-05-22">
             <description>
                 <p>Add italian translation</p>
