@@ -386,7 +386,7 @@ pub fn nix_browsers() -> Vec<Browser> {
         ),        
         Browser::new(
             BrowserType::Chromium,
-            "Brave Browser",
+            "Brave",
             "brave",
             "/run/current-system/sw/bin/brave",
             ".local/share/cosmic-webapps/chromium",
