@@ -367,3 +367,92 @@ pub fn flatpak_browsers() -> Vec<Browser> {
         ),
     ]
 }
+
+pub fn nix_browsers() -> Vec<Browser> {
+    vec![
+        Browser::new(
+            BrowserType::Firefox,
+            "Firefox",
+            "firefox",
+            "/run/current-system/sw/bin/firefox",
+            ".local/share/cosmic-webapps/firefox",
+        ),
+        Browser::new(
+            BrowserType::Firefox,
+            "Floorp",
+            "floorp",
+            "/run/current-system/sw/bin/floorp",
+            ".local/share/cosmic-webapps/firefox",
+        ),        
+        Browser::new(
+            BrowserType::Chromium,
+            "Brave",
+            "brave",
+            "/run/current-system/sw/bin/brave",
+            ".local/share/cosmic-webapps/chromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Chrome",
+            "google-chrome-stable",
+            "/run/current-system/sw/bin/google-chrome-stable",
+            ".local/share/cosmic-webapps/chromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Chromium",
+            "chromium",
+            "/run/current-system/sw/bin/chromium",
+            ".local/share/cosmic-webapps/chromium",
+        ),
+        Browser::new(
+            BrowserType::Firefox,
+            "Librewolf",
+            "librewolf",
+            "/run/current-system/sw/bin/librewolf",
+            ".local/share/cosmic-webapps/firefox",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Vivaldi",
+            "vivaldi-stable",
+            "/run/current-system/sw/bin/vivaldi",
+            ".local/share/cosmic-webapps/chromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Microsoft Edge",
+            "microsoft-edge-stable",
+            "/run/current-system/sw/bin/microsoft-edge-stable",
+            ".local/share/cosmic-webapps/chromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Microsoft Edge Beta",
+            "microsoft-edge-beta",
+            "/run/current-system/sw/bin/microsoft-edge-beta",
+            ".local/share/cosmic-webapps/chromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Microsoft Edge Dev",
+            "microsoft-edge-dev",
+            "/run/current-system/sw/bin/microsoft-edge-dev",
+            ".local/share/cosmic-webapps/chromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Yandex",
+            "yandex-browser",
+            "/run/current-system/sw/bin/yandex-browser",
+            ".local/share/cosmic-webapps/chromium",
+        ),
+        Browser::new(
+            BrowserType::Falkon,
+            "Falkon",
+            "falkon",
+            "/run/current-system/sw/bin/falkon",
+            ".local/share/cosmic-webapps/falkon",
+        ),
+    ]
+}

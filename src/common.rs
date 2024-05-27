@@ -29,7 +29,7 @@ use crate::{
     fl,
     icon_cache::IconCache,
     pages,
-    supported_browsers::{flatpak_browsers, native_browsers},
+    supported_browsers::{flatpak_browsers, native_browsers, nix_browsers},
 };
 
 lazy_static::lazy_static! {
@@ -589,9 +589,11 @@ pub fn get_supported_browsers() -> Vec<Browser> {
 
     let native_browsers = native_browsers();
     let flatpak_browsers = flatpak_browsers();
+    let nix_browsers: Vec<Browser> =  nix_browsers();
 
     test_browsers.extend(native_browsers);
     test_browsers.extend(flatpak_browsers);
+    test_browsers.extend(nix_browsers);
 
     let mut browsers = Vec::new();
 
