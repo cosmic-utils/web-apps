@@ -72,6 +72,7 @@ pub enum Message {
     Warning((WarnAction, WarnMessages)),
 
     // Installator
+    DownloadIconsPack,
     InstallScript(String),
     InstallCommand(ExitStatus),
 }
@@ -116,17 +117,6 @@ impl Application for Window {
         let manager = Home::new();
         let creator = creator::AppCreator::new();
         let selector = IconPicker::default();
-
-        // let (page, cmd) = if !icon_pack_installed() {
-        //     let cmd = Command::perform(add_icon_packs_install_script(), |file| {
-        //         app(Message::InstallScript(file))
-        //     });
-
-        //     let installator = Installator::new();
-        //     (Pages::IconInstallator(installator), cmd)
-        // } else {
-        //     (Pages::MainWindow, Command::none())
-        // };
 
         let warn_element = Warning::new(Vec::new());
 
@@ -478,7 +468,14 @@ impl Application for Window {
 
                 Command::none()
             }
+            Message::DownloadIconsPack => {
+                let installator = Installator::new();
+                self.current_page = Pages::IconInstallator(installator);
 
+                Command::perform(add_icon_packs_install_script(), |file| {
+                    app(Message::InstallScript(file))
+                })
+            }
             Message::InstallScript(script) => {
                 if !icon_pack_installed() {
                     return Command::perform(execute_script(script), |status| {

@@ -6,7 +6,7 @@ use cosmic::{
     Element,
 };
 
-use crate::{fl, pages::Message};
+use crate::{fl, icon_pack_installed, pages::Message};
 
 #[derive(Debug, Clone, Default)]
 pub struct IconPicker {
@@ -39,11 +39,20 @@ impl IconPicker {
             .padding(8)
             .width(Length::FillPortion(1));
 
-        let controls = widget::row()
+        let mut controls = widget::row()
             .spacing(10)
             .push(search_field)
             .push(my_icons_btn)
             .push(custom_icon_btn);
+
+        if !icon_pack_installed() {
+            controls = controls.push(
+                widget::button(text(fl!("download")))
+                    .on_press(Message::DownloadIconsPack)
+                    .padding(8)
+                    .width(Length::FillPortion(1)),
+            );
+        }
 
         let mut items: Vec<Element<Message>> = Vec::new();
 

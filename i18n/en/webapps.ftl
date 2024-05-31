@@ -43,6 +43,7 @@ private-mode=Private Mode
 # iconpicker.rs
 icon-name-to-find=Icon name to find
 my-icons=My icons
+download=Download
 
 # icons_installator.rs
 icons-installer-header=Please wait. Downloading icons...

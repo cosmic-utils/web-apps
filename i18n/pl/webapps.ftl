@@ -43,6 +43,7 @@ private-mode=Tryb prywatny
 # iconpicker.rs
 icon-name-to-find=Nazwa ikony do znalezienia
 my-icons=Moje ikony
+download=Pobierz
 
 # icons_installator.rs
 icons-installer-header=Proszę czekać. Trwa pobieranie ikon...
