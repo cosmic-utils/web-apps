@@ -117,30 +117,30 @@ impl Application for Window {
         let creator = creator::AppCreator::new();
         let selector = IconPicker::default();
 
-        let (page, cmd) = if !icon_pack_installed() {
-            let cmd = Command::perform(add_icon_packs_install_script(), |file| {
-                app(Message::InstallScript(file))
-            });
+        // let (page, cmd) = if !icon_pack_installed() {
+        //     let cmd = Command::perform(add_icon_packs_install_script(), |file| {
+        //         app(Message::InstallScript(file))
+        //     });
 
-            let installator = Installator::new();
-            (Pages::IconInstallator(installator), cmd)
-        } else {
-            (Pages::MainWindow, Command::none())
-        };
+        //     let installator = Installator::new();
+        //     (Pages::IconInstallator(installator), cmd)
+        // } else {
+        //     (Pages::MainWindow, Command::none())
+        // };
 
         let warn_element = Warning::new(Vec::new());
 
         let mut windows = Window {
             core,
             main_window: manager,
-            current_page: page,
+            current_page: Pages::MainWindow,
             creator_window: creator,
             icon_selector: selector,
             dialog_opt: None,
             warning: warn_element,
         };
 
-        let commands = Command::batch(vec![windows.set_title(), cmd]);
+        let commands = Command::batch(vec![windows.set_title()]);
 
         (windows, commands)
     }

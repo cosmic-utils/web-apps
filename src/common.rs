@@ -66,22 +66,15 @@ pub fn desktop_filepath(filename: &str) -> PathBuf {
 }
 
 pub fn icons_location() -> PathBuf {
-    // match std::env::var("FLATPAK_ID") {
-    //     Ok(_) => {
-    //         let mut icons_dir = home_dir();
-    //         icons_dir.push(".var/app/io.github.elevenhsoft.WebApps/data/icons");
-    //         icons_dir
-    //     }
-    //     Err(_) => {
-    //         let mut test_path = home_dir();
-    //         test_path.push(".local/share/icons");
-    //         test_path
-    //     }
-    // }
+    home_dir().join(".local/share/icons")
+}
 
-    let mut test_path = home_dir();
-    test_path.push(".local/share/icons");
-    test_path
+pub fn system_fonts() -> PathBuf {
+    if let Ok(path) = PathBuf::from_str("/usr/share/icons") {
+        path
+    } else {
+        PathBuf::new()
+    }
 }
 
 pub fn my_icons_location() -> PathBuf {
@@ -589,7 +582,7 @@ pub fn get_supported_browsers() -> Vec<Browser> {
 
     let native_browsers = native_browsers();
     let flatpak_browsers = flatpak_browsers();
-    let nix_browsers: Vec<Browser> =  nix_browsers();
+    let nix_browsers: Vec<Browser> = nix_browsers();
 
     test_browsers.extend(native_browsers);
     test_browsers.extend(flatpak_browsers);
@@ -638,22 +631,35 @@ pub fn get_icon_name_from_url(url: &str) -> String {
 pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
     let mut icons: Vec<String> = Vec::new();
 
-    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(&path).into_iter().filter_map(|e| e.ok()) {
         if let Some(filename) = entry.file_name().to_str() {
             if filename.contains(&icon_name) {
-                if let Some(path) = entry.path().to_str() {
-                    if let Ok(buffer) = tokio::fs::read_to_string(&mut path.to_string()).await {
-                        let options = usvg::Options::default();
-                        if let Ok(parsed) =
-                            usvg::Tree::from_str(&buffer, &options, &fontdb::Database::new())
-                        {
-                            let size = parsed.size();
-                            if size.width() >= 64.0
-                                && size.height() >= 64.0
-                                && !icons.contains(&path.to_string())
+                if is_svg(filename) {
+                    if let Some(path) = entry.path().to_str() {
+                        if let Ok(buffer) = tokio::fs::read_to_string(&mut path.to_string()).await {
+                            let options = usvg::Options::default();
+                            if let Ok(parsed) =
+                                usvg::Tree::from_str(&buffer, &options, &fontdb::Database::new())
                             {
-                                icons.push(path.to_string())
+                                let size = parsed.size();
+                                if size.width() >= 64.0
+                                    && size.height() >= 64.0
+                                    && !icons.contains(&path.to_string())
+                                {
+                                    icons.push(path.to_string())
+                                }
                             }
+                        }
+                    }
+                } else if let Some(path) = entry.path().to_str() {
+                    let image = ImageReader::open(path).unwrap().decode();
+
+                    if let Ok(img) = image {
+                        if img.width() >= 64
+                            && img.height() >= 64
+                            && !icons.contains(&path.to_string())
+                        {
+                            icons.push(path.to_string())
                         }
                     }
                 }
@@ -667,7 +673,8 @@ pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
 pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     let mut result: Vec<String> = Vec::new();
 
-    result.extend(find_icon(icons_location(), icon_name).await);
+    result.extend(find_icon(icons_location(), icon_name.clone()).await);
+    result.extend(find_icon(system_fonts(), icon_name).await);
 
     if url_valid(&url) {
         if let Ok(data) = download_favicon(&url).await {
@@ -760,7 +767,19 @@ pub fn move_icon(path: String, output_name: String) -> String {
             // file.write_all(&content).expect("saving image");
         }
     } else if !path.contains(&save_path) {
-        copy(&path, &save_path).expect("saving image");
+        if !is_svg(&path) {
+            let file = File::open(&path);
+            if let Ok(mut opened) = file {
+                let mut buffer = Vec::new();
+                opened.read_to_end(&mut buffer).unwrap();
+
+                let content = Bytes::from(buffer);
+
+                let _ = convert_raster_to_svg_format(content, &save_path);
+            }
+        } else {
+            copy(&path, &save_path).unwrap();
+        }
     }
 
     save_path
