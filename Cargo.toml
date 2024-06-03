@@ -31,6 +31,7 @@ i18n-embed-fl = "0.7.0"
 bytes = "1.6.0"
 svg = "0.17.0"
 base64 = "0.22.1"
+ashpd = { version = "0.8.1", features = ["wayland"] }
 
 [dependencies.i18n-embed]
 version = "0.14.1"
@@ -44,7 +45,3 @@ features = ["tokio", "winit"]
 [features]
 default = ["wgpu"]
 wgpu = ["libcosmic/wgpu"]
-
-[dependencies.cosmic-files]
-git = "https://github.com/pop-os/cosmic-files.git"
-default-features = false

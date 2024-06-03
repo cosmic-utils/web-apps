@@ -3,8 +3,11 @@ pub mod home_screen;
 pub mod iconpicker;
 pub mod icons_installator;
 
+use std::path::PathBuf;
 use std::process::ExitStatus;
+use std::str::FromStr;
 
+use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::iced::alignment::Horizontal;
 use cosmic::iced::Length;
 use cosmic::widget::Container;
@@ -13,13 +16,10 @@ use cosmic::{
         message::{self, app},
         Core, Message as CosmicMessage,
     },
-    cosmic_theme, executor,
-    iced::window,
-    style,
+    cosmic_theme, executor, style,
     widget::{self, text},
     Application, ApplicationExt, Command, Element,
 };
-use cosmic_files::dialog::{Dialog, DialogKind, DialogMessage, DialogResult};
 
 use crate::{
     add_icon_packs_install_script,
@@ -51,8 +51,7 @@ pub enum Message {
     CloseCreator,
     OpenIconPicker,
     OpenIconPickerDialog,
-    DialogIconPicker(DialogMessage),
-    OpenFileResult(DialogResult),
+    OpenFileResult(Vec<String>),
     Creator(creator::Message),
     DoneEdit,
     DoneCreate,
@@ -91,7 +90,6 @@ pub struct Window {
     current_page: Pages,
     creator_window: creator::AppCreator,
     icon_selector: IconPicker,
-    dialog_opt: Option<Dialog<Message>>,
     warning: Warning,
 }
 
@@ -126,7 +124,6 @@ impl Application for Window {
             current_page: Pages::MainWindow,
             creator_window: creator,
             icon_selector: selector,
-            dialog_opt: None,
             warning: warn_element,
         };
 
@@ -209,44 +206,45 @@ impl Application for Window {
                 Command::none()
             }
             Message::OpenIconPickerDialog => {
-                if self.dialog_opt.is_none() {
-                    let (dialog, command) = Dialog::new(
-                        DialogKind::OpenFile,
-                        None,
-                        Message::DialogIconPicker,
-                        Message::OpenFileResult,
-                    );
-                    self.dialog_opt = Some(dialog);
-                    return command;
-                }
-                Command::none()
-            }
-            Message::DialogIconPicker(message) => {
-                if let Some(dialog) = &mut self.dialog_opt {
-                    return dialog.update(message);
-                }
-                Command::none()
+                return Command::perform(
+                    async move {
+                        let result = SelectedFiles::open_file()
+                            .title("Open multiple images")
+                            .accept_label("Attach")
+                            .modal(true)
+                            .multiple(true)
+                            .filter(FileFilter::new("JPEG Image").glob("*.jpg"))
+                            .filter(FileFilter::new("PNG Image").glob("*.png"))
+                            .filter(FileFilter::new("SVG Images").glob("*.svg"))
+                            .send()
+                            .await
+                            .unwrap()
+                            .response();
+
+                        if let Ok(result) = result {
+                            result
+                                .uris()
+                                .iter()
+                                .map(|file| file.path().to_string())
+                                .collect::<Vec<String>>()
+                        } else {
+                            Vec::new()
+                        }
+                    },
+                    |files| cosmic::app::message::app(Message::OpenFileResult(files)),
+                );
             }
             Message::OpenFileResult(result) => {
-                self.dialog_opt = None;
-                match result {
-                    DialogResult::Cancel => {}
-                    DialogResult::Open(paths) => {
-                        for path in paths {
-                            if let Some(str) = path.to_str() {
-                                let icon_name = path.file_stem();
-                                if let Some(file_stem) = icon_name {
-                                    move_icon(
-                                        str.to_string(),
-                                        file_stem.to_str().unwrap().to_string(),
-                                    );
+                for path in result {
+                    if let Ok(buf) = PathBuf::from_str(&path) {
+                        let icon_name = buf.file_stem();
+                        if let Some(file_stem) = icon_name {
+                            move_icon(path.to_string(), file_stem.to_str().unwrap().to_string());
 
-                                    return Command::perform(
-                                        find_icon(my_icons_location(), String::new()),
-                                        |result| app(Message::FoundIcons(result)),
-                                    );
-                                }
-                            }
+                            return Command::perform(
+                                find_icon(my_icons_location(), String::new()),
+                                |result| app(Message::FoundIcons(result)),
+                            );
                         }
                     }
                 }
@@ -509,18 +507,11 @@ impl Application for Window {
             .center_x()
             .into()
     }
-
-    fn view_window(&self, window_id: window::Id) -> Element<Message> {
-        match &self.dialog_opt {
-            Some(dialog) => dialog.view(window_id),
-            None => widget::text("Unknown window ID").into(),
-        }
-    }
 }
 
 impl Window {
     fn set_title(&mut self) -> Command<CosmicMessage<Message>> {
-        self.set_window_title(fl!("app"), self.main_window_id())
+        self.set_window_title(fl!("app"))
     }
     fn create_valid_launcher(&mut self, entry: WebAppLauncher) -> anyhow::Result<()> {
         move_icon(
