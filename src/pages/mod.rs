@@ -254,6 +254,10 @@ impl Application for Window {
                 Command::none()
             }
             Message::EditAppName(flag) => {
+                if !flag {
+                    self.main_window.new_app_name.clear()
+                }
+
                 self.main_window.edit_appname = flag;
                 Command::none()
             }
