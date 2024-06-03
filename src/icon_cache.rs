@@ -33,6 +33,7 @@ impl IconCache {
 
         bundle!("folder-download-symbolic", 16);
         bundle!("folder-pictures-symbolic", 16);
+        bundle!("application-menu-symbolic", 16);
         bundle!("edit-symbolic", 16);
         bundle!("edit-delete-symbolic", 16);
         bundle!("document-new-symbolic", 16);

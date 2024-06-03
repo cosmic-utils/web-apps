@@ -41,6 +41,9 @@ pub enum Buttons {
     SearchFavicon,
     Edit(WebAppLauncher),
     Delete(WebAppLauncher),
+    DoneEdit((Option<String>, Option<String>)),
+    DoneCreate,
+    AppNameSubmit(WebAppLauncher),
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -53,10 +56,10 @@ pub enum Message {
     OpenIconPickerDialog,
     OpenFileResult(Vec<String>),
     Creator(creator::Message),
-    DoneEdit,
-    DoneCreate,
     LoadingDone,
 
+    EditAppName(bool),
+    AppNameInput(String),
     Clicked(Buttons),
     // icons
     CustomIconsSearch(String),
@@ -250,34 +253,19 @@ impl Application for Window {
                 }
                 Command::none()
             }
-            Message::DoneCreate => {
-                let new_entry = WebAppLauncher::new(
-                    self.creator_window.app_title.clone(),
-                    None,
-                    self.creator_window.app_url.clone(),
-                    self.creator_window.app_icon.clone(),
-                    self.creator_window.app_category.clone(),
-                    self.creator_window.app_browser.clone(),
-                    self.creator_window.app_parameters.clone(),
-                    self.creator_window.app_isolated,
-                    self.creator_window.app_navbar,
-                    self.creator_window.app_incognito,
-                );
-
-                if new_entry.is_valid {
-                    self.create_valid_launcher(new_entry).unwrap();
-                } else {
-                    self.warning.push_warn(WarnMessages::Duplicate);
-                }
-                self.creator_window.edit_mode = false;
+            Message::EditAppName(flag) => {
+                self.main_window.edit_appname = flag;
                 Command::none()
             }
-            Message::DoneEdit => {
-                if let Some(launcher) = self.main_window.launcher.to_owned() {
-                    let _deleted = launcher.delete();
-                    let edited_entry = WebAppLauncher::new(
+            Message::AppNameInput(new_name) => {
+                self.main_window.new_app_name = new_name;
+                Command::none()
+            }
+            Message::Clicked(buttons) => match buttons {
+                Buttons::DoneCreate => {
+                    let new_entry = WebAppLauncher::new(
                         self.creator_window.app_title.clone(),
-                        Some(launcher.codename),
+                        None,
                         self.creator_window.app_url.clone(),
                         self.creator_window.app_icon.clone(),
                         self.creator_window.app_category.clone(),
@@ -288,16 +276,62 @@ impl Application for Window {
                         self.creator_window.app_incognito,
                     );
 
-                    if edited_entry.is_valid {
-                        self.create_valid_launcher(edited_entry).unwrap();
+                    if new_entry.is_valid {
+                        self.create_valid_launcher(new_entry).unwrap();
                     } else {
                         self.warning.push_warn(WarnMessages::Duplicate);
                     }
+                    self.creator_window.edit_mode = false;
+                    Command::none()
                 }
-                self.creator_window.edit_mode = false;
-                Command::none()
-            }
-            Message::Clicked(buttons) => match buttons {
+                Buttons::DoneEdit((new_name, old_icon)) => {
+                    if let Some(launcher) = self.main_window.launcher.to_owned() {
+                        let _deleted = launcher.delete();
+                        let mut edited_entry = WebAppLauncher::new(
+                            self.creator_window.app_title.clone(),
+                            Some(launcher.codename),
+                            self.creator_window.app_url.clone(),
+                            self.creator_window.app_icon.clone(),
+                            self.creator_window.app_category.clone(),
+                            self.creator_window.app_browser.clone(),
+                            self.creator_window.app_parameters.clone(),
+                            self.creator_window.app_isolated,
+                            self.creator_window.app_navbar,
+                            self.creator_window.app_incognito,
+                        );
+
+                        if new_name.is_some() {
+                            edited_entry.name = new_name.unwrap();
+                        }
+
+                        if old_icon.is_some() {
+                            edited_entry.icon = old_icon.unwrap();
+                        }
+
+                        if edited_entry.is_valid {
+                            self.create_valid_launcher(edited_entry).unwrap();
+                        } else {
+                            self.warning.push_warn(WarnMessages::Duplicate);
+                        }
+                    }
+                    self.creator_window.edit_mode = false;
+                    Command::none()
+                }
+                Buttons::AppNameSubmit(mut launcher) => {
+                    launcher.name.clone_from(&self.main_window.new_app_name);
+                    self.main_window
+                        .launcher
+                        .clone_from(&Some(launcher.clone()));
+
+                    self.main_window.new_app_name.clear();
+
+                    Command::perform(async {}, |_| {
+                        app(Message::Clicked(Buttons::DoneEdit((
+                            Some(launcher.name),
+                            Some(launcher.icon),
+                        ))))
+                    })
+                }
                 Buttons::Edit(launcher) => {
                     let selected_browser = get_supported_browsers()
                         .iter()

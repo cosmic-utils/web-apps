@@ -286,12 +286,14 @@ impl AppCreator {
 
         let save_btn = if self.edit_mode {
             widget::button(Container::new(text(fl!("edit"))).center_x())
-                .on_press(pages::Message::DoneEdit)
+                .on_press(pages::Message::Clicked(pages::Buttons::DoneEdit((
+                    None, None,
+                ))))
                 .width(Length::Fill)
                 .style(theme::Button::Suggested)
         } else {
             widget::button(Container::new(text(fl!("create"))).center_x())
-                .on_press(pages::Message::DoneCreate)
+                .on_press(pages::Message::Clicked(pages::Buttons::DoneCreate))
                 .width(Length::Fill)
                 .style(theme::Button::Suggested)
         };
