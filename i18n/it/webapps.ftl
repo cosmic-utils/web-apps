@@ -1,4 +1,4 @@
-app=COSMIC Web Apps
+app=Quick Web Apps
 loading=Caricamento in corso...
 open=Apri
 number={ $number }

@@ -1,17 +1,17 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <div align="center">
   <br>
-  <img alt="COSMIC Web Apps" src="https://raw.githubusercontent.com/elevenhsoft/WebApps/master/res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.svg" width="192" />
-  <h1>COSMIC Web Apps</h1>
+  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/elevenhsoft/WebApps/master/res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.svg" width="192" />
+  <h1>Quick Web Apps</h1>
 
   <h3>Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from
 given url working inside separate window of your browser of choice.</h3>
 
   <br>
 
-  <img alt="COSMIC Web Apps Dark window" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-dark.png" width="192">
-  <img alt="COSMIC Web Apps Creator" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-creator.png" width="192">
-  <img alt="COSMIC Web Apps Icon selector" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-icon-picker.png" width="192">
+  <img alt="Quick Web Apps Dark window" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-dark.png" width="192">
+  <img alt="Quick Web Apps Creator" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-creator.png" width="192">
+  <img alt="Quick Web Apps Icon selector" src="https://github.com/elevenhsoft/WebApps/blob/master/res/screenshots/window-icon-picker.png" width="192">
 
   <br><br><br>
 
@@ -64,7 +64,7 @@ app.
 
 `sudo just install`
 
-That's all. You can run `COSMIC Web Apps` from you app launcher.
+That's all. You can run `Quick Web Apps` from you app launcher.
 
 ### Uninstall
 

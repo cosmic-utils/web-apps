@@ -78,7 +78,7 @@ pub fn system_fonts() -> PathBuf {
 }
 
 pub fn my_icons_location() -> PathBuf {
-    icons_location().join("CosmicWebApps")
+    icons_location().join("QuickWebApps")
 }
 
 pub fn webapplauncher_is_valid(

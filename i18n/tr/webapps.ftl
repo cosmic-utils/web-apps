@@ -1,4 +1,4 @@
-app=COSMIC Web Apps
+app=Quick Web Apps
 loading=Yükleniyor...
 open=Aç
 number={ $number }

@@ -1,11 +1,11 @@
 [package]
 name = "webapps"
-version = "0.4.5"
+version = "0.4.6"
 edition = "2021"
 
 [[bin]]
 path = "src/main.rs"
-name = "cosmic-webapps"
+name = "quick-webapps"
 
 [profile.dev]
 opt-level = 1

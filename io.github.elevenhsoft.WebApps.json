@@ -1,57 +1,57 @@
 {
-    "app-id": "io.github.elevenhsoft.WebApps",
-    "runtime": "org.freedesktop.Platform",
-    "runtime-version": "23.08",
-    "sdk": "org.freedesktop.Sdk",
-    "sdk-extensions": [
-        "org.freedesktop.Sdk.Extension.rust-stable"
-    ],
-    "command": "cosmic-webapps",
-    "finish-args": [
-        "--share=ipc",
-        "--socket=fallback-x11",
-        "--socket=wayland",
-        "--device=dri",
-        "--share=network",
-        "--filesystem=/var/lib/flatpak:ro",
-        "--filesystem=~/.var/app:rw",
-        "--filesystem=~/.local/share/flatpak:ro",
-        "--filesystem=~/.local/share/applications:rw",
-        "--filesystem=~/.local/share/icons:create"
-    ],
-    "build-options": {
-        "append-path": "/usr/lib/sdk/rust-stable/bin"
-    },
-    "modules": [
-        {
-            "name": "cosmic-webapps",
-            "buildsystem": "simple",
-            "build-options": {
-                "env": {
-                    "CARGO_HOME": "/run/build/cosmic-webapps/cargo"
-                }
-            },
-            "build-commands": [
-                "cargo --offline fetch --manifest-path Cargo.toml --verbose",
-                "cargo --offline build --release --verbose",
-                "install -Dm0755 ./target/release/cosmic-webapps /app/bin/cosmic-webapps",
-                "install -Dm0644 ./res/io.github.elevenhsoft.WebApps.desktop /app/share/applications/io.github.elevenhsoft.WebApps.desktop",
-                "install -Dm0644 ./res/io.github.elevenhsoft.WebApps.metainfo.xml /app/share/metainfo/io.github.elevenhsoft.WebApps.metainfo.xml",
-                "install -Dm0644 ./res/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.svg",
-                "install -Dm0644 ./res/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.svg",
-                "install -Dm0644 ./res/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.svg",
-                "install -Dm0644 ./res/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.svg",
-                "install -Dm0644 ./res/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.svg",
-                "install -Dm0644 ./res/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.svg",
-                "install -Dm0644 ./res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.svg"
-            ],
-            "sources": [
-                {
-                    "type": "dir",
-                    "path": "."
-                },
-                "cargo-sources.json"
-            ]
+  "app-id": "io.github.elevenhsoft.WebApps",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "23.08",
+  "sdk": "org.freedesktop.Sdk",
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.rust-stable"
+  ],
+  "command": "quick-webapps",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=fallback-x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--share=network",
+    "--filesystem=/var/lib/flatpak:ro",
+    "--filesystem=~/.var/app:rw",
+    "--filesystem=~/.local/share/flatpak:ro",
+    "--filesystem=~/.local/share/applications:rw",
+    "--filesystem=~/.local/share/icons:create"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/rust-stable/bin"
+  },
+  "modules": [
+    {
+      "name": "quick-webapps",
+      "buildsystem": "simple",
+      "build-options": {
+        "env": {
+          "CARGO_HOME": "/run/build/quick-webapps/cargo"
         }
-    ]
+      },
+      "build-commands": [
+        "cargo --offline fetch --manifest-path Cargo.toml --verbose",
+        "cargo --offline build --release --verbose",
+        "install -Dm0755 ./target/release/quick-webapps /app/bin/quick-webapps",
+        "install -Dm0644 ./res/io.github.elevenhsoft.WebApps.desktop /app/share/applications/io.github.elevenhsoft.WebApps.desktop",
+        "install -Dm0644 ./res/io.github.elevenhsoft.WebApps.metainfo.xml /app/share/metainfo/io.github.elevenhsoft.WebApps.metainfo.xml",
+        "install -Dm0644 ./res/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.svg",
+        "install -Dm0644 ./res/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.svg",
+        "install -Dm0644 ./res/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.svg",
+        "install -Dm0644 ./res/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.svg",
+        "install -Dm0644 ./res/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.svg",
+        "install -Dm0644 ./res/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.svg",
+        "install -Dm0644 ./res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.svg /app/share/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.svg"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "."
+        },
+        "cargo-sources.json"
+      ]
+    }
+  ]
 }

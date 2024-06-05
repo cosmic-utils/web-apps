@@ -64,18 +64,6 @@ download
 
 error_message=$(mkdir -p $LOCAL_DESTDIR 2>&1)
 
-# Check if app is flatpak sandboxed
-# if [ -n "$FLATPAK_ID" ]; then
-#     echo "COSMIC Web Apps is probably sandboxed."
-#     echo "You do NOT have write permission on $LOCAL_DESTDIR."
-#     echo "Writing to $FLATPAK_DESTDIR."
-#     install $FLATPAK_DESTDIR Papirus "$EXTRA_THEMES"
-# else
-#     echo "COSMIC Web Apps is not sandboxed."
-#     echo "You have write permission on $LOCAL_DESTDIR."
-#     install $LOCAL_DESTDIR Papirus "$EXTRA_THEMES"
-# fi
-
 install $LOCAL_DESTDIR Papirus "$EXTRA_THEMES"
 
 trap cleanup EXIT HUP INT TERM

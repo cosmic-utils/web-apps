@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=COSMIC Web Apps
-Exec=cosmic-webapps
+Name=Quick Web Apps
+Exec=quick-webapps
 Terminal=false
 Type=Application
 StartupNotify=true
