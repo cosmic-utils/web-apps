@@ -81,6 +81,20 @@ pub fn native_browsers() -> Vec<Browser> {
             ".local/share/quick-webapps/chromium",
         ),
         Browser::new(
+            BrowserType::Chromium,
+            "Cromite",
+            "cromite",
+            "/usr/bin/cromite",
+            ".local/share/quick-webapps/chromium",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            "Thorium",
+            "thorium-browser",
+            "/usr/bin/thorium-browser",
+            ".local/share/quick-webapps/chromium",
+        ),
+        Browser::new(
             BrowserType::Firefox,
             "Librewolf",
             "librewolf",
