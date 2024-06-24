@@ -216,7 +216,6 @@ impl Application for Window {
                             .accept_label("Attach")
                             .modal(true)
                             .multiple(true)
-                            .filter(FileFilter::new("JPEG Image").glob("*.jpg"))
                             .filter(FileFilter::new("PNG Image").glob("*.png"))
                             .filter(FileFilter::new("SVG Images").glob("*.svg"))
                             .send()
