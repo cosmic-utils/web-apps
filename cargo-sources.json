@@ -2,8 +2,8 @@
     {
         "type": "git",
         "url": "https://github.com/wash2/accesskit",
-        "commit": "5f9b61c8264000d001499c902562422e13efa7a8",
-        "dest": "flatpak-cargo/git/accesskit-5f9b61c"
+        "commit": "26f729169cd849970af02be62289606c63572d2d",
+        "dest": "flatpak-cargo/git/accesskit-26f7291"
     },
     {
         "type": "git",
@@ -14,20 +14,20 @@
     {
         "type": "git",
         "url": "https://github.com/pop-os/window_clipboard",
-        "commit": "8a816d8f218e290041bb5ef6d3b695c38e0a53b7",
-        "dest": "flatpak-cargo/git/window_clipboard-8a816d8"
+        "commit": "7c59b07b9172d8e0401f7e06609e1050575309c9",
+        "dest": "flatpak-cargo/git/window_clipboard-7c59b07"
     },
     {
         "type": "git",
         "url": "https://github.com/pop-os/libcosmic",
-        "commit": "173ddca60fdb26cf5b1784edfc1a78594acf7002",
-        "dest": "flatpak-cargo/git/libcosmic-173ddca"
+        "commit": "5c6fa840f4e75ce94075cb1c8d22623077821193",
+        "dest": "flatpak-cargo/git/libcosmic-5c6fa84"
     },
     {
         "type": "git",
         "url": "https://github.com/pop-os/cosmic-text",
-        "commit": "5e82de11cf5c977ee82a5d631c05382f4acc7314",
-        "dest": "flatpak-cargo/git/cosmic-text-5e82de1"
+        "commit": "a03ec6b75f0ea8fd6264d6cd05afcec3c2213f8f",
+        "dest": "flatpak-cargo/git/cosmic-text-a03ec6b"
     },
     {
         "type": "git",
@@ -43,15 +43,9 @@
     },
     {
         "type": "git",
-        "url": "https://github.com/smithay/client-toolkit",
-        "commit": "3bed072b966022f5f929d12f3aff089b1ace980b",
-        "dest": "flatpak-cargo/git/client-toolkit-3bed072"
-    },
-    {
-        "type": "git",
         "url": "https://github.com/pop-os/smithay-clipboard",
-        "commit": "ab422ddcc95a9a1717df094f9c8fe69e2fdb2a27",
-        "dest": "flatpak-cargo/git/smithay-clipboard-ab422dd"
+        "commit": "d099e82a4c1e7d3e88dc34b7333de21928b1b22c",
+        "dest": "flatpak-cargo/git/smithay-clipboard-d099e82"
     },
     {
         "type": "git",
@@ -74,14 +68,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/ab_glyph/ab_glyph-0.2.26.crate",
-        "sha256": "2e53b0a3d5760cd2ba9b787ae0c6440ad18ee294ff71b05e3381c900a7d16cfd",
-        "dest": "cargo/vendor/ab_glyph-0.2.26"
+        "url": "https://static.crates.io/crates/ab_glyph/ab_glyph-0.2.27.crate",
+        "sha256": "1c3a1cbc201cc13ed06cf875efb781f2249b3677f5c74571b67d817877f9d697",
+        "dest": "cargo/vendor/ab_glyph-0.2.27"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"2e53b0a3d5760cd2ba9b787ae0c6440ad18ee294ff71b05e3381c900a7d16cfd\", \"files\": {}}",
-        "dest": "cargo/vendor/ab_glyph-0.2.26",
+        "contents": "{\"package\": \"1c3a1cbc201cc13ed06cf875efb781f2249b3677f5c74571b67d817877f9d697\", \"files\": {}}",
+        "dest": "cargo/vendor/ab_glyph-0.2.27",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -100,7 +94,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-5f9b61c/common\" \"cargo/vendor/accesskit\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-26f7291/common\" \"cargo/vendor/accesskit\""
         ]
     },
     {
@@ -118,7 +112,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-5f9b61c/consumer\" \"cargo/vendor/accesskit_consumer\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-26f7291/consumer\" \"cargo/vendor/accesskit_consumer\""
         ]
     },
     {
@@ -136,7 +130,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-5f9b61c/platforms/macos\" \"cargo/vendor/accesskit_macos\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-26f7291/platforms/macos\" \"cargo/vendor/accesskit_macos\""
         ]
     },
     {
@@ -154,7 +148,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-5f9b61c/platforms/unix\" \"cargo/vendor/accesskit_unix\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-26f7291/platforms/unix\" \"cargo/vendor/accesskit_unix\""
         ]
     },
     {
@@ -172,7 +166,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-5f9b61c/platforms/windows\" \"cargo/vendor/accesskit_windows\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-26f7291/platforms/windows\" \"cargo/vendor/accesskit_windows\""
         ]
     },
     {
@@ -190,7 +184,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-5f9b61c/platforms/winit\" \"cargo/vendor/accesskit_winit\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/accesskit-26f7291/platforms/winit\" \"cargo/vendor/accesskit_winit\""
         ]
     },
     {
@@ -689,14 +683,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/async-signal/async-signal-0.2.7.crate",
-        "sha256": "329972aa325176e89114919f2a80fdae4f4c040f66a370b1a1159c6c0f94e7aa",
-        "dest": "cargo/vendor/async-signal-0.2.7"
+        "url": "https://static.crates.io/crates/async-signal/async-signal-0.2.8.crate",
+        "sha256": "794f185324c2f00e771cd9f1ae8b5ac68be2ca7abb129a87afd6e86d228bc54d",
+        "dest": "cargo/vendor/async-signal-0.2.8"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"329972aa325176e89114919f2a80fdae4f4c040f66a370b1a1159c6c0f94e7aa\", \"files\": {}}",
-        "dest": "cargo/vendor/async-signal-0.2.7",
+        "contents": "{\"package\": \"794f185324c2f00e771cd9f1ae8b5ac68be2ca7abb129a87afd6e86d228bc54d\", \"files\": {}}",
+        "dest": "cargo/vendor/async-signal-0.2.8",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -850,14 +844,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/backtrace/backtrace-0.3.72.crate",
-        "sha256": "17c6a35df3749d2e8bb1b7b21a976d82b15548788d2735b9d82f329268f71a11",
-        "dest": "cargo/vendor/backtrace-0.3.72"
+        "url": "https://static.crates.io/crates/backtrace/backtrace-0.3.73.crate",
+        "sha256": "5cc23269a4f8976d0a4d2e7109211a419fe30e8d88d677cd60b6bc79c5732e0a",
+        "dest": "cargo/vendor/backtrace-0.3.73"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"17c6a35df3749d2e8bb1b7b21a976d82b15548788d2735b9d82f329268f71a11\", \"files\": {}}",
-        "dest": "cargo/vendor/backtrace-0.3.72",
+        "contents": "{\"package\": \"5cc23269a4f8976d0a4d2e7109211a419fe30e8d88d677cd60b6bc79c5732e0a\", \"files\": {}}",
+        "dest": "cargo/vendor/backtrace-0.3.73",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -941,27 +935,27 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/bitflags/bitflags-2.5.0.crate",
-        "sha256": "cf4b9d6a944f767f8e5e0db018570623c85f3d925ac718db4e06d0187adb21c1",
-        "dest": "cargo/vendor/bitflags-2.5.0"
+        "url": "https://static.crates.io/crates/bitflags/bitflags-2.6.0.crate",
+        "sha256": "b048fb63fd8b5923fc5aa7b340d8e156aec7ec02f0c78fa8a6ddc2613f6f71de",
+        "dest": "cargo/vendor/bitflags-2.6.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"cf4b9d6a944f767f8e5e0db018570623c85f3d925ac718db4e06d0187adb21c1\", \"files\": {}}",
-        "dest": "cargo/vendor/bitflags-2.5.0",
+        "contents": "{\"package\": \"b048fb63fd8b5923fc5aa7b340d8e156aec7ec02f0c78fa8a6ddc2613f6f71de\", \"files\": {}}",
+        "dest": "cargo/vendor/bitflags-2.6.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/bitstream-io/bitstream-io-2.3.0.crate",
-        "sha256": "7c12d1856e42f0d817a835fe55853957c85c8c8a470114029143d3f12671446e",
-        "dest": "cargo/vendor/bitstream-io-2.3.0"
+        "url": "https://static.crates.io/crates/bitstream-io/bitstream-io-2.4.2.crate",
+        "sha256": "415f8399438eb5e4b2f73ed3152a3448b98149dda642a957ee704e1daa5cf1d8",
+        "dest": "cargo/vendor/bitstream-io-2.4.2"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"7c12d1856e42f0d817a835fe55853957c85c8c8a470114029143d3f12671446e\", \"files\": {}}",
-        "dest": "cargo/vendor/bitstream-io-2.3.0",
+        "contents": "{\"package\": \"415f8399438eb5e4b2f73ed3152a3448b98149dda642a957ee704e1daa5cf1d8\", \"files\": {}}",
+        "dest": "cargo/vendor/bitstream-io-2.4.2",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -1084,14 +1078,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/bytemuck/bytemuck-1.16.0.crate",
-        "sha256": "78834c15cb5d5efe3452d58b1e8ba890dd62d21907f867f383358198e56ebca5",
-        "dest": "cargo/vendor/bytemuck-1.16.0"
+        "url": "https://static.crates.io/crates/bytemuck/bytemuck-1.16.1.crate",
+        "sha256": "b236fc92302c97ed75b38da1f4917b5cdda4984745740f153a5d3059e48d725e",
+        "dest": "cargo/vendor/bytemuck-1.16.1"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"78834c15cb5d5efe3452d58b1e8ba890dd62d21907f867f383358198e56ebca5\", \"files\": {}}",
-        "dest": "cargo/vendor/bytemuck-1.16.0",
+        "contents": "{\"package\": \"b236fc92302c97ed75b38da1f4917b5cdda4984745740f153a5d3059e48d725e\", \"files\": {}}",
+        "dest": "cargo/vendor/bytemuck-1.16.1",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -1201,14 +1195,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/cc/cc-1.0.98.crate",
-        "sha256": "41c270e7540d725e65ac7f1b212ac8ce349719624d7bcff99f8e2e488e8cf03f",
-        "dest": "cargo/vendor/cc-1.0.98"
+        "url": "https://static.crates.io/crates/cc/cc-1.0.101.crate",
+        "sha256": "ac367972e516d45567c7eafc73d24e1c193dcf200a8d94e9db7b3d38b349572d",
+        "dest": "cargo/vendor/cc-1.0.101"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"41c270e7540d725e65ac7f1b212ac8ce349719624d7bcff99f8e2e488e8cf03f\", \"files\": {}}",
-        "dest": "cargo/vendor/cc-1.0.98",
+        "contents": "{\"package\": \"ac367972e516d45567c7eafc73d24e1c193dcf200a8d94e9db7b3d38b349572d\", \"files\": {}}",
+        "dest": "cargo/vendor/cc-1.0.101",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -1305,7 +1299,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-8a816d8/macos\" \"cargo/vendor/clipboard_macos\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-7c59b07/macos\" \"cargo/vendor/clipboard_macos\""
         ]
     },
     {
@@ -1323,12 +1317,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-8a816d8/wayland\" \"cargo/vendor/clipboard_wayland\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-7c59b07/wayland\" \"cargo/vendor/clipboard_wayland\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"clipboard_wayland\"\nversion = \"0.2.2\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector0193@gmail.com>\",]\nedition = \"2018\"\ndescription = \"A library to obtain access to the clipboard of a Wayland window\"\nlicense = \"Apache-2.0\"\nrepository = \"https://github.com/hecrj/window_clipboard\"\ndocumentation = \"https://docs.rs/clipboard_wayland\"\nkeywords = [ \"clipboard\", \"wayland\",]\n\n[dependencies.smithay-clipboard]\ngit = \"https://github.com/pop-os/smithay-clipboard\"\ntag = \"pop-dnd-4\"\nfeatures = [ \"dnd\",]\n\n[dependencies.mime]\npath = \"../mime\"\n\n[dependencies.dnd]\npath = \"../dnd\"\n",
+        "contents": "[package]\nname = \"clipboard_wayland\"\nversion = \"0.2.2\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector0193@gmail.com>\",]\nedition = \"2018\"\ndescription = \"A library to obtain access to the clipboard of a Wayland window\"\nlicense = \"Apache-2.0\"\nrepository = \"https://github.com/hecrj/window_clipboard\"\ndocumentation = \"https://docs.rs/clipboard_wayland\"\nkeywords = [ \"clipboard\", \"wayland\",]\n\n[dependencies.smithay-clipboard]\ngit = \"https://github.com/pop-os/smithay-clipboard\"\ntag = \"pop-dnd-5\"\nfeatures = [ \"dnd\",]\n\n[dependencies.mime]\npath = \"../mime\"\n\n[dependencies.dnd]\npath = \"../dnd\"\n",
         "dest": "cargo/vendor/clipboard_wayland",
         "dest-filename": "Cargo.toml"
     },
@@ -1341,7 +1335,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-8a816d8/x11\" \"cargo/vendor/clipboard_x11\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-7c59b07/x11\" \"cargo/vendor/clipboard_x11\""
         ]
     },
     {
@@ -1554,12 +1548,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/cosmic-config\" \"cargo/vendor/cosmic-config\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/cosmic-config\" \"cargo/vendor/cosmic-config\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"cosmic-config\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[features]\ndefault = [ \"macro\", \"subscription\",]\ndbus = [ \"dep:zbus\", \"cosmic-settings-daemon\", \"futures-util\", \"subscription\",]\nmacro = [ \"cosmic-config-derive\",]\nsubscription = [ \"iced_futures\",]\n\n[dependencies]\nnotify = \"6.0.0\"\nron = \"0.8.0\"\nserde = \"1.0.152\"\nonce_cell = \"1.19.0\"\ndirs = \"5.0.1\"\ntracing = \"0.1\"\n\n[dependencies.cosmic-settings-daemon]\ngit = \"https://github.com/pop-os/dbus-settings-bindings\"\noptional = true\n\n[dependencies.zbus]\nversion = \"4.2.1\"\ndefault-features = false\noptional = true\n\n[dependencies.atomicwrites]\ngit = \"https://github.com/jackpot51/rust-atomicwrites\"\n\n[dependencies.calloop]\nversion = \"0.13.0\"\noptional = true\n\n[dependencies.cosmic-config-derive]\npath = \"../cosmic-config-derive/\"\noptional = true\n\n[dependencies.iced]\npath = \"../iced/\"\ndefault-features = false\noptional = true\n\n[dependencies.iced_futures]\npath = \"../iced/futures/\"\ndefault-features = false\noptional = true\n\n[dependencies.futures-util]\nversion = \"0.3\"\noptional = true\n\n[dependencies.tokio]\nversion = \"1.0\"\noptional = true\nfeatures = [ \"time\",]\n\n[dependencies.async-std]\nversion = \"1.10\"\noptional = true\n\n[target.\"cfg(unix)\".dependencies]\nxdg = \"2.1\"\n\n[target.\"cfg(windows)\".dependencies]\nknown-folders = \"1.1.0\"\n",
+        "contents": "[package]\nname = \"cosmic-config\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[features]\ndefault = [ \"macro\", \"subscription\",]\ndbus = [ \"dep:zbus\", \"cosmic-settings-daemon\", \"futures-util\", \"subscription\",]\nmacro = [ \"cosmic-config-derive\",]\nsubscription = [ \"iced_futures\",]\n\n[dependencies]\nnotify = \"6.0.0\"\nron = \"0.8.0\"\nserde = \"1.0.152\"\nonce_cell = \"1.19.0\"\ndirs = \"5.0.1\"\ntracing = \"0.1\"\n\n[dependencies.cosmic-settings-daemon]\ngit = \"https://github.com/pop-os/dbus-settings-bindings\"\noptional = true\n\n[dependencies.zbus]\nversion = \"4.2.1\"\ndefault-features = false\noptional = true\n\n[dependencies.atomicwrites]\ngit = \"https://github.com/jackpot51/rust-atomicwrites\"\n\n[dependencies.calloop]\nversion = \"0.14.0\"\noptional = true\n\n[dependencies.cosmic-config-derive]\npath = \"../cosmic-config-derive/\"\noptional = true\n\n[dependencies.iced]\npath = \"../iced/\"\ndefault-features = false\noptional = true\n\n[dependencies.iced_futures]\npath = \"../iced/futures/\"\ndefault-features = false\noptional = true\n\n[dependencies.futures-util]\nversion = \"0.3\"\noptional = true\n\n[dependencies.tokio]\nversion = \"1.0\"\noptional = true\nfeatures = [ \"time\",]\n\n[dependencies.async-std]\nversion = \"1.10\"\noptional = true\n\n[target.\"cfg(unix)\".dependencies]\nxdg = \"2.1\"\n\n[target.\"cfg(windows)\".dependencies]\nknown-folders = \"1.1.0\"\n",
         "dest": "cargo/vendor/cosmic-config",
         "dest-filename": "Cargo.toml"
     },
@@ -1572,7 +1566,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/cosmic-config-derive\" \"cargo/vendor/cosmic-config-derive\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/cosmic-config-derive\" \"cargo/vendor/cosmic-config-derive\""
         ]
     },
     {
@@ -1590,12 +1584,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/cosmic-text-5e82de1/.\" \"cargo/vendor/cosmic-text\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/cosmic-text-a03ec6b/.\" \"cargo/vendor/cosmic-text\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[[bench]]\nname = \"layout\"\nharness = false\n\n[package]\nname = \"cosmic-text\"\ndescription = \"Pure Rust multi-line text handling\"\nversion = \"0.11.2\"\nauthors = [ \"Jeremy Soller <jeremy@system76.com>\",]\nedition = \"2021\"\nlicense = \"MIT OR Apache-2.0\"\ndocumentation = \"https://docs.rs/cosmic-text/latest/cosmic_text/\"\nrepository = \"https://github.com/pop-os/cosmic-text\"\nrust-version = \"1.65\"\n\n[dependencies]\nbitflags = \"2.4.1\"\nlibm = \"0.2.8\"\nlog = \"0.4.20\"\nrangemap = \"1.4.0\"\nself_cell = \"1.0.1\"\nunicode-linebreak = \"0.1.5\"\nunicode-script = \"0.5.5\"\nunicode-segmentation = \"1.10.1\"\n\n[features]\ndefault = [ \"std\", \"swash\", \"fontconfig\",]\nfontconfig = [ \"fontdb/fontconfig\", \"std\",]\nno_std = [ \"rustybuzz/libm\", \"hashbrown\",]\nshape-run-cache = []\nstd = [ \"fontdb/memmap\", \"fontdb/std\", \"rustybuzz/std\", \"sys-locale\", \"ttf-parser/std\", \"unicode-bidi/std\",]\nvi = [ \"modit\", \"syntect\", \"cosmic_undo_2\",]\nwasm-web = [ \"sys-locale?/js\",]\nwarn_on_missing_glyphs = []\n\n[workspace]\nmembers = [ \"examples/*\",]\n\n[dev-dependencies]\ntiny-skia = \"0.11.2\"\n\n[dependencies.cosmic_undo_2]\nversion = \"0.2.0\"\noptional = true\n\n[dependencies.fontdb]\nversion = \"0.16.0\"\ndefault-features = false\n\n[dependencies.hashbrown]\nversion = \"0.14.1\"\noptional = true\ndefault-features = false\n\n[dependencies.modit]\nversion = \"0.1.4\"\noptional = true\n\n[dependencies.rustc-hash]\nversion = \"1.1.0\"\ndefault-features = false\n\n[dependencies.rustybuzz]\nversion = \"0.12.0\"\ndefault-features = false\nfeatures = [ \"libm\",]\n\n[dependencies.swash]\nversion = \"0.1.12\"\noptional = true\n\n[dependencies.syntect]\nversion = \"5.1.0\"\noptional = true\n\n[dependencies.sys-locale]\nversion = \"0.3.1\"\noptional = true\n\n[dependencies.ttf-parser]\nversion = \"0.20.0\"\ndefault-features = false\n\n[dependencies.unicode-bidi]\nversion = \"0.3.13\"\ndefault-features = false\nfeatures = [ \"hardcoded-data\",]\n\n[dev-dependencies.criterion]\nversion = \"0.5.1\"\ndefault-features = false\nfeatures = [ \"cargo_bench_support\",]\n\n[profile.test]\nopt-level = 1\n\n[package.metadata.docs.rs]\nfeatures = [ \"vi\",]\n",
+        "contents": "[[bench]]\nname = \"layout\"\nharness = false\n\n[package]\nname = \"cosmic-text\"\ndescription = \"Pure Rust multi-line text handling\"\nversion = \"0.12.0\"\nauthors = [ \"Jeremy Soller <jeremy@system76.com>\",]\nedition = \"2021\"\nlicense = \"MIT OR Apache-2.0\"\ndocumentation = \"https://docs.rs/cosmic-text/latest/cosmic_text/\"\nrepository = \"https://github.com/pop-os/cosmic-text\"\nrust-version = \"1.65\"\n\n[dependencies]\nbitflags = \"2.4.1\"\nlog = \"0.4.20\"\nrangemap = \"1.4.0\"\nself_cell = \"1.0.1\"\nunicode-linebreak = \"0.1.5\"\nunicode-script = \"0.5.5\"\nunicode-segmentation = \"1.10.1\"\n\n[features]\ndefault = [ \"std\", \"swash\", \"fontconfig\",]\nfontconfig = [ \"fontdb/fontconfig\", \"std\",]\nno_std = [ \"rustybuzz/libm\", \"hashbrown\", \"dep:libm\",]\nshape-run-cache = []\nstd = [ \"fontdb/memmap\", \"fontdb/std\", \"rustybuzz/std\", \"sys-locale\", \"ttf-parser/std\", \"unicode-bidi/std\", \"rayon\",]\nvi = [ \"modit\", \"syntect\", \"cosmic_undo_2\",]\nwasm-web = [ \"sys-locale?/js\",]\nwarn_on_missing_glyphs = []\n\n[workspace]\nmembers = [ \"examples/*\",]\n\n[dev-dependencies]\ntiny-skia = \"0.11.2\"\n\n[dependencies.cosmic_undo_2]\nversion = \"0.2.0\"\noptional = true\n\n[dependencies.fontdb]\nversion = \"0.16\"\ndefault-features = false\n\n[dependencies.hashbrown]\nversion = \"0.14.1\"\noptional = true\ndefault-features = false\n\n[dependencies.libm]\nversion = \"0.2.8\"\noptional = true\n\n[dependencies.modit]\nversion = \"0.1.4\"\noptional = true\n\n[dependencies.rustc-hash]\nversion = \"1.1.0\"\ndefault-features = false\n\n[dependencies.rustybuzz]\nversion = \"0.14\"\ndefault-features = false\nfeatures = [ \"libm\",]\n\n[dependencies.swash]\nversion = \"0.1.17\"\noptional = true\n\n[dependencies.syntect]\nversion = \"5.1.0\"\noptional = true\n\n[dependencies.sys-locale]\nversion = \"0.3.1\"\noptional = true\n\n[dependencies.ttf-parser]\nversion = \"0.21\"\ndefault-features = false\n\n[dependencies.rayon]\nversion = \"1\"\noptional = true\n\n[dependencies.unicode-bidi]\nversion = \"0.3.13\"\ndefault-features = false\nfeatures = [ \"hardcoded-data\",]\n\n[dev-dependencies.criterion]\nversion = \"0.5.1\"\ndefault-features = false\nfeatures = [ \"cargo_bench_support\",]\n\n[profile.test]\nopt-level = 1\n\n[package.metadata.docs.rs]\nfeatures = [ \"vi\",]\n",
         "dest": "cargo/vendor/cosmic-text",
         "dest-filename": "Cargo.toml"
     },
@@ -1608,7 +1602,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/cosmic-theme\" \"cargo/vendor/cosmic-theme\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/cosmic-theme\" \"cargo/vendor/cosmic-theme\""
         ]
     },
     {
@@ -1904,14 +1898,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/derive_more/derive_more-0.99.17.crate",
-        "sha256": "4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321",
-        "dest": "cargo/vendor/derive_more-0.99.17"
+        "url": "https://static.crates.io/crates/derive_more/derive_more-0.99.18.crate",
+        "sha256": "5f33878137e4dafd7fa914ad4e259e18a4e8e532b9617a2d0150262bf53abfce",
+        "dest": "cargo/vendor/derive_more-0.99.18"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"4fb810d30a7c1953f91334de7244731fc3f3c10d7fe163338a35b9f640960321\", \"files\": {}}",
-        "dest": "cargo/vendor/derive_more-0.99.17",
+        "contents": "{\"package\": \"5f33878137e4dafd7fa914ad4e259e18a4e8e532b9617a2d0150262bf53abfce\", \"files\": {}}",
+        "dest": "cargo/vendor/derive_more-0.99.18",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -1982,14 +1976,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/displaydoc/displaydoc-0.2.4.crate",
-        "sha256": "487585f4d0c6655fe74905e2504d8ad6908e4db67f744eb140876906c2f3175d",
-        "dest": "cargo/vendor/displaydoc-0.2.4"
+        "url": "https://static.crates.io/crates/displaydoc/displaydoc-0.2.5.crate",
+        "sha256": "97369cbbc041bc366949bc74d34658d6cda5621039731c6310521892a3a20ae0",
+        "dest": "cargo/vendor/displaydoc-0.2.5"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"487585f4d0c6655fe74905e2504d8ad6908e4db67f744eb140876906c2f3175d\", \"files\": {}}",
-        "dest": "cargo/vendor/displaydoc-0.2.4",
+        "contents": "{\"package\": \"97369cbbc041bc366949bc74d34658d6cda5621039731c6310521892a3a20ae0\", \"files\": {}}",
+        "dest": "cargo/vendor/displaydoc-0.2.5",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -2021,12 +2015,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-8a816d8/dnd\" \"cargo/vendor/dnd\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-7c59b07/dnd\" \"cargo/vendor/dnd\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"dnd\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\nbitflags = \"2.5.0\"\nraw-window-handle = \"0.6\"\n\n[dependencies.mime]\npath = \"../mime\"\n\n[target.\"cfg(all(unix, not(any(target_os=\\\"macos\\\", target_os=\\\"android\\\", target_os=\\\"emscripten\\\", target_os=\\\"ios\\\", target_os=\\\"redox\\\"))))\".dependencies.smithay-clipboard]\ngit = \"https://github.com/pop-os/smithay-clipboard\"\ntag = \"pop-dnd-4\"\nfeatures = [ \"dnd\",]\n\n[target.\"cfg(all(unix, not(any(target_os=\\\"macos\\\", target_os=\\\"android\\\", target_os=\\\"emscripten\\\", target_os=\\\"ios\\\", target_os=\\\"redox\\\"))))\".dependencies.sctk]\npackage = \"smithay-client-toolkit\"\ngit = \"https://github.com/Smithay/client-toolkit\"\ndefault-features = false\nfeatures = [ \"calloop\",]\nrev = \"3bed072\"\n",
+        "contents": "[package]\nname = \"dnd\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\nbitflags = \"2.5.0\"\nraw-window-handle = \"0.6\"\n\n[dependencies.mime]\npath = \"../mime\"\n\n[target.\"cfg(all(unix, not(any(target_os=\\\"macos\\\", target_os=\\\"android\\\", target_os=\\\"emscripten\\\", target_os=\\\"ios\\\", target_os=\\\"redox\\\"))))\".dependencies.smithay-clipboard]\ngit = \"https://github.com/pop-os/smithay-clipboard\"\ntag = \"pop-dnd-5\"\nfeatures = [ \"dnd\",]\n\n[target.\"cfg(all(unix, not(any(target_os=\\\"macos\\\", target_os=\\\"android\\\", target_os=\\\"emscripten\\\", target_os=\\\"ios\\\", target_os=\\\"redox\\\"))))\".dependencies.sctk]\npackage = \"smithay-client-toolkit\"\nversion = \"0.19.1\"\ndefault-features = false\nfeatures = [ \"calloop\",]\n",
         "dest": "cargo/vendor/dnd",
         "dest-filename": "Cargo.toml"
     },
@@ -2117,14 +2111,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/dtoa-short/dtoa-short-0.3.4.crate",
-        "sha256": "dbaceec3c6e4211c79e7b1800fb9680527106beb2f9c51904a3210c03a448c74",
-        "dest": "cargo/vendor/dtoa-short-0.3.4"
+        "url": "https://static.crates.io/crates/dtoa-short/dtoa-short-0.3.5.crate",
+        "sha256": "cd1511a7b6a56299bd043a9c167a6d2bfb37bf84a6dfceaba651168adfb43c87",
+        "dest": "cargo/vendor/dtoa-short-0.3.5"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"dbaceec3c6e4211c79e7b1800fb9680527106beb2f9c51904a3210c03a448c74\", \"files\": {}}",
-        "dest": "cargo/vendor/dtoa-short-0.3.4",
+        "contents": "{\"package\": \"cd1511a7b6a56299bd043a9c167a6d2bfb37bf84a6dfceaba651168adfb43c87\", \"files\": {}}",
+        "dest": "cargo/vendor/dtoa-short-0.3.5",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -2143,14 +2137,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/either/either-1.12.0.crate",
-        "sha256": "3dca9240753cf90908d7e4aac30f630662b02aebaa1b58a3cadabdb23385b58b",
-        "dest": "cargo/vendor/either-1.12.0"
+        "url": "https://static.crates.io/crates/either/either-1.13.0.crate",
+        "sha256": "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0",
+        "dest": "cargo/vendor/either-1.13.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"3dca9240753cf90908d7e4aac30f630662b02aebaa1b58a3cadabdb23385b58b\", \"files\": {}}",
-        "dest": "cargo/vendor/either-1.12.0",
+        "contents": "{\"package\": \"60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0\", \"files\": {}}",
+        "dest": "cargo/vendor/either-1.13.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -2182,27 +2176,27 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/enumflags2/enumflags2-0.7.9.crate",
-        "sha256": "3278c9d5fb675e0a51dabcf4c0d355f692b064171535ba72361be1528a9d8e8d",
-        "dest": "cargo/vendor/enumflags2-0.7.9"
+        "url": "https://static.crates.io/crates/enumflags2/enumflags2-0.7.10.crate",
+        "sha256": "d232db7f5956f3f14313dc2f87985c58bd2c695ce124c8cdd984e08e15ac133d",
+        "dest": "cargo/vendor/enumflags2-0.7.10"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"3278c9d5fb675e0a51dabcf4c0d355f692b064171535ba72361be1528a9d8e8d\", \"files\": {}}",
-        "dest": "cargo/vendor/enumflags2-0.7.9",
+        "contents": "{\"package\": \"d232db7f5956f3f14313dc2f87985c58bd2c695ce124c8cdd984e08e15ac133d\", \"files\": {}}",
+        "dest": "cargo/vendor/enumflags2-0.7.10",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/enumflags2_derive/enumflags2_derive-0.7.9.crate",
-        "sha256": "5c785274071b1b420972453b306eeca06acf4633829db4223b58a2a8c5953bc4",
-        "dest": "cargo/vendor/enumflags2_derive-0.7.9"
+        "url": "https://static.crates.io/crates/enumflags2_derive/enumflags2_derive-0.7.10.crate",
+        "sha256": "de0d48a183585823424a4ce1aa132d174a6a81bd540895822eb4c8373a8e49e8",
+        "dest": "cargo/vendor/enumflags2_derive-0.7.10"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"5c785274071b1b420972453b306eeca06acf4633829db4223b58a2a8c5953bc4\", \"files\": {}}",
-        "dest": "cargo/vendor/enumflags2_derive-0.7.9",
+        "contents": "{\"package\": \"de0d48a183585823424a4ce1aa132d174a6a81bd540895822eb4c8373a8e49e8\", \"files\": {}}",
+        "dest": "cargo/vendor/enumflags2_derive-0.7.10",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -2247,14 +2241,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/etagere/etagere-0.2.11.crate",
-        "sha256": "4460bc8c5caa3360e4221a5a2930c654a141dd3fe067a00c5355c488e711ae79",
-        "dest": "cargo/vendor/etagere-0.2.11"
+        "url": "https://static.crates.io/crates/etagere/etagere-0.2.13.crate",
+        "sha256": "0e2f1e3be19fb10f549be8c1bf013e8675b4066c445e36eb76d2ebb2f54ee495",
+        "dest": "cargo/vendor/etagere-0.2.13"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"4460bc8c5caa3360e4221a5a2930c654a141dd3fe067a00c5355c488e711ae79\", \"files\": {}}",
-        "dest": "cargo/vendor/etagere-0.2.11",
+        "contents": "{\"package\": \"0e2f1e3be19fb10f549be8c1bf013e8675b4066c445e36eb76d2ebb2f54ee495\", \"files\": {}}",
+        "dest": "cargo/vendor/etagere-0.2.13",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -3201,6 +3195,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/hermit-abi/hermit-abi-0.4.0.crate",
+        "sha256": "fbf6a919d6cf397374f7dfeeea91d974c7c0a7221d0d0f4f20d859d329e53fcc",
+        "dest": "cargo/vendor/hermit-abi-0.4.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"fbf6a919d6cf397374f7dfeeea91d974c7c0a7221d0d0f4f20d859d329e53fcc\", \"files\": {}}",
+        "dest": "cargo/vendor/hermit-abi-0.4.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/hex/hex-0.4.3.crate",
         "sha256": "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70",
         "dest": "cargo/vendor/hex-0.4.3"
@@ -3266,14 +3273,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/httparse/httparse-1.8.0.crate",
-        "sha256": "d897f394bad6a705d5f4104762e116a75639e470d80901eed05a860a95cb1904",
-        "dest": "cargo/vendor/httparse-1.8.0"
+        "url": "https://static.crates.io/crates/httparse/httparse-1.9.4.crate",
+        "sha256": "0fcc0b4a115bf80b728eb8ea024ad5bd707b615bfed49e0665b6e0f86fd082d9",
+        "dest": "cargo/vendor/httparse-1.9.4"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"d897f394bad6a705d5f4104762e116a75639e470d80901eed05a860a95cb1904\", \"files\": {}}",
-        "dest": "cargo/vendor/httparse-1.8.0",
+        "contents": "{\"package\": \"0fcc0b4a115bf80b728eb8ea024ad5bd707b615bfed49e0665b6e0f86fd082d9\", \"files\": {}}",
+        "dest": "cargo/vendor/httparse-1.9.4",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -3396,12 +3403,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced\" \"cargo/vendor/iced\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced\" \"cargo/vendor/iced\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"iced\"\ndescription = \"A cross-platform GUI library inspired by Elm\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\nwgpu = [ \"iced_renderer/wgpu\", \"iced_widget/wgpu\",]\nimage = [ \"iced_widget/image\", \"dep:image\",]\nsvg = [ \"iced_widget/svg\",]\ncanvas = [ \"iced_widget/canvas\",]\nqr_code = [ \"iced_widget/qr_code\",]\nlazy = [ \"iced_widget/lazy\",]\ndebug = [ \"iced_winit?/debug\", \"iced_sctk?/debug\",]\ntokio = [ \"iced_futures/tokio\",]\nasync-std = [ \"iced_futures/async-std\",]\nsmol = [ \"iced_futures/smol\",]\npalette = [ \"iced_core/palette\",]\nweb-colors = [ \"iced_renderer/web-colors\",]\nwebgl = [ \"iced_renderer/webgl\",]\nhighlighter = [ \"iced_highlighter\",]\nmulti-window = [ \"iced_winit?/multi-window\",]\nadvanced = []\na11y = [ \"iced_accessibility\", \"iced_core/a11y\", \"iced_widget/a11y\", \"iced_winit?/a11y\", \"iced_sctk?/a11y\",]\nwinit = [ \"iced_winit\", \"iced_accessibility?/accesskit_winit\",]\nwayland = [ \"iced_sctk\", \"iced_widget/wayland\", \"iced_accessibility?/accesskit_unix\", \"iced_core/wayland\",]\nwayland-clipboard = [ \"iced_sctk?/clipboard\",]\n\n[dependencies]\nthiserror = \"1.0\"\n\n[workspace]\nmembers = [ \"core\", \"futures\", \"graphics\", \"runtime\", \"renderer\", \"style\", \"tiny_skia\", \"wgpu\", \"widget\", \"winit\", \"examples/*\", \"accessibility\", \"sctk\",]\nexclude = [ \"examples/integration\",]\n\n[badges.maintenance]\nstatus = \"actively-developed\"\n\n[dependencies.iced_core]\nversion = \"0.12\"\npath = \"core\"\n\n[dependencies.iced_futures]\nversion = \"0.12\"\npath = \"futures\"\n\n[dependencies.iced_renderer]\nversion = \"0.12\"\npath = \"renderer\"\n\n[dependencies.iced_widget]\nversion = \"0.12\"\npath = \"widget\"\n\n[dependencies.iced_winit]\nfeatures = [ \"application\", \"application\",]\noptional = true\nversion = \"0.12\"\npath = \"winit\"\n\n[dependencies.iced_sctk]\noptional = true\nversion = \"0.1\"\npath = \"sctk\"\n\n[dependencies.iced_highlighter]\noptional = true\nversion = \"0.12\"\npath = \"highlighter\"\n\n[dependencies.iced_accessibility]\noptional = true\nversion = \"0.1\"\npath = \"accessibility\"\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.mime]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.image]\noptional = true\nversion = \"0.24\"\n\n[workspace.package]\nversion = \"0.12.0\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nedition = \"2021\"\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[workspace.dependencies]\nasync-std = \"1.0\"\nbitflags = \"2.5\"\nfutures = \"0.3\"\nglam = \"0.24\"\nguillotiere = \"0.6\"\nhalf = \"2.2\"\nimage = \"0.24\"\nkamadak-exif = \"0.5\"\nkurbo = \"0.9\"\nlog = \"0.4\"\nlyon = \"1.0\"\nlyon_path = \"1.0\"\nnum-traits = \"0.2\"\nonce_cell = \"1.0\"\nouroboros = \"0.17\"\npalette = \"0.7\"\nraw-window-handle = \"0.6\"\nresvg = \"0.37\"\nrustc-hash = \"1.0\"\nsmol = \"1.0\"\nsmol_str = \"0.2\"\nsyntect = \"5.1\"\nsysinfo = \"0.28\"\nthiserror = \"1.0\"\ntiny-skia = \"0.11\"\ntokio = \"1.0\"\ntracing = \"0.1\"\nunicode-segmentation = \"1.0\"\nwasm-bindgen-futures = \"0.4\"\nwasm-timer = \"0.2\"\nweb-sys = \"0.3\"\nweb-time = \"0.2\"\nwinapi = \"0.3\"\n\n[profile.release-opt]\ninherits = \"release\"\ncodegen-units = 1\ndebug = false\nlto = true\nincremental = false\nopt-level = 3\noverflow-checks = false\nstrip = \"debuginfo\"\n\n[workspace.dependencies.iced]\nversion = \"0.12\"\npath = \".\"\n\n[workspace.dependencies.iced_core]\nversion = \"0.12\"\npath = \"core\"\n\n[workspace.dependencies.iced_futures]\nversion = \"0.12\"\npath = \"futures\"\n\n[workspace.dependencies.iced_graphics]\nversion = \"0.12\"\npath = \"graphics\"\n\n[workspace.dependencies.iced_highlighter]\nversion = \"0.12\"\npath = \"highlighter\"\n\n[workspace.dependencies.iced_renderer]\nversion = \"0.12\"\npath = \"renderer\"\n\n[workspace.dependencies.iced_runtime]\nversion = \"0.12\"\npath = \"runtime\"\n\n[workspace.dependencies.iced_style]\nversion = \"0.12\"\npath = \"style\"\n\n[workspace.dependencies.iced_tiny_skia]\nversion = \"0.12\"\npath = \"tiny_skia\"\n\n[workspace.dependencies.iced_wgpu]\nversion = \"0.12\"\npath = \"wgpu\"\n\n[workspace.dependencies.iced_widget]\nversion = \"0.12\"\npath = \"widget\"\n\n[workspace.dependencies.iced_winit]\nversion = \"0.12\"\npath = \"winit\"\nfeatures = [ \"application\",]\n\n[workspace.dependencies.iced_sctk]\nversion = \"0.1\"\npath = \"sctk\"\n\n[workspace.dependencies.iced_accessibility]\nversion = \"0.1\"\npath = \"accessibility\"\n\n[workspace.dependencies.bytemuck]\nversion = \"1.0\"\nfeatures = [ \"derive\",]\n\n[workspace.dependencies.cosmic-text]\ngit = \"https://github.com/pop-os/cosmic-text.git\"\n\n[workspace.dependencies.glyphon]\ngit = \"https://github.com/pop-os/glyphon.git\"\ntag = \"v0.5.0\"\n\n[workspace.dependencies.qrcode]\nversion = \"0.12\"\ndefault-features = false\n\n[workspace.dependencies.sctk]\npackage = \"smithay-client-toolkit\"\ngit = \"https://github.com/smithay/client-toolkit\"\nrev = \"3bed072\"\n\n[workspace.dependencies.softbuffer]\ngit = \"https://github.com/pop-os/softbuffer\"\ntag = \"cosmic-4.0\"\n\n[workspace.dependencies.xxhash-rust]\nversion = \"0.8\"\nfeatures = [ \"xxh3\",]\n\n[workspace.dependencies.wayland-protocols]\nversion = \"0.31.0\"\nfeatures = [ \"staging\",]\n\n[workspace.dependencies.wgpu]\ngit = \"https://github.com/gfx-rs/wgpu\"\nrev = \"20fda69\"\n\n[workspace.dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[workspace.dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[workspace.dependencies.mime]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[workspace.dependencies.winit]\ngit = \"https://github.com/pop-os/winit.git\"\nbranch = \"winit-0.29\"\n\n[package.metadata.docs.rs]\nrustdoc-args = [ \"--cfg\", \"docsrs\",]\nall-features = true\n",
+        "contents": "[package]\nname = \"iced\"\ndescription = \"A cross-platform GUI library inspired by Elm\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\nwgpu = [ \"iced_renderer/wgpu\", \"iced_widget/wgpu\",]\nimage = [ \"iced_widget/image\", \"dep:image\",]\nsvg = [ \"iced_widget/svg\",]\ncanvas = [ \"iced_widget/canvas\",]\nqr_code = [ \"iced_widget/qr_code\",]\nlazy = [ \"iced_widget/lazy\",]\ndebug = [ \"iced_winit?/debug\", \"iced_sctk?/debug\",]\ntokio = [ \"iced_futures/tokio\",]\nasync-std = [ \"iced_futures/async-std\",]\nsmol = [ \"iced_futures/smol\",]\npalette = [ \"iced_core/palette\",]\nweb-colors = [ \"iced_renderer/web-colors\",]\nwebgl = [ \"iced_renderer/webgl\",]\nhighlighter = [ \"iced_highlighter\",]\nmulti-window = [ \"iced_winit?/multi-window\",]\nadvanced = []\na11y = [ \"iced_accessibility\", \"iced_core/a11y\", \"iced_widget/a11y\", \"iced_winit?/a11y\", \"iced_sctk?/a11y\",]\nwinit = [ \"iced_winit\", \"iced_accessibility?/accesskit_winit\",]\nwayland = [ \"iced_sctk\", \"iced_widget/wayland\", \"iced_accessibility?/accesskit_unix\", \"iced_core/wayland\",]\nwayland-clipboard = [ \"iced_sctk?/clipboard\",]\n\n[dependencies]\nthiserror = \"1.0\"\n\n[workspace]\nmembers = [ \"core\", \"futures\", \"graphics\", \"runtime\", \"renderer\", \"style\", \"tiny_skia\", \"wgpu\", \"widget\", \"winit\", \"examples/*\", \"accessibility\", \"sctk\",]\nexclude = [ \"examples/integration\",]\n\n[badges.maintenance]\nstatus = \"actively-developed\"\n\n[dependencies.iced_core]\nversion = \"0.12\"\npath = \"core\"\n\n[dependencies.iced_futures]\nversion = \"0.12\"\npath = \"futures\"\n\n[dependencies.iced_renderer]\nversion = \"0.12\"\npath = \"renderer\"\n\n[dependencies.iced_widget]\nversion = \"0.12\"\npath = \"widget\"\n\n[dependencies.iced_winit]\nfeatures = [ \"application\", \"application\",]\noptional = true\nversion = \"0.12\"\npath = \"winit\"\n\n[dependencies.iced_sctk]\noptional = true\nversion = \"0.1\"\npath = \"sctk\"\n\n[dependencies.iced_highlighter]\noptional = true\nversion = \"0.12\"\npath = \"highlighter\"\n\n[dependencies.iced_accessibility]\noptional = true\nversion = \"0.1\"\npath = \"accessibility\"\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.mime]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.image]\noptional = true\nversion = \"0.24\"\n\n[workspace.package]\nversion = \"0.12.0\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nedition = \"2021\"\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[workspace.dependencies]\nasync-std = \"1.0\"\nbitflags = \"2.5\"\nfutures = \"0.3\"\nglam = \"0.24\"\nguillotiere = \"0.6\"\nhalf = \"2.2\"\nimage = \"0.24\"\nkamadak-exif = \"0.5\"\nkurbo = \"0.9\"\nlog = \"0.4\"\nlyon = \"1.0\"\nlyon_path = \"1.0\"\nnum-traits = \"0.2\"\nonce_cell = \"1.0\"\nouroboros = \"0.17\"\npalette = \"0.7\"\nraw-window-handle = \"0.6\"\nresvg = \"0.37\"\nrustc-hash = \"1.0\"\nsmol = \"1.0\"\nsmol_str = \"0.2\"\nsyntect = \"5.1\"\nsysinfo = \"0.28\"\nthiserror = \"1.0\"\ntiny-skia = \"0.11\"\ntokio = \"1.0\"\ntracing = \"0.1\"\nunicode-segmentation = \"1.0\"\nwasm-bindgen-futures = \"0.4\"\nwasm-timer = \"0.2\"\nweb-sys = \"0.3\"\nweb-time = \"0.2\"\nwinapi = \"0.3\"\n\n[profile.release-opt]\ninherits = \"release\"\ncodegen-units = 1\ndebug = false\nlto = true\nincremental = false\nopt-level = 3\noverflow-checks = false\nstrip = \"debuginfo\"\n\n[workspace.dependencies.iced]\nversion = \"0.12\"\npath = \".\"\n\n[workspace.dependencies.iced_core]\nversion = \"0.12\"\npath = \"core\"\n\n[workspace.dependencies.iced_futures]\nversion = \"0.12\"\npath = \"futures\"\n\n[workspace.dependencies.iced_graphics]\nversion = \"0.12\"\npath = \"graphics\"\n\n[workspace.dependencies.iced_highlighter]\nversion = \"0.12\"\npath = \"highlighter\"\n\n[workspace.dependencies.iced_renderer]\nversion = \"0.12\"\npath = \"renderer\"\n\n[workspace.dependencies.iced_runtime]\nversion = \"0.12\"\npath = \"runtime\"\n\n[workspace.dependencies.iced_style]\nversion = \"0.12\"\npath = \"style\"\n\n[workspace.dependencies.iced_tiny_skia]\nversion = \"0.12\"\npath = \"tiny_skia\"\n\n[workspace.dependencies.iced_wgpu]\nversion = \"0.12\"\npath = \"wgpu\"\n\n[workspace.dependencies.iced_widget]\nversion = \"0.12\"\npath = \"widget\"\n\n[workspace.dependencies.iced_winit]\nversion = \"0.12\"\npath = \"winit\"\nfeatures = [ \"application\",]\n\n[workspace.dependencies.iced_sctk]\nversion = \"0.1\"\npath = \"sctk\"\n\n[workspace.dependencies.iced_accessibility]\nversion = \"0.1\"\npath = \"accessibility\"\n\n[workspace.dependencies.bytemuck]\nversion = \"1.0\"\nfeatures = [ \"derive\",]\n\n[workspace.dependencies.cosmic-text]\ngit = \"https://github.com/pop-os/cosmic-text.git\"\n\n[workspace.dependencies.glyphon]\ngit = \"https://github.com/pop-os/glyphon.git\"\ntag = \"v0.5.0\"\n\n[workspace.dependencies.qrcode]\nversion = \"0.12\"\ndefault-features = false\n\n[workspace.dependencies.sctk]\npackage = \"smithay-client-toolkit\"\nversion = \"0.19.1\"\n\n[workspace.dependencies.softbuffer]\ngit = \"https://github.com/pop-os/softbuffer\"\ntag = \"cosmic-4.0\"\n\n[workspace.dependencies.xxhash-rust]\nversion = \"0.8\"\nfeatures = [ \"xxh3\",]\n\n[workspace.dependencies.wayland-protocols]\nversion = \"0.32.1\"\nfeatures = [ \"staging\",]\n\n[workspace.dependencies.wgpu]\ngit = \"https://github.com/gfx-rs/wgpu\"\nrev = \"20fda69\"\n\n[workspace.dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[workspace.dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[workspace.dependencies.mime]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[workspace.dependencies.winit]\ngit = \"https://github.com/pop-os/winit.git\"\nbranch = \"winit-0.29\"\n\n[package.metadata.docs.rs]\nrustdoc-args = [ \"--cfg\", \"docsrs\",]\nall-features = true\n",
         "dest": "cargo/vendor/iced",
         "dest-filename": "Cargo.toml"
     },
@@ -3414,12 +3421,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/accessibility\" \"cargo/vendor/iced_accessibility\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/accessibility\" \"cargo/vendor/iced_accessibility\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"iced_accessibility\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies.accesskit]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\n\n[dependencies.accesskit_unix]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\noptional = true\n\n[dependencies.accesskit_windows]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\noptional = true\n\n[dependencies.accesskit_macos]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\noptional = true\n\n[dependencies.accesskit_winit]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\noptional = true\n",
+        "contents": "[package]\nname = \"iced_accessibility\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies.accesskit]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\n\n[dependencies.accesskit_unix]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\noptional = true\ndefault-features = false\nfeatures = [ \"tokio\",]\n\n[dependencies.accesskit_windows]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\noptional = true\n\n[dependencies.accesskit_macos]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\noptional = true\n\n[dependencies.accesskit_winit]\ngit = \"https://github.com/wash2/accesskit.git\"\nbranch = \"winit-0.29\"\noptional = true\n",
         "dest": "cargo/vendor/iced_accessibility",
         "dest-filename": "Cargo.toml"
     },
@@ -3432,12 +3439,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/core\" \"cargo/vendor/iced_core\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/core\" \"cargo/vendor/iced_core\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"iced_core\"\ndescription = \"The essential ideas of iced\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\na11y = [ \"iced_accessibility\",]\nwayland = [ \"iced_accessibility?/accesskit_unix\", \"sctk\",]\n\n[dependencies]\nbitflags = \"2.5\"\nlog = \"0.4\"\nnum-traits = \"0.2\"\nsmol_str = \"0.2\"\nthiserror = \"1.0\"\nweb-time = \"0.2\"\n\n[dev-dependencies]\napprox = \"0.5\"\n\n[dependencies.xxhash-rust]\nversion = \"0.8\"\nfeatures = [ \"xxh3\",]\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.mime]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.sctk]\noptional = true\npackage = \"smithay-client-toolkit\"\ngit = \"https://github.com/smithay/client-toolkit\"\nrev = \"3bed072\"\n\n[dependencies.palette]\noptional = true\nversion = \"0.7\"\n\n[dependencies.serde]\nversion = \"1\"\noptional = true\nfeatures = [ \"serde_derive\",]\n\n[dependencies.iced_accessibility]\nversion = \"0.1.0\"\npath = \"../accessibility\"\noptional = true\n\n[target.\"cfg(windows)\".dependencies]\nraw-window-handle = \"0.6\"\n",
+        "contents": "[package]\nname = \"iced_core\"\ndescription = \"The essential ideas of iced\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\na11y = [ \"iced_accessibility\",]\nwayland = [ \"iced_accessibility?/accesskit_unix\", \"sctk\",]\n\n[dependencies]\nbitflags = \"2.5\"\nlog = \"0.4\"\nnum-traits = \"0.2\"\nsmol_str = \"0.2\"\nthiserror = \"1.0\"\nweb-time = \"0.2\"\n\n[dev-dependencies]\napprox = \"0.5\"\n\n[dependencies.xxhash-rust]\nversion = \"0.8\"\nfeatures = [ \"xxh3\",]\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.mime]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.sctk]\noptional = true\npackage = \"smithay-client-toolkit\"\nversion = \"0.19.1\"\n\n[dependencies.palette]\noptional = true\nversion = \"0.7\"\n\n[dependencies.serde]\nversion = \"1\"\noptional = true\nfeatures = [ \"serde_derive\",]\n\n[dependencies.iced_accessibility]\nversion = \"0.1.0\"\npath = \"../accessibility\"\noptional = true\n\n[target.\"cfg(windows)\".dependencies]\nraw-window-handle = \"0.6\"\n",
         "dest": "cargo/vendor/iced_core",
         "dest-filename": "Cargo.toml"
     },
@@ -3450,7 +3457,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/futures\" \"cargo/vendor/iced_futures\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/futures\" \"cargo/vendor/iced_futures\""
         ]
     },
     {
@@ -3468,7 +3475,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/graphics\" \"cargo/vendor/iced_graphics\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/graphics\" \"cargo/vendor/iced_graphics\""
         ]
     },
     {
@@ -3486,7 +3493,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/renderer\" \"cargo/vendor/iced_renderer\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/renderer\" \"cargo/vendor/iced_renderer\""
         ]
     },
     {
@@ -3504,12 +3511,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/runtime\" \"cargo/vendor/iced_runtime\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/runtime\" \"cargo/vendor/iced_runtime\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"iced_runtime\"\ndescription = \"A renderer-agnostic runtime for iced\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\ndebug = []\nmulti-window = []\na11y = [ \"iced_accessibility\", \"iced_core/a11y\",]\nwayland = [ \"iced_accessibility?/accesskit_unix\", \"iced_core/wayland\", \"sctk\",]\n\n[dependencies]\nthiserror = \"1.0\"\n\n[dependencies.iced_core]\nversion = \"0.12\"\npath = \"core\"\n\n[dependencies.iced_futures]\nfeatures = [ \"thread-pool\",]\nversion = \"0.12\"\npath = \"futures\"\n\n[dependencies.sctk]\noptional = true\npackage = \"smithay-client-toolkit\"\ngit = \"https://github.com/smithay/client-toolkit\"\nrev = \"3bed072\"\n\n[dependencies.iced_accessibility]\noptional = true\nversion = \"0.1\"\npath = \"accessibility\"\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n",
+        "contents": "[package]\nname = \"iced_runtime\"\ndescription = \"A renderer-agnostic runtime for iced\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\ndebug = []\nmulti-window = []\na11y = [ \"iced_accessibility\", \"iced_core/a11y\",]\nwayland = [ \"iced_accessibility?/accesskit_unix\", \"iced_core/wayland\", \"sctk\",]\n\n[dependencies]\nthiserror = \"1.0\"\n\n[dependencies.iced_core]\nversion = \"0.12\"\npath = \"core\"\n\n[dependencies.iced_futures]\nfeatures = [ \"thread-pool\",]\nversion = \"0.12\"\npath = \"futures\"\n\n[dependencies.sctk]\noptional = true\npackage = \"smithay-client-toolkit\"\nversion = \"0.19.1\"\n\n[dependencies.iced_accessibility]\noptional = true\nversion = \"0.1\"\npath = \"accessibility\"\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n",
         "dest": "cargo/vendor/iced_runtime",
         "dest-filename": "Cargo.toml"
     },
@@ -3522,7 +3529,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/style\" \"cargo/vendor/iced_style\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/style\" \"cargo/vendor/iced_style\""
         ]
     },
     {
@@ -3540,7 +3547,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/tiny_skia\" \"cargo/vendor/iced_tiny_skia\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/tiny_skia\" \"cargo/vendor/iced_tiny_skia\""
         ]
     },
     {
@@ -3558,12 +3565,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/wgpu\" \"cargo/vendor/iced_wgpu\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/wgpu\" \"cargo/vendor/iced_wgpu\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"iced_wgpu\"\ndescription = \"A renderer for iced on top of wgpu\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\ngeometry = [ \"iced_graphics/geometry\", \"lyon\",]\nimage = [ \"iced_graphics/image\",]\nsvg = [ \"resvg\",]\nweb-colors = [ \"iced_graphics/web-colors\",]\nwebgl = [ \"wgpu/webgl\",]\n\n[dependencies]\nbitflags = \"2.5\"\nfutures = \"0.3\"\nglam = \"0.24\"\nguillotiere = \"0.6\"\nlog = \"0.4\"\nonce_cell = \"1.0\"\n\n[dependencies.iced_graphics]\nversion = \"0.12\"\npath = \"graphics\"\n\n[dependencies.bytemuck]\nversion = \"1.0\"\nfeatures = [ \"derive\",]\n\n[dependencies.glyphon]\ngit = \"https://github.com/pop-os/glyphon.git\"\ntag = \"v0.5.0\"\n\n[dependencies.wgpu]\ngit = \"https://github.com/gfx-rs/wgpu\"\nrev = \"20fda69\"\n\n[dependencies.lyon]\noptional = true\nversion = \"1.0\"\n\n[dependencies.resvg]\noptional = true\nversion = \"0.37\"\n\n[dependencies.tracing]\noptional = true\nversion = \"0.1\"\n\n[target.\"cfg(unix)\".dependencies]\nraw-window-handle = \"0.6\"\n\n[package.metadata.docs.rs]\nrustdoc-args = [ \"--cfg\", \"docsrs\",]\nall-features = true\n\n[target.\"cfg(unix)\".dependencies.rustix]\nversion = \"0.38\"\n\n[target.\"cfg(unix)\".dependencies.sctk]\npackage = \"smithay-client-toolkit\"\ngit = \"https://github.com/smithay/client-toolkit\"\nrev = \"3bed072\"\n\n[target.\"cfg(unix)\".dependencies.wayland-protocols]\nversion = \"0.31.0\"\nfeatures = [ \"staging\",]\n\n[target.\"cfg(unix)\".dependencies.wayland-backend]\nversion = \"0.3.3\"\nfeatures = [ \"client_system\",]\n\n[target.\"cfg(unix)\".dependencies.wayland-client]\nversion = \"0.31.2\"\n\n[target.\"cfg(unix)\".dependencies.wayland-sys]\nversion = \"0.31.1\"\nfeatures = [ \"dlopen\",]\n",
+        "contents": "[package]\nname = \"iced_wgpu\"\ndescription = \"A renderer for iced on top of wgpu\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\ngeometry = [ \"iced_graphics/geometry\", \"lyon\",]\nimage = [ \"iced_graphics/image\",]\nsvg = [ \"resvg\",]\nweb-colors = [ \"iced_graphics/web-colors\",]\nwebgl = [ \"wgpu/webgl\",]\n\n[dependencies]\nbitflags = \"2.5\"\nfutures = \"0.3\"\nglam = \"0.24\"\nguillotiere = \"0.6\"\nlog = \"0.4\"\nonce_cell = \"1.0\"\n\n[dependencies.iced_graphics]\nversion = \"0.12\"\npath = \"graphics\"\n\n[dependencies.bytemuck]\nversion = \"1.0\"\nfeatures = [ \"derive\",]\n\n[dependencies.glyphon]\ngit = \"https://github.com/pop-os/glyphon.git\"\ntag = \"v0.5.0\"\n\n[dependencies.wgpu]\ngit = \"https://github.com/gfx-rs/wgpu\"\nrev = \"20fda69\"\n\n[dependencies.lyon]\noptional = true\nversion = \"1.0\"\n\n[dependencies.resvg]\noptional = true\nversion = \"0.37\"\n\n[dependencies.tracing]\noptional = true\nversion = \"0.1\"\n\n[target.\"cfg(all(unix, not(target_os = \\\"macos\\\")))\".dependencies]\nraw-window-handle = \"0.6\"\n\n[package.metadata.docs.rs]\nrustdoc-args = [ \"--cfg\", \"docsrs\",]\nall-features = true\n\n[target.\"cfg(all(unix, not(target_os = \\\"macos\\\")))\".dependencies.rustix]\nversion = \"0.38\"\n\n[target.\"cfg(all(unix, not(target_os = \\\"macos\\\")))\".dependencies.sctk]\npackage = \"smithay-client-toolkit\"\nversion = \"0.19.1\"\n\n[target.\"cfg(all(unix, not(target_os = \\\"macos\\\")))\".dependencies.wayland-protocols]\nversion = \"0.32.1\"\nfeatures = [ \"staging\",]\n\n[target.\"cfg(all(unix, not(target_os = \\\"macos\\\")))\".dependencies.wayland-backend]\nversion = \"0.3.3\"\nfeatures = [ \"client_system\",]\n\n[target.\"cfg(all(unix, not(target_os = \\\"macos\\\")))\".dependencies.wayland-client]\nversion = \"0.31.2\"\n\n[target.\"cfg(all(unix, not(target_os = \\\"macos\\\")))\".dependencies.wayland-sys]\nversion = \"0.31.1\"\nfeatures = [ \"dlopen\",]\n",
         "dest": "cargo/vendor/iced_wgpu",
         "dest-filename": "Cargo.toml"
     },
@@ -3576,12 +3583,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/widget\" \"cargo/vendor/iced_widget\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/widget\" \"cargo/vendor/iced_widget\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"iced_widget\"\ndescription = \"The built-in widgets for iced\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\nlazy = [ \"ouroboros\",]\nimage = [ \"iced_renderer/image\",]\nsvg = [ \"iced_renderer/svg\",]\ncanvas = [ \"iced_renderer/geometry\",]\nqr_code = [ \"canvas\", \"qrcode\",]\nwgpu = [ \"iced_renderer/wgpu\",]\na11y = [ \"iced_accessibility\",]\nwayland = [ \"sctk\",]\n\n[dependencies]\nnum-traits = \"0.2\"\nthiserror = \"1.0\"\nunicode-segmentation = \"1.0\"\n\n[dependencies.iced_renderer]\nversion = \"0.12\"\npath = \"renderer\"\n\n[dependencies.iced_runtime]\nversion = \"0.12\"\npath = \"runtime\"\n\n[dependencies.iced_style]\nversion = \"0.12\"\npath = \"style\"\n\n[dependencies.iced_accessibility]\noptional = true\nversion = \"0.1\"\npath = \"accessibility\"\n\n[dependencies.sctk]\noptional = true\npackage = \"smithay-client-toolkit\"\ngit = \"https://github.com/smithay/client-toolkit\"\nrev = \"3bed072\"\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.ouroboros]\noptional = true\nversion = \"0.17\"\n\n[dependencies.qrcode]\noptional = true\nversion = \"0.12\"\ndefault-features = false\n\n[package.metadata.docs.rs]\nrustdoc-args = [ \"--cfg\", \"docsrs\",]\nall-features = true\n",
+        "contents": "[package]\nname = \"iced_widget\"\ndescription = \"The built-in widgets for iced\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\nlazy = [ \"ouroboros\",]\nimage = [ \"iced_renderer/image\",]\nsvg = [ \"iced_renderer/svg\",]\ncanvas = [ \"iced_renderer/geometry\",]\nqr_code = [ \"canvas\", \"qrcode\",]\nwgpu = [ \"iced_renderer/wgpu\",]\na11y = [ \"iced_accessibility\",]\nwayland = [ \"sctk\",]\n\n[dependencies]\nnum-traits = \"0.2\"\nthiserror = \"1.0\"\nunicode-segmentation = \"1.0\"\n\n[dependencies.iced_renderer]\nversion = \"0.12\"\npath = \"renderer\"\n\n[dependencies.iced_runtime]\nversion = \"0.12\"\npath = \"runtime\"\n\n[dependencies.iced_style]\nversion = \"0.12\"\npath = \"style\"\n\n[dependencies.iced_accessibility]\noptional = true\nversion = \"0.1\"\npath = \"accessibility\"\n\n[dependencies.sctk]\noptional = true\npackage = \"smithay-client-toolkit\"\nversion = \"0.19.1\"\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.ouroboros]\noptional = true\nversion = \"0.17\"\n\n[dependencies.qrcode]\noptional = true\nversion = \"0.12\"\ndefault-features = false\n\n[package.metadata.docs.rs]\nrustdoc-args = [ \"--cfg\", \"docsrs\",]\nall-features = true\n",
         "dest": "cargo/vendor/iced_widget",
         "dest-filename": "Cargo.toml"
     },
@@ -3594,12 +3601,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/iced/winit\" \"cargo/vendor/iced_winit\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/iced/winit\" \"cargo/vendor/iced_winit\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"iced_winit\"\ndescription = \"A runtime for iced on top of winit\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\ndefault = [ \"x11\", \"wayland\", \"wayland-dlopen\", \"wayland-csd-adwaita\",]\ndebug = [ \"iced_runtime/debug\",]\nsystem = [ \"sysinfo\",]\napplication = []\nx11 = [ \"winit/x11\",]\nwayland = [ \"winit/wayland\",]\nwayland-dlopen = [ \"winit/wayland-dlopen\",]\nwayland-csd-adwaita = [ \"winit/wayland-csd-adwaita\",]\nmulti-window = [ \"iced_runtime/multi-window\",]\na11y = [ \"iced_accessibility\", \"iced_runtime/a11y\",]\n\n[dependencies]\nlog = \"0.4\"\nthiserror = \"1.0\"\ntracing = \"0.1\"\n\n[dependencies.iced_graphics]\nversion = \"0.12\"\npath = \"graphics\"\n\n[dependencies.iced_runtime]\nversion = \"0.12\"\npath = \"runtime\"\n\n[dependencies.iced_style]\nversion = \"0.12\"\npath = \"style\"\n\n[dependencies.iced_accessibility]\noptional = true\nfeatures = [ \"accesskit_winit\",]\nversion = \"0.1\"\npath = \"accessibility\"\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-6\"\n\n[dependencies.winit]\ngit = \"https://github.com/pop-os/winit.git\"\nbranch = \"winit-0.29\"\n\n[dependencies.sysinfo]\noptional = true\nversion = \"0.28\"\n\n[target.\"cfg(target_os = \\\"windows\\\")\".dependencies]\nwinapi = \"0.3\"\n\n[target.\"cfg(target_arch = \\\"wasm32\\\")\".dependencies.web-sys]\nfeatures = [ \"Document\", \"Window\",]\nversion = \"0.3\"\n",
+        "contents": "[package]\nname = \"iced_winit\"\ndescription = \"A runtime for iced on top of winit\"\nversion = \"0.12.0\"\nedition = \"2021\"\nauthors = [ \"H\u00e9ctor Ram\u00f3n Jim\u00e9nez <hector@hecrj.dev>\",]\nlicense = \"MIT\"\nrepository = \"https://github.com/iced-rs/iced\"\nhomepage = \"https://iced.rs\"\ncategories = [ \"gui\",]\nkeywords = [ \"gui\", \"ui\", \"graphics\", \"interface\", \"widgets\",]\n\n[features]\ndefault = [ \"x11\", \"wayland\", \"wayland-dlopen\", \"wayland-csd-adwaita\",]\ndebug = [ \"iced_runtime/debug\",]\nsystem = [ \"sysinfo\",]\napplication = []\nx11 = [ \"winit/x11\",]\nwayland = [ \"winit/wayland\",]\nwayland-dlopen = [ \"winit/wayland-dlopen\",]\nwayland-csd-adwaita = [ \"winit/wayland-csd-adwaita\",]\nmulti-window = [ \"iced_runtime/multi-window\",]\na11y = [ \"iced_accessibility\", \"iced_runtime/a11y\",]\n\n[dependencies]\nlog = \"0.4\"\nthiserror = \"1.0\"\ntracing = \"0.1\"\n\n[dependencies.iced_graphics]\nversion = \"0.12\"\npath = \"graphics\"\n\n[dependencies.iced_runtime]\nversion = \"0.12\"\npath = \"runtime\"\n\n[dependencies.iced_style]\nversion = \"0.12\"\npath = \"style\"\n\n[dependencies.iced_accessibility]\noptional = true\nfeatures = [ \"accesskit_winit\",]\nversion = \"0.1\"\npath = \"accessibility\"\n\n[dependencies.window_clipboard]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.dnd]\ngit = \"https://github.com/pop-os/window_clipboard.git\"\ntag = \"pop-dnd-8\"\n\n[dependencies.winit]\ngit = \"https://github.com/pop-os/winit.git\"\nbranch = \"winit-0.29\"\n\n[dependencies.sysinfo]\noptional = true\nversion = \"0.28\"\n\n[target.\"cfg(target_os = \\\"windows\\\")\".dependencies]\nwinapi = \"0.3\"\n\n[target.\"cfg(target_arch = \\\"wasm32\\\")\".dependencies.web-sys]\nfeatures = [ \"Document\", \"Window\",]\nversion = \"0.3\"\n",
         "dest": "cargo/vendor/iced_winit",
         "dest-filename": "Cargo.toml"
     },
@@ -4041,14 +4048,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/lazy_static/lazy_static-1.4.0.crate",
-        "sha256": "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646",
-        "dest": "cargo/vendor/lazy_static-1.4.0"
+        "url": "https://static.crates.io/crates/lazy_static/lazy_static-1.5.0.crate",
+        "sha256": "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe",
+        "dest": "cargo/vendor/lazy_static-1.5.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646\", \"files\": {}}",
-        "dest": "cargo/vendor/lazy_static-1.4.0",
+        "contents": "{\"package\": \"bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe\", \"files\": {}}",
+        "dest": "cargo/vendor/lazy_static-1.5.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4080,12 +4087,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-173ddca/.\" \"cargo/vendor/libcosmic\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/libcosmic-5c6fa84/.\" \"cargo/vendor/libcosmic\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"libcosmic\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version = \"1.71\"\n\n[lib]\nname = \"cosmic\"\n\n[features]\ndefault = [ \"iced_sctk?/clipboard\",]\na11y = [ \"iced/a11y\", \"iced_accessibility\",]\nanimated-image = [ \"image\", \"dep:async-fs\", \"tokio?/io-util\", \"tokio?/fs\",]\napplet = [ \"wayland\", \"tokio\", \"cosmic-panel-config\", \"ron\",]\napplet-token = []\ndbus-config = [ \"cosmic-config/dbus\", \"dep:zbus\", \"cosmic-settings-daemon\",]\ndebug = [ \"iced/debug\",]\npipewire = [ \"ashpd?/pipewire\",]\nprocess = [ \"dep:nix\",]\nrfd = [ \"dep:rfd\",]\ndesktop = [ \"process\", \"dep:freedesktop-desktop-entry\", \"dep:mime\", \"dep:shlex\", \"dep:textdistance\",]\nserde-keycode = [ \"iced_core/serde\",]\nsingle-instance = [ \"dep:zbus\", \"ron\",]\nsmol = [ \"iced/smol\", \"zbus?/async-io\",]\ntokio = [ \"dep:tokio\", \"ashpd?/tokio\", \"iced/tokio\", \"rfd?/tokio\", \"zbus?/tokio\", \"cosmic-config/tokio\",]\nwayland = [ \"ashpd?/wayland\", \"iced_runtime/wayland\", \"iced/wayland\", \"iced_sctk\", \"cctk\",]\nmulti-window = [ \"iced/multi-window\",]\nwgpu = [ \"iced/wgpu\", \"iced_wgpu\",]\nwinit = [ \"iced/winit\", \"iced_winit\",]\nwinit_debug = [ \"winit\", \"debug\",]\nwinit_tokio = [ \"winit\", \"tokio\",]\nwinit_wgpu = [ \"winit\", \"wgpu\",]\nxdg-portal = [ \"ashpd\",]\n\n[dependencies]\napply = \"0.3.0\"\nchrono = \"0.4.35\"\ncss-color = \"0.2.5\"\nderive_setters = \"0.1.5\"\nfraction = \"0.14.0\"\nlazy_static = \"1.4.0\"\npalette = \"0.7.3\"\nslotmap = \"1.0.6\"\nthiserror = \"1.0.44\"\ntracing = \"0.1\"\nunicode-segmentation = \"1.6\"\nurl = \"2.4.0\"\n\n[workspace]\nmembers = [ \"cosmic-config\", \"cosmic-config-derive\", \"cosmic-theme\", \"examples/*\",]\nexclude = [ \"examples/design-demo\", \"iced\",]\n\n[dependencies.ashpd]\nversion = \"0.8.1\"\ndefault-features = false\noptional = true\n\n[dependencies.async-fs]\nversion = \"2.1\"\noptional = true\n\n[dependencies.cctk]\ngit = \"https://github.com/pop-os/cosmic-protocols\"\npackage = \"cosmic-client-toolkit\"\nrev = \"e4e6f8c\"\noptional = true\n\n[dependencies.cosmic-config]\npath = \"cosmic-config\"\n\n[dependencies.cosmic-settings-daemon]\ngit = \"https://github.com/pop-os/dbus-settings-bindings\"\noptional = true\n\n[dependencies.image]\nversion = \"0.25.1\"\noptional = true\n\n[dependencies.mime]\nversion = \"0.3.17\"\noptional = true\n\n[dependencies.nix]\nversion = \"0.27\"\nfeatures = [ \"process\",]\noptional = true\n\n[dependencies.rfd]\nversion = \"0.14.0\"\noptional = true\n\n[dependencies.serde]\nversion = \"1.0.180\"\nfeatures = [ \"derive\",]\n\n[dependencies.textdistance]\nversion = \"1.0.2\"\noptional = true\n\n[dependencies.tokio]\nversion = \"1.24.2\"\noptional = true\n\n[dependencies.zbus]\nversion = \"4.2.1\"\ndefault-features = false\noptional = true\n\n[dependencies.cosmic-theme]\npath = \"cosmic-theme\"\n\n[dependencies.iced]\npath = \"./iced\"\ndefault-features = false\nfeatures = [ \"advanced\", \"image\", \"lazy\", \"svg\", \"web-colors\",]\n\n[dependencies.iced_runtime]\npath = \"./iced/runtime\"\n\n[dependencies.iced_renderer]\npath = \"./iced/renderer\"\n\n[dependencies.iced_core]\npath = \"./iced/core\"\nfeatures = [ \"serde\",]\n\n[dependencies.iced_widget]\npath = \"./iced/widget\"\nfeatures = [ \"canvas\",]\n\n[dependencies.iced_futures]\npath = \"./iced/futures\"\n\n[dependencies.iced_accessibility]\npath = \"./iced/accessibility\"\noptional = true\n\n[dependencies.iced_tiny_skia]\npath = \"./iced/tiny_skia\"\n\n[dependencies.iced_style]\npath = \"./iced/style\"\n\n[dependencies.iced_sctk]\npath = \"./iced/sctk\"\noptional = true\n\n[dependencies.iced_winit]\npath = \"./iced/winit\"\noptional = true\n\n[dependencies.iced_wgpu]\npath = \"./iced/wgpu\"\noptional = true\n\n[dependencies.cosmic-panel-config]\ngit = \"https://github.com/pop-os/cosmic-panel\"\noptional = true\n\n[dependencies.ron]\nversion = \"0.8\"\noptional = true\n\n[dependencies.taffy]\ngit = \"https://github.com/DioxusLabs/taffy\"\nrev = \"7781c70\"\nfeatures = [ \"grid\",]\n\n[workspace.dependencies]\ndirs = \"5.0.1\"\n\n[target.\"cfg(unix)\".dependencies]\nfreedesktop-icons = \"0.2.5\"\n\n[patch.\"https://github.com/pop-os/libcosmic\".libcosmic]\npath = \"./\"\n\n[target.\"cfg(unix)\".dependencies.freedesktop-desktop-entry]\nversion = \"0.5.1\"\noptional = true\n\n[target.\"cfg(unix)\".dependencies.shlex]\nversion = \"1.3.0\"\noptional = true\n",
+        "contents": "[package]\nname = \"libcosmic\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version = \"1.71\"\n\n[lib]\nname = \"cosmic\"\n\n[features]\ndefault = [ \"clipboard\",]\na11y = [ \"iced/a11y\", \"iced_accessibility\",]\nanimated-image = [ \"image\", \"dep:async-fs\", \"tokio?/io-util\", \"tokio?/fs\",]\napplet = [ \"wayland\", \"tokio\", \"cosmic-panel-config\", \"ron\",]\napplet-token = []\nclipboard = [ \"iced_sctk?/clipboard\",]\ndbus-config = [ \"cosmic-config/dbus\", \"dep:zbus\", \"cosmic-settings-daemon\",]\ndebug = [ \"iced/debug\",]\npipewire = [ \"ashpd?/pipewire\",]\nprocess = [ \"dep:nix\",]\nrfd = [ \"dep:rfd\",]\ndesktop = [ \"process\", \"dep:freedesktop-desktop-entry\", \"dep:mime\", \"dep:shlex\", \"dep:textdistance\",]\nserde-keycode = [ \"iced_core/serde\",]\nsingle-instance = [ \"dep:zbus\", \"ron\",]\nsmol = [ \"iced/smol\", \"zbus?/async-io\",]\ntokio = [ \"dep:tokio\", \"ashpd?/tokio\", \"iced/tokio\", \"rfd?/tokio\", \"zbus?/tokio\", \"cosmic-config/tokio\",]\nwayland = [ \"ashpd?/wayland\", \"iced_runtime/wayland\", \"iced/wayland\", \"iced_sctk\", \"cctk\",]\nmulti-window = [ \"iced/multi-window\",]\nwgpu = [ \"iced/wgpu\", \"iced_wgpu\",]\nwinit = [ \"iced/winit\", \"iced_winit\",]\nwinit_debug = [ \"winit\", \"debug\",]\nwinit_tokio = [ \"winit\", \"tokio\",]\nwinit_wgpu = [ \"winit\", \"wgpu\",]\nxdg-portal = [ \"ashpd\",]\n\n[dependencies]\napply = \"0.3.0\"\nchrono = \"0.4.35\"\ncss-color = \"0.2.5\"\nderive_setters = \"0.1.5\"\nfraction = \"0.14.0\"\nlazy_static = \"1.4.0\"\npalette = \"0.7.3\"\nslotmap = \"1.0.6\"\nthiserror = \"1.0.44\"\ntracing = \"0.1\"\nunicode-segmentation = \"1.6\"\nurl = \"2.4.0\"\n\n[workspace]\nmembers = [ \"cosmic-config\", \"cosmic-config-derive\", \"cosmic-theme\", \"examples/*\",]\nexclude = [ \"examples/design-demo\", \"iced\",]\n\n[dependencies.ashpd]\nversion = \"0.8.1\"\ndefault-features = false\noptional = true\n\n[dependencies.async-fs]\nversion = \"2.1\"\noptional = true\n\n[dependencies.cctk]\ngit = \"https://github.com/pop-os/cosmic-protocols\"\npackage = \"cosmic-client-toolkit\"\nrev = \"c8d3a1c\"\noptional = true\n\n[dependencies.cosmic-config]\npath = \"cosmic-config\"\n\n[dependencies.cosmic-settings-daemon]\ngit = \"https://github.com/pop-os/dbus-settings-bindings\"\noptional = true\n\n[dependencies.image]\nversion = \"0.25.1\"\noptional = true\n\n[dependencies.mime]\nversion = \"0.3.17\"\noptional = true\n\n[dependencies.nix]\nversion = \"0.27\"\nfeatures = [ \"process\",]\noptional = true\n\n[dependencies.rfd]\nversion = \"0.14.0\"\noptional = true\n\n[dependencies.serde]\nversion = \"1.0.180\"\nfeatures = [ \"derive\",]\n\n[dependencies.textdistance]\nversion = \"1.0.2\"\noptional = true\n\n[dependencies.tokio]\nversion = \"1.24.2\"\noptional = true\n\n[dependencies.zbus]\nversion = \"4.2.1\"\ndefault-features = false\noptional = true\n\n[dependencies.cosmic-theme]\npath = \"cosmic-theme\"\n\n[dependencies.iced]\npath = \"./iced\"\ndefault-features = false\nfeatures = [ \"advanced\", \"image\", \"lazy\", \"svg\", \"web-colors\",]\n\n[dependencies.iced_runtime]\npath = \"./iced/runtime\"\n\n[dependencies.iced_renderer]\npath = \"./iced/renderer\"\n\n[dependencies.iced_core]\npath = \"./iced/core\"\nfeatures = [ \"serde\",]\n\n[dependencies.iced_widget]\npath = \"./iced/widget\"\nfeatures = [ \"canvas\",]\n\n[dependencies.iced_futures]\npath = \"./iced/futures\"\n\n[dependencies.iced_accessibility]\npath = \"./iced/accessibility\"\noptional = true\n\n[dependencies.iced_tiny_skia]\npath = \"./iced/tiny_skia\"\n\n[dependencies.iced_style]\npath = \"./iced/style\"\n\n[dependencies.iced_sctk]\npath = \"./iced/sctk\"\noptional = true\n\n[dependencies.iced_winit]\npath = \"./iced/winit\"\noptional = true\n\n[dependencies.iced_wgpu]\npath = \"./iced/wgpu\"\noptional = true\n\n[dependencies.cosmic-panel-config]\ngit = \"https://github.com/pop-os/cosmic-panel\"\noptional = true\n\n[dependencies.ron]\nversion = \"0.8\"\noptional = true\n\n[dependencies.taffy]\ngit = \"https://github.com/DioxusLabs/taffy\"\nrev = \"7781c70\"\nfeatures = [ \"grid\",]\n\n[workspace.dependencies]\ndirs = \"5.0.1\"\n\n[target.\"cfg(unix)\".dependencies]\nfreedesktop-icons = \"0.2.5\"\n\n[patch.\"https://github.com/pop-os/libcosmic\".libcosmic]\npath = \"./\"\n\n[target.\"cfg(unix)\".dependencies.freedesktop-desktop-entry]\nversion = \"0.5.1\"\noptional = true\n\n[target.\"cfg(unix)\".dependencies.shlex]\nversion = \"1.3.0\"\noptional = true\n",
         "dest": "cargo/vendor/libcosmic",
         "dest-filename": "Cargo.toml"
     },
@@ -4124,14 +4131,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/libloading/libloading-0.8.3.crate",
-        "sha256": "0c2a198fb6b0eada2a8df47933734e6d35d350665a33a3593d7164fa52c75c19",
-        "dest": "cargo/vendor/libloading-0.8.3"
+        "url": "https://static.crates.io/crates/libloading/libloading-0.8.4.crate",
+        "sha256": "e310b3a6b5907f99202fcdb4960ff45b93735d7c7d96b760fcff8db2dc0e103d",
+        "dest": "cargo/vendor/libloading-0.8.4"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"0c2a198fb6b0eada2a8df47933734e6d35d350665a33a3593d7164fa52c75c19\", \"files\": {}}",
-        "dest": "cargo/vendor/libloading-0.8.3",
+        "contents": "{\"package\": \"e310b3a6b5907f99202fcdb4960ff45b93735d7c7d96b760fcff8db2dc0e103d\", \"files\": {}}",
+        "dest": "cargo/vendor/libloading-0.8.4",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4241,14 +4248,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/log/log-0.4.21.crate",
-        "sha256": "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c",
-        "dest": "cargo/vendor/log-0.4.21"
+        "url": "https://static.crates.io/crates/log/log-0.4.22.crate",
+        "sha256": "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24",
+        "dest": "cargo/vendor/log-0.4.22"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c\", \"files\": {}}",
-        "dest": "cargo/vendor/log-0.4.21",
+        "contents": "{\"package\": \"a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24\", \"files\": {}}",
+        "dest": "cargo/vendor/log-0.4.22",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4397,14 +4404,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/memchr/memchr-2.7.2.crate",
-        "sha256": "6c8640c5d730cb13ebd907d8d04b52f55ac9a2eec55b440c8892f40d56c76c1d",
-        "dest": "cargo/vendor/memchr-2.7.2"
+        "url": "https://static.crates.io/crates/memchr/memchr-2.7.4.crate",
+        "sha256": "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3",
+        "dest": "cargo/vendor/memchr-2.7.4"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"6c8640c5d730cb13ebd907d8d04b52f55ac9a2eec55b440c8892f40d56c76c1d\", \"files\": {}}",
-        "dest": "cargo/vendor/memchr-2.7.2",
+        "contents": "{\"package\": \"78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3\", \"files\": {}}",
+        "dest": "cargo/vendor/memchr-2.7.4",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4475,12 +4482,12 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-8a816d8/mime\" \"cargo/vendor/mime\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-7c59b07/mime\" \"cargo/vendor/mime\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"mime\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[target.\"cfg(all(unix, not(any(target_os=\\\"macos\\\", target_os=\\\"android\\\", target_os=\\\"emscripten\\\", target_os=\\\"ios\\\", target_os=\\\"redox\\\"))))\".dependencies.smithay-clipboard]\ngit = \"https://github.com/pop-os/smithay-clipboard\"\ntag = \"pop-dnd-4\"\n",
+        "contents": "[package]\nname = \"mime\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[target.\"cfg(all(unix, not(any(target_os=\\\"macos\\\", target_os=\\\"android\\\", target_os=\\\"emscripten\\\", target_os=\\\"ios\\\", target_os=\\\"redox\\\"))))\".dependencies.smithay-clipboard]\ngit = \"https://github.com/pop-os/smithay-clipboard\"\ntag = \"pop-dnd-5\"\n",
         "dest": "cargo/vendor/mime",
         "dest-filename": "Cargo.toml"
     },
@@ -4519,14 +4526,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/miniz_oxide/miniz_oxide-0.7.3.crate",
-        "sha256": "87dfd01fe195c66b572b37921ad8803d010623c0aca821bea2302239d155cdae",
-        "dest": "cargo/vendor/miniz_oxide-0.7.3"
+        "url": "https://static.crates.io/crates/miniz_oxide/miniz_oxide-0.7.4.crate",
+        "sha256": "b8a240ddb74feaf34a79a7add65a741f3167852fba007066dcac1ca548d89c08",
+        "dest": "cargo/vendor/miniz_oxide-0.7.4"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"87dfd01fe195c66b572b37921ad8803d010623c0aca821bea2302239d155cdae\", \"files\": {}}",
-        "dest": "cargo/vendor/miniz_oxide-0.7.3",
+        "contents": "{\"package\": \"b8a240ddb74feaf34a79a7add65a741f3167852fba007066dcac1ca548d89c08\", \"files\": {}}",
+        "dest": "cargo/vendor/miniz_oxide-0.7.4",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4732,14 +4739,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/num-bigint/num-bigint-0.4.5.crate",
-        "sha256": "c165a9ab64cf766f73521c0dd2cfdff64f488b8f0b3e621face3462d3db536d7",
-        "dest": "cargo/vendor/num-bigint-0.4.5"
+        "url": "https://static.crates.io/crates/num-bigint/num-bigint-0.4.6.crate",
+        "sha256": "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9",
+        "dest": "cargo/vendor/num-bigint-0.4.6"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"c165a9ab64cf766f73521c0dd2cfdff64f488b8f0b3e621face3462d3db536d7\", \"files\": {}}",
-        "dest": "cargo/vendor/num-bigint-0.4.5",
+        "contents": "{\"package\": \"a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9\", \"files\": {}}",
+        "dest": "cargo/vendor/num-bigint-0.4.6",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -4979,14 +4986,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/object/object-0.35.0.crate",
-        "sha256": "b8ec7ab813848ba4522158d5517a6093db1ded27575b070f4177b8d12b41db5e",
-        "dest": "cargo/vendor/object-0.35.0"
+        "url": "https://static.crates.io/crates/object/object-0.36.0.crate",
+        "sha256": "576dfe1fc8f9df304abb159d767a29d0476f7750fbf8aa7ad07816004a207434",
+        "dest": "cargo/vendor/object-0.36.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"b8ec7ab813848ba4522158d5517a6093db1ded27575b070f4177b8d12b41db5e\", \"files\": {}}",
-        "dest": "cargo/vendor/object-0.35.0",
+        "contents": "{\"package\": \"576dfe1fc8f9df304abb159d767a29d0476f7750fbf8aa7ad07816004a207434\", \"files\": {}}",
+        "dest": "cargo/vendor/object-0.36.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -5473,14 +5480,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/polling/polling-3.7.1.crate",
-        "sha256": "5e6a007746f34ed64099e88783b0ae369eaa3da6392868ba262e2af9b8fbaea1",
-        "dest": "cargo/vendor/polling-3.7.1"
+        "url": "https://static.crates.io/crates/polling/polling-3.7.2.crate",
+        "sha256": "a3ed00ed3fbf728b5816498ecd316d1716eecaced9c0c8d2c5a6740ca214985b",
+        "dest": "cargo/vendor/polling-3.7.2"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"5e6a007746f34ed64099e88783b0ae369eaa3da6392868ba262e2af9b8fbaea1\", \"files\": {}}",
-        "dest": "cargo/vendor/polling-3.7.1",
+        "contents": "{\"package\": \"a3ed00ed3fbf728b5816498ecd316d1716eecaced9c0c8d2c5a6740ca214985b\", \"files\": {}}",
+        "dest": "cargo/vendor/polling-3.7.2",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -5590,14 +5597,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/proc-macro2/proc-macro2-1.0.85.crate",
-        "sha256": "22244ce15aa966053a896d1accb3a6e68469b97c7f33f284b99f0d576879fc23",
-        "dest": "cargo/vendor/proc-macro2-1.0.85"
+        "url": "https://static.crates.io/crates/proc-macro2/proc-macro2-1.0.86.crate",
+        "sha256": "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77",
+        "dest": "cargo/vendor/proc-macro2-1.0.86"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"22244ce15aa966053a896d1accb3a6e68469b97c7f33f284b99f0d576879fc23\", \"files\": {}}",
-        "dest": "cargo/vendor/proc-macro2-1.0.85",
+        "contents": "{\"package\": \"5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77\", \"files\": {}}",
+        "dest": "cargo/vendor/proc-macro2-1.0.86",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -5759,14 +5766,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/ravif/ravif-0.11.5.crate",
-        "sha256": "bc13288f5ab39e6d7c9d501759712e6969fcc9734220846fc9ed26cae2cc4234",
-        "dest": "cargo/vendor/ravif-0.11.5"
+        "url": "https://static.crates.io/crates/ravif/ravif-0.11.7.crate",
+        "sha256": "67376f469e7e7840d0040bbf4b9b3334005bb167f814621326e4c7ab8cd6e944",
+        "dest": "cargo/vendor/ravif-0.11.7"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"bc13288f5ab39e6d7c9d501759712e6969fcc9734220846fc9ed26cae2cc4234\", \"files\": {}}",
-        "dest": "cargo/vendor/ravif-0.11.5",
+        "contents": "{\"package\": \"67376f469e7e7840d0040bbf4b9b3334005bb167f814621326e4c7ab8cd6e944\", \"files\": {}}",
+        "dest": "cargo/vendor/ravif-0.11.7",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -5876,14 +5883,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/redox_syscall/redox_syscall-0.5.1.crate",
-        "sha256": "469052894dcb553421e483e4209ee581a45100d31b4018de03e5a7ad86374a7e",
-        "dest": "cargo/vendor/redox_syscall-0.5.1"
+        "url": "https://static.crates.io/crates/redox_syscall/redox_syscall-0.5.2.crate",
+        "sha256": "c82cf8cff14456045f55ec4241383baeff27af886adb72ffb2162f99911de0fd",
+        "dest": "cargo/vendor/redox_syscall-0.5.2"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"469052894dcb553421e483e4209ee581a45100d31b4018de03e5a7ad86374a7e\", \"files\": {}}",
-        "dest": "cargo/vendor/redox_syscall-0.5.1",
+        "contents": "{\"package\": \"c82cf8cff14456045f55ec4241383baeff27af886adb72ffb2162f99911de0fd\", \"files\": {}}",
+        "dest": "cargo/vendor/redox_syscall-0.5.2",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -5902,40 +5909,40 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/regex/regex-1.10.4.crate",
-        "sha256": "c117dbdfde9c8308975b6a18d71f3f385c89461f7b3fb054288ecf2a2058ba4c",
-        "dest": "cargo/vendor/regex-1.10.4"
+        "url": "https://static.crates.io/crates/regex/regex-1.10.5.crate",
+        "sha256": "b91213439dad192326a0d7c6ee3955910425f441d7038e0d6933b0aec5c4517f",
+        "dest": "cargo/vendor/regex-1.10.5"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"c117dbdfde9c8308975b6a18d71f3f385c89461f7b3fb054288ecf2a2058ba4c\", \"files\": {}}",
-        "dest": "cargo/vendor/regex-1.10.4",
+        "contents": "{\"package\": \"b91213439dad192326a0d7c6ee3955910425f441d7038e0d6933b0aec5c4517f\", \"files\": {}}",
+        "dest": "cargo/vendor/regex-1.10.5",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/regex-automata/regex-automata-0.4.6.crate",
-        "sha256": "86b83b8b9847f9bf95ef68afb0b8e6cdb80f498442f5179a29fad448fcc1eaea",
-        "dest": "cargo/vendor/regex-automata-0.4.6"
+        "url": "https://static.crates.io/crates/regex-automata/regex-automata-0.4.7.crate",
+        "sha256": "38caf58cc5ef2fed281f89292ef23f6365465ed9a41b7a7754eb4e26496c92df",
+        "dest": "cargo/vendor/regex-automata-0.4.7"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"86b83b8b9847f9bf95ef68afb0b8e6cdb80f498442f5179a29fad448fcc1eaea\", \"files\": {}}",
-        "dest": "cargo/vendor/regex-automata-0.4.6",
+        "contents": "{\"package\": \"38caf58cc5ef2fed281f89292ef23f6365465ed9a41b7a7754eb4e26496c92df\", \"files\": {}}",
+        "dest": "cargo/vendor/regex-automata-0.4.7",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/regex-syntax/regex-syntax-0.8.3.crate",
-        "sha256": "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56",
-        "dest": "cargo/vendor/regex-syntax-0.8.3"
+        "url": "https://static.crates.io/crates/regex-syntax/regex-syntax-0.8.4.crate",
+        "sha256": "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b",
+        "dest": "cargo/vendor/regex-syntax-0.8.4"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56\", \"files\": {}}",
-        "dest": "cargo/vendor/regex-syntax-0.8.3",
+        "contents": "{\"package\": \"7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b\", \"files\": {}}",
+        "dest": "cargo/vendor/regex-syntax-0.8.4",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -6175,6 +6182,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/rustybuzz/rustybuzz-0.14.1.crate",
+        "sha256": "cfb9cf8877777222e4a3bc7eb247e398b56baba500c38c1c46842431adc8b55c",
+        "dest": "cargo/vendor/rustybuzz-0.14.1"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"cfb9cf8877777222e4a3bc7eb247e398b56baba500c38c1c46842431adc8b55c\", \"files\": {}}",
+        "dest": "cargo/vendor/rustybuzz-0.14.1",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/ryu/ryu-1.0.18.crate",
         "sha256": "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f",
         "dest": "cargo/vendor/ryu-1.0.18"
@@ -6357,14 +6377,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/serde_json/serde_json-1.0.117.crate",
-        "sha256": "455182ea6142b14f93f4bc5320a2b31c1f266b66a4a5c858b013302a5d8cbfc3",
-        "dest": "cargo/vendor/serde_json-1.0.117"
+        "url": "https://static.crates.io/crates/serde_json/serde_json-1.0.118.crate",
+        "sha256": "d947f6b3163d8857ea16c4fa0dd4840d52f3041039a85decd46867eb1abef2e4",
+        "dest": "cargo/vendor/serde_json-1.0.118"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"455182ea6142b14f93f4bc5320a2b31c1f266b66a4a5c858b013302a5d8cbfc3\", \"files\": {}}",
-        "dest": "cargo/vendor/serde_json-1.0.117",
+        "contents": "{\"package\": \"d947f6b3163d8857ea16c4fa0dd4840d52f3041039a85decd46867eb1abef2e4\", \"files\": {}}",
+        "dest": "cargo/vendor/serde_json-1.0.118",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -6539,6 +6559,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/skrifa/skrifa-0.19.3.crate",
+        "sha256": "0ab45fb68b53576a43d4fc0e9ec8ea64e29a4d2cc7f44506964cb75f288222e9",
+        "dest": "cargo/vendor/skrifa-0.19.3"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"0ab45fb68b53576a43d4fc0e9ec8ea64e29a4d2cc7f44506964cb75f288222e9\", \"files\": {}}",
+        "dest": "cargo/vendor/skrifa-0.19.3",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/slab/slab-0.4.9.crate",
         "sha256": "8f92a496fb766b417c996b9c5e57daf2f7ad3b0bebe1ccfca4856390e3d3bb67",
         "dest": "cargo/vendor/slab-0.4.9"
@@ -6576,24 +6609,6 @@
         "dest-filename": ".cargo-checksum.json"
     },
     {
-        "type": "shell",
-        "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/client-toolkit-3bed072/.\" \"cargo/vendor/smithay-client-toolkit\""
-        ]
-    },
-    {
-        "type": "inline",
-        "contents": "[[example]]\nname = \"wgpu\"\nrequired-features = [ \"wayland-backend/client_system\",]\n\n[package]\nname = \"smithay-client-toolkit\"\nversion = \"0.18.0\"\nauthors = [ \"Elinor Berger <elinor@safaradeg.net>\", \"i509VCB <mail@i509.me>\", \"Ashley Wulber <ashley@system76.com>\",]\ndocumentation = \"https://smithay.github.io/client-toolkit\"\nrepository = \"https://github.com/smithay/client-toolkit\"\nlicense = \"MIT\"\nedition = \"2021\"\ncategories = [ \"gui\",]\nkeywords = [ \"wayland\", \"client\",]\ndescription = \"Toolkit for making client wayland applications.\"\nreadme = \"README.md\"\n\n[dependencies]\nbitflags = \"2.4\"\ncursor-icon = \"1.1.0\"\nlibc = \"0.2.148\"\nlog = \"0.4\"\nmemmap2 = \"0.9.0\"\nthiserror = \"1.0.30\"\nwayland-backend = \"0.3.0\"\nwayland-client = \"0.31.1\"\nwayland-cursor = \"0.31.0\"\nwayland-scanner = \"0.31.0\"\nwayland-csd-frame = \"0.3.0\"\nxkeysym = \"0.2.0\"\n\n[features]\ndefault = [ \"calloop\", \"xkbcommon\",]\ncalloop = [ \"dep:calloop\", \"calloop-wayland-source\",]\nxkbcommon = [ \"dep:xkbcommon\", \"bytemuck\", \"pkg-config\", \"xkeysym/bytemuck\",]\n\n[dev-dependencies]\nbytemuck = \"1.13.0\"\ndrm-fourcc = \"2.2.0\"\nfont-kit = \"0.11.0\"\nimage = \"0.24\"\nenv_logger = \"0.10\"\nwgpu = \"0.19.0\"\nraqote = \"0.8.2\"\nraw-window-handle = \"0.6.0\"\npollster = \"0.3.0\"\n\n[dependencies.bytemuck]\nversion = \"1.13.0\"\noptional = true\n\n[dependencies.rustix]\nversion = \"0.38.15\"\nfeatures = [ \"fs\", \"pipe\", \"shm\",]\n\n[dependencies.wayland-protocols]\nversion = \"0.31.2\"\nfeatures = [ \"client\", \"staging\", \"unstable\",]\n\n[dependencies.wayland-protocols-wlr]\nversion = \"0.2.0\"\nfeatures = [ \"client\",]\n\n[dependencies.xkbcommon]\nversion = \"0.7.0\"\noptional = true\nfeatures = [ \"wayland\",]\n\n[dependencies.calloop]\nversion = \"0.13.0\"\noptional = true\n\n[dependencies.calloop-wayland-source]\nversion = \"0.3.0\"\noptional = true\n\n[build-dependencies.pkg-config]\nversion = \"0.3\"\noptional = true\n\n[package.metadata.docs.rs]\nfeatures = [ \"calloop\", \"xkbcommon\",]\nrustdoc-args = [ \"--cfg\", \"docsrs\",]\n",
-        "dest": "cargo/vendor/smithay-client-toolkit",
-        "dest-filename": "Cargo.toml"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": null, \"files\": {}}",
-        "dest": "cargo/vendor/smithay-client-toolkit",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
         "type": "archive",
         "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/smithay-client-toolkit/smithay-client-toolkit-0.18.1.crate",
@@ -6607,14 +6622,27 @@
         "dest-filename": ".cargo-checksum.json"
     },
     {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/smithay-client-toolkit/smithay-client-toolkit-0.19.1.crate",
+        "sha256": "837d3067369e24aeda699a5d9fc5aa14ca14a84dd70aeed7156bfa04a5605b32",
+        "dest": "cargo/vendor/smithay-client-toolkit-0.19.1"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"837d3067369e24aeda699a5d9fc5aa14ca14a84dd70aeed7156bfa04a5605b32\", \"files\": {}}",
+        "dest": "cargo/vendor/smithay-client-toolkit-0.19.1",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/smithay-clipboard-ab422dd/.\" \"cargo/vendor/smithay-clipboard\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/smithay-clipboard-d099e82/.\" \"cargo/vendor/smithay-clipboard\""
         ]
     },
     {
         "type": "inline",
-        "contents": "[package]\nname = \"smithay-clipboard\"\nversion = \"0.8.0\"\nauthors = [ \"Kirill Chibisov <contact@kchibisov.com>\", \"Victor Berger <victor.berger@m4x.org>\",]\nedition = \"2021\"\ndescription = \"Provides access to the wayland clipboard for client applications.\"\nrepository = \"https://github.com/smithay/smithay-clipboard\"\ndocumentation = \"https://smithay.github.io/smithay-clipboard\"\nlicense = \"MIT\"\nkeywords = [ \"clipboard\", \"wayland\",]\nrust-version = \"1.65.0\"\n\n[dependencies]\nlibc = \"0.2.149\"\n\n[dev-dependencies]\ndirs = \"5.0.1\"\nthiserror = \"1.0.57\"\nurl = \"2.5.0\"\n\n[features]\ndefault = [ \"dlopen\", \"dnd\", \"rwh-6\",]\nrwh-6 = [ \"raw-window-handle\",]\ndnd = []\ndlopen = [ \"wayland-backend/dlopen\",]\n\n[dependencies.sctk]\npackage = \"smithay-client-toolkit\"\ngit = \"https://github.com/Smithay/client-toolkit\"\ndefault-features = false\nfeatures = [ \"calloop\",]\nrev = \"3bed072\"\n\n[dependencies.wayland-backend]\nversion = \"0.3.3\"\ndefault_features = false\nfeatures = [ \"client_system\",]\n\n[dependencies.raw-window-handle]\nversion = \"0.6\"\noptional = true\n\n[dev-dependencies.sctk]\npackage = \"smithay-client-toolkit\"\ngit = \"https://github.com/Smithay/client-toolkit\"\ndefault-features = false\nfeatures = [ \"calloop\", \"xkbcommon\",]\nrev = \"3bed072\"\n",
+        "contents": "[package]\nname = \"smithay-clipboard\"\nversion = \"0.8.0\"\nauthors = [ \"Kirill Chibisov <contact@kchibisov.com>\", \"Victor Berger <victor.berger@m4x.org>\",]\nedition = \"2021\"\ndescription = \"Provides access to the wayland clipboard for client applications.\"\nrepository = \"https://github.com/smithay/smithay-clipboard\"\ndocumentation = \"https://smithay.github.io/smithay-clipboard\"\nlicense = \"MIT\"\nkeywords = [ \"clipboard\", \"wayland\",]\nrust-version = \"1.65.0\"\n\n[dependencies]\nlibc = \"0.2.149\"\n\n[dev-dependencies]\ndirs = \"5.0.1\"\nthiserror = \"1.0.57\"\nurl = \"2.5.0\"\n\n[features]\ndefault = [ \"dlopen\", \"dnd\", \"rwh-6\",]\nrwh-6 = [ \"raw-window-handle\",]\ndnd = []\ndlopen = [ \"wayland-backend/dlopen\",]\n\n[dependencies.sctk]\npackage = \"smithay-client-toolkit\"\nversion = \"0.19.1\"\ndefault-features = false\nfeatures = [ \"calloop\",]\n\n[dependencies.wayland-backend]\nversion = \"0.3.3\"\ndefault_features = false\nfeatures = [ \"client_system\",]\n\n[dependencies.raw-window-handle]\nversion = \"0.6\"\noptional = true\n\n[dev-dependencies.sctk]\npackage = \"smithay-client-toolkit\"\nversion = \"0.19.1\"\ndefault-features = false\nfeatures = [ \"calloop\", \"xkbcommon\",]\n",
         "dest": "cargo/vendor/smithay-clipboard",
         "dest-filename": "Cargo.toml"
     },
@@ -6853,14 +6881,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/swash/swash-0.1.16.crate",
-        "sha256": "682a612b50baf09e8a039547ecf49e6c155690dcb751b1bcb19c93cdeb3d42d4",
-        "dest": "cargo/vendor/swash-0.1.16"
+        "url": "https://static.crates.io/crates/swash/swash-0.1.17.crate",
+        "sha256": "4d7773d67fe3373048cf840bfcc54ec3207cfc1e95c526b287ef2eb5eff9faf6",
+        "dest": "cargo/vendor/swash-0.1.17"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"682a612b50baf09e8a039547ecf49e6c155690dcb751b1bcb19c93cdeb3d42d4\", \"files\": {}}",
-        "dest": "cargo/vendor/swash-0.1.16",
+        "contents": "{\"package\": \"4d7773d67fe3373048cf840bfcc54ec3207cfc1e95c526b287ef2eb5eff9faf6\", \"files\": {}}",
+        "dest": "cargo/vendor/swash-0.1.17",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -6879,14 +6907,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/syn/syn-2.0.66.crate",
-        "sha256": "c42f3f41a2de00b01c0aaad383c5a45241efc8b2d1eda5661812fda5f3cdcff5",
-        "dest": "cargo/vendor/syn-2.0.66"
+        "url": "https://static.crates.io/crates/syn/syn-2.0.68.crate",
+        "sha256": "901fa70d88b9d6c98022e23b4136f9f3e54e4662c3bc1bd1d84a42a9a0f0c1e9",
+        "dest": "cargo/vendor/syn-2.0.68"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"c42f3f41a2de00b01c0aaad383c5a45241efc8b2d1eda5661812fda5f3cdcff5\", \"files\": {}}",
-        "dest": "cargo/vendor/syn-2.0.66",
+        "contents": "{\"package\": \"901fa70d88b9d6c98022e23b4136f9f3e54e4662c3bc1bd1d84a42a9a0f0c1e9\", \"files\": {}}",
+        "dest": "cargo/vendor/syn-2.0.68",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -7144,14 +7172,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/tinyvec/tinyvec-1.6.0.crate",
-        "sha256": "87cc5ceb3875bb20c2890005a4e226a4651264a5c75edb2421b52861a0a0cb50",
-        "dest": "cargo/vendor/tinyvec-1.6.0"
+        "url": "https://static.crates.io/crates/tinyvec/tinyvec-1.6.1.crate",
+        "sha256": "c55115c6fbe2d2bef26eb09ad74bde02d8255476fc0c7b515ef09fbb35742d82",
+        "dest": "cargo/vendor/tinyvec-1.6.1"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"87cc5ceb3875bb20c2890005a4e226a4651264a5c75edb2421b52861a0a0cb50\", \"files\": {}}",
-        "dest": "cargo/vendor/tinyvec-1.6.0",
+        "contents": "{\"package\": \"c55115c6fbe2d2bef26eb09ad74bde02d8255476fc0c7b515ef09fbb35742d82\", \"files\": {}}",
+        "dest": "cargo/vendor/tinyvec-1.6.1",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -7664,14 +7692,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/url/url-2.5.0.crate",
-        "sha256": "31e6302e3bb753d46e83516cae55ae196fc0c309407cf11ab35cc51a4c2a4633",
-        "dest": "cargo/vendor/url-2.5.0"
+        "url": "https://static.crates.io/crates/url/url-2.5.2.crate",
+        "sha256": "22784dbdf76fdde8af1aeda5622b546b422b6fc585325248a2bf9f5e41e94d6c",
+        "dest": "cargo/vendor/url-2.5.2"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"31e6302e3bb753d46e83516cae55ae196fc0c309407cf11ab35cc51a4c2a4633\", \"files\": {}}",
-        "dest": "cargo/vendor/url-2.5.0",
+        "contents": "{\"package\": \"22784dbdf76fdde8af1aeda5622b546b422b6fc585325248a2bf9f5e41e94d6c\", \"files\": {}}",
+        "dest": "cargo/vendor/url-2.5.2",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -8041,6 +8069,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/wayland-protocols/wayland-protocols-0.32.1.crate",
+        "sha256": "83d0f1056570486e26a3773ec633885124d79ae03827de05ba6c85f79904026c",
+        "dest": "cargo/vendor/wayland-protocols-0.32.1"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"83d0f1056570486e26a3773ec633885124d79ae03827de05ba6c85f79904026c\", \"files\": {}}",
+        "dest": "cargo/vendor/wayland-protocols-0.32.1",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/wayland-protocols-plasma/wayland-protocols-plasma-0.2.0.crate",
         "sha256": "23803551115ff9ea9bce586860c5c5a971e360825a0309264102a9495a5ff479",
         "dest": "cargo/vendor/wayland-protocols-plasma-0.2.0"
@@ -8062,6 +8103,19 @@
         "type": "inline",
         "contents": "{\"package\": \"ad1f61b76b6c2d8742e10f9ba5c3737f6530b4c243132c2a2ccc8aa96fe25cd6\", \"files\": {}}",
         "dest": "cargo/vendor/wayland-protocols-wlr-0.2.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/wayland-protocols-wlr/wayland-protocols-wlr-0.3.1.crate",
+        "sha256": "a7dab47671043d9f5397035975fe1cac639e5bca5cc0b3c32d09f01612e34d24",
+        "dest": "cargo/vendor/wayland-protocols-wlr-0.3.1"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"a7dab47671043d9f5397035975fe1cac639e5bca5cc0b3c32d09f01612e34d24\", \"files\": {}}",
+        "dest": "cargo/vendor/wayland-protocols-wlr-0.3.1",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -8269,7 +8323,7 @@
     {
         "type": "shell",
         "commands": [
-            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-8a816d8/.\" \"cargo/vendor/window_clipboard\""
+            "cp -r --reflink=auto \"flatpak-cargo/git/window_clipboard-7c59b07/.\" \"cargo/vendor/window_clipboard\""
         ]
     },
     {
@@ -8747,14 +8801,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/winnow/winnow-0.6.11.crate",
-        "sha256": "56c52728401e1dc672a56e81e593e912aa54c78f40246869f78359a2bf24d29d",
-        "dest": "cargo/vendor/winnow-0.6.11"
+        "url": "https://static.crates.io/crates/winnow/winnow-0.6.13.crate",
+        "sha256": "59b5e5f6c299a3c7890b876a2a587f3115162487e704907d9b6cd29473052ba1",
+        "dest": "cargo/vendor/winnow-0.6.13"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"56c52728401e1dc672a56e81e593e912aa54c78f40246869f78359a2bf24d29d\", \"files\": {}}",
-        "dest": "cargo/vendor/winnow-0.6.11",
+        "contents": "{\"package\": \"59b5e5f6c299a3c7890b876a2a587f3115162487e704907d9b6cd29473052ba1\", \"files\": {}}",
+        "dest": "cargo/vendor/winnow-0.6.13",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -8838,14 +8892,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/xdg-home/xdg-home-1.1.0.crate",
-        "sha256": "21e5a325c3cb8398ad6cf859c1135b25dd29e186679cf2da7581d9679f63b38e",
-        "dest": "cargo/vendor/xdg-home-1.1.0"
+        "url": "https://static.crates.io/crates/xdg-home/xdg-home-1.2.0.crate",
+        "sha256": "ca91dcf8f93db085f3a0a29358cd0b9d670915468f4290e8b85d118a34211ab8",
+        "dest": "cargo/vendor/xdg-home-1.2.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"21e5a325c3cb8398ad6cf859c1135b25dd29e186679cf2da7581d9679f63b38e\", \"files\": {}}",
-        "dest": "cargo/vendor/xdg-home-1.1.0",
+        "contents": "{\"package\": \"ca91dcf8f93db085f3a0a29358cd0b9d670915468f4290e8b85d118a34211ab8\", \"files\": {}}",
+        "dest": "cargo/vendor/xdg-home-1.2.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -8877,14 +8931,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/xkeysym/xkeysym-0.2.0.crate",
-        "sha256": "054a8e68b76250b253f671d1268cb7f1ae089ec35e195b2efb2a4e9a836d0621",
-        "dest": "cargo/vendor/xkeysym-0.2.0"
+        "url": "https://static.crates.io/crates/xkeysym/xkeysym-0.2.1.crate",
+        "sha256": "b9cc00251562a284751c9973bace760d86c0276c471b4be569fe6b068ee97a56",
+        "dest": "cargo/vendor/xkeysym-0.2.1"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"054a8e68b76250b253f671d1268cb7f1ae089ec35e195b2efb2a4e9a836d0621\", \"files\": {}}",
-        "dest": "cargo/vendor/xkeysym-0.2.0",
+        "contents": "{\"package\": \"b9cc00251562a284751c9973bace760d86c0276c471b4be569fe6b068ee97a56\", \"files\": {}}",
+        "dest": "cargo/vendor/xkeysym-0.2.1",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -8955,14 +9009,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/zbus/zbus-4.2.2.crate",
-        "sha256": "989c3977a7aafa97b12b9a35d21cdcff9b0d2289762b14683f45d66b1ba6c48f",
-        "dest": "cargo/vendor/zbus-4.2.2"
+        "url": "https://static.crates.io/crates/zbus/zbus-4.3.0.crate",
+        "sha256": "23915fcb26e7a9a9dc05fd93a9870d336d6d032cd7e8cebf1c5c37666489fdd5",
+        "dest": "cargo/vendor/zbus-4.3.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"989c3977a7aafa97b12b9a35d21cdcff9b0d2289762b14683f45d66b1ba6c48f\", \"files\": {}}",
-        "dest": "cargo/vendor/zbus-4.2.2",
+        "contents": "{\"package\": \"23915fcb26e7a9a9dc05fd93a9870d336d6d032cd7e8cebf1c5c37666489fdd5\", \"files\": {}}",
+        "dest": "cargo/vendor/zbus-4.3.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -8981,14 +9035,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/zbus_macros/zbus_macros-4.2.2.crate",
-        "sha256": "6fe9de53245dcf426b7be226a4217dd5e339080e5d46e64a02d6e5dcbf90fca1",
-        "dest": "cargo/vendor/zbus_macros-4.2.2"
+        "url": "https://static.crates.io/crates/zbus_macros/zbus_macros-4.3.0.crate",
+        "sha256": "02bcca0b586d2f8589da32347b4784ba424c4891ed86aa5b50d5e88f6b2c4f5d",
+        "dest": "cargo/vendor/zbus_macros-4.3.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"6fe9de53245dcf426b7be226a4217dd5e339080e5d46e64a02d6e5dcbf90fca1\", \"files\": {}}",
-        "dest": "cargo/vendor/zbus_macros-4.2.2",
+        "contents": "{\"package\": \"02bcca0b586d2f8589da32347b4784ba424c4891ed86aa5b50d5e88f6b2c4f5d\", \"files\": {}}",
+        "dest": "cargo/vendor/zbus_macros-4.3.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -9175,7 +9229,7 @@
     },
     {
         "type": "inline",
-        "contents": "[source.vendored-sources]\ndirectory = \"cargo/vendor\"\n\n[source.crates-io]\nreplace-with = \"vendored-sources\"\n\n[source.\"https://github.com/wash2/accesskit\"]\ngit = \"https://github.com/wash2/accesskit\"\nreplace-with = \"vendored-sources\"\nbranch = \"winit-0.29\"\n\n[source.\"https://github.com/jackpot51/rust-atomicwrites\"]\ngit = \"https://github.com/jackpot51/rust-atomicwrites\"\nreplace-with = \"vendored-sources\"\n\n[source.\"https://github.com/pop-os/window_clipboard\"]\ngit = \"https://github.com/pop-os/window_clipboard\"\nreplace-with = \"vendored-sources\"\ntag = \"pop-dnd-6\"\n\n[source.\"https://github.com/pop-os/libcosmic\"]\ngit = \"https://github.com/pop-os/libcosmic\"\nreplace-with = \"vendored-sources\"\n\n[source.\"https://github.com/pop-os/cosmic-text\"]\ngit = \"https://github.com/pop-os/cosmic-text\"\nreplace-with = \"vendored-sources\"\n\n[source.\"https://github.com/gfx-rs/wgpu\"]\ngit = \"https://github.com/gfx-rs/wgpu\"\nreplace-with = \"vendored-sources\"\nrev = \"20fda69\"\n\n[source.\"https://github.com/pop-os/glyphon\"]\ngit = \"https://github.com/pop-os/glyphon\"\nreplace-with = \"vendored-sources\"\ntag = \"v0.5.0\"\n\n[source.\"https://github.com/smithay/client-toolkit\"]\ngit = \"https://github.com/smithay/client-toolkit\"\nreplace-with = \"vendored-sources\"\nrev = \"3bed072\"\n\n[source.\"https://github.com/pop-os/smithay-clipboard\"]\ngit = \"https://github.com/pop-os/smithay-clipboard\"\nreplace-with = \"vendored-sources\"\ntag = \"pop-dnd-4\"\n\n[source.\"https://github.com/pop-os/softbuffer\"]\ngit = \"https://github.com/pop-os/softbuffer\"\nreplace-with = \"vendored-sources\"\ntag = \"cosmic-4.0\"\n\n[source.\"https://github.com/dioxuslabs/taffy\"]\ngit = \"https://github.com/dioxuslabs/taffy\"\nreplace-with = \"vendored-sources\"\nrev = \"7781c70\"\n\n[source.\"https://github.com/pop-os/winit\"]\ngit = \"https://github.com/pop-os/winit\"\nreplace-with = \"vendored-sources\"\nbranch = \"winit-0.29\"\n",
+        "contents": "[source.vendored-sources]\ndirectory = \"cargo/vendor\"\n\n[source.crates-io]\nreplace-with = \"vendored-sources\"\n\n[source.\"https://github.com/wash2/accesskit\"]\ngit = \"https://github.com/wash2/accesskit\"\nreplace-with = \"vendored-sources\"\nbranch = \"winit-0.29\"\n\n[source.\"https://github.com/jackpot51/rust-atomicwrites\"]\ngit = \"https://github.com/jackpot51/rust-atomicwrites\"\nreplace-with = \"vendored-sources\"\n\n[source.\"https://github.com/pop-os/window_clipboard\"]\ngit = \"https://github.com/pop-os/window_clipboard\"\nreplace-with = \"vendored-sources\"\ntag = \"pop-dnd-8\"\n\n[source.\"https://github.com/pop-os/libcosmic\"]\ngit = \"https://github.com/pop-os/libcosmic\"\nreplace-with = \"vendored-sources\"\n\n[source.\"https://github.com/pop-os/cosmic-text\"]\ngit = \"https://github.com/pop-os/cosmic-text\"\nreplace-with = \"vendored-sources\"\n\n[source.\"https://github.com/gfx-rs/wgpu\"]\ngit = \"https://github.com/gfx-rs/wgpu\"\nreplace-with = \"vendored-sources\"\nrev = \"20fda69\"\n\n[source.\"https://github.com/pop-os/glyphon\"]\ngit = \"https://github.com/pop-os/glyphon\"\nreplace-with = \"vendored-sources\"\ntag = \"v0.5.0\"\n\n[source.\"https://github.com/pop-os/smithay-clipboard\"]\ngit = \"https://github.com/pop-os/smithay-clipboard\"\nreplace-with = \"vendored-sources\"\ntag = \"pop-dnd-5\"\n\n[source.\"https://github.com/pop-os/softbuffer\"]\ngit = \"https://github.com/pop-os/softbuffer\"\nreplace-with = \"vendored-sources\"\ntag = \"cosmic-4.0\"\n\n[source.\"https://github.com/dioxuslabs/taffy\"]\ngit = \"https://github.com/dioxuslabs/taffy\"\nreplace-with = \"vendored-sources\"\nrev = \"7781c70\"\n\n[source.\"https://github.com/pop-os/winit\"]\ngit = \"https://github.com/pop-os/winit\"\nreplace-with = \"vendored-sources\"\nbranch = \"winit-0.29\"\n",
         "dest": "cargo",
         "dest-filename": "config"
     }
