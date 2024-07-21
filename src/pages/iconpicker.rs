@@ -11,7 +11,6 @@ use crate::{fl, icon_pack_installed, pages::Message};
 #[derive(Debug, Clone, Default)]
 pub struct IconPicker {
     pub icon_searching: String,
-    pub icons_paths: Vec<String>,
     pub icons: Vec<Icon>,
     pub loading: bool,
 }

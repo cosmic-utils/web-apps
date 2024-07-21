@@ -114,7 +114,7 @@ pub struct WebAppLauncher {
     pub icon: String,
     pub is_valid: bool,
     pub exec: String,
-    pub args: Vec<String>,
+    // pub args: Vec<String>,
     pub category: String,
     pub url: String,
     pub custom_parameters: String,
@@ -146,7 +146,7 @@ impl WebAppLauncher {
         let path = desktop_filepath(&filename);
         let web_browser = browser;
         let exec = web_browser.exec.clone();
-        let args = Vec::new();
+        // let args = Vec::new();
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
 
@@ -160,7 +160,7 @@ impl WebAppLauncher {
             icon,
             is_valid,
             exec,
-            args,
+            // args,
             category,
             url,
             custom_parameters,
@@ -268,7 +268,7 @@ impl WebAppLauncher {
                     icon,
                     is_valid,
                     exec,
-                    args,
+                    // args,
                     category,
                     url,
                     custom_parameters,

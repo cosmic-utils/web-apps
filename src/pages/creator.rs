@@ -16,7 +16,6 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct AppCreator {
-    pub app_codename: Option<String>,
     pub app_title_id: id::Id,
     pub app_title: String,
     pub app_url: String,
@@ -26,7 +25,6 @@ pub struct AppCreator {
     pub app_categories: Vec<String>,
     pub app_category: String,
     pub selected_category: usize,
-    pub app_browser_name: String,
     pub app_browser: Browser,
     pub app_navbar: bool,
     pub app_incognito: bool,
@@ -34,7 +32,6 @@ pub struct AppCreator {
     pub selected_icon: Option<pages::iconpicker::Icon>,
     pub app_browsers: Vec<Browser>,
     pub selected_browser: Option<usize>,
-    pub dialog_open: bool,
     pub edit_mode: bool,
 }
 
@@ -74,7 +71,6 @@ impl AppCreator {
         ];
 
         AppCreator {
-            app_codename: None,
             app_title_id: id::Id::new("app-title"),
             app_title: String::new(),
             app_url: String::new(),
@@ -84,7 +80,6 @@ impl AppCreator {
             app_categories: categories.to_vec(),
             app_category: categories[0].clone(),
             selected_category: 0,
-            app_browser_name: fl!("browser"),
             app_browser: browser.clone(),
             app_navbar: false,
             app_incognito: false,
@@ -92,7 +87,6 @@ impl AppCreator {
             selected_icon: None,
             app_browsers: browsers,
             selected_browser: Some(0),
-            dialog_open: false,
             edit_mode: false,
         }
     }
