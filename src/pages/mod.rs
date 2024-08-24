@@ -17,7 +17,7 @@ use cosmic::{
         Core, Message as CosmicMessage,
     },
     cosmic_theme, executor, style,
-    widget::{self, text},
+    widget::{self},
     Application, ApplicationExt, Command, Element,
 };
 
@@ -130,9 +130,9 @@ impl Application for Window {
             warning: warn_element,
         };
 
-        let commands = Command::batch(vec![windows.set_title()]);
+        windows.update_title();
 
-        (windows, commands)
+        (windows, Command::none())
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
@@ -154,26 +154,12 @@ impl Application for Window {
         ]
     }
 
-    fn header_center(&self) -> Vec<Element<Self::Message>> {
-        match self.current_page {
-            Pages::MainWindow => vec![text(fl!("app")).into()],
-            Pages::AppCreator => {
-                let title = if self.creator_window.edit_mode {
-                    format!("{} {}", fl!("edit"), self.creator_window.app_title)
-                } else {
-                    fl!("create-new-webapp")
-                };
-                vec![text(title).into()]
-            }
-            Pages::IconPicker => vec![text(fl!("icon-selector")).into()],
-            Pages::IconInstallator(_) => vec![text(fl!("icon-installer")).into()],
-        }
-    }
-
     fn update(&mut self, message: Self::Message) -> Command<CosmicMessage<Message>> {
         match message {
             Message::OpenHome => {
                 self.current_page = Pages::MainWindow;
+
+                self.update_title();
 
                 Command::none()
             }
@@ -182,11 +168,15 @@ impl Application for Window {
                 self.current_page = Pages::AppCreator;
                 self.init_warning_box();
 
+                self.update_title();
+
                 Command::none()
             }
             Message::CloseCreator => {
                 self.current_page = Pages::MainWindow;
                 self.creator_window.edit_mode = false;
+
+                self.update_title();
 
                 Command::none()
             }
@@ -205,7 +195,8 @@ impl Application for Window {
             Message::OpenIconPicker => {
                 self.current_page = Pages::IconPicker;
 
-                // Command::perform(async {}, |_| app(Message::PerformIconSearch))
+                self.update_title();
+
                 Command::none()
             }
             Message::OpenIconPickerDialog => {
@@ -507,6 +498,8 @@ impl Application for Window {
                 let installator = Installator::new();
                 self.current_page = Pages::IconInstallator(installator);
 
+                self.update_title();
+
                 Command::perform(add_icon_packs_install_script(), |file| {
                     app(Message::InstallScript(file))
                 })
@@ -524,6 +517,7 @@ impl Application for Window {
                     self.current_page = Pages::MainWindow;
                 }
 
+                self.update_title();
                 Command::none()
             }
         }
@@ -547,9 +541,22 @@ impl Application for Window {
 }
 
 impl Window {
-    fn set_title(&mut self) -> Command<CosmicMessage<Message>> {
-        self.set_window_title(fl!("app"))
+    fn update_title(&mut self) {
+        match self.current_page {
+            Pages::MainWindow => self.set_header_title(fl!("app")),
+            Pages::AppCreator => {
+                let title = if self.creator_window.edit_mode {
+                    format!("{} {}", fl!("edit"), self.creator_window.app_title)
+                } else {
+                    fl!("create-new-webapp")
+                };
+                self.set_header_title(title)
+            }
+            Pages::IconPicker => self.set_header_title(fl!("icon-selector")),
+            Pages::IconInstallator(_) => self.set_header_title(fl!("icon-installer")),
+        }
     }
+
     fn create_valid_launcher(&mut self, entry: WebAppLauncher) -> anyhow::Result<()> {
         move_icon(
             self.creator_window.app_icon.clone(),
