@@ -40,7 +40,7 @@ features = ["fluent-system", "desktop-requester"]
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic"
 default-features = false
-features = ["tokio", "winit"]
+features = ["tokio", "winit", "dbus-config"]
 
 [features]
 default = ["wgpu"]
