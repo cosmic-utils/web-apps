@@ -3,24 +3,23 @@ pub mod home_screen;
 pub mod iconpicker;
 pub mod icons_installator;
 
-use std::any::TypeId;
 use std::path::PathBuf;
 use std::process::ExitStatus;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::app::command::set_theme;
-use cosmic::cosmic_theme::ThemeMode;
 use cosmic::iced::alignment::Horizontal;
-use cosmic::iced::{Length, Subscription};
-use cosmic::theme;
+use cosmic::iced::Length;
 use cosmic::widget::Container;
+use cosmic::Theme;
 use cosmic::{
     app::{
         message::{self, app},
         Core, Message as CosmicMessage,
     },
-    cosmic_config, cosmic_theme, executor, style,
+     cosmic_theme, executor, style,
     widget::{self},
     Application, ApplicationExt, Command, Element,
 };
@@ -82,7 +81,7 @@ pub enum Message {
     InstallScript(String),
     InstallCommand(ExitStatus),
 
-    SystemThemeModeChange,
+    SystemTheme,
 }
 
 #[derive(Debug, Clone)]
@@ -138,18 +137,7 @@ impl Application for Window {
 
         windows.update_title();
 
-        (windows, Command::none())
-    }
-
-    fn subscription(&self) -> Subscription<Message> {
-        struct ThemeSubscription;
-
-        Subscription::batch(vec![cosmic_config::config_subscription::<_, ThemeMode>(
-            TypeId::of::<ThemeSubscription>(),
-            cosmic_theme::THEME_MODE_ID.into(),
-            cosmic_theme::ThemeMode::version(),
-        )
-        .map(|_| Message::SystemThemeModeChange)])
+        (windows, Command::perform(async {}, |_| cosmic::app::message::app(Message::SystemTheme)))
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
@@ -537,7 +525,9 @@ impl Application for Window {
                 self.update_title();
                 Command::none()
             }
-            Message::SystemThemeModeChange => set_theme(theme::system_preference()),
+            Message::SystemTheme => {
+                set_theme(Theme::custom(Arc::new(cosmic_theme::Theme::preferred_theme())))
+            }
         }
     }
 
