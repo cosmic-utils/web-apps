@@ -280,8 +280,11 @@ impl WebAppLauncher {
         }
     }
 
-    fn create_firefox_userjs(&self, path: PathBuf) -> bool {
-        let content = include_bytes!("../data/runtime/firefox/profile/user.js");
+    fn create_firefox_userjs(&self, is_zen_browser: bool, path: PathBuf) -> bool {
+        let content = match is_zen_browser {
+            true => include_bytes!("../data/runtime/zen-browser/profile/user.js"),
+            false => include_bytes!("../data/runtime/firefox/profile/user.js"),
+        };
 
         let mut file = File::create(&path)
             .unwrap_or_else(|_| panic!("failed to create user.js in {:?}", path));
@@ -289,21 +292,34 @@ impl WebAppLauncher {
         file.write_all(content).is_ok()
     }
 
-    fn create_user_chrome_css(&self, path: PathBuf, create_navbar: bool) -> bool {
-        let user_chrome_css =
-            include_bytes!("../data/runtime/firefox/profile/chrome/userChrome.css");
-
+    fn create_user_chrome_css(
+        &self,
+        is_zen_browser: bool,
+        path: PathBuf,
+        create_navbar: bool,
+    ) -> bool {
         let mut file = File::create(&path)
             .unwrap_or_else(|_| panic!("cant create userChrome.css in {:?}", path));
 
         if create_navbar {
             file.write_all(b"").is_ok()
         } else {
-            file.write_all(user_chrome_css).is_ok()
+            match is_zen_browser {
+                true => file
+                    .write_all(include_bytes!(
+                        "../data/runtime/zen-browser/profile/chrome/userChrome.css"
+                    ))
+                    .is_ok(),
+                false => file
+                    .write_all(include_bytes!(
+                        "../data/runtime/firefox/profile/chrome/userChrome.css"
+                    ))
+                    .is_ok(),
+            }
         }
     }
 
-    fn exec_firefox(&self) -> String {
+    fn exec_firefox(&self, is_zen_browser: bool) -> String {
         let profile_path = self.web_browser.profile_path.join(&self.codename);
         let user_js_path = profile_path.join("user.js");
         let mut user_chrome_css = profile_path.join("chrome");
@@ -316,8 +332,8 @@ impl WebAppLauncher {
 
         user_chrome_css = user_chrome_css.join("userChrome.css");
 
-        self.create_firefox_userjs(user_js_path);
-        self.create_user_chrome_css(user_chrome_css, self.navbar);
+        self.create_firefox_userjs(is_zen_browser, user_js_path);
+        self.create_user_chrome_css(is_zen_browser, user_chrome_css, self.navbar);
 
         let profile_path = profile_path.to_str().unwrap();
 
@@ -400,8 +416,9 @@ impl WebAppLauncher {
 
     fn exec_string(&self) -> String {
         match self.web_browser._type {
-            BrowserType::Firefox => self.exec_firefox(),
-            BrowserType::FirefoxFlatpak => self.exec_firefox(),
+            BrowserType::Firefox => self.exec_firefox(false),
+            BrowserType::FirefoxFlatpak => self.exec_firefox(false),
+            BrowserType::ZenFlatpak => self.exec_firefox(true),
             BrowserType::Chromium => self.exec_chromium(),
             BrowserType::ChromiumFlatpak => self.exec_chromium(),
             BrowserType::Falkon => self.exec_falkon(),
@@ -500,6 +517,7 @@ pub enum BrowserType {
     NoBrowser,
     Firefox,
     FirefoxFlatpak,
+    ZenFlatpak,
     Chromium,
     ChromiumFlatpak,
     Falkon,

@@ -380,14 +380,14 @@ pub fn flatpak_browsers() -> Vec<Browser> {
             ".var/app/one.ablaze.floorp/data/profiles",
         ),
         Browser::new(
-            BrowserType::FirefoxFlatpak,
+            BrowserType::ZenFlatpak,
             "Zen Browser",
             "/var/lib/flatpak/exports/bin/io.github.zen_browser.zen",
             "/var/lib/flatpak/exports/bin/io.github.zen_browser.zen",
             ".var/app/io.github.zen_browser.zen/data/profiles",
         ),
         Browser::new(
-            BrowserType::FirefoxFlatpak,
+            BrowserType::ZenFlatpak,
             "Zen Browser",
             ".local/share/flatpak/exports/bin/io.github.zen_browser.zen",
             ".local/share/flatpak/exports/bin/io.github.zen_browser.zen",
