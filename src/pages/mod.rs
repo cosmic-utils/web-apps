@@ -19,7 +19,7 @@ use cosmic::{
         message::{self, app},
         Core, Message as CosmicMessage,
     },
-     cosmic_theme, executor, style,
+    cosmic_theme, executor, style,
     widget::{self},
     Application, ApplicationExt, Command, Element,
 };
@@ -526,7 +526,11 @@ impl Application for Window {
                 Command::none()
             }
             Message::SystemTheme => {
-                set_theme(Theme::custom(Arc::new(cosmic_theme::Theme::preferred_theme())))
+                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
+                    set_theme(Theme::custom(Arc::new(cosmic_theme::Theme::preferred_theme())))
+                } else {
+                    Command::none()
+                }
             }
         }
     }
