@@ -22,7 +22,6 @@ use scraper::{Html, Selector};
 use svg::node::element::Image;
 use svg::Document;
 use url::Url;
-use usvg::fontdb;
 use walkdir::WalkDir;
 
 use crate::{
@@ -638,9 +637,7 @@ pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
                     if let Some(path) = entry.path().to_str() {
                         if let Ok(buffer) = tokio::fs::read_to_string(&mut path.to_string()).await {
                             let options = usvg::Options::default();
-                            if let Ok(parsed) =
-                                usvg::Tree::from_str(&buffer, &options, &fontdb::Database::new())
-                            {
+                            if let Ok(parsed) = usvg::Tree::from_str(&buffer, &options) {
                                 let size = parsed.size();
                                 if size.width() >= 64.0
                                     && size.height() >= 64.0
