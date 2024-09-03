@@ -4,7 +4,7 @@
   <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/WebApps/master/res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.svg" width="192" />
   <h1>Quick Web Apps</h1>
 
-  <h3>Web App Manager for Cosmic desktop written with love and libcosmic. Allow you to simply create web applications from
+  <h3>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications from
 given url working inside separate window of your browser of choice.</h3>
 
   <br>
