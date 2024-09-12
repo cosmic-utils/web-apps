@@ -135,9 +135,14 @@ impl Application for Window {
             warning: warn_element,
         };
 
-        windows.update_title();
+        let commands = Command::batch(vec![
+            windows.update_title(),
+            Command::perform(async {}, |_| {
+                cosmic::app::message::app(Message::SystemTheme)
+            }),
+        ]);
 
-        (windows, Command::perform(async {}, |_| cosmic::app::message::app(Message::SystemTheme)))
+        (windows, commands)
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
@@ -164,26 +169,20 @@ impl Application for Window {
             Message::OpenHome => {
                 self.current_page = Pages::MainWindow;
 
-                self.update_title();
-
-                Command::none()
+                self.update_title()
             }
 
             Message::OpenCreator => {
                 self.current_page = Pages::AppCreator;
                 self.init_warning_box();
 
-                self.update_title();
-
-                Command::none()
+                self.update_title()
             }
             Message::CloseCreator => {
                 self.current_page = Pages::MainWindow;
                 self.creator_window.edit_mode = false;
 
-                self.update_title();
-
-                Command::none()
+                self.update_title()
             }
             Message::Creator(message) => {
                 let command = self.creator_window.update(message);
@@ -200,9 +199,7 @@ impl Application for Window {
             Message::OpenIconPicker => {
                 self.current_page = Pages::IconPicker;
 
-                self.update_title();
-
-                Command::none()
+                self.update_title()
             }
             Message::OpenIconPickerDialog => {
                 return Command::perform(
@@ -503,11 +500,14 @@ impl Application for Window {
                 let installator = Installator::new();
                 self.current_page = Pages::IconInstallator(installator);
 
-                self.update_title();
+                let update_title = self.update_title();
 
-                Command::perform(add_icon_packs_install_script(), |file| {
-                    app(Message::InstallScript(file))
-                })
+                Command::batch(vec![
+                    update_title,
+                    Command::perform(add_icon_packs_install_script(), |file| {
+                        app(Message::InstallScript(file))
+                    }),
+                ])
             }
             Message::InstallScript(script) => {
                 if !icon_pack_installed() {
@@ -522,12 +522,13 @@ impl Application for Window {
                     self.current_page = Pages::MainWindow;
                 }
 
-                self.update_title();
-                Command::none()
+                self.update_title()
             }
             Message::SystemTheme => {
                 if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
-                    set_theme(Theme::custom(Arc::new(cosmic_theme::Theme::preferred_theme())))
+                    set_theme(Theme::custom(Arc::new(
+                        cosmic_theme::Theme::preferred_theme(),
+                    )))
                 } else {
                     Command::none()
                 }
@@ -553,20 +554,23 @@ impl Application for Window {
 }
 
 impl Window {
-    fn update_title(&mut self) {
+    fn match_title(&self) -> String {
         match self.current_page {
-            Pages::MainWindow => self.set_header_title(fl!("app")),
+            Pages::MainWindow => fl!("app"),
             Pages::AppCreator => {
-                let title = if self.creator_window.edit_mode {
+                if self.creator_window.edit_mode {
                     format!("{} {}", fl!("edit"), self.creator_window.app_title)
                 } else {
                     fl!("create-new-webapp")
-                };
-                self.set_header_title(title)
+                }
             }
-            Pages::IconPicker => self.set_header_title(fl!("icon-selector")),
-            Pages::IconInstallator(_) => self.set_header_title(fl!("icon-installer")),
+            Pages::IconPicker => fl!("icon-selector"),
+            Pages::IconInstallator(_) => fl!("icon-installer"),
         }
+    }
+    fn update_title(&mut self) -> Command<CosmicMessage<Message>> {
+        self.set_header_title(self.match_title());
+        self.set_window_title(self.match_title())
     }
 
     fn create_valid_launcher(&mut self, entry: WebAppLauncher) -> anyhow::Result<()> {
