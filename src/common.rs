@@ -741,13 +741,14 @@ pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
     Ok(favicons)
 }
 
-pub fn convert_raster_to_svg_format(img_slice: Bytes, icon_name: &str) -> Result<String> {
+pub fn convert_raster_to_svg_format(img_slice: Bytes, icon_name: &str) -> Option<String> {
     if let Ok(data) = load_from_memory(&img_slice) {
         let (width, height) = data.dimensions();
         let mut image_buffer = Vec::new();
         let mut image_cursor = Cursor::new(&mut image_buffer);
 
-        data.write_to(&mut image_cursor, image::ImageFormat::Png)?;
+        data.write_to(&mut image_cursor, image::ImageFormat::Png)
+            .unwrap();
 
         let encoded_img = BASE64_STANDARD.encode(image_buffer);
 
@@ -766,13 +767,13 @@ pub fn convert_raster_to_svg_format(img_slice: Bytes, icon_name: &str) -> Result
 
         // Save the SVG document
         if let Some(save_path) = icon_save_path(icon_name, "svg") {
-            svg::save(&save_path, &document)?;
+            svg::save(&save_path, &document).unwrap();
 
-            return Ok(save_path);
+            return Some(save_path);
         }
     }
 
-    Ok(String::default())
+    None
 }
 
 fn icon_save_path(icon_name: &str, format: &str) -> Option<String> {
@@ -795,12 +796,8 @@ pub fn move_icon(path: String, output_name: String) -> Option<String> {
         if response.status().is_success() {
             let content: Bytes = response.bytes().expect("getting image bytes");
 
-            let ret = convert_raster_to_svg_format(content, &icon_name).unwrap();
-
-            return Some(ret);
+            return convert_raster_to_svg_format(content, &icon_name);
         }
-
-        return None;
     } else if !path.contains(&icon_name) {
         if !is_svg(&path) {
             let file = File::open(&path);
@@ -810,12 +807,8 @@ pub fn move_icon(path: String, output_name: String) -> Option<String> {
 
                 let content = Bytes::from(buffer);
 
-                let ret = convert_raster_to_svg_format(content, &icon_name).unwrap();
-
-                return Some(ret);
+                return convert_raster_to_svg_format(content, &icon_name);
             }
-
-            return None;
         } else {
             let ret = icon_save_path(&icon_name, "svg")?;
             copy(&path, &ret).unwrap();
@@ -824,7 +817,7 @@ pub fn move_icon(path: String, output_name: String) -> Option<String> {
         }
     }
 
-    None
+    Some(path)
 }
 
 pub async fn image_handle(path: String) -> Option<pages::iconpicker::Icon> {

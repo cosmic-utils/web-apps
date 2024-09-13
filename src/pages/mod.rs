@@ -13,7 +13,7 @@ use cosmic::app::command::set_theme;
 use cosmic::iced::alignment::Horizontal;
 use cosmic::iced::Length;
 use cosmic::widget::Container;
-use cosmic::Theme;
+use cosmic::{app, Theme};
 use cosmic::{
     app::{
         message::{self, app},
@@ -351,7 +351,10 @@ impl Application for Window {
                     self.creator_window.edit_mode = true;
 
                     Command::perform(image_handle(launcher.icon), |result| {
-                        app(Message::SetIcon(result.unwrap()))
+                        if let Some(res) = result {
+                            return app(Message::SetIcon(res));
+                        }
+                        app::Message::None
                     })
                 }
                 Buttons::Delete(launcher) => {
