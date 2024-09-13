@@ -257,10 +257,6 @@ impl AppCreator {
         )
         .width(Length::Fixed(200.));
 
-        // let navbar_toggle = widget::toggler(fl!("navbar"), self.app_navbar, |b| {
-        // pages::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
-        // });
-
         let navbar_toggle = widget::toggler(fl!("navbar"), self.app_navbar, |b| {
             pages::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
         })
