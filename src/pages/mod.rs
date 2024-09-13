@@ -234,7 +234,8 @@ impl Application for Window {
                     if let Ok(buf) = PathBuf::from_str(&path) {
                         let icon_name = buf.file_stem();
                         if let Some(file_stem) = icon_name {
-                            move_icon(path.to_string(), file_stem.to_str().unwrap().to_string());
+                            move_icon(path.to_string(), file_stem.to_str().unwrap().to_string())
+                                .unwrap();
 
                             return Command::perform(
                                 find_icon(my_icons_location(), String::new()),
@@ -445,20 +446,22 @@ impl Application for Window {
 
                 if !self.icon_selector.icons.is_empty() {
                     let path = self.icon_selector.icons[0].path.clone();
-                    let saved = move_icon(path, self.creator_window.app_title.clone());
-                    self.creator_window.app_icon.clone_from(&saved);
-                    self.creator_window.app_icon = saved;
+                    if let Some(saved) = move_icon(path, self.creator_window.app_title.clone()) {
+                        self.creator_window.app_icon = saved;
+                    };
                     self.creator_window.selected_icon = Some(self.icon_selector.icons[0].clone());
                 }
 
                 Command::none()
             }
             Message::ChangeIcon(icon) => {
-                let path = icon.path.clone();
-                let saved = move_icon(path, self.creator_window.app_title.clone());
-                self.creator_window.selected_icon = Some(icon.clone());
-                self.creator_window.app_icon = saved;
                 self.current_page = Pages::AppCreator;
+
+                let path = icon.path.clone();
+                self.creator_window.selected_icon = Some(icon.clone());
+                if let Some(saved) = move_icon(path, self.creator_window.app_title.clone()) {
+                    self.creator_window.app_icon = saved;
+                };
 
                 if self.creator_window.selected_icon.is_some()
                     && !self.creator_window.app_icon.is_empty()
@@ -478,17 +481,20 @@ impl Application for Window {
             Message::SetIcon(icon) => {
                 let path = icon.path;
 
-                let saved = move_icon(path, self.creator_window.app_title.clone());
-                self.current_page = Pages::AppCreator;
-                self.creator_window.app_icon.clone_from(&saved);
+                if let Some(saved) = move_icon(path, self.creator_window.app_title.clone()) {
+                    self.current_page = Pages::AppCreator;
+                    self.creator_window.app_icon.clone_from(&saved);
 
-                Command::perform(image_handle(saved), |result| {
-                    if let Some(res) = result {
-                        app(Message::SelectIcon(res))
-                    } else {
-                        message::none()
-                    }
-                })
+                    Command::perform(image_handle(saved), |result| {
+                        if let Some(res) = result {
+                            app(Message::SelectIcon(res))
+                        } else {
+                            message::none()
+                        }
+                    })
+                } else {
+                    Command::none()
+                }
             }
             Message::SelectIcon(ico) => {
                 self.creator_window.selected_icon = Some(ico.clone());
@@ -574,14 +580,10 @@ impl Window {
     }
 
     fn create_valid_launcher(&mut self, entry: WebAppLauncher) -> anyhow::Result<()> {
-        move_icon(
-            self.creator_window.app_icon.clone(),
-            self.creator_window.app_title.clone(),
-        );
-
-        entry.create().unwrap();
-        self.creator_window.edit_mode = false;
-        self.current_page = Pages::MainWindow;
+        if entry.create().is_ok() {
+            self.creator_window.edit_mode = false;
+            self.current_page = Pages::MainWindow;
+        };
 
         Ok(())
     }
