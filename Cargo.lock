@@ -1132,7 +1132,7 @@ dependencies = [
 [[package]]
 name = "cosmic-config"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "atomicwrites",
  "cosmic-config-derive",
@@ -1154,7 +1154,7 @@ dependencies = [
 [[package]]
 name = "cosmic-config-derive"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -1194,7 +1194,7 @@ dependencies = [
 [[package]]
 name = "cosmic-theme"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "almost",
  "cosmic-config",
@@ -2601,7 +2601,7 @@ dependencies = [
 [[package]]
 name = "iced"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "dnd",
  "iced_accessibility",
@@ -2619,7 +2619,7 @@ dependencies = [
 [[package]]
 name = "iced_accessibility"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -2628,7 +2628,7 @@ dependencies = [
 [[package]]
 name = "iced_core"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "bitflags 2.6.0",
  "dnd",
@@ -2648,7 +2648,7 @@ dependencies = [
 [[package]]
 name = "iced_futures"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "futures",
  "iced_core",
@@ -2661,7 +2661,7 @@ dependencies = [
 [[package]]
 name = "iced_graphics"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "bitflags 2.6.0",
  "bytemuck",
@@ -2685,7 +2685,7 @@ dependencies = [
 [[package]]
 name = "iced_renderer"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "iced_graphics",
  "iced_tiny_skia",
@@ -2697,7 +2697,7 @@ dependencies = [
 [[package]]
 name = "iced_runtime"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "dnd",
  "iced_core",
@@ -2709,7 +2709,7 @@ dependencies = [
 [[package]]
 name = "iced_style"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "iced_core",
  "once_cell",
@@ -2719,7 +2719,7 @@ dependencies = [
 [[package]]
 name = "iced_tiny_skia"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "bytemuck",
  "cosmic-text",
@@ -2736,7 +2736,7 @@ dependencies = [
 [[package]]
 name = "iced_wgpu"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "as-raw-xcb-connection",
  "bitflags 2.6.0",
@@ -2765,7 +2765,7 @@ dependencies = [
 [[package]]
 name = "iced_widget"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "dnd",
  "iced_renderer",
@@ -2781,7 +2781,7 @@ dependencies = [
 [[package]]
 name = "iced_winit"
 version = "0.12.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "dnd",
  "iced_graphics",
@@ -3118,9 +3118,9 @@ dependencies = [
 
 [[package]]
 name = "kurbo"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e5aa9f0f96a938266bdb12928a67169e8d22c6a786fda8ed984b85e6ba93c3c"
+checksum = "89234b2cc610a7dd927ebde6b41dd1a5d4214cffaef4cf1fb2195d592f92518f"
 dependencies = [
  "arrayvec",
  "smallvec",
@@ -3147,7 +3147,7 @@ checksum = "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
 [[package]]
 name = "libcosmic"
 version = "0.1.0"
-source = "git+https://github.com/pop-os/libcosmic#c497c227ce806dec84cf66ffcae07745374b1ef8"
+source = "git+https://github.com/pop-os/libcosmic#914d989049ea1a8c47f0690cdbbfe3f862cc491d"
 dependencies = [
  "apply",
  "ashpd 0.9.1",
@@ -5464,7 +5464,7 @@ version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "794de53cc48eaabeed0ab6a3404a65f40b3e38c067e4435883a65d2aa4ca000e"
 dependencies = [
- "kurbo 0.11.0",
+ "kurbo 0.11.1",
  "siphasher 1.0.1",
 ]
 
@@ -6139,7 +6139,7 @@ dependencies = [
  "flate2",
  "fontdb 0.21.0",
  "imagesize 0.13.0",
- "kurbo 0.11.0",
+ "kurbo 0.11.1",
  "log",
  "pico-args",
  "roxmltree 0.20.0",
