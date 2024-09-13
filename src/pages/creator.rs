@@ -1,9 +1,8 @@
-use cosmic::widget::{text, warning};
 use cosmic::{
     app::{message::app, Message as CosmicMessage},
     iced::{id, Length},
-    style, theme,
-    widget::{self, dropdown, toggler, Container},
+    style,
+    widget::{self},
     Command, Element,
 };
 
@@ -201,11 +200,11 @@ impl AppCreator {
                 .style(style::Button::Icon)
         };
 
-        Container::new(ico).center_x().center_y().into()
+        widget::container(ico).center_x().center_y().into()
     }
 
     fn download_button(&self) -> Element<pages::Message> {
-        Container::new(
+        widget::container(
             widget::button(icon_cache_get("folder-download-symbolic", 16))
                 .width(Length::Fixed(48.))
                 .height(Length::Fixed(48.))
@@ -251,71 +250,72 @@ impl AppCreator {
             .on_input(|s| pages::Message::Creator(Message::Arguments(s)))
             .width(Length::Fill);
 
-        let categories_dropdown = dropdown(
+        let categories_dropdown = widget::dropdown(
             &self.app_categories,
             Some(self.selected_category),
             move |index| pages::Message::Creator(Message::Category(index)),
         )
         .width(Length::Fixed(200.));
 
-        let navbar_toggle = toggler(fl!("navbar"), self.app_navbar, |b| {
+        // let navbar_toggle = widget::toggler(fl!("navbar"), self.app_navbar, |b| {
+        // pages::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
+        // });
+
+        let navbar_toggle = widget::toggler(fl!("navbar"), self.app_navbar, |b| {
             pages::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
         })
-        .width(Length::Fill);
+        .spacing(10);
 
         let browser_specific = match self.app_browser._type {
             BrowserType::Firefox => navbar_toggle,
             BrowserType::FirefoxFlatpak => navbar_toggle,
             BrowserType::ZenFlatpak => navbar_toggle,
 
-            _ => toggler(fl!("isolated-profile"), self.app_isolated, |b| {
+            _ => widget::toggler(fl!("isolated-profile"), self.app_isolated, |b| {
                 pages::Message::Creator(Message::Clicked(Buttons::IsolatedProfile(b)))
             })
-            .width(Length::Fill),
+            .spacing(10),
         };
 
-        let incognito = toggler(fl!("private-mode"), self.app_incognito, |b| {
+        let incognito = widget::toggler(fl!("private-mode"), self.app_incognito, |b| {
             pages::Message::Creator(Message::Clicked(Buttons::Incognito(b)))
         })
-        .width(Length::Fill);
-
-        let save_btn = if self.edit_mode {
-            widget::button(Container::new(text(fl!("edit"))).center_x())
-                .on_press(pages::Message::Clicked(pages::Buttons::DoneEdit((
-                    None, None,
-                ))))
-                .width(Length::Fill)
-                .style(theme::Button::Suggested)
-        } else {
-            widget::button(Container::new(text(fl!("create"))).center_x())
-                .on_press(pages::Message::Clicked(pages::Buttons::DoneCreate))
-                .width(Length::Fill)
-                .style(theme::Button::Suggested)
-        };
+        .spacing(10);
 
         let first_row = widget::row()
             .push(categories_dropdown)
             .push(browser_specific)
-            .push(save_btn)
             .spacing(10);
 
-        let app_browsers = dropdown(&self.app_browsers, self.selected_browser, |idx| {
+        let app_browsers = widget::dropdown(&self.app_browsers, self.selected_browser, |idx| {
             pages::Message::Creator(Message::Browser(idx))
         })
         .width(Length::Fixed(200.));
 
-        let creator_close = widget::button(Container::new(text(fl!("close"))).center_x())
-            .on_press(pages::Message::CloseCreator)
-            .width(Length::Fill);
+        let save_btn = if self.edit_mode {
+            widget::button::suggested(fl!("edit")).on_press(pages::Message::Clicked(
+                pages::Buttons::DoneEdit((None, None)),
+            ))
+        } else {
+            widget::button::suggested(fl!("create"))
+                .on_press(pages::Message::Clicked(pages::Buttons::DoneCreate))
+        };
+
+        let creator_close =
+            widget::button::standard(fl!("close")).on_press(pages::Message::CloseCreator);
+
+        let spacer = widget::horizontal_space(Length::Fill);
 
         let end_row = widget::row()
             .push(app_browsers)
             .push(incognito)
+            .push(spacer)
+            .push(save_btn)
             .push(creator_close)
             .spacing(10);
 
         let view_column = widget::column()
-            .push(warning(warnings))
+            .push(widget::warning(warnings))
             .push(row)
             .push(app_arguments)
             .push(first_row)
@@ -323,6 +323,6 @@ impl AppCreator {
             .spacing(10)
             .padding(30);
 
-        Container::new(view_column).max_width(1000).into()
+        widget::container(view_column).max_width(1000).into()
     }
 }
