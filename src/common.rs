@@ -18,7 +18,6 @@ use image::GenericImageView;
 use image::ImageReader;
 use rand::{thread_rng, Rng};
 use reqwest::Client;
-use scraper::{Html, Selector};
 use svg::node::element::Image;
 use svg::Document;
 use url::Url;
@@ -700,35 +699,43 @@ pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     result
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct FaviconResponse {
+    pub url: String,
+    pub host: String,
+    pub status: u16,
+    #[serde(rename = "statusText")]
+    pub status_text: String,
+    pub icons: Vec<FaviconIcon>,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct FaviconIcon {
+    pub sizes: String,
+    pub href: String,
+}
+
 pub async fn download_favicon(url: &str) -> Result<Vec<String>> {
     let mut favicons = Vec::new();
 
-    if let Ok(request) = Client::new().get(url).send().await {
-        if let Ok(content) = request.text().await {
-            let document = Html::parse_document(&content);
-            let head = Selector::parse("head").unwrap();
-            let link = Selector::parse("link").unwrap();
-            let meta = Selector::parse("meta").unwrap();
+    let url = Url::parse(url)?;
 
-            for head in document.select(&head) {
-                let fragment = Html::parse_document(&head.html());
+    if let Some(domain) = url.domain() {
+        let request = Client::new()
+            .get(format!(
+                "https://www.faviconextractor.com/api/favicon/{}",
+                domain
+            ))
+            .send()
+            .await?;
 
-                for link in fragment.select(&link) {
-                    if link.attr("rel") == Some("icon") {
-                        let val = link.value().attr("href").unwrap();
+        let response: FaviconResponse = request.json().await?;
 
-                        favicons.push(val.to_string());
-                    }
-                }
-
-                for meta in fragment.select(&meta) {
-                    if meta.value().attr("property") == Some("og:image") {
-                        let val = meta.value().attr("content").unwrap();
-
-                        favicons.push(val.to_string());
-                    }
-                }
-            }
+        if response.status == 200 {
+            response
+                .icons
+                .iter()
+                .for_each(|icon| favicons.push(icon.href.clone()));
         }
     }
 
