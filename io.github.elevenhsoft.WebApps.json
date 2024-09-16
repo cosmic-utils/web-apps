@@ -24,6 +24,38 @@
   },
   "modules": [
     {
+      "name": "just",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm0755 just /app/bin/just"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "strip-components": 0,
+          "dest-filename": "just.tar.gz",
+          "url": "https://github.com/casey/just/releases/download/1.35.0/just-1.35.0-x86_64-unknown-linux-musl.tar.gz",
+          "sha256": "c4172306e241bd175c07316156a610593fa2b687ac49418520a375605d7cead4"
+        }
+      ]
+    },
+    {
+      "name": "cosmic-icons",
+      "buildsystem": "simple",
+      "build-commands": [
+        "sed -i \"s|prefix := '/usr'|prefix := '/app'|\" justfile",
+        "just install"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "dest-filename": "cosmic-icons-epoch-1.0.0-alpha.1.tar.gz",
+          "url": "https://github.com/pop-os/cosmic-icons/archive/refs/tags/epoch-1.0.0-alpha.1.tar.gz",
+          "sha256": "20d1a184c0421501e7ed8761f6e6178c3e16c787373357dae1d4dc22b9109428"
+        }
+      ]
+    },
+    {
       "name": "quick-webapps",
       "buildsystem": "simple",
       "build-options": {
