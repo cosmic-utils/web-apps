@@ -4,8 +4,8 @@
     <developer id="io.github.elevenhsoft">
         <name>elevenhsoft</name>
     </developer>
-    <url type="homepage">https://github.com/elevenhsoft/WebApps</url>
-    <url type="bugtracker">https://github.com/elevenhsoft/WebApps/issues</url>
+    <url type="homepage">https://github.com/cosmic-utils/web-apps</url>
+    <url type="bugtracker">https://github.com/cosmic-utils/web-apps/issues</url>
     <url type="donation">https://ko-fi.com/elevenhsoft</url>
 
     <name>Quick Web Apps</name>
@@ -37,11 +37,13 @@
             <caption>Installed apps</caption>
         </screenshot>
         <screenshot xml:lang="en">
-            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-creator.png</image>
+            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-creator.png
+            </image>
             <caption>Creator</caption>
         </screenshot>
         <screenshot xml:lang="en">
-            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-icon-picker.png</image>
+            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-icon-picker.png
+            </image>
             <caption>Icon Picker</caption>
         </screenshot>
     </screenshots>
@@ -52,6 +54,11 @@
     </branding>
 
     <releases>
+        <release version="0.4.8" date="2024-09-16">
+            <description>
+                <p>Just a fixed release to resolve some packaging issue</p>
+            </description>
+        </release>
         <release version="0.4.7" date="2024-09-16">
             <description>
                 <p>Many fixes and improvements</p>
