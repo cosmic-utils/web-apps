@@ -52,6 +52,12 @@
     </branding>
 
     <releases>
+        <release version="0.4.7" date="2024-09-16">
+            <description>
+                <p>Many fixes and improvements</p>
+                <p>Updated dependencies</p>
+            </description>
+        </release>
         <release version="0.4.6" date="2024-06-05">
             <description>
                 <p>Add support for PNG icons</p>
