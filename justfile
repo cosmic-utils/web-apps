@@ -26,6 +26,8 @@ icons-src := 'res' / 'icons' / 'hicolor'
 icons-dst := base-dir / 'share' / 'icons' / 'hicolor'
 fp-icons-dst := fp-base-dir / 'share' / 'icons' / 'hicolor'
 
+import "packaging.just"
+
 # Default recipe which runs `just build-release`
 default: build-release
 

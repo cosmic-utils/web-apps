@@ -1,5 +1,6 @@
 /target
 /debug
+/vendor
 
 **/*.rs.bk
 
