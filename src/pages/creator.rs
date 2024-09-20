@@ -183,18 +183,18 @@ impl AppCreator {
     fn icon_picker_icon(&self, icon: Option<pages::iconpicker::Icon>) -> Element<pages::Message> {
         let ico = if let Some(ico) = icon {
             match ico.icon {
-                IconType::Raster(data) => widget::button(widget::image(data))
+                IconType::Raster(data) => widget::button::custom(widget::image(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
                     .style(style::Button::Icon),
 
-                IconType::Svg(data) => widget::button(widget::svg(data))
+                IconType::Svg(data) => widget::button::custom(widget::svg(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
                     .style(style::Button::Icon),
             }
         } else {
-            widget::button(icon_cache_get("folder-pictures-symbolic", 16))
+            widget::button::custom(icon_cache_get("folder-pictures-symbolic", 16))
                 .width(Length::Fixed(48.))
                 .height(Length::Fixed(48.))
                 .style(style::Button::Icon)
@@ -205,7 +205,7 @@ impl AppCreator {
 
     fn download_button(&self) -> Element<pages::Message> {
         widget::container(
-            widget::button(icon_cache_get("folder-download-symbolic", 16))
+            widget::button::custom(icon_cache_get("folder-download-symbolic", 16))
                 .width(Length::Fixed(48.))
                 .height(Length::Fixed(48.))
                 .style(style::Button::Icon),
@@ -228,13 +228,13 @@ impl AppCreator {
         let app_data_inputs = widget::column().push(app_title).push(app_url).spacing(10);
 
         let download_button = self.download_button();
-        let download_button = widget::button(download_button)
+        let download_button = widget::button::custom(download_button)
             .width(82.)
             .height(82.)
             .on_press(pages::Message::Clicked(pages::Buttons::SearchFavicon));
 
         let icon = self.icon_picker_icon(self.selected_icon.clone());
-        let icon = widget::button(icon)
+        let icon = widget::button::custom(icon)
             .width(Length::Fixed(82.))
             .height(Length::Fixed(82.))
             .on_press(pages::Message::OpenIconPicker);

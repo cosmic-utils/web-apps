@@ -51,12 +51,12 @@ impl Home {
                 .on_submit(Message::Clicked(Buttons::AppNameSubmit(app.clone()))),
             );
 
-            let edit = widget::button(icon_cache_get("application-menu-symbolic", 16))
+            let edit = widget::button::custom(icon_cache_get("application-menu-symbolic", 16))
                 .on_press(Message::Clicked(Buttons::Edit(app.clone())))
                 .padding(10)
                 .style(style::Button::Icon);
 
-            let delete = widget::button(icon_cache_get("edit-delete-symbolic", 16))
+            let delete = widget::button::custom(icon_cache_get("edit-delete-symbolic", 16))
                 .on_press(Message::Clicked(Buttons::Delete(app.clone())))
                 .padding(10)
                 .style(style::Button::Icon);

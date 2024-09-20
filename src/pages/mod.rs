@@ -151,12 +151,12 @@ impl Application for Window {
         let cosmic_theme::Spacing { space_xxs, .. } = self.core().system_theme().cosmic().spacing;
 
         vec![
-            widget::button(go_home_icon)
+            widget::button::custom(go_home_icon)
                 .on_press(Message::OpenHome)
                 .padding(space_xxs)
                 .style(style::Button::Icon)
                 .into(),
-            widget::button(go_creator)
+            widget::button::custom(go_creator)
                 .on_press(Message::OpenCreator)
                 .padding(space_xxs)
                 .style(style::Button::Icon)

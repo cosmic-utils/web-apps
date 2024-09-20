@@ -28,12 +28,12 @@ impl IconPicker {
             text(fl!("loading"))
         };
 
-        let my_icons_btn = widget::button(loading_state_text)
+        let my_icons_btn = widget::button::custom(loading_state_text)
             .on_press(Message::MyIcons)
             .padding(8)
             .width(Length::FillPortion(1));
 
-        let custom_icon_btn = widget::button(text(fl!("open")))
+        let custom_icon_btn = widget::button::custom(text(fl!("open")))
             .on_press(Message::OpenIconPickerDialog)
             .padding(8)
             .width(Length::FillPortion(1));
@@ -46,7 +46,7 @@ impl IconPicker {
 
         if !icon_pack_installed() {
             controls = controls.push(
-                widget::button(text(fl!("download")))
+                widget::button::custom(text(fl!("download")))
                     .on_press(Message::DownloadIconsPack)
                     .padding(8)
                     .width(Length::FillPortion(1)),
@@ -57,12 +57,12 @@ impl IconPicker {
 
         for ico in self.icons.iter() {
             let btn = match ico.clone().icon {
-                IconType::Raster(icon) => widget::button(widget::image(icon))
+                IconType::Raster(icon) => widget::button::custom(widget::image(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
                     .on_press(Message::ChangeIcon(ico.clone()))
                     .style(theme::Button::Icon),
-                IconType::Svg(icon) => widget::button(widget::svg(icon))
+                IconType::Svg(icon) => widget::button::custom(widget::svg(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
                     .on_press(Message::ChangeIcon(ico.clone()))
