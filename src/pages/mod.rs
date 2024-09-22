@@ -583,7 +583,8 @@ impl Window {
     }
 
     fn create_valid_launcher(&mut self, entry: WebAppLauncher) -> anyhow::Result<()> {
-        if entry.create().is_ok() {
+        if entry.is_valid && self.warning.is_empty() {
+            let _ = entry.create().is_ok();
             self.creator_window.edit_mode = false;
             self.current_page = Pages::MainWindow;
         };

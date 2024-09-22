@@ -90,4 +90,8 @@ impl Warning {
 
         content
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.messages.is_empty()
+    }
 }
