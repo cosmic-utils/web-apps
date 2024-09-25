@@ -1,6 +1,6 @@
 [package]
 name = "webapps"
-version = "0.4.8"
+version = "0.4.9"
 edition = "2021"
 description = "Web applications at your fingertips"
 authors = ["cosmic-utils"]
@@ -53,30 +53,76 @@ features = ["tokio", "winit", "wgpu", "dbus-config"]
 [package.metadata.deb]
 license-file = "LICENSE"
 assets = [
-    ["target/release/quick-webapps", "usr/bin/", "755"],
-    ["res/io.github.elevenhsoft.WebApps.desktop", "usr/share/applications/", "644"],
-    ["res/io.github.elevenhsoft.WebApps.metainfo.xml", "usr/share/metainfo/", "644"],
-    ["res/icons/hicolor/**/*", "usr/share/icons/hicolor/", "644"],
+  [
+    "target/release/quick-webapps",
+    "usr/bin/",
+    "755",
+  ],
+  [
+    "res/io.github.elevenhsoft.WebApps.desktop",
+    "usr/share/applications/",
+    "644",
+  ],
+  [
+    "res/io.github.elevenhsoft.WebApps.metainfo.xml",
+    "usr/share/metainfo/",
+    "644",
+  ],
+  [
+    "res/icons/hicolor/**/*",
+    "usr/share/icons/hicolor/",
+    "644",
+  ],
 ]
 
 [package.metadata.generate-rpm]
 assets = [
-    { source = "target/release/quick-webapps", dest = "/usr/bin/", mode = "755" },
-    { source = "LICENSE", dest = "/usr/share/doc/wizard/LICENSE", doc = true, mode = "644" },
-    { source = "res/*.desktop", dest = "/usr/share/applications/", mode = "644" },
-    { source = "res/icons/hicolor/**/*", dest = "/usr/share/icons/hicolor/", mode = "644"},
+  { source = "target/release/quick-webapps", dest = "/usr/bin/", mode = "755" },
+  { source = "LICENSE", dest = "/usr/share/doc/wizard/LICENSE", doc = true, mode = "644" },
+  { source = "res/*.desktop", dest = "/usr/share/applications/", mode = "644" },
+  { source = "res/icons/hicolor/**/*", dest = "/usr/share/icons/hicolor/", mode = "644" },
 ]
 
 [package.metadata.aur]
 files = [
-    ["res/io.github.elevenhsoft.WebApps.desktop", "/usr/share/applications/io.github.elevenhsoft.WebApps.desktop"],
-    ["res/io.github.elevenhsoft.WebApps.metainfo.xml", "/usr/share/metainfo/io.github.elevenhsoft.WebApps.metainfo.xml"],
-    ["LICENSE","/usr/share/doc/quick-webapps/LICENSE"],
-    ["res/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.png", "/usr/share/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.png"],
-    ["res/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.png", "/usr/share/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.png"],
-    ["res/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.png", "/usr/share/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.png"],
-    ["res/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.png", "/usr/share/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.png"],
-    ["res/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.png", "/usr/share/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.png"],
-    ["res/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.png", "/usr/share/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.png"],
-    ["res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png", "/usr/share/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png"],
+  [
+    "res/io.github.elevenhsoft.WebApps.desktop",
+    "/usr/share/applications/io.github.elevenhsoft.WebApps.desktop",
+  ],
+  [
+    "res/io.github.elevenhsoft.WebApps.metainfo.xml",
+    "/usr/share/metainfo/io.github.elevenhsoft.WebApps.metainfo.xml",
+  ],
+  [
+    "LICENSE",
+    "/usr/share/doc/quick-webapps/LICENSE",
+  ],
+  [
+    "res/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.png",
+    "/usr/share/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.png",
+  ],
+  [
+    "res/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.png",
+    "/usr/share/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.png",
+  ],
+  [
+    "res/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.png",
+    "/usr/share/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.png",
+  ],
+  [
+    "res/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.png",
+    "/usr/share/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.png",
+  ],
+  [
+    "res/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.png",
+    "/usr/share/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.png",
+  ],
+  [
+    "res/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.png",
+    "/usr/share/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.png",
+  ],
+  [
+    "res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png",
+    "/usr/share/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png",
+  ],
 ]
