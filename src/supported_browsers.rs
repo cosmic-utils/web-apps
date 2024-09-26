@@ -1,4 +1,4 @@
-use crate::common::{Browser, BrowserType};
+use crate::browser::{Browser, BrowserType};
 
 #[allow(dead_code)]
 pub fn native_browsers() -> Vec<Browser> {

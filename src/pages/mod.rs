@@ -27,9 +27,8 @@ use cosmic::{
 use crate::{
     add_icon_packs_install_script,
     common::{
-        self, find_icon, find_icons, get_icon_name_from_url, get_supported_browsers,
-        icon_cache_get, image_handle, move_icon, my_icons_location, Browser, BrowserType,
-        WebAppLauncher,
+        self, find_icon, find_icons, get_icon_name_from_url, icon_cache_get, image_handle,
+        move_icon, qwa_icons_location,
     },
     execute_script, fl, icon_pack_installed,
     pages::home_screen::Home,
@@ -38,15 +37,16 @@ use crate::{
     warning::WarnMessages,
     warning::{WarnAction, Warning},
 };
+use crate::{browser, launcher};
 
 #[derive(Debug, Clone)]
 pub enum Buttons {
     SearchFavicon,
-    Edit(WebAppLauncher),
-    Delete(WebAppLauncher),
+    Edit(launcher::WebAppLauncher),
+    Delete(launcher::WebAppLauncher),
     DoneEdit((Option<String>, Option<String>)),
     DoneCreate,
-    AppNameSubmit(WebAppLauncher),
+    AppNameSubmit(launcher::WebAppLauncher),
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -234,11 +234,10 @@ impl Application for Window {
                     if let Ok(buf) = PathBuf::from_str(&path) {
                         let icon_name = buf.file_stem();
                         if let Some(file_stem) = icon_name {
-                            move_icon(path.to_string(), file_stem.to_str().unwrap().to_string())
-                                .unwrap();
+                            move_icon(path.to_string(), file_stem.to_str().unwrap().to_string());
 
                             return Command::perform(
-                                find_icon(my_icons_location(), String::new()),
+                                find_icon(qwa_icons_location(), String::new()),
                                 |result| app(Message::FoundIcons(result)),
                             );
                         }
@@ -260,7 +259,7 @@ impl Application for Window {
             }
             Message::Clicked(buttons) => match buttons {
                 Buttons::DoneCreate => {
-                    let new_entry = WebAppLauncher::new(
+                    let new_entry = launcher::WebAppLauncher::new(
                         self.creator_window.app_title.clone(),
                         None,
                         self.creator_window.app_url.clone(),
@@ -284,7 +283,7 @@ impl Application for Window {
                 Buttons::DoneEdit((new_name, old_icon)) => {
                     if let Some(launcher) = self.main_window.launcher.to_owned() {
                         let _deleted = launcher.delete();
-                        let mut edited_entry = WebAppLauncher::new(
+                        let mut edited_entry = launcher::WebAppLauncher::new(
                             self.creator_window.app_title.clone(),
                             Some(launcher.codename),
                             self.creator_window.app_url.clone(),
@@ -330,7 +329,7 @@ impl Application for Window {
                     })
                 }
                 Buttons::Edit(launcher) => {
-                    let selected_browser = get_supported_browsers()
+                    let selected_browser = browser::get_supported_browsers()
                         .iter()
                         .position(|b| b.name == launcher.web_browser.name);
 
@@ -344,7 +343,8 @@ impl Application for Window {
                     self.creator_window.app_parameters = launcher.custom_parameters;
                     self.creator_window.app_category = launcher.category;
                     self.creator_window.app_browser =
-                        Browser::web_browser(launcher.web_browser.name).expect("browser not found");
+                        browser::Browser::web_browser(launcher.web_browser.name)
+                            .expect("browser not found");
                     self.creator_window.selected_browser = selected_browser;
                     self.creator_window.app_navbar = launcher.navbar;
                     self.creator_window.app_incognito = launcher.is_incognito;
@@ -379,7 +379,7 @@ impl Application for Window {
 
                 self.icon_selector.loading = true;
 
-                Command::perform(find_icon(my_icons_location(), icon_name), |result| {
+                Command::perform(find_icon(qwa_icons_location(), icon_name), |result| {
                     app(Message::FoundIcons(result))
                 })
             }
@@ -449,9 +449,8 @@ impl Application for Window {
 
                 if !self.icon_selector.icons.is_empty() {
                     let path = self.icon_selector.icons[0].path.clone();
-                    if let Some(saved) = move_icon(path, self.creator_window.app_title.clone()) {
-                        self.creator_window.app_icon = saved;
-                    };
+                    self.creator_window.app_icon =
+                        move_icon(path, self.creator_window.app_title.clone());
                     self.creator_window.selected_icon = Some(self.icon_selector.icons[0].clone());
                 }
 
@@ -462,9 +461,8 @@ impl Application for Window {
 
                 let path = icon.path.clone();
                 self.creator_window.selected_icon = Some(icon.clone());
-                if let Some(saved) = move_icon(path, self.creator_window.app_title.clone()) {
-                    self.creator_window.app_icon = saved;
-                };
+                self.creator_window.app_icon =
+                    move_icon(path, self.creator_window.app_title.clone());
 
                 if self.creator_window.selected_icon.is_some()
                     && !self.creator_window.app_icon.is_empty()
@@ -484,20 +482,17 @@ impl Application for Window {
             Message::SetIcon(icon) => {
                 let path = icon.path;
 
-                if let Some(saved) = move_icon(path, self.creator_window.app_title.clone()) {
-                    self.current_page = Pages::AppCreator;
-                    self.creator_window.app_icon.clone_from(&saved);
+                let saved = move_icon(path, self.creator_window.app_title.clone());
+                self.current_page = Pages::AppCreator;
+                self.creator_window.app_icon.clone_from(&saved);
 
-                    Command::perform(image_handle(saved), |result| {
-                        if let Some(res) = result {
-                            app(Message::SelectIcon(res))
-                        } else {
-                            message::none()
-                        }
-                    })
-                } else {
-                    Command::none()
-                }
+                Command::perform(image_handle(saved), |result| {
+                    if let Some(res) = result {
+                        app(Message::SelectIcon(res))
+                    } else {
+                        message::none()
+                    }
+                })
             }
             Message::SelectIcon(ico) => {
                 self.creator_window.selected_icon = Some(ico.clone());
@@ -582,7 +577,7 @@ impl Window {
         self.set_window_title(self.match_title())
     }
 
-    fn create_valid_launcher(&mut self, entry: WebAppLauncher) -> anyhow::Result<()> {
+    fn create_valid_launcher(&mut self, entry: launcher::WebAppLauncher) -> anyhow::Result<()> {
         if entry.is_valid && self.warning.is_empty() {
             let _ = entry.create().is_ok();
             self.creator_window.edit_mode = false;
@@ -604,7 +599,7 @@ impl Window {
         if self.creator_window.app_icon.is_empty() {
             self.warning.push_warn(WarnMessages::AppIcon)
         }
-        if self.creator_window.app_browser._type == BrowserType::NoBrowser {
+        if self.creator_window.app_browser._type == browser::BrowserType::NoBrowser {
             self.warning.push_warn(WarnMessages::AppBrowser)
         }
     }

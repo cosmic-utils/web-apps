@@ -1,5 +1,8 @@
+mod browser;
 mod common;
+mod favicon;
 mod icon_cache;
+mod launcher;
 mod localize;
 mod pages;
 mod supported_browsers;

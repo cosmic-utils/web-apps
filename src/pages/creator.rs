@@ -7,7 +7,8 @@ use cosmic::{
 };
 
 use crate::{
-    common::{get_supported_browsers, icon_cache_get, url_valid, Browser, BrowserType},
+    browser::{get_supported_browsers, Browser, BrowserType},
+    common::{icon_cache_get, url_valid},
     fl,
     pages::{self, iconpicker::IconType},
     warning::{WarnAction, WarnMessages},
