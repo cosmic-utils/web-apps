@@ -7,6 +7,7 @@ pub enum BrowserType {
     NoBrowser,
     Firefox,
     FirefoxFlatpak,
+    Zen,
     ZenFlatpak,
     Chromium,
     ChromiumFlatpak,

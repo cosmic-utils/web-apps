@@ -137,6 +137,13 @@ pub fn native_browsers() -> Vec<Browser> {
             ".local/share/quick-webapps/firefox",
         ),
         Browser::new(
+            BrowserType::Zen,
+            "Zen Browser",
+            "zen-browser",
+            "/usr/bin/zen-browser",
+            ".local/share/quick-webapps/firefox",
+        ),
+        Browser::new(
             BrowserType::Chromium,
             "Vivaldi",
             "vivaldi-stable",
