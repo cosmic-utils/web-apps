@@ -37,9 +37,6 @@
 
     <provides>
         <id>com.system76.CosmicApplication</id>
-        <binaries>
-            <binary>quick-webapps</binary>
-        </binaries>
     </provides>
 
     <screenshots>
