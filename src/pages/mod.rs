@@ -277,7 +277,7 @@ impl Application for Window {
                     } else {
                         self.warning.push_warn(WarnMessages::Duplicate);
                     }
-                    self.creator_window.edit_mode = false;
+                    self.creator_window = creator::AppCreator::new();
                     Command::none()
                 }
                 Buttons::DoneEdit((new_name, old_icon)) => {
@@ -310,7 +310,7 @@ impl Application for Window {
                             self.warning.push_warn(WarnMessages::Duplicate);
                         }
                     }
-                    self.creator_window.edit_mode = false;
+                    self.creator_window = creator::AppCreator::new();
                     Command::none()
                 }
                 Buttons::AppNameSubmit(mut launcher) => {
