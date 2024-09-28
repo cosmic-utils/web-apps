@@ -152,7 +152,7 @@ pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
 }
 
 pub fn convert_raster_to_svg_format(img_slice: Bytes, icon_name: &str) -> String {
-    let save_path = icon_save_path(icon_name, "svg");
+    let save_path = icon_save_path(icon_name);
 
     if let Ok(data) = load_from_memory(&img_slice) {
         let (width, height) = data.dimensions();
@@ -185,9 +185,9 @@ pub fn convert_raster_to_svg_format(img_slice: Bytes, icon_name: &str) -> String
     save_path
 }
 
-fn icon_save_path(icon_name: &str, format: &str) -> String {
+fn icon_save_path(icon_name: &str) -> String {
     qwa_icons_location()
-        .join(format!("{}.{}", icon_name, format))
+        .join(format!("{}.svg", icon_name))
         .to_str()
         .unwrap()
         .to_string()
@@ -218,7 +218,7 @@ pub fn move_icon(path: String, output_name: String) -> String {
         }
     };
 
-    let save_path = icon_save_path(&icon_name, "svg");
+    let save_path = icon_save_path(&icon_name);
     copy(&path, &save_path).unwrap();
 
     save_path
