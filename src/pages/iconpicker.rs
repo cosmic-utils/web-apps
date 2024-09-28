@@ -6,13 +6,12 @@ use cosmic::{
     Element,
 };
 
-use crate::{fl, icon_pack_installed, pages::Message};
+use crate::{common, fl, icon_pack_installed, pages::Message};
 
 #[derive(Debug, Clone, Default)]
 pub struct IconPicker {
     pub icon_searching: String,
-    pub icons: Vec<Icon>,
-    pub loading: bool,
+    pub icons: Vec<common::Icon>,
 }
 
 impl IconPicker {
@@ -22,13 +21,7 @@ impl IconPicker {
             .on_submit(Message::PerformIconSearch)
             .width(Length::FillPortion(3));
 
-        let loading_state_text = if !self.loading {
-            text(fl!("my-icons"))
-        } else {
-            text(fl!("loading"))
-        };
-
-        let my_icons_btn = widget::button::custom(loading_state_text)
+        let my_icons_btn = widget::button::custom(text(fl!("my-icons")))
             .on_press(Message::MyIcons)
             .padding(8)
             .width(Length::FillPortion(1));
@@ -57,12 +50,12 @@ impl IconPicker {
 
         for ico in self.icons.iter() {
             let btn = match ico.clone().icon {
-                IconType::Raster(icon) => widget::button::custom(widget::image(icon))
+                common::IconType::Raster(icon) => widget::button::custom(widget::image(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
                     .on_press(Message::ChangeIcon(ico.clone()))
                     .style(theme::Button::Icon),
-                IconType::Svg(icon) => widget::button::custom(widget::svg(icon))
+                common::IconType::Svg(icon) => widget::button::custom(widget::svg(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
                     .on_press(Message::ChangeIcon(ico.clone()))
@@ -85,23 +78,5 @@ impl IconPicker {
             .padding(30)
             .max_width(1000)
             .into()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum IconType {
-    Raster(widget::image::Handle),
-    Svg(widget::svg::Handle),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Icon {
-    pub icon: IconType,
-    pub path: String,
-}
-
-impl Icon {
-    pub fn new(icon: IconType, path: String) -> Self {
-        Self { icon, path }
     }
 }

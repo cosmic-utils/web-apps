@@ -1,6 +1,7 @@
 use crate::{
-    common::{get_webapps, icon_cache_get, WebAppLauncher},
+    common::icon_cache_get,
     fl,
+    launcher::{get_webapps, WebAppLauncher},
     pages::{Buttons, Message},
 };
 

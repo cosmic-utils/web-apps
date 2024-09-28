@@ -1,5 +1,6 @@
 use cosmic::{
     app::{message::app, Message as CosmicMessage},
+    command,
     iced::{id, Length},
     style,
     widget::{self},
@@ -7,9 +8,10 @@ use cosmic::{
 };
 
 use crate::{
-    common::{get_supported_browsers, icon_cache_get, url_valid, Browser, BrowserType},
+    browser::{get_supported_browsers, Browser, BrowserType},
+    common::{self, icon_cache_get, url_valid, IconType},
     fl,
-    pages::{self, iconpicker::IconType},
+    pages::{self},
     warning::{WarnAction, WarnMessages},
 };
 
@@ -28,7 +30,7 @@ pub struct AppCreator {
     pub app_navbar: bool,
     pub app_incognito: bool,
     pub app_isolated: bool,
-    pub selected_icon: Option<pages::iconpicker::Icon>,
+    pub selected_icon: Option<common::Icon>,
     pub app_browsers: Vec<Browser>,
     pub selected_browser: Option<usize>,
     pub edit_mode: bool,
@@ -91,96 +93,92 @@ impl AppCreator {
     }
 
     pub fn update(&mut self, message: Message) -> Command<CosmicMessage<pages::Message>> {
+        let mut commands: Vec<Command<CosmicMessage<pages::Message>>> = Vec::new();
+
         match message {
             Message::Title(title) => {
                 self.app_title = title;
 
                 if self.app_title.len() >= 3 {
-                    Command::perform(async {}, |_| {
+                    commands.push(command::future(async {
                         app(pages::Message::Warning((
                             WarnAction::Remove,
                             WarnMessages::AppName,
                         )))
-                    })
+                    }))
                 } else {
-                    Command::perform(async {}, |_| {
+                    commands.push(command::future(async {
                         app(pages::Message::Warning((
                             WarnAction::Add,
                             WarnMessages::AppName,
                         )))
-                    })
+                    }))
                 }
             }
             Message::Url(url) => {
                 self.app_url = url;
 
                 if url_valid(&self.app_url) {
-                    Command::perform(async {}, |_| {
+                    commands.push(command::future(async {
                         app(pages::Message::Warning((
                             WarnAction::Remove,
                             WarnMessages::AppUrl,
                         )))
-                    })
+                    }))
                 } else {
-                    Command::perform(async {}, |_| {
+                    commands.push(command::future(async {
                         app(pages::Message::Warning((
                             WarnAction::Add,
                             WarnMessages::AppUrl,
                         )))
-                    })
+                    }))
                 }
             }
             Message::Arguments(args) => {
                 self.app_parameters = args;
-                Command::none()
             }
             Message::Browser(idx) => {
                 let browser = &self.app_browsers[idx];
                 self.selected_browser = Some(idx);
                 self.app_browser = browser.clone();
 
-                match browser._type {
-                    BrowserType::NoBrowser => Command::perform(async {}, |_| {
+                commands.push(match browser._type {
+                    BrowserType::NoBrowser => command::future(async {
                         app(pages::Message::Warning((
                             WarnAction::Add,
                             WarnMessages::AppBrowser,
                         )))
                     }),
-                    _ => Command::perform(async {}, |_| {
+                    _ => command::future(async {
                         app(pages::Message::Warning((
                             WarnAction::Remove,
                             WarnMessages::AppBrowser,
                         )))
                     }),
-                }
+                })
             }
             Message::Category(idx) => {
                 self.app_category.clone_from(&self.app_categories[idx]);
                 self.selected_category = idx;
-                Command::none()
             }
 
             Message::Clicked(buttons) => match buttons {
                 Buttons::Navbar(selected) => {
                     self.app_navbar = selected;
-
-                    Command::none()
                 }
                 Buttons::IsolatedProfile(selected) => {
                     self.app_isolated = selected;
-
-                    Command::none()
                 }
                 Buttons::Incognito(selected) => {
                     self.app_incognito = selected;
-
-                    Command::none()
                 }
             },
-        }
+        };
+
+        Command::batch(commands)
     }
 
-    fn icon_picker_icon(&self, icon: Option<pages::iconpicker::Icon>) -> Element<pages::Message> {
+    fn icon_picker_icon(&self, icon: Option<common::Icon>) -> Element<pages::Message> {
         let ico = if let Some(ico) = icon {
             match ico.icon {
                 IconType::Raster(data) => widget::button::custom(widget::image(data))
