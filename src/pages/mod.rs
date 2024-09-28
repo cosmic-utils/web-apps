@@ -180,7 +180,7 @@ impl Application for Window {
             }
             Message::CloseCreator => {
                 self.current_page = Pages::MainWindow;
-                self.creator_window.edit_mode = false;
+                self.creator_window = creator::AppCreator::new();
                 commands.push(self.update_title());
             }
             Message::Creator(message) => {
