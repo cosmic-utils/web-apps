@@ -224,20 +224,23 @@ impl Application for Window {
                 }));
             }
             Message::OpenFileResult(result) => {
-                for path in result {
-                    if let Ok(buf) = PathBuf::from_str(&path) {
-                        let icon_name = buf.file_stem();
-                        if let Some(file_stem) = icon_name {
-                            move_icon(path.to_string(), file_stem.to_str().unwrap().to_string());
-
-                            commands.push(command::future(async {
-                                app(Message::FoundIcons(
-                                    find_icon(qwa_icons_location(), String::new()).await,
-                                ))
-                            }));
+                commands.push(command::future(async {
+                    for path in result {
+                        if let Ok(buf) = PathBuf::from_str(&path) {
+                            let icon_name = buf.file_stem();
+                            if let Some(file_stem) = icon_name {
+                                move_icon(
+                                    path.to_string(),
+                                    file_stem.to_str().unwrap().to_string(),
+                                );
+                            };
                         };
                     }
-                }
+
+                    app(Message::FoundIcons(
+                        find_icon(qwa_icons_location(), String::new()).await,
+                    ))
+                }));
             }
             Message::EditAppName(flag) => {
                 if !flag {

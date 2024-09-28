@@ -206,21 +206,19 @@ pub fn move_icon(path: String, output_name: String) -> String {
 
             return convert_raster_to_svg_format(content, &icon_name);
         }
-    } else if !path.contains(&icon_name) {
-        if !is_svg(&path) {
-            if let Ok(mut file) = File::open(&path) {
-                let mut buffer = Vec::new();
-                file.read_to_end(&mut buffer).unwrap();
-                let content = Bytes::from(buffer);
+    } else if !is_svg(&path) {
+        if let Ok(mut file) = File::open(&path) {
+            let mut buffer = Vec::new();
+            file.read_to_end(&mut buffer).unwrap();
+            let content = Bytes::from(buffer);
 
-                return convert_raster_to_svg_format(content, &icon_name);
-            }
-        } else {
-            let save_path = icon_save_path(&icon_name, "svg");
-            copy(&path, &save_path).unwrap();
-
-            return save_path;
+            return convert_raster_to_svg_format(content, &icon_name);
         }
+    } else {
+        let save_path = icon_save_path(&icon_name, "svg");
+        copy(&path, &save_path).unwrap();
+
+        return save_path;
     }
 
     path
