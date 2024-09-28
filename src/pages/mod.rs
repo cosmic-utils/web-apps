@@ -66,13 +66,13 @@ pub enum Message {
     Clicked(Buttons),
     // icons
     CustomIconsSearch(String),
-    ChangeIcon(iconpicker::Icon),
+    ChangeIcon(common::Icon),
     MyIcons,
     PerformIconSearch,
     FoundIcons(Vec<String>),
-    PushIcon(Option<iconpicker::Icon>),
-    SetIcon(iconpicker::Icon),
-    SelectIcon(iconpicker::Icon),
+    PushIcon(Option<common::Icon>),
+    SetIcon(common::Icon),
+    SelectIcon(common::Icon),
 
     Warning((WarnAction, WarnMessages)),
 
@@ -377,15 +377,12 @@ impl Application for Window {
             Message::MyIcons => {
                 let icon_name = self.icon_selector.icon_searching.clone();
 
-                self.icon_selector.loading = true;
-
                 Command::perform(find_icon(qwa_icons_location(), icon_name), |result| {
                     app(Message::FoundIcons(result))
                 })
             }
             Message::PerformIconSearch => {
                 self.icon_selector.icons.clear();
-                self.icon_selector.loading = true;
 
                 let name = if self.icon_selector.icon_searching.is_empty()
                     && !self.creator_window.app_url.is_empty()
@@ -407,7 +404,6 @@ impl Application for Window {
             }
             Message::CustomIconsSearch(input) => {
                 self.icon_selector.icon_searching = input;
-                self.icon_selector.loading = false;
 
                 Command::none()
             }
@@ -445,8 +441,6 @@ impl Application for Window {
                 Command::batch(vec![cmd, done])
             }
             Message::LoadingDone => {
-                self.icon_selector.loading = false;
-
                 if !self.icon_selector.icons.is_empty() {
                     let path = self.icon_selector.icons[0].path.clone();
                     self.creator_window.app_icon =

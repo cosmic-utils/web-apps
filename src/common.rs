@@ -21,7 +21,7 @@ use tokio::io::AsyncReadExt;
 use url::Url;
 use walkdir::WalkDir;
 
-use crate::{favicon, icon_cache::IconCache, pages::iconpicker};
+use crate::{favicon, icon_cache::IconCache};
 
 lazy_static::lazy_static! {
     static ref ICON_CACHE: Mutex<IconCache> = Mutex::new(IconCache::new());
@@ -226,7 +226,7 @@ pub fn move_icon(path: String, output_name: String) -> String {
     path
 }
 
-pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
+pub async fn image_handle(path: String) -> Option<Icon> {
     if url_valid(&path) {
         let mut data: Vec<_> = Vec::new();
 
@@ -238,10 +238,7 @@ pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
 
         let handle = widget::image::Handle::from_memory(data);
 
-        return Some(iconpicker::Icon::new(
-            iconpicker::IconType::Raster(handle),
-            path,
-        ));
+        return Some(Icon::new(IconType::Raster(handle), path));
     };
 
     if let Ok(result_path) = PathBuf::from_str(&path) {
@@ -249,10 +246,7 @@ pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
             if is_svg(&path) {
                 let handle = widget::svg::Handle::from_path(&result_path);
 
-                return Some(iconpicker::Icon::new(
-                    iconpicker::IconType::Svg(handle),
-                    path,
-                ));
+                return Some(Icon::new(IconType::Svg(handle), path));
             } else {
                 let mut data: Vec<_> = Vec::new();
 
@@ -266,10 +260,7 @@ pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
                         if image.width() >= 96 && image.height() >= 96 {
                             let handle = widget::image::Handle::from_memory(data);
 
-                            return Some(iconpicker::Icon::new(
-                                iconpicker::IconType::Raster(handle),
-                                path,
-                            ));
+                            return Some(Icon::new(IconType::Raster(handle), path));
                         }
                     };
                 }
@@ -278,4 +269,22 @@ pub async fn image_handle(path: String) -> Option<iconpicker::Icon> {
     }
 
     None
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum IconType {
+    Raster(widget::image::Handle),
+    Svg(widget::svg::Handle),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Icon {
+    pub icon: IconType,
+    pub path: String,
+}
+
+impl Icon {
+    pub fn new(icon: IconType, path: String) -> Self {
+        Self { icon, path }
+    }
 }

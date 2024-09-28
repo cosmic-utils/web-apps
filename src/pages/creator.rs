@@ -8,9 +8,9 @@ use cosmic::{
 
 use crate::{
     browser::{get_supported_browsers, Browser, BrowserType},
-    common::{icon_cache_get, url_valid},
+    common::{self, icon_cache_get, url_valid, IconType},
     fl,
-    pages::{self, iconpicker::IconType},
+    pages::{self},
     warning::{WarnAction, WarnMessages},
 };
 
@@ -29,7 +29,7 @@ pub struct AppCreator {
     pub app_navbar: bool,
     pub app_incognito: bool,
     pub app_isolated: bool,
-    pub selected_icon: Option<pages::iconpicker::Icon>,
+    pub selected_icon: Option<common::Icon>,
     pub app_browsers: Vec<Browser>,
     pub selected_browser: Option<usize>,
     pub edit_mode: bool,
@@ -181,7 +181,7 @@ impl AppCreator {
         }
     }
 
-    fn icon_picker_icon(&self, icon: Option<pages::iconpicker::Icon>) -> Element<pages::Message> {
+    fn icon_picker_icon(&self, icon: Option<common::Icon>) -> Element<pages::Message> {
         let ico = if let Some(ico) = icon {
             match ico.icon {
                 IconType::Raster(data) => widget::button::custom(widget::image(data))
