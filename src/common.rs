@@ -206,7 +206,9 @@ pub fn move_icon(path: String, output_name: String) -> String {
 
             return convert_raster_to_svg_format(content, &icon_name);
         }
-    } else if !is_svg(&path) {
+    };
+
+    if !is_svg(&path) {
         if let Ok(mut file) = File::open(&path) {
             let mut buffer = Vec::new();
             file.read_to_end(&mut buffer).unwrap();
@@ -214,14 +216,12 @@ pub fn move_icon(path: String, output_name: String) -> String {
 
             return convert_raster_to_svg_format(content, &icon_name);
         }
-    } else {
-        let save_path = icon_save_path(&icon_name, "svg");
-        copy(&path, &save_path).unwrap();
+    };
 
-        return save_path;
-    }
+    let save_path = icon_save_path(&icon_name, "svg");
+    copy(&path, &save_path).unwrap();
 
-    path
+    save_path
 }
 
 pub async fn image_handle(path: String) -> Option<Icon> {
