@@ -1,5 +1,3 @@
-#![allow(clippy::too_many_arguments)]
-
 use std::{
     ffi::OsStr,
     fs::{copy, create_dir_all, File},
