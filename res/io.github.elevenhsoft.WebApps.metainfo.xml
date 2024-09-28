@@ -35,6 +35,13 @@
         <category>Utility</category>
     </categories>
 
+    <provides>
+        <id>com.system76.CosmicApplication</id>
+        <binaries>
+            <binary>quick-webapps</binary>
+        </binaries>
+    </provides>
+
     <screenshots>
         <screenshot type="default" xml:lang="en">
             <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-dark.png</image>
