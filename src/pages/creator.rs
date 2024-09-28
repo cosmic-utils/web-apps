@@ -261,9 +261,10 @@ impl AppCreator {
         .spacing(10);
 
         let browser_specific = match self.app_browser._type {
-            BrowserType::Firefox => navbar_toggle,
-            BrowserType::FirefoxFlatpak => navbar_toggle,
-            BrowserType::ZenFlatpak => navbar_toggle,
+            BrowserType::Firefox
+            | BrowserType::FirefoxFlatpak
+            | BrowserType::Zen
+            | BrowserType::ZenFlatpak => navbar_toggle,
 
             _ => widget::toggler(fl!("isolated-profile"), self.app_isolated, |b| {
                 pages::Message::Creator(Message::Clicked(Buttons::IsolatedProfile(b)))

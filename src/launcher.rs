@@ -241,16 +241,34 @@ impl WebAppLauncher {
         }
     }
 
-    fn create_firefox_userjs(&self, is_zen_browser: bool, path: PathBuf) -> bool {
-        let content = match is_zen_browser {
-            true => include_bytes!("../data/runtime/zen-browser/profile/user.js"),
-            false => include_bytes!("../data/runtime/firefox/profile/user.js"),
-        };
-
+    fn create_firefox_userjs(
+        &self,
+        is_zen_browser: bool,
+        path: PathBuf,
+        create_navbar: bool,
+    ) -> bool {
         let mut file = File::create(&path)
             .unwrap_or_else(|_| panic!("failed to create user.js in {:?}", path));
 
-        file.write_all(content).is_ok()
+        let navbar_pref = if create_navbar {
+            b"user_pref(\"browser.tabs.inTitlebar\", 2);\n"
+        } else {
+            b"user_pref(\"browser.tabs.inTitlebar\", 0);\n"
+        };
+        let Ok(_) = file.write_all(navbar_pref) else {
+            return false;
+        };
+
+        match is_zen_browser {
+            true => file
+                .write_all(include_bytes!(
+                    "../data/runtime/zen-browser/profile/user.js"
+                ))
+                .is_ok(),
+            false => file
+                .write_all(include_bytes!("../data/runtime/firefox/profile/user.js"))
+                .is_ok(),
+        }
     }
 
     fn create_user_chrome_css(
@@ -293,7 +311,7 @@ impl WebAppLauncher {
 
         user_chrome_css = user_chrome_css.join("userChrome.css");
 
-        self.create_firefox_userjs(is_zen_browser, user_js_path);
+        self.create_firefox_userjs(is_zen_browser, user_js_path, self.navbar);
         self.create_user_chrome_css(is_zen_browser, user_chrome_css, self.navbar);
 
         let profile_path = profile_path.to_str().unwrap();
@@ -376,15 +394,13 @@ impl WebAppLauncher {
     }
 
     fn exec_string(&self) -> String {
+        use browser::BrowserType::*;
         match self.web_browser._type {
-            browser::BrowserType::Firefox => self.exec_firefox(false),
-            browser::BrowserType::FirefoxFlatpak => self.exec_firefox(false),
-            browser::BrowserType::ZenFlatpak => self.exec_firefox(true),
-            browser::BrowserType::Chromium => self.exec_chromium(),
-            browser::BrowserType::ChromiumFlatpak => self.exec_chromium(),
-            browser::BrowserType::Falkon => self.exec_falkon(),
-            browser::BrowserType::FalkonFlatpak => self.exec_falkon(),
-            browser::BrowserType::NoBrowser => String::new(),
+            Firefox | FirefoxFlatpak => self.exec_firefox(false),
+            Zen | ZenFlatpak => self.exec_firefox(true),
+            Chromium | ChromiumFlatpak => self.exec_chromium(),
+            Falkon | FalkonFlatpak => self.exec_falkon(),
+            NoBrowser => String::new(),
         }
     }
 

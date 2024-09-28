@@ -6,6 +6,14 @@
     visibility: collapse !important;
 }
 
+#zen-appcontent-navbar-container {
+    visibility: collapse !important;
+}
+
+#navigator-toolbox {
+    visibility: collapse !important;
+}
+
 /************************************/
 /****** simpleMenuWizard Compact******/
 
