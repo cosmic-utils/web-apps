@@ -231,7 +231,7 @@ pub async fn image_handle(path: String) -> Option<Icon> {
                     let size = parsed.size();
                     if size.width() >= 96.0 && size.height() >= 96.0 {
                         let handle = widget::svg::Handle::from_memory(bytes.to_vec());
-                        return Some(Icon::new(IconType::Svg(handle), path));
+                        return Some(Icon::new(IconType::Svg(handle), path, true));
                     }
                 }
                 if let Ok(image_reader) =
@@ -240,7 +240,7 @@ pub async fn image_handle(path: String) -> Option<Icon> {
                     if let Ok(image) = image_reader.decode() {
                         if image.width() >= 96 && image.height() >= 96 {
                             let handle = widget::image::Handle::from_memory(bytes);
-                            return Some(Icon::new(IconType::Raster(handle), path));
+                            return Some(Icon::new(IconType::Raster(handle), path, true));
                         }
                     };
                 }
@@ -253,7 +253,7 @@ pub async fn image_handle(path: String) -> Option<Icon> {
             if is_svg(&path) {
                 let handle = widget::svg::Handle::from_path(&result_path);
 
-                return Some(Icon::new(IconType::Svg(handle), path));
+                return Some(Icon::new(IconType::Svg(handle), path, false));
             } else {
                 let mut data: Vec<_> = Vec::new();
 
@@ -267,7 +267,7 @@ pub async fn image_handle(path: String) -> Option<Icon> {
                         if image.width() >= 96 && image.height() >= 96 {
                             let handle = widget::image::Handle::from_memory(data);
 
-                            return Some(Icon::new(IconType::Raster(handle), path));
+                            return Some(Icon::new(IconType::Raster(handle), path, false));
                         }
                     };
                 }
@@ -288,10 +288,15 @@ pub enum IconType {
 pub struct Icon {
     pub icon: IconType,
     pub path: String,
+    pub is_favicon: bool,
 }
 
 impl Icon {
-    pub fn new(icon: IconType, path: String) -> Self {
-        Self { icon, path }
+    pub fn new(icon: IconType, path: String, is_favicon: bool) -> Self {
+        Self {
+            icon,
+            path,
+            is_favicon,
+        }
     }
 }

@@ -414,6 +414,10 @@ impl Application for Window {
                     }
                 };
 
+                self.icon_selector
+                    .icons
+                    .sort_by_key(|icon| !icon.is_favicon);
+
                 commands.push(command::future(async { app(Message::LoadingDone) }));
             }
             Message::LoadingDone => {
