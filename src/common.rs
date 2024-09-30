@@ -137,14 +137,14 @@ pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
 pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
     let mut result: Vec<String> = Vec::new();
 
-    result.extend(find_icon(icons_location(), icon_name.clone()).await);
-    result.extend(find_icon(system_icons(), icon_name).await);
-
     if url_valid(&url) {
         if let Ok(data) = favicon::download_favicon(&url).await {
             result.extend(data)
         }
     };
+
+    result.extend(find_icon(icons_location(), icon_name.clone()).await);
+    result.extend(find_icon(system_icons(), icon_name).await);
 
     result
 }
@@ -224,17 +224,28 @@ pub fn move_icon(path: String, output_name: String) -> String {
 
 pub async fn image_handle(path: String) -> Option<Icon> {
     if url_valid(&path) {
-        let mut data: Vec<_> = Vec::new();
-
         if let Ok(response) = Client::new().get(&path).send().await {
             if let Ok(bytes) = response.bytes().await {
-                data.extend(bytes);
+                let options = usvg::Options::default();
+                if let Ok(parsed) = usvg::Tree::from_data(&bytes, &options) {
+                    let size = parsed.size();
+                    if size.width() >= 96.0 && size.height() >= 96.0 {
+                        let handle = widget::svg::Handle::from_memory(bytes.to_vec());
+                        return Some(Icon::new(IconType::Svg(handle), path));
+                    }
+                }
+                if let Ok(image_reader) =
+                    ImageReader::new(Cursor::new(&bytes)).with_guessed_format()
+                {
+                    if let Ok(image) = image_reader.decode() {
+                        if image.width() >= 96 && image.height() >= 96 {
+                            let handle = widget::image::Handle::from_memory(bytes);
+                            return Some(Icon::new(IconType::Raster(handle), path));
+                        }
+                    };
+                }
             }
         }
-
-        let handle = widget::image::Handle::from_memory(data);
-
-        return Some(Icon::new(IconType::Raster(handle), path));
     };
 
     if let Ok(result_path) = PathBuf::from_str(&path) {
