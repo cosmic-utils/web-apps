@@ -15,10 +15,7 @@ use cosmic::iced::Length;
 use cosmic::widget::Container;
 use cosmic::{app, command, Theme};
 use cosmic::{
-    app::{
-        message::{self, app},
-        Core, Message as CosmicMessage,
-    },
+    app::{message::app, Core, Message as CosmicMessage},
     cosmic_theme, executor, style,
     widget::{self},
     Application, ApplicationExt, Command, Element,
@@ -66,7 +63,6 @@ pub enum Message {
     Clicked(Buttons),
     // icons
     CustomIconsSearch(String),
-    ChangeIcon(common::Icon),
     MyIcons,
     PerformIconSearch,
     FoundIcons(Vec<String>),
@@ -272,7 +268,6 @@ impl Application for Window {
                     } else {
                         self.warning.push_warn(WarnMessages::Duplicate);
                     }
-                    self.creator_window = creator::AppCreator::new();
                 }
                 Buttons::DoneEdit((new_name, old_icon)) => {
                     if let Some(launcher) = self.main_window.launcher.to_owned() {
@@ -304,7 +299,6 @@ impl Application for Window {
                             self.warning.push_warn(WarnMessages::Duplicate);
                         }
                     }
-                    self.creator_window = creator::AppCreator::new();
                 }
                 Buttons::AppNameSubmit(mut launcher) => {
                     launcher.name.clone_from(&self.main_window.new_app_name);
@@ -424,23 +418,22 @@ impl Application for Window {
             }
             Message::LoadingDone => {
                 if !self.icon_selector.icons.is_empty() {
-                    let path = self.icon_selector.icons[0].path.clone();
-                    self.creator_window.app_icon =
-                        move_icon(path, self.creator_window.app_title.clone());
                     self.creator_window.selected_icon = Some(self.icon_selector.icons[0].clone());
                 }
             }
-            Message::ChangeIcon(icon) => {
+            Message::SetIcon(icon) => {
                 self.current_page = Pages::AppCreator;
 
-                let path = icon.path.clone();
+                self.current_page = Pages::AppCreator;
                 self.creator_window.selected_icon = Some(icon.clone());
-                self.creator_window.app_icon =
-                    move_icon(path, self.creator_window.app_title.clone());
 
-                if self.creator_window.selected_icon.is_some()
-                    && !self.creator_window.app_icon.is_empty()
-                {
+                commands.push(command::future(async { app(Message::SelectIcon(icon)) }));
+            }
+            Message::SelectIcon(ico) => {
+                self.creator_window.selected_icon = Some(ico.clone());
+                self.creator_window.app_icon = ico.path;
+
+                if self.creator_window.selected_icon.is_some() {
                     commands.push(command::future(async {
                         app(Message::Warning((
                             WarnAction::Remove,
@@ -452,25 +445,6 @@ impl Application for Window {
                         app(Message::Warning((WarnAction::Add, WarnMessages::AppIcon)))
                     }));
                 }
-            }
-            Message::SetIcon(icon) => {
-                let path = icon.path;
-
-                let saved = move_icon(path, self.creator_window.app_title.clone());
-                self.current_page = Pages::AppCreator;
-                self.creator_window.app_icon.clone_from(&saved);
-
-                commands.push(command::future(async {
-                    if let Some(res) = image_handle(saved).await {
-                        app(Message::SelectIcon(res))
-                    } else {
-                        message::none()
-                    }
-                }));
-            }
-            Message::SelectIcon(ico) => {
-                self.creator_window.selected_icon = Some(ico.clone());
-                self.creator_window.app_icon = ico.path;
             }
             Message::DownloadIconsPack => {
                 let installator = Installator::new();
@@ -544,10 +518,13 @@ impl Window {
         self.set_window_title(self.match_title())
     }
 
-    fn create_valid_launcher(&mut self, entry: launcher::WebAppLauncher) -> anyhow::Result<()> {
+    fn create_valid_launcher(&mut self, mut entry: launcher::WebAppLauncher) -> anyhow::Result<()> {
         if entry.is_valid && self.warning.is_empty() {
+            if let Some(icon) = &self.creator_window.selected_icon {
+                entry.icon = move_icon(icon.path.clone(), self.creator_window.app_title.clone());
+            }
             let _ = entry.create().is_ok();
-            self.creator_window.edit_mode = false;
+            self.creator_window = creator::AppCreator::new();
             self.current_page = Pages::MainWindow;
         };
 

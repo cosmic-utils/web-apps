@@ -53,12 +53,12 @@ impl IconPicker {
                 common::IconType::Raster(icon) => widget::button::custom(widget::image(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
-                    .on_press(Message::ChangeIcon(ico.clone()))
+                    .on_press(Message::SetIcon(ico.clone()))
                     .style(theme::Button::Icon),
                 common::IconType::Svg(icon) => widget::button::custom(widget::svg(icon))
                     .width(Length::Fixed(64.))
                     .height(Length::Fixed(64.))
-                    .on_press(Message::ChangeIcon(ico.clone()))
+                    .on_press(Message::SetIcon(ico.clone()))
                     .style(theme::Button::Icon),
             };
             items.push(btn.into());
