@@ -423,6 +423,15 @@ impl Application for Window {
             Message::LoadingDone => {
                 if !self.icon_selector.icons.is_empty() {
                     self.creator_window.selected_icon = Some(self.icon_selector.icons[0].clone());
+
+                    if self.creator_window.selected_icon.is_some() {
+                        commands.push(command::future(async {
+                            app(Message::Warning((
+                                WarnAction::Remove,
+                                WarnMessages::AppIcon,
+                            )))
+                        }));
+                    }
                 }
             }
             Message::SetIcon(icon) => {
