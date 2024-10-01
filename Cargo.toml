@@ -45,7 +45,7 @@ features = ["fluent-system", "desktop-requester"]
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic"
 default-features = false
-features = ["tokio", "winit", "wgpu", "dbus-config"]
+features = ["tokio", "winit", "wgpu"]
 
 # [patch.'https://github.com/pop-os/libcosmic']
 # libcosmic = { path = "../libcosmic" }
