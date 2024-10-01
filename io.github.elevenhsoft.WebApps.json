@@ -13,11 +13,13 @@
     "--socket=wayland",
     "--device=dri",
     "--share=network",
+    "--filesystem=host-os",
     "--filesystem=/var/lib/flatpak:ro",
-    "--filesystem=~/.var/app:rw",
     "--filesystem=~/.local/share/flatpak:ro",
     "--filesystem=~/.local/share/applications:rw",
-    "--filesystem=~/.local/share/icons:create"
+    "--filesystem=~/.local/share/icons:create",
+    "--filesystem=~/.local/share/quick-webapps:create",
+    "--filesystem=~/.var/app:rw"
   ],
   "build-options": {
     "append-path": "/usr/lib/sdk/rust-stable/bin"

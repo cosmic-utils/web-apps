@@ -1,4 +1,7 @@
-use crate::{common, fl, supported_browsers};
+use crate::{
+    common::{self, home_dir},
+    fl, supported_browsers,
+};
 
 use freedesktop_desktop_entry::{default_paths, get_languages_from_env, Iter, PathSource};
 use std::path::PathBuf;
@@ -94,7 +97,18 @@ fn installed_apps() -> Vec<App> {
     let mut apps: Vec<App> = Vec::new();
 
     let locales = get_languages_from_env();
-    for entry in Iter::new(default_paths()).entries(Some(&locales)) {
+    let mut paths = Vec::new();
+    default_paths().for_each(|path| paths.push(path));
+
+    // this is workaround for flatpak sandbox
+    if PathBuf::from("/.flatpak-info").exists() {
+        paths.push(home_dir().join(".local/share/flatpak/exports/share/applications"));
+        paths.push("/var/lib/flatpak/exports/share/applications".into());
+        paths.push("/run/host/usr/share/applications".into());
+        paths.push("/run/host/usr/local/share/applications".into());
+    }
+
+    for entry in Iter::new(paths.into_iter()).entries(Some(&locales)) {
         match PathSource::guess_from(&entry.path) {
             PathSource::Local => apps.push(App::new(AppSource::Native, entry.id().to_string())),
             PathSource::LocalDesktop => {
@@ -111,6 +125,17 @@ fn installed_apps() -> Vec<App> {
             }
             PathSource::SystemFlatpak => {
                 apps.push(App::new(AppSource::SystemFlatpak, entry.id().to_string()))
+            }
+            PathSource::Other(_) => {
+                let str_path = entry.path.to_string_lossy();
+
+                if str_path.contains(".local/share/flatpak/") {
+                    apps.push(App::new(AppSource::Flatpak, entry.id().to_string()))
+                } else if str_path.contains("/var/lib/flatpak/") {
+                    apps.push(App::new(AppSource::SystemFlatpak, entry.id().to_string()))
+                } else {
+                    apps.push(App::new(AppSource::Native, entry.id().to_string()))
+                }
             }
             _ => continue,
         };
