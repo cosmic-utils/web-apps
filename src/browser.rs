@@ -1,6 +1,7 @@
-use std::path::PathBuf;
-
 use crate::{common, fl, supported_browsers};
+
+use freedesktop_desktop_entry::{default_paths, get_languages_from_env, Iter, PathSource};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrowserType {
@@ -20,7 +21,7 @@ pub struct Browser {
     pub _type: BrowserType,
     pub name: String,
     pub exec: String,
-    pub test: PathBuf,
+    pub id: String,
     pub profile_path: PathBuf,
 }
 
@@ -31,16 +32,9 @@ impl AsRef<str> for Browser {
 }
 
 impl Browser {
-    pub fn new(
-        _type: BrowserType,
-        name: &str,
-        exec: &str,
-        test_path: &str,
-        profile_path: &str,
-    ) -> Self {
+    pub fn new(_type: BrowserType, name: &str, exec: &str, id: &str, profile_path: &str) -> Self {
         let name = name.to_string();
-
-        let mut test = PathBuf::new();
+        let id = id.to_string();
         let mut exe_path = PathBuf::new();
 
         let base = common::home_dir();
@@ -54,23 +48,14 @@ impl Browser {
             exe_path.push(exec)
         }
 
-        if test_path.starts_with(".local/share") {
-            let flatpak_path: Vec<&str> = test_path.split(".local/share/").collect();
-            let path = data_home.join(flatpak_path[1]);
-            test.push(path);
-        } else {
-            test.push(test_path)
-        }
-
         let exec = exe_path.to_str().unwrap().to_string();
-
         let profile_path = base.join(profile_path);
 
         Self {
             _type,
             name,
             exec,
-            test,
+            id,
             profile_path,
         }
     }
@@ -85,28 +70,91 @@ impl Browser {
     }
 }
 
+#[derive(Debug)]
+enum AppSource {
+    Native,
+    Nix,
+    Flatpak,
+    SystemFlatpak,
+}
+
+#[derive(Debug)]
+struct App {
+    pub app_source: AppSource,
+    pub id: String,
+}
+
+impl App {
+    pub fn new(app_source: AppSource, id: String) -> Self {
+        Self { app_source, id }
+    }
+}
+
+fn installed_apps() -> Vec<App> {
+    let mut apps: Vec<App> = Vec::new();
+
+    let locales = get_languages_from_env();
+    for entry in Iter::new(default_paths()).entries(Some(&locales)) {
+        match PathSource::guess_from(&entry.path) {
+            PathSource::Local => apps.push(App::new(AppSource::Native, entry.id().to_string())),
+            PathSource::LocalDesktop => {
+                apps.push(App::new(AppSource::Native, entry.id().to_string()))
+            }
+            PathSource::LocalFlatpak => {
+                apps.push(App::new(AppSource::Flatpak, entry.id().to_string()))
+            }
+            PathSource::LocalNix => apps.push(App::new(AppSource::Nix, entry.id().to_string())),
+            PathSource::Nix => apps.push(App::new(AppSource::Nix, entry.id().to_string())),
+            PathSource::System => apps.push(App::new(AppSource::Native, entry.id().to_string())),
+            PathSource::SystemLocal => {
+                apps.push(App::new(AppSource::Native, entry.id().to_string()))
+            }
+            PathSource::SystemFlatpak => {
+                apps.push(App::new(AppSource::SystemFlatpak, entry.id().to_string()))
+            }
+            _ => continue,
+        };
+    }
+
+    apps
+}
+
 pub fn get_supported_browsers() -> Vec<Browser> {
-    let mut test_browsers: Vec<Browser> = Vec::new();
-
     let native_browsers: Vec<Browser> = supported_browsers::native_browsers();
-    let flatpak_browsers: Vec<Browser> = supported_browsers::flatpak_browsers();
     let nix_browsers: Vec<Browser> = supported_browsers::nix_browsers();
-
-    test_browsers.extend(native_browsers);
-    test_browsers.extend(flatpak_browsers);
-    test_browsers.extend(nix_browsers);
+    let flatpak_browsers: Vec<Browser> = supported_browsers::flatpak_browsers();
+    let flatpak_system_browsers: Vec<Browser> = supported_browsers::flatpak_system_browsers();
 
     let mut browsers = Vec::new();
 
-    for browser in test_browsers {
-        let exists = browser.test.as_path().try_exists();
-
-        match exists {
-            Ok(found) => match found {
-                true => browsers.push(browser),
-                false => continue,
-            },
-            Err(_) => continue,
+    for app in installed_apps().iter() {
+        match app.app_source {
+            AppSource::Native => {
+                if let Some(installed) = native_browsers.iter().find(|browser| browser.id == app.id)
+                {
+                    browsers.push(installed.clone())
+                }
+            }
+            AppSource::Nix => {
+                if let Some(installed) = nix_browsers.iter().find(|browser| browser.id == app.id) {
+                    browsers.push(installed.clone())
+                }
+            }
+            AppSource::Flatpak => {
+                if let Some(installed) =
+                    flatpak_browsers.iter().find(|browser| browser.id == app.id)
+                {
+                    browsers.push(installed.clone())
+                }
+            }
+            AppSource::SystemFlatpak => {
+                if let Some(installed) = flatpak_system_browsers
+                    .iter()
+                    .find(|browser| browser.id == app.id)
+                {
+                    browsers.push(installed.clone())
+                }
+            }
         }
     }
 

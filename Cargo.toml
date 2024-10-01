@@ -37,6 +37,7 @@ bytes = "1.7.1"
 svg = "0.18.0"
 base64 = "0.22.1"
 ashpd = { version = "0.9.1", features = ["wayland"] }
+freedesktop-desktop-entry = "0.7.5"
 
 [dependencies.i18n-embed]
 version = "0.15.0"
