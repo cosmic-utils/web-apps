@@ -263,11 +263,7 @@ impl Application for Window {
                         self.creator_window.app_incognito,
                     );
 
-                    if new_entry.is_valid {
-                        self.create_valid_launcher(new_entry).unwrap();
-                    } else {
-                        self.warning.push_warn(WarnMessages::Duplicate);
-                    }
+                    self.create_valid_launcher(new_entry).unwrap();
                 }
                 Buttons::DoneEdit((new_name, old_icon)) => {
                     if let Some(launcher) = self.main_window.launcher.to_owned() {
@@ -293,11 +289,7 @@ impl Application for Window {
                             edited_entry.icon = old_icon.unwrap();
                         }
 
-                        if edited_entry.is_valid {
-                            self.create_valid_launcher(edited_entry).unwrap();
-                        } else {
-                            self.warning.push_warn(WarnMessages::Duplicate);
-                        }
+                        self.create_valid_launcher(edited_entry).unwrap();
                     }
                 }
                 Buttons::AppNameSubmit(mut launcher) => {
@@ -532,15 +524,24 @@ impl Window {
     }
 
     fn create_valid_launcher(&mut self, mut entry: launcher::WebAppLauncher) -> anyhow::Result<()> {
-        if entry.is_valid && self.warning.is_empty() {
-            if let Some(icon) = &self.creator_window.selected_icon {
-                entry.icon = move_icon(icon.path.clone(), self.creator_window.app_title.clone());
-            }
+        if let Some(icon) = &self.creator_window.selected_icon {
+            entry.icon = move_icon(icon.path.clone(), self.creator_window.app_title.clone());
+        }
+        if launcher::webapplauncher_is_valid(
+            &entry.web_browser,
+            &entry.icon,
+            &entry.codename,
+            &entry.name,
+            &entry.url,
+        ) && self.warning.is_empty()
+        {
             let _ = entry.create().is_ok();
             self.creator_window = creator::AppCreator::new();
             self.current_page = Pages::MainWindow;
+            return Ok(());
         };
 
+        self.warning.push_warn(WarnMessages::Duplicate);
         Ok(())
     }
 

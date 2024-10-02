@@ -71,7 +71,6 @@ pub struct WebAppLauncher {
     pub web_browser: browser::Browser,
     pub name: String,
     pub icon: String,
-    pub is_valid: bool,
     pub exec: String,
     // pub args: Vec<String>,
     pub category: String,
@@ -110,15 +109,12 @@ impl WebAppLauncher {
         let isolate_profile = isolated;
         let is_incognito = privatewindow;
 
-        let is_valid = webapplauncher_is_valid(&web_browser, &icon, &codename, &name, &url);
-
         Self {
             path,
             codename,
             web_browser,
             name,
             icon,
-            is_valid,
             exec,
             // args,
             category,
@@ -135,7 +131,6 @@ impl WebAppLauncher {
         let mut browser_name = String::new();
         let mut name = String::new();
         let mut icon = String::new();
-        let mut is_valid = false;
         let mut exec = String::new();
         let mut args = Vec::new();
         let mut category = String::new();
@@ -147,18 +142,9 @@ impl WebAppLauncher {
 
         let reader = io::BufReader::new(file);
 
-        let mut is_webapp = false;
-
         for line_result in reader.lines() {
             match line_result {
                 Ok(line) => {
-                    if line.contains("StartupWMClass=WebApp")
-                        || line.contains("StartupWMClass=Chromium")
-                        || line.contains("StartupWMClass=ICE-SSB")
-                    {
-                        is_webapp = true;
-                    };
-
                     if line.contains("Name=") {
                         name = line.replace("Name=", "");
                     };
@@ -206,10 +192,6 @@ impl WebAppLauncher {
             }
         }
 
-        if is_webapp && !name.is_empty() && !icon.is_empty() {
-            is_valid = true
-        }
-
         let web_browser = browser::Browser::web_browser(browser_name);
 
         match web_browser {
@@ -226,7 +208,6 @@ impl WebAppLauncher {
                     web_browser,
                     name,
                     icon,
-                    is_valid,
                     exec,
                     // args,
                     category,
