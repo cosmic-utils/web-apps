@@ -53,6 +53,7 @@ icons-installer-message=This app requires icons to work with. In case we don't h
 warning=You don't meet requirements
     .success=You can create new Web App
     .duplicate=  - Web App invalid. Maybe you already have this Web App?
+    .wrong-icon =  - Selected icon is invalid. Select another one.
     .app-name=  - App name must be longer than 3 characters
     .app-url=  - You must provide valid URL starting with http:// or https://
     .app-icon=  - You must select an Icon for your launcher

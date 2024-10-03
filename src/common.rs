@@ -204,6 +204,8 @@ pub fn move_icon(path: String, output_name: String) -> String {
 
             return convert_raster_to_svg_format(content, &icon_name);
         }
+
+        return String::new();
     };
 
     if !is_svg(&path) {

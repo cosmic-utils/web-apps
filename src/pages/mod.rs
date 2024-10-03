@@ -525,7 +525,15 @@ impl Window {
 
     fn create_valid_launcher(&mut self, mut entry: launcher::WebAppLauncher) -> anyhow::Result<()> {
         if let Some(icon) = &self.creator_window.selected_icon {
-            entry.icon = move_icon(icon.path.clone(), self.creator_window.app_title.clone());
+            let path = move_icon(icon.path.clone(), self.creator_window.app_title.clone());
+
+            if path.is_empty() {
+                self.warning.push_warn(WarnMessages::WrongIcon);
+                return Ok(());
+            }
+
+            self.warning.remove_warn(WarnMessages::WrongIcon);
+            entry.icon = path;
         }
         if launcher::webapplauncher_is_valid(
             &entry.web_browser,

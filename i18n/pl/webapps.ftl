@@ -53,6 +53,7 @@ icons-installer-message=Ta aplikacja potrzebuje ikon do działania. W przypadku 
 warning=Proszę spełnić poniższe wymagania
     .success=Spełniasz wymagania do utworzenia Web Appki
     .duplicate=  - Web Appka niepoprawna. Upewnij się, że nie posiadasz już takiej appki
+    .wrong-icon =  - Wybrana ikona jest niepoprawna. Prosimy wybrać inną.
     .app-name=  - Nazwa musi być dłuższa niż 3 znaki
     .app-url=  - Proszę podać poprawny link zaczynający się od http:// lub https://
     .app-icon=  - Musisz wybrać ikonę aplikacji
