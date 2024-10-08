@@ -71,7 +71,7 @@ install:
     done
 
 # Installs files for flatpak
-flatpak:
+flatpak-install:
     install -Dm0755 {{bin-src}} {{fp-bin-dst}}
     install -Dm0644 {{desktop-src}} {{fp-desktop-dst}}
     install -Dm0644 {{metainfo-src}} {{fp-metainfo-dst}}

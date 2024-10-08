@@ -1,11 +1,13 @@
 {
   "app-id": "io.github.elevenhsoft.WebApps",
   "runtime": "org.freedesktop.Platform",
-  "runtime-version": "23.08",
+  "runtime-version": "24.08",
   "sdk": "org.freedesktop.Sdk",
   "sdk-extensions": [
     "org.freedesktop.Sdk.Extension.rust-stable"
   ],
+  "base": "com.system76.Cosmic.BaseApp",
+  "base-version": "stable",
   "command": "quick-webapps",
   "finish-args": [
     "--share=ipc",
@@ -26,51 +28,6 @@
   },
   "modules": [
     {
-      "name": "just",
-      "buildsystem": "simple",
-      "build-commands": [
-        "install -Dm0755 just /app/bin/just"
-      ],
-      "sources": [
-        {
-          "type": "archive",
-          "strip-components": 0,
-          "dest-filename": "just.tar.gz",
-          "url": "https://github.com/casey/just/releases/download/1.35.0/just-1.35.0-x86_64-unknown-linux-musl.tar.gz",
-          "sha256": "c4172306e241bd175c07316156a610593fa2b687ac49418520a375605d7cead4",
-          "only_arches": [
-            "x86_64"
-          ]
-        },
-        {
-          "type": "archive",
-          "strip-components": 0,
-          "dest-filename": "just.tar.gz",
-          "url": "https://github.com/casey/just/releases/download/1.35.0/just-1.35.0-aarch64-unknown-linux-musl.tar.gz",
-          "sha256": "a94c75426239fce8c1e7fdfccd20d60d987924f91ac45c843a14cd72d4d71e73",
-          "only_arches": [
-            "aarch64"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "cosmic-icons",
-      "buildsystem": "simple",
-      "build-commands": [
-        "sed -i \"s|prefix := '/usr'|prefix := '/app'|\" justfile",
-        "just install"
-      ],
-      "sources": [
-        {
-          "type": "archive",
-          "dest-filename": "cosmic-icons-epoch-1.0.0-alpha.1.tar.gz",
-          "url": "https://github.com/pop-os/cosmic-icons/archive/refs/tags/epoch-1.0.0-alpha.1.tar.gz",
-          "sha256": "20d1a184c0421501e7ed8761f6e6178c3e16c787373357dae1d4dc22b9109428"
-        }
-      ]
-    },
-    {
       "name": "quick-webapps",
       "buildsystem": "simple",
       "build-options": {
@@ -81,7 +38,7 @@
       "build-commands": [
         "cargo --offline fetch --manifest-path Cargo.toml --verbose",
         "cargo --offline build --release --verbose",
-        "just flatpak"
+        "just flatpak-install"
       ],
       "sources": [
         {
