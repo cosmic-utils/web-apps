@@ -5,7 +5,10 @@
         <name>elevenhsoft</name>
     </developer>
     <url type="homepage">https://github.com/cosmic-utils/web-apps</url>
+    <url type="vcs-browser">https://github.com/cosmic-utils/web-apps</url>
     <url type="bugtracker">https://github.com/cosmic-utils/web-apps/issues</url>
+    <url type="contribute">https://github.com/cosmic-utils/web-apps</url>
+    <url type="translate">https://github.com/cosmic-utils/web-apps/tree/master/i18n</url>
     <url type="donation">https://ko-fi.com/elevenhsoft</url>
 
     <name>Quick Web Apps</name>
@@ -60,6 +63,16 @@
         <color type="primary" scheme_preference="light">#94ebeb</color>
         <color type="primary" scheme_preference="dark">#578383</color>
     </branding>
+
+    <requires>
+        <display_length compare="ge">640</display_length>
+        <internet>always</internet>
+    </requires>
+
+    <supports>
+        <control>keyboard</control>
+        <control>pointing</control>
+    </supports>
 
     <releases>
         <release version="0.5.1" date="2024-10-08">
