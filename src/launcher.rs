@@ -7,7 +7,11 @@ use std::{
 use anyhow::{anyhow, Error};
 use rand::{thread_rng, Rng};
 
-use crate::{browser, common, launcher};
+use crate::{
+    browser,
+    common::{self, home_dir},
+    launcher,
+};
 
 pub fn webapplauncher_is_valid(
     webbrowser: &browser::Browser,
@@ -104,7 +108,20 @@ impl WebAppLauncher {
         let filename = format!("webapp-{}.desktop", codename);
         let path = common::desktop_filepath(&filename);
         let web_browser = browser;
-        let exec = web_browser.exec.clone();
+        let exec = match web_browser._binary {
+            browser::BinaryLocation::System => web_browser.exec.clone(),
+            browser::BinaryLocation::Nix => web_browser.exec.clone(),
+            browser::BinaryLocation::FlatpakLocal => {
+                format!(
+                    "{}/.local/share/flatpak/exports/bin/{}",
+                    home_dir().to_str().unwrap_or_default(),
+                    web_browser.exec.clone()
+                )
+            }
+            browser::BinaryLocation::FlatpakSystem => {
+                format!("/var/lib/flatpak/exports/bin/{}", web_browser.exec.clone())
+            }
+        };
         // let args = Vec::new();
         let isolate_profile = isolated;
         let is_incognito = privatewindow;

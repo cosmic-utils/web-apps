@@ -20,11 +20,19 @@ pub enum BrowserType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BinaryLocation {
+    System,
+    Nix,
+    FlatpakLocal,
+    FlatpakSystem,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Browser {
     pub _type: BrowserType,
+    pub _binary: BinaryLocation,
     pub name: String,
     pub exec: String,
-    pub id: String,
     pub profile_path: PathBuf,
 }
 
@@ -35,9 +43,14 @@ impl AsRef<str> for Browser {
 }
 
 impl Browser {
-    pub fn new(_type: BrowserType, name: &str, exec: &str, id: &str, profile_path: &str) -> Self {
+    pub fn new(
+        _type: BrowserType,
+        _binary: BinaryLocation,
+        name: &str,
+        exec: &str,
+        profile_path: &str,
+    ) -> Self {
         let name = name.to_string();
-        let id = id.to_string();
         let mut exe_path = PathBuf::new();
 
         let base = common::home_dir();
@@ -56,11 +69,19 @@ impl Browser {
 
         Self {
             _type,
+            _binary,
             name,
             exec,
-            id,
             profile_path,
         }
+    }
+
+    pub fn update_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    pub fn update_binary_location(&mut self, location: BinaryLocation) {
+        self._binary = location;
     }
 
     pub fn web_browser(name: String) -> Option<Browser> {
@@ -84,12 +105,17 @@ enum AppSource {
 #[derive(Debug)]
 struct App {
     pub app_source: AppSource,
-    pub id: String,
+    pub name: String,
+    pub exec: String,
 }
 
 impl App {
-    pub fn new(app_source: AppSource, id: String) -> Self {
-        Self { app_source, id }
+    pub fn new(app_source: AppSource, name: String, exec: String) -> Self {
+        Self {
+            app_source,
+            name,
+            exec,
+        }
     }
 }
 
@@ -110,31 +136,107 @@ fn installed_apps() -> Vec<App> {
 
     for entry in Iter::new(paths.into_iter()).entries(Some(&locales)) {
         match PathSource::guess_from(&entry.path) {
-            PathSource::Local => apps.push(App::new(AppSource::Native, entry.id().to_string())),
+            PathSource::Local => {
+                if let Some(exec) = entry.exec() {
+                    apps.push(App::new(
+                        AppSource::Native,
+                        format!("{} (Local)", entry.name(&locales).unwrap_or_default()),
+                        exec.to_string(),
+                    ))
+                }
+            }
             PathSource::LocalDesktop => {
-                apps.push(App::new(AppSource::Native, entry.id().to_string()))
+                if let Some(exec) = entry.exec() {
+                    apps.push(App::new(
+                        AppSource::Native,
+                        format!("{} (Local)", entry.name(&locales).unwrap_or_default()),
+                        exec.to_string(),
+                    ))
+                }
             }
             PathSource::LocalFlatpak => {
-                apps.push(App::new(AppSource::Flatpak, entry.id().to_string()))
+                if let Some(exec) = entry.exec() {
+                    apps.push(App::new(
+                        AppSource::Flatpak,
+                        format!(
+                            "{} (Local Flatpak)",
+                            entry.name(&locales).unwrap_or_default()
+                        ),
+                        exec.to_string(),
+                    ))
+                }
             }
-            PathSource::LocalNix => apps.push(App::new(AppSource::Nix, entry.id().to_string())),
-            PathSource::Nix => apps.push(App::new(AppSource::Nix, entry.id().to_string())),
-            PathSource::System => apps.push(App::new(AppSource::Native, entry.id().to_string())),
+            PathSource::LocalNix => {
+                if let Some(exec) = entry.exec() {
+                    apps.push(App::new(
+                        AppSource::Nix,
+                        format!("{} (Local)", entry.name(&locales).unwrap_or_default()),
+                        exec.to_string(),
+                    ))
+                }
+            }
+            PathSource::Nix => {
+                if let Some(exec) = entry.exec() {
+                    apps.push(App::new(
+                        AppSource::Nix,
+                        entry.name(&locales).unwrap_or_default().to_string(),
+                        exec.to_string(),
+                    ))
+                }
+            }
+            PathSource::System => {
+                if let Some(exec) = entry.exec() {
+                    apps.push(App::new(
+                        AppSource::Native,
+                        entry.name(&locales).unwrap_or_default().to_string(),
+                        exec.to_string(),
+                    ))
+                }
+            }
             PathSource::SystemLocal => {
-                apps.push(App::new(AppSource::Native, entry.id().to_string()))
+                if let Some(exec) = entry.exec() {
+                    apps.push(App::new(
+                        AppSource::Native,
+                        format!("{} (Local)", entry.name(&locales).unwrap_or_default()),
+                        exec.to_string(),
+                    ))
+                }
             }
             PathSource::SystemFlatpak => {
-                apps.push(App::new(AppSource::SystemFlatpak, entry.id().to_string()))
+                if let Some(exec) = entry.exec() {
+                    apps.push(App::new(
+                        AppSource::SystemFlatpak,
+                        format!("{} (Flatpak)", entry.name(&locales).unwrap_or_default()),
+                        exec.to_string(),
+                    ))
+                }
             }
             PathSource::Other(_) => {
-                let str_path = entry.path.to_string_lossy();
+                if let Some(exec) = entry.exec() {
+                    let str_path = entry.path.to_string_lossy();
 
-                if str_path.contains(".local/share/flatpak/") {
-                    apps.push(App::new(AppSource::Flatpak, entry.id().to_string()))
-                } else if str_path.contains("/var/lib/flatpak/") {
-                    apps.push(App::new(AppSource::SystemFlatpak, entry.id().to_string()))
-                } else {
-                    apps.push(App::new(AppSource::Native, entry.id().to_string()))
+                    if str_path.contains(".local/share/flatpak/") {
+                        apps.push(App::new(
+                            AppSource::Flatpak,
+                            format!(
+                                "{} (Local Flatpak)",
+                                entry.name(&locales).unwrap_or_default()
+                            ),
+                            exec.to_string(),
+                        ))
+                    } else if str_path.contains("/var/lib/flatpak/") {
+                        apps.push(App::new(
+                            AppSource::SystemFlatpak,
+                            format!("{} (Flatpak)", entry.name(&locales).unwrap_or_default()),
+                            exec.to_string(),
+                        ))
+                    } else {
+                        apps.push(App::new(
+                            AppSource::Native,
+                            entry.name(&locales).unwrap_or_default().to_string(),
+                            exec.to_string(),
+                        ))
+                    }
                 }
             }
             _ => continue,
@@ -145,38 +247,56 @@ fn installed_apps() -> Vec<App> {
 }
 
 pub fn get_supported_browsers() -> Vec<Browser> {
-    let native_browsers: Vec<Browser> = supported_browsers::native_browsers();
-    let nix_browsers: Vec<Browser> = supported_browsers::nix_browsers();
-    let flatpak_browsers: Vec<Browser> = supported_browsers::flatpak_browsers();
-    let flatpak_system_browsers: Vec<Browser> = supported_browsers::flatpak_system_browsers();
+    let mut native_browsers: Vec<Browser> = supported_browsers::native_browsers();
+    let mut nix_browsers: Vec<Browser> = supported_browsers::nix_browsers();
+    let mut flatpak_browsers: Vec<Browser> = supported_browsers::flatpak_browsers();
 
     let mut browsers = Vec::new();
 
     for app in installed_apps().iter() {
         match app.app_source {
             AppSource::Native => {
-                if let Some(installed) = native_browsers.iter().find(|browser| browser.id == app.id)
+                if let Some(installed) = native_browsers
+                    .iter_mut()
+                    .find(|browser| app.exec.contains(&browser.exec))
                 {
+                    if !app.name.is_empty() {
+                        installed.update_name(app.name.clone())
+                    }
                     browsers.push(installed.clone())
                 }
             }
             AppSource::Nix => {
-                if let Some(installed) = nix_browsers.iter().find(|browser| browser.id == app.id) {
+                if let Some(installed) = nix_browsers
+                    .iter_mut()
+                    .find(|browser| app.exec.contains(&browser.exec))
+                {
+                    if !app.name.is_empty() {
+                        installed.update_name(app.name.clone())
+                    }
                     browsers.push(installed.clone())
                 }
             }
             AppSource::Flatpak => {
-                if let Some(installed) =
-                    flatpak_browsers.iter().find(|browser| browser.id == app.id)
+                if let Some(installed) = flatpak_browsers
+                    .iter_mut()
+                    .find(|browser| app.exec.contains(&browser.exec))
                 {
+                    if !app.name.is_empty() {
+                        installed.update_name(app.name.clone())
+                    }
                     browsers.push(installed.clone())
                 }
             }
             AppSource::SystemFlatpak => {
-                if let Some(installed) = flatpak_system_browsers
-                    .iter()
-                    .find(|browser| browser.id == app.id)
+                if let Some(installed) = flatpak_browsers
+                    .iter_mut()
+                    .find(|browser| app.exec.contains(&browser.exec))
                 {
+                    if !app.name.is_empty() {
+                        installed.update_name(app.name.clone())
+                    }
+                    installed.update_binary_location(BinaryLocation::FlatpakSystem);
                     browsers.push(installed.clone())
                 }
             }
@@ -186,8 +306,8 @@ pub fn get_supported_browsers() -> Vec<Browser> {
     if browsers.is_empty() {
         browsers.push(Browser::new(
             BrowserType::NoBrowser,
+            BinaryLocation::System,
             &fl!("select-browser"),
-            "",
             "",
             "",
         ));
