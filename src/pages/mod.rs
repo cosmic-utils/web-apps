@@ -31,8 +31,8 @@ use crate::{
     pages::home_screen::Home,
     pages::iconpicker::IconPicker,
     pages::icons_installator::Installator,
+    warning::WarnAction,
     warning::WarnMessages,
-    warning::{WarnAction, Warning},
 };
 use crate::{browser, launcher};
 
@@ -94,7 +94,6 @@ pub struct Window {
     current_page: Pages,
     creator_window: creator::AppCreator,
     icon_selector: IconPicker,
-    warning: Warning,
 }
 
 impl Application for Window {
@@ -120,15 +119,12 @@ impl Application for Window {
         let creator = creator::AppCreator::new();
         let selector = IconPicker::default();
 
-        let warn_element = Warning::new(Vec::new());
-
         let mut windows = Window {
             core,
             main_window: manager,
             current_page: Pages::MainWindow,
             creator_window: creator,
             icon_selector: selector,
-            warning: warn_element,
         };
 
         let commands = Command::batch(vec![
@@ -184,8 +180,8 @@ impl Application for Window {
             }
             Message::Warning((action, message)) => {
                 match action {
-                    WarnAction::Add => self.warning.push_warn(message),
-                    WarnAction::Remove => self.warning.remove_warn(message),
+                    WarnAction::Add => self.creator_window.warning.push_warn(message),
+                    WarnAction::Remove => self.creator_window.warning.remove_warn(message),
                 };
             }
             Message::OpenIconPicker => {
@@ -312,7 +308,7 @@ impl Application for Window {
                         .iter()
                         .position(|b| b.name == launcher.web_browser.name);
 
-                    self.warning.remove_all_warns();
+                    self.creator_window.warning.remove_all_warns();
                     self.main_window.edit_mode = true;
                     self.main_window.launcher = Some(launcher.clone());
 
@@ -489,7 +485,9 @@ impl Application for Window {
     fn view(&self) -> Element<Message> {
         let view = match &self.current_page {
             Pages::MainWindow => self.main_window.view(),
-            Pages::AppCreator => self.creator_window.view(self.warning.messages()),
+            Pages::AppCreator => self
+                .creator_window
+                .view(self.creator_window.warning.clone()),
             Pages::IconPicker => self.icon_selector.view(),
             Pages::IconInstallator(installator) => installator.view(),
         };
@@ -528,11 +526,15 @@ impl Window {
             let path = move_icon(icon.path.clone(), self.creator_window.app_title.clone());
 
             if path.is_empty() {
-                self.warning.push_warn(WarnMessages::WrongIcon);
+                self.creator_window
+                    .warning
+                    .push_warn(WarnMessages::WrongIcon);
                 return Ok(());
             }
 
-            self.warning.remove_warn(WarnMessages::WrongIcon);
+            self.creator_window
+                .warning
+                .remove_warn(WarnMessages::WrongIcon);
             entry.icon = path;
         }
         if launcher::webapplauncher_is_valid(
@@ -541,7 +543,7 @@ impl Window {
             &entry.codename,
             &entry.name,
             &entry.url,
-        ) && self.warning.is_empty()
+        ) && !self.creator_window.warning.show
         {
             let _ = entry.create().is_ok();
             self.creator_window = creator::AppCreator::new();
@@ -549,24 +551,28 @@ impl Window {
             return Ok(());
         };
 
-        self.warning.push_warn(WarnMessages::Duplicate);
+        self.creator_window
+            .warning
+            .push_warn(WarnMessages::Duplicate);
         Ok(())
     }
 
     fn init_warning_box(&mut self) {
-        self.warning.remove_all_warns();
+        self.creator_window.warning.remove_all_warns();
 
         if self.creator_window.app_title.is_empty() || self.creator_window.app_title.len() <= 3 {
-            self.warning.push_warn(WarnMessages::AppName)
+            self.creator_window.warning.push_warn(WarnMessages::AppName)
         }
         if self.creator_window.app_url.is_empty() {
-            self.warning.push_warn(WarnMessages::AppUrl)
+            self.creator_window.warning.push_warn(WarnMessages::AppUrl)
         }
         if self.creator_window.app_icon.is_empty() {
-            self.warning.push_warn(WarnMessages::AppIcon)
+            self.creator_window.warning.push_warn(WarnMessages::AppIcon)
         }
         if self.creator_window.app_browser._type == browser::BrowserType::NoBrowser {
-            self.warning.push_warn(WarnMessages::AppBrowser)
+            self.creator_window
+                .warning
+                .push_warn(WarnMessages::AppBrowser)
         }
     }
 }

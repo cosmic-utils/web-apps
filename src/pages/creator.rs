@@ -12,7 +12,7 @@ use crate::{
     common::{self, icon_cache_get, url_valid, IconType},
     fl,
     pages::{self},
-    warning::{WarnAction, WarnMessages},
+    warning::{WarnAction, WarnMessages, Warning},
 };
 
 #[derive(Debug, Clone)]
@@ -34,6 +34,7 @@ pub struct AppCreator {
     pub app_browsers: Vec<Browser>,
     pub selected_browser: Option<usize>,
     pub edit_mode: bool,
+    pub warning: Warning,
 }
 
 #[derive(Debug, Clone)]
@@ -89,6 +90,7 @@ impl AppCreator {
             app_browsers: browsers,
             selected_browser: Some(0),
             edit_mode: false,
+            warning: Warning::new(),
         }
     }
 
@@ -213,7 +215,7 @@ impl AppCreator {
         .into()
     }
 
-    pub fn view(&self, warnings: String) -> Element<pages::Message> {
+    pub fn view(&self, warning: Warning) -> Element<pages::Message> {
         let app_title = widget::text_input(fl!("title"), &self.app_title)
             .id(self.app_title_id.clone())
             .on_input(|s| pages::Message::Creator(Message::Title(s)))
@@ -309,8 +311,13 @@ impl AppCreator {
             .push(creator_close)
             .spacing(10);
 
-        let view_column = widget::column()
-            .push(widget::warning(warnings))
+        let mut view_column = widget::column();
+
+        if warning.show {
+            view_column = view_column.push(widget::warning(warning.messages()))
+        }
+
+        view_column = view_column
             .push(row)
             .push(app_arguments)
             .push(first_row)

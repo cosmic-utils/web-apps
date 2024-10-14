@@ -3,7 +3,6 @@ use crate::fl;
 #[derive(Debug, Clone, PartialEq)]
 pub enum WarnMessages {
     Warning,
-    Sucess,
     Duplicate,
     WrongIcon,
     AppName,
@@ -22,7 +21,6 @@ impl std::fmt::Display for WarnMessages {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
             WarnMessages::Warning => write!(f, "{}", fl!("warning")),
-            WarnMessages::Sucess => write!(f, "{}", fl!("warning", "success")),
             WarnMessages::Duplicate => write!(f, "{}", fl!("warning", "duplicate")),
             WarnMessages::WrongIcon => write!(f, "{}", fl!("warning", "wrong-icon")),
             WarnMessages::AppName => write!(f, "{}", fl!("warning", "app-name")),
@@ -43,27 +41,26 @@ impl Default for WarnMessages {
 
 #[derive(Default, Debug, Clone)]
 pub struct Warning {
-    pub header: WarnMessages,
+    pub show: bool,
     pub messages: Vec<WarnMessages>,
 }
 
 impl Warning {
-    pub fn new(messages: Vec<WarnMessages>) -> Self {
-        let header = if !messages.is_empty() {
-            WarnMessages::Warning
-        } else {
-            WarnMessages::Sucess
-        };
+    pub fn new() -> Self {
+        let show = true;
+        let messages = vec![
+            WarnMessages::Warning,
+            WarnMessages::AppName,
+            WarnMessages::AppUrl,
+            WarnMessages::AppIcon,
+            WarnMessages::AppBrowser,
+        ];
 
-        Self { header, messages }
+        Self { show, messages }
     }
 
     pub fn switch_header(&mut self) {
-        if self.messages.is_empty() {
-            self.header = WarnMessages::Sucess
-        } else {
-            self.header = WarnMessages::Warning
-        }
+        self.show = !self.messages.is_empty()
     }
 
     pub fn push_warn(&mut self, message: WarnMessages) {
@@ -84,16 +81,12 @@ impl Warning {
     }
 
     pub fn messages(&self) -> String {
-        let mut content = format!("{}\n", self.header);
+        let mut content = format!("{}\n", WarnMessages::Warning);
 
         for line in &self.messages {
             content.push_str(&format!("{}\n", line));
         }
 
         content
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.messages.is_empty()
     }
 }
