@@ -140,7 +140,7 @@ fn installed_apps() -> Vec<App> {
                 if let Some(exec) = entry.exec() {
                     apps.push(App::new(
                         AppSource::Native,
-                        format!("{} (Local)", entry.name(&locales).unwrap_or_default()),
+                        format!("{} (User)", entry.name(&locales).unwrap_or_default()),
                         exec.to_string(),
                     ))
                 }
@@ -149,7 +149,7 @@ fn installed_apps() -> Vec<App> {
                 if let Some(exec) = entry.exec() {
                     apps.push(App::new(
                         AppSource::Native,
-                        format!("{} (Local)", entry.name(&locales).unwrap_or_default()),
+                        format!("{} (User)", entry.name(&locales).unwrap_or_default()),
                         exec.to_string(),
                     ))
                 }
@@ -159,7 +159,7 @@ fn installed_apps() -> Vec<App> {
                     apps.push(App::new(
                         AppSource::Flatpak,
                         format!(
-                            "{} (Local Flatpak)",
+                            "{} (User Flatpak)",
                             entry.name(&locales).unwrap_or_default()
                         ),
                         exec.to_string(),
@@ -170,7 +170,7 @@ fn installed_apps() -> Vec<App> {
                 if let Some(exec) = entry.exec() {
                     apps.push(App::new(
                         AppSource::Nix,
-                        format!("{} (Local)", entry.name(&locales).unwrap_or_default()),
+                        format!("{} (User)", entry.name(&locales).unwrap_or_default()),
                         exec.to_string(),
                     ))
                 }
@@ -197,7 +197,7 @@ fn installed_apps() -> Vec<App> {
                 if let Some(exec) = entry.exec() {
                     apps.push(App::new(
                         AppSource::Native,
-                        format!("{} (Local)", entry.name(&locales).unwrap_or_default()),
+                        format!("{} (User)", entry.name(&locales).unwrap_or_default()),
                         exec.to_string(),
                     ))
                 }
@@ -219,7 +219,7 @@ fn installed_apps() -> Vec<App> {
                         apps.push(App::new(
                             AppSource::Flatpak,
                             format!(
-                                "{} (Local Flatpak)",
+                                "{} (User Flatpak)",
                                 entry.name(&locales).unwrap_or_default()
                             ),
                             exec.to_string(),
