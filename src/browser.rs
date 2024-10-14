@@ -135,6 +135,12 @@ fn installed_apps() -> Vec<App> {
     }
 
     for entry in Iter::new(paths.into_iter()).entries(Some(&locales)) {
+        if let Some(comments) = entry.comment(&locales) {
+            if comments.to_lowercase().contains("web app") {
+                continue;
+            }
+        }
+
         match PathSource::guess_from(&entry.path) {
             PathSource::Local => {
                 if let Some(exec) = entry.exec() {
