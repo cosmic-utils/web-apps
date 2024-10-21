@@ -9,7 +9,7 @@ use std::{
 
 use base64::prelude::*;
 use bytes::Bytes;
-use cosmic::widget;
+use cosmic::{iced_core, widget};
 use image::ImageReader;
 use image::{load_from_memory, GenericImageView};
 use reqwest::Client;
@@ -36,10 +36,10 @@ pub fn url_valid(url: &str) -> bool {
 
 pub fn is_svg(path: &str) -> bool {
     if !url_valid(path) {
-        if let Ok(pb) = PathBuf::from_str(path) {
-            if pb.extension() == Some(OsStr::new("svg")) {
-                return true;
-            }
+        let Ok(pb) = PathBuf::from_str(path);
+
+        if pb.extension() == Some(OsStr::new("svg")) {
+            return true;
         }
     }
     false
@@ -70,11 +70,8 @@ pub fn icons_location() -> PathBuf {
 }
 
 pub fn system_icons() -> PathBuf {
-    if let Ok(path) = PathBuf::from_str("/usr/share/icons") {
-        path
-    } else {
-        PathBuf::new()
-    }
+    let Ok(path) = PathBuf::from_str("/usr/share/icons");
+    path
 }
 
 pub fn qwa_icons_location() -> PathBuf {
@@ -241,7 +238,7 @@ pub async fn image_handle(path: String) -> Option<Icon> {
                 {
                     if let Ok(image) = image_reader.decode() {
                         if image.width() >= 96 && image.height() >= 96 {
-                            let handle = widget::image::Handle::from_memory(bytes);
+                            let handle = iced_core::image::Handle::from_bytes(bytes);
                             return Some(Icon::new(IconType::Raster(handle), path, true));
                         }
                     };
@@ -250,32 +247,31 @@ pub async fn image_handle(path: String) -> Option<Icon> {
         }
     };
 
-    if let Ok(result_path) = PathBuf::from_str(&path) {
-        if result_path.is_file() {
-            if is_svg(&path) {
-                let handle = widget::svg::Handle::from_path(&result_path);
+    let Ok(result_path) = PathBuf::from_str(&path);
 
-                return Some(Icon::new(IconType::Svg(handle), path, false));
-            } else {
-                let mut data: Vec<_> = Vec::new();
+    if result_path.is_file() {
+        if is_svg(&path) {
+            let handle = widget::svg::Handle::from_path(&result_path);
 
-                if let Ok(mut file) = tokio::fs::File::open(&result_path).await {
-                    let _ = file.read_to_end(&mut data).await;
-                }
+            return Some(Icon::new(IconType::Svg(handle), path, false));
+        } else {
+            let mut data: Vec<_> = Vec::new();
 
-                if let Ok(image_reader) = ImageReader::new(Cursor::new(&data)).with_guessed_format()
-                {
-                    if let Ok(image) = image_reader.decode() {
-                        if image.width() >= 96 && image.height() >= 96 {
-                            let handle = widget::image::Handle::from_memory(data);
-
-                            return Some(Icon::new(IconType::Raster(handle), path, false));
-                        }
-                    };
-                }
+            if let Ok(mut file) = tokio::fs::File::open(&result_path).await {
+                let _ = file.read_to_end(&mut data).await;
             }
-        };
-    }
+
+            if let Ok(image_reader) = ImageReader::new(Cursor::new(&data)).with_guessed_format() {
+                if let Ok(image) = image_reader.decode() {
+                    if image.width() >= 96 && image.height() >= 96 {
+                        let handle = iced_core::image::Handle::from_bytes(data);
+
+                        return Some(Icon::new(IconType::Raster(handle), path, false));
+                    }
+                };
+            }
+        }
+    };
 
     None
 }

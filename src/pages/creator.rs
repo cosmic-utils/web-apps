@@ -1,10 +1,10 @@
 use cosmic::{
-    app::{message::app, Message as CosmicMessage},
+    app::Task,
     command,
     iced::{id, Length},
     style,
     widget::{self},
-    Command, Element,
+    Element,
 };
 
 use crate::{
@@ -94,8 +94,8 @@ impl AppCreator {
         }
     }
 
-    pub fn update(&mut self, message: Message) -> Command<CosmicMessage<pages::Message>> {
-        let mut commands: Vec<Command<CosmicMessage<pages::Message>>> = Vec::new();
+    pub fn update(&mut self, message: Message) -> Task<pages::Message> {
+        let mut commands: Vec<Task<pages::Message>> = Vec::new();
 
         match message {
             Message::Title(title) => {
@@ -103,17 +103,11 @@ impl AppCreator {
 
                 if self.app_title.len() >= 3 {
                     commands.push(command::future(async {
-                        app(pages::Message::Warning((
-                            WarnAction::Remove,
-                            WarnMessages::AppName,
-                        )))
+                        pages::Message::Warning((WarnAction::Remove, WarnMessages::AppName))
                     }))
                 } else {
                     commands.push(command::future(async {
-                        app(pages::Message::Warning((
-                            WarnAction::Add,
-                            WarnMessages::AppName,
-                        )))
+                        pages::Message::Warning((WarnAction::Add, WarnMessages::AppName))
                     }))
                 }
             }
@@ -122,17 +116,11 @@ impl AppCreator {
 
                 if url_valid(&self.app_url) {
                     commands.push(command::future(async {
-                        app(pages::Message::Warning((
-                            WarnAction::Remove,
-                            WarnMessages::AppUrl,
-                        )))
+                        pages::Message::Warning((WarnAction::Remove, WarnMessages::AppUrl))
                     }))
                 } else {
                     commands.push(command::future(async {
-                        app(pages::Message::Warning((
-                            WarnAction::Add,
-                            WarnMessages::AppUrl,
-                        )))
+                        pages::Message::Warning((WarnAction::Add, WarnMessages::AppUrl))
                     }))
                 }
             }
@@ -146,16 +134,10 @@ impl AppCreator {
 
                 commands.push(match browser._type {
                     BrowserType::NoBrowser => command::future(async {
-                        app(pages::Message::Warning((
-                            WarnAction::Add,
-                            WarnMessages::AppBrowser,
-                        )))
+                        pages::Message::Warning((WarnAction::Add, WarnMessages::AppBrowser))
                     }),
                     _ => command::future(async {
-                        app(pages::Message::Warning((
-                            WarnAction::Remove,
-                            WarnMessages::AppBrowser,
-                        )))
+                        pages::Message::Warning((WarnAction::Remove, WarnMessages::AppBrowser))
                     }),
                 })
             }
@@ -177,7 +159,7 @@ impl AppCreator {
             },
         };
 
-        Command::batch(commands)
+        Task::batch(commands)
     }
 
     fn icon_picker_icon(&self, icon: Option<common::Icon>) -> Element<pages::Message> {
@@ -186,21 +168,24 @@ impl AppCreator {
                 IconType::Raster(data) => widget::button::custom(widget::image(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
-                    .style(style::Button::Icon),
+                    .class(style::Button::Icon),
 
                 IconType::Svg(data) => widget::button::custom(widget::svg(data))
                     .width(Length::Fixed(48.))
                     .height(Length::Fixed(48.))
-                    .style(style::Button::Icon),
+                    .class(style::Button::Icon),
             }
         } else {
             widget::button::custom(icon_cache_get("folder-pictures-symbolic", 16))
                 .width(Length::Fixed(48.))
                 .height(Length::Fixed(48.))
-                .style(style::Button::Icon)
+                .class(style::Button::Icon)
         };
 
-        widget::container(ico).center_x().center_y().into()
+        widget::container(ico)
+            .center_x(Length::Fill)
+            .center_y(Length::Fill)
+            .into()
     }
 
     fn download_button(&self) -> Element<pages::Message> {
@@ -208,10 +193,10 @@ impl AppCreator {
             widget::button::custom(icon_cache_get("folder-download-symbolic", 16))
                 .width(Length::Fixed(48.))
                 .height(Length::Fixed(48.))
-                .style(style::Button::Icon),
+                .class(style::Button::Icon),
         )
-        .center_x()
-        .center_y()
+        .center_x(Length::Fill)
+        .center_y(Length::Fill)
         .into()
     }
 
@@ -257,10 +242,10 @@ impl AppCreator {
         )
         .width(Length::Fixed(200.));
 
-        let navbar_toggle = widget::toggler(fl!("navbar"), self.app_navbar, |b| {
-            pages::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
-        })
-        .spacing(10);
+        let navbar_toggle = widget::toggler(self.app_navbar)
+            .label(fl!("navbar"))
+            .on_toggle(|b| pages::Message::Creator(Message::Clicked(Buttons::Navbar(b))))
+            .spacing(10);
 
         let browser_specific = match self.app_browser._type {
             BrowserType::Firefox
@@ -268,16 +253,18 @@ impl AppCreator {
             | BrowserType::Zen
             | BrowserType::ZenFlatpak => navbar_toggle,
 
-            _ => widget::toggler(fl!("isolated-profile"), self.app_isolated, |b| {
-                pages::Message::Creator(Message::Clicked(Buttons::IsolatedProfile(b)))
-            })
-            .spacing(10),
+            _ => widget::toggler(self.app_isolated)
+                .label(fl!("isolated-profile"))
+                .on_toggle(|b| {
+                    pages::Message::Creator(Message::Clicked(Buttons::IsolatedProfile(b)))
+                })
+                .spacing(10),
         };
 
-        let incognito = widget::toggler(fl!("private-mode"), self.app_incognito, |b| {
-            pages::Message::Creator(Message::Clicked(Buttons::Incognito(b)))
-        })
-        .spacing(10);
+        let incognito = widget::toggler(self.app_incognito)
+            .label(fl!("private-mode"))
+            .on_toggle(|b| pages::Message::Creator(Message::Clicked(Buttons::Incognito(b))))
+            .spacing(10);
 
         let first_row = widget::row()
             .push(categories_dropdown)
@@ -301,7 +288,7 @@ impl AppCreator {
         let creator_close =
             widget::button::standard(fl!("close")).on_press(pages::Message::CloseCreator);
 
-        let spacer = widget::horizontal_space(Length::Fill);
+        let spacer = widget::horizontal_space();
 
         let end_row = widget::row()
             .push(app_browsers)

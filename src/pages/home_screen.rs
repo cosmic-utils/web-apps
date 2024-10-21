@@ -33,7 +33,7 @@ impl Home {
     }
 
     pub fn view(&self) -> Element<Message> {
-        let mut app_list = column().spacing(12).align_items(Alignment::Center);
+        let mut app_list = column().spacing(12).align_x(Alignment::Center);
         let webapps = get_webapps();
 
         for app in webapps.iter().flatten() {
@@ -55,12 +55,12 @@ impl Home {
             let edit = widget::button::custom(icon_cache_get("application-menu-symbolic", 16))
                 .on_press(Message::Clicked(Buttons::Edit(app.clone())))
                 .padding(10)
-                .style(style::Button::Icon);
+                .class(style::Button::Icon);
 
             let delete = widget::button::custom(icon_cache_get("edit-delete-symbolic", 16))
                 .on_press(Message::Clicked(Buttons::Delete(app.clone())))
                 .padding(10)
-                .style(style::Button::Icon);
+                .class(style::Button::Icon);
 
             let row = cosmic::widget::row()
                 .spacing(4)
@@ -70,11 +70,11 @@ impl Home {
 
             app_list = app_list.push(
                 Container::new(cosmic::widget::row().push(row).push(row2))
-                    .style(theme::Container::List),
+                    .class(theme::Container::List),
             );
         }
 
-        let mut final_content = column().spacing(20).align_items(Alignment::Center);
+        let mut final_content = column().spacing(20).align_x(Alignment::Center);
 
         if !webapps.is_empty() {
             final_content = final_content.push(Scrollable::new(app_list));

@@ -15,10 +15,10 @@ use cosmic::iced::Length;
 use cosmic::widget::Container;
 use cosmic::{app, command, Theme};
 use cosmic::{
-    app::{message::app, Core, Message as CosmicMessage},
+    app::{command::Task, Application, ApplicationExt, Core},
     cosmic_theme, executor, style,
     widget::{self},
-    Application, ApplicationExt, Command, Element,
+    Element,
 };
 
 use crate::{
@@ -49,6 +49,7 @@ pub enum Buttons {
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum Message {
+    None,
     OpenHome,
     OpenCreator,
     CloseCreator,
@@ -111,10 +112,7 @@ impl Application for Window {
         &mut self.core
     }
 
-    fn init(
-        core: Core,
-        _flags: Self::Flags,
-    ) -> (Self, Command<cosmic::app::Message<Self::Message>>) {
+    fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Message>) {
         let manager = Home::new();
         let creator = creator::AppCreator::new();
         let selector = IconPicker::default();
@@ -127,10 +125,10 @@ impl Application for Window {
             icon_selector: selector,
         };
 
-        let commands = Command::batch(vec![
+        let commands = Task::batch(vec![
             windows.update_title(),
-            Command::perform(async {}, |_| {
-                cosmic::app::message::app(Message::SystemTheme)
+            Task::perform(async {}, |_| {
+                cosmic::app::Message::App(Message::SystemTheme)
             }),
         ]);
 
@@ -146,18 +144,17 @@ impl Application for Window {
             widget::button::custom(go_home_icon)
                 .on_press(Message::OpenHome)
                 .padding(space_xxs)
-                .style(style::Button::Icon)
                 .into(),
             widget::button::custom(go_creator)
                 .on_press(Message::OpenCreator)
                 .padding(space_xxs)
-                .style(style::Button::Icon)
+                .class(style::Button::Icon)
                 .into(),
         ]
     }
 
-    fn update(&mut self, message: Self::Message) -> Command<CosmicMessage<Message>> {
-        let mut commands: Vec<Command<CosmicMessage<Message>>> = Vec::new();
+    fn update(&mut self, message: Self::Message) -> Task<Message> {
+        let mut commands: Vec<Task<Message>> = Vec::new();
 
         match message {
             Message::OpenHome => {
@@ -218,20 +215,15 @@ impl Application for Window {
             Message::OpenFileResult(result) => {
                 commands.push(command::future(async {
                     for path in result {
-                        if let Ok(buf) = PathBuf::from_str(&path) {
-                            let icon_name = buf.file_stem();
-                            if let Some(file_stem) = icon_name {
-                                move_icon(
-                                    path.to_string(),
-                                    file_stem.to_str().unwrap().to_string(),
-                                );
-                            };
+                        let Ok(buf) = PathBuf::from_str(&path);
+
+                        let icon_name = buf.file_stem();
+                        if let Some(file_stem) = icon_name {
+                            move_icon(path.to_string(), file_stem.to_str().unwrap().to_string());
                         };
                     }
 
-                    app(Message::FoundIcons(
-                        find_icon(qwa_icons_location(), String::new()).await,
-                    ))
+                    Message::FoundIcons(find_icon(qwa_icons_location(), String::new()).await)
                 }));
             }
             Message::EditAppName(flag) => {
@@ -297,10 +289,10 @@ impl Application for Window {
                     self.main_window.new_app_name.clear();
 
                     commands.push(command::future(async {
-                        app(Message::Clicked(Buttons::DoneEdit((
+                        Message::Clicked(Buttons::DoneEdit((
                             Some(launcher.name),
                             Some(launcher.icon),
-                        ))))
+                        )))
                     }));
                 }
                 Buttons::Edit(launcher) => {
@@ -327,9 +319,9 @@ impl Application for Window {
 
                     commands.push(command::future(async {
                         if let Some(res) = image_handle(launcher.icon).await {
-                            return app(Message::SetIcon(res));
+                            return Message::SetIcon(res);
                         }
-                        app::Message::None
+                        Message::None
                     }));
                 }
                 Buttons::Delete(launcher) => {
@@ -342,7 +334,7 @@ impl Application for Window {
 
                         let name = get_icon_name_from_url(&self.creator_window.app_url);
                         commands.push(command::future(async {
-                            app(Message::FoundIcons(find_icons(name, url).await))
+                            Message::FoundIcons(find_icons(name, url).await)
                         }))
                     }
                 }
@@ -351,9 +343,7 @@ impl Application for Window {
                 let icon_name = self.icon_selector.icon_searching.clone();
 
                 commands.push(command::future(async {
-                    app(Message::FoundIcons(
-                        find_icon(qwa_icons_location(), icon_name).await,
-                    ))
+                    Message::FoundIcons(find_icon(qwa_icons_location(), icon_name).await)
                 }))
             }
             Message::PerformIconSearch => {
@@ -372,7 +362,9 @@ impl Application for Window {
                 if !self.creator_window.app_url.is_empty()
                     || !self.icon_selector.icon_searching.is_empty()
                 {
-                    return Command::perform(icons, |icons| app(Message::FoundIcons(icons)));
+                    return Task::perform(icons, |icons| {
+                        app::message::Message::App(Message::FoundIcons(icons))
+                    });
                 }
             }
             Message::CustomIconsSearch(input) => {
@@ -382,17 +374,14 @@ impl Application for Window {
                 self.icon_selector.icons.clear();
                 result.into_iter().for_each(|path| {
                     commands.push(command::future(async {
-                        app(Message::PushIcon(image_handle(path).await))
+                        Message::PushIcon(image_handle(path).await)
                     }));
                 });
             }
             Message::PushIcon(icon) => {
                 if icon.is_some() {
                     commands.push(command::future(async {
-                        app(Message::Warning((
-                            WarnAction::Remove,
-                            WarnMessages::AppIcon,
-                        )))
+                        Message::Warning((WarnAction::Remove, WarnMessages::AppIcon))
                     }));
                 };
 
@@ -406,7 +395,7 @@ impl Application for Window {
                     .icons
                     .sort_by_key(|icon| !icon.is_favicon);
 
-                commands.push(command::future(async { app(Message::LoadingDone) }));
+                commands.push(command::future(async { Message::LoadingDone }));
             }
             Message::LoadingDone => {
                 if !self.icon_selector.icons.is_empty() {
@@ -414,10 +403,7 @@ impl Application for Window {
 
                     if self.creator_window.selected_icon.is_some() {
                         commands.push(command::future(async {
-                            app(Message::Warning((
-                                WarnAction::Remove,
-                                WarnMessages::AppIcon,
-                            )))
+                            Message::Warning((WarnAction::Remove, WarnMessages::AppIcon))
                         }));
                     }
                 }
@@ -428,7 +414,7 @@ impl Application for Window {
                 self.current_page = Pages::AppCreator;
                 self.creator_window.selected_icon = Some(icon.clone());
 
-                commands.push(command::future(async { app(Message::SelectIcon(icon)) }));
+                commands.push(command::future(async { Message::SelectIcon(icon) }));
             }
             Message::SelectIcon(ico) => {
                 self.creator_window.selected_icon = Some(ico.clone());
@@ -436,14 +422,11 @@ impl Application for Window {
 
                 if self.creator_window.selected_icon.is_some() {
                     commands.push(command::future(async {
-                        app(Message::Warning((
-                            WarnAction::Remove,
-                            WarnMessages::AppIcon,
-                        )))
+                        Message::Warning((WarnAction::Remove, WarnMessages::AppIcon))
                     }));
                 } else {
                     commands.push(command::future(async {
-                        app(Message::Warning((WarnAction::Add, WarnMessages::AppIcon)))
+                        Message::Warning((WarnAction::Add, WarnMessages::AppIcon))
                     }));
                 }
             }
@@ -452,15 +435,13 @@ impl Application for Window {
                 self.current_page = Pages::IconInstallator(installator);
                 commands.push(self.update_title());
                 commands.push(command::future(async {
-                    app(Message::InstallScript(
-                        add_icon_packs_install_script().await,
-                    ))
+                    Message::InstallScript(add_icon_packs_install_script().await)
                 }));
             }
             Message::InstallScript(script) => {
                 if !icon_pack_installed() {
                     commands.push(command::future(async {
-                        app(Message::InstallCommand(execute_script(script).await))
+                        Message::InstallCommand(execute_script(script).await)
                     }));
                 }
             }
@@ -477,9 +458,10 @@ impl Application for Window {
                     ))))
                 }
             }
+            Message::None => {}
         }
 
-        Command::batch(commands)
+        Task::batch(commands)
     }
 
     fn view(&self) -> Element<Message> {
@@ -496,7 +478,7 @@ impl Application for Window {
             .width(Length::Fill)
             .height(Length::Fill)
             .align_x(Horizontal::Center)
-            .center_x()
+            .center_x(Length::Fill)
             .into()
     }
 }
@@ -516,7 +498,7 @@ impl Window {
             Pages::IconInstallator(_) => fl!("icon-installer"),
         }
     }
-    fn update_title(&mut self) -> Command<CosmicMessage<Message>> {
+    fn update_title(&mut self) -> Task<Message> {
         self.set_header_title(self.match_title());
         self.set_window_title(self.match_title())
     }
