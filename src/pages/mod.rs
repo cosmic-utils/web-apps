@@ -118,8 +118,6 @@ impl Application for Window {
         let creator = creator::AppCreator::new();
         let selector = IconPicker::default();
 
-        tracing::info!("{:?}", core.main_window_id());
-
         let mut windows = Window {
             main_window_id: core.main_window_id(),
             core,
