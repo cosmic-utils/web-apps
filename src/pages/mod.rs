@@ -11,14 +11,14 @@ use std::sync::Arc;
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::app::command::set_theme;
 use cosmic::iced::alignment::Horizontal;
-use cosmic::iced::Length;
+use cosmic::iced::{window, Length};
 use cosmic::widget::Container;
 use cosmic::{app, command, Theme};
 use cosmic::{
-    app::{command::Task, Application, ApplicationExt, Core},
+    app::{command::Task, Core},
     cosmic_theme, executor, style,
     widget::{self},
-    Element,
+    Application, ApplicationExt, Element,
 };
 
 use crate::{
@@ -91,6 +91,7 @@ pub enum Pages {
 
 pub struct Window {
     core: Core,
+    main_window_id: Option<window::Id>,
     main_window: Home,
     current_page: Pages,
     creator_window: creator::AppCreator,
@@ -117,7 +118,10 @@ impl Application for Window {
         let creator = creator::AppCreator::new();
         let selector = IconPicker::default();
 
+        tracing::info!("{:?}", core.main_window_id());
+
         let mut windows = Window {
+            main_window_id: core.main_window_id(),
             core,
             main_window: manager,
             current_page: Pages::MainWindow,
@@ -125,14 +129,12 @@ impl Application for Window {
             icon_selector: selector,
         };
 
-        let commands = Task::batch(vec![
+        let commands = vec![
             windows.update_title(),
-            Task::perform(async {}, |_| {
-                cosmic::app::Message::App(Message::SystemTheme)
-            }),
-        ]);
+            command::future(async { cosmic::app::Message::App(Message::SystemTheme) }),
+        ];
 
-        (windows, commands)
+        (windows, Task::batch(commands))
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
@@ -144,6 +146,7 @@ impl Application for Window {
             widget::button::custom(go_home_icon)
                 .on_press(Message::OpenHome)
                 .padding(space_xxs)
+                .class(style::Button::Icon)
                 .into(),
             widget::button::custom(go_creator)
                 .on_press(Message::OpenCreator)
@@ -500,7 +503,11 @@ impl Window {
     }
     fn update_title(&mut self) -> Task<Message> {
         self.set_header_title(self.match_title());
-        self.set_window_title(self.match_title())
+        if let Some(id) = self.main_window_id {
+            self.set_window_title(self.match_title(), id)
+        } else {
+            Task::none()
+        }
     }
 
     fn create_valid_launcher(&mut self, mut entry: launcher::WebAppLauncher) -> anyhow::Result<()> {
