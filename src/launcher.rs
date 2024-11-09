@@ -432,6 +432,21 @@ impl WebAppLauncher {
         Ok(())
     }
 
+    pub fn remove_desktop_file(&self) -> anyhow::Result<()> {
+        let exist = self.path.as_path().exists();
+
+        match exist {
+            true => {
+                remove_file(&self.path)?;
+            }
+            false => {
+                tracing::error!("file not found");
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn delete(&self) -> anyhow::Result<()> {
         let exist = self.path.as_path().exists();
 

@@ -256,7 +256,7 @@ impl Application for Window {
                 }
                 Buttons::DoneEdit((new_name, old_icon)) => {
                     if let Some(launcher) = self.main_window.launcher.to_owned() {
-                        let _deleted = launcher.delete();
+                        let _deleted = launcher.remove_desktop_file();
                         let mut edited_entry = launcher::WebAppLauncher::new(
                             self.creator_window.app_title.clone(),
                             Some(launcher.codename),
