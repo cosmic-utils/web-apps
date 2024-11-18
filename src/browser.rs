@@ -128,6 +128,7 @@ fn installed_apps() -> Vec<App> {
 
     // this is workaround for flatpak sandbox
     if PathBuf::from("/.flatpak-info").exists() {
+        paths.push(home_dir().join(".local/share/applications"));
         paths.push(home_dir().join(".local/share/flatpak/exports/share/applications"));
         paths.push("/var/lib/flatpak/exports/share/applications".into());
         paths.push("/run/host/usr/share/applications".into());
