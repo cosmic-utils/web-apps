@@ -75,6 +75,12 @@
     </supports>
 
     <releases>
+        <release version="0.5.3" date="2024-11-19">
+            <description>
+                <p>Some fixes and improvements</p>
+                <p>Updated dependencies</p>
+            </description>
+        </release>
         <release version="0.5.2" date="2024-10-30">
             <description>
                 <p>Some fixes and improvements</p>
