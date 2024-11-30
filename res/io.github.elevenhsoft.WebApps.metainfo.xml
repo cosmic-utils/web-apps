@@ -49,18 +49,23 @@
     <screenshots>
         <screenshot type="default" xml:lang="en">
             <image
-            >https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-dark.png</image>
+            >https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/0.5.4a/res/screenshots/window-light.png</image>
             <caption>Installed apps</caption>
         </screenshot>
         <screenshot xml:lang="en">
             <image
-            >https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-creator.png
+            >https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/0.5.4a/res/screenshots/window-dark.png</image>
+            <caption>Installed apps in dark mode</caption>
+        </screenshot>
+        <screenshot xml:lang="en">
+            <image
+            >https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/0.5.4a/res/screenshots/window-creator.png
             </image>
             <caption>Creator</caption>
         </screenshot>
         <screenshot xml:lang="en">
             <image
-            >https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-icon-picker.png
+            >https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/0.5.4a/res/screenshots/window-icon-picker.png
             </image>
             <caption>Icon Picker</caption>
         </screenshot>
