@@ -1,8 +1,7 @@
 use cosmic::{
     app::Task,
-    command,
     iced::{id, Length},
-    style,
+    style, task,
     widget::{self},
     Element,
 };
@@ -102,11 +101,11 @@ impl AppCreator {
                 self.app_title = title;
 
                 if self.app_title.len() >= 3 {
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         pages::Message::Warning((WarnAction::Remove, WarnMessages::AppName))
                     }))
                 } else {
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         pages::Message::Warning((WarnAction::Add, WarnMessages::AppName))
                     }))
                 }
@@ -115,11 +114,11 @@ impl AppCreator {
                 self.app_url = url;
 
                 if url_valid(&self.app_url) {
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         pages::Message::Warning((WarnAction::Remove, WarnMessages::AppUrl))
                     }))
                 } else {
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         pages::Message::Warning((WarnAction::Add, WarnMessages::AppUrl))
                     }))
                 }
@@ -133,10 +132,10 @@ impl AppCreator {
                 self.app_browser = browser.clone();
 
                 commands.push(match browser._type {
-                    BrowserType::NoBrowser => command::future(async {
+                    BrowserType::NoBrowser => task::future(async {
                         pages::Message::Warning((WarnAction::Add, WarnMessages::AppBrowser))
                     }),
-                    _ => command::future(async {
+                    _ => task::future(async {
                         pages::Message::Warning((WarnAction::Remove, WarnMessages::AppBrowser))
                     }),
                 })

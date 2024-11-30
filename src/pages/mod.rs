@@ -13,7 +13,7 @@ use cosmic::app::command::set_theme;
 use cosmic::iced::alignment::Horizontal;
 use cosmic::iced::{window, Length};
 use cosmic::widget::Container;
-use cosmic::{app, command, Theme};
+use cosmic::{app, task, Theme};
 use cosmic::{
     app::{command::Task, Core},
     cosmic_theme, executor, style,
@@ -129,7 +129,7 @@ impl Application for Window {
 
         let commands = vec![
             windows.update_title(),
-            command::future(async { cosmic::app::Message::App(Message::SystemTheme) }),
+            task::future(async { cosmic::app::Message::App(Message::SystemTheme) }),
         ];
 
         (windows, Task::batch(commands))
@@ -187,7 +187,7 @@ impl Application for Window {
                 commands.push(self.update_title())
             }
             Message::OpenIconPickerDialog => {
-                commands.push(command::future(async move {
+                commands.push(task::future(async move {
                     let result = SelectedFiles::open_file()
                         .title("Open multiple images")
                         .accept_label("Attach")
@@ -214,7 +214,7 @@ impl Application for Window {
                 }));
             }
             Message::OpenFileResult(result) => {
-                commands.push(command::future(async {
+                commands.push(task::future(async {
                     for path in result {
                         let Ok(buf) = PathBuf::from_str(&path);
 
@@ -289,7 +289,7 @@ impl Application for Window {
 
                     self.main_window.new_app_name.clear();
 
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         Message::Clicked(Buttons::DoneEdit((
                             Some(launcher.name),
                             Some(launcher.icon),
@@ -318,7 +318,7 @@ impl Application for Window {
                     self.creator_window.app_incognito = launcher.is_incognito;
                     self.creator_window.edit_mode = true;
 
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         if let Some(res) = image_handle(launcher.icon).await {
                             return Message::SetIcon(res);
                         }
@@ -334,7 +334,7 @@ impl Application for Window {
                         let url = self.creator_window.app_url.clone();
 
                         let name = get_icon_name_from_url(&self.creator_window.app_url);
-                        commands.push(command::future(async {
+                        commands.push(task::future(async {
                             Message::FoundIcons(find_icons(name, url).await)
                         }))
                     }
@@ -343,7 +343,7 @@ impl Application for Window {
             Message::MyIcons => {
                 let icon_name = self.icon_selector.icon_searching.clone();
 
-                commands.push(command::future(async {
+                commands.push(task::future(async {
                     Message::FoundIcons(find_icon(qwa_icons_location(), icon_name).await)
                 }))
             }
@@ -374,14 +374,14 @@ impl Application for Window {
             Message::FoundIcons(result) => {
                 self.icon_selector.icons.clear();
                 result.into_iter().for_each(|path| {
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         Message::PushIcon(image_handle(path).await)
                     }));
                 });
             }
             Message::PushIcon(icon) => {
                 if icon.is_some() {
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         Message::Warning((WarnAction::Remove, WarnMessages::AppIcon))
                     }));
                 };
@@ -396,14 +396,14 @@ impl Application for Window {
                     .icons
                     .sort_by_key(|icon| !icon.is_favicon);
 
-                commands.push(command::future(async { Message::LoadingDone }));
+                commands.push(task::future(async { Message::LoadingDone }));
             }
             Message::LoadingDone => {
                 if !self.icon_selector.icons.is_empty() {
                     self.creator_window.selected_icon = Some(self.icon_selector.icons[0].clone());
 
                     if self.creator_window.selected_icon.is_some() {
-                        commands.push(command::future(async {
+                        commands.push(task::future(async {
                             Message::Warning((WarnAction::Remove, WarnMessages::AppIcon))
                         }));
                     }
@@ -415,18 +415,18 @@ impl Application for Window {
                 self.current_page = Pages::AppCreator;
                 self.creator_window.selected_icon = Some(icon.clone());
 
-                commands.push(command::future(async { Message::SelectIcon(icon) }));
+                commands.push(task::future(async { Message::SelectIcon(icon) }));
             }
             Message::SelectIcon(ico) => {
                 self.creator_window.selected_icon = Some(ico.clone());
                 self.creator_window.app_icon = ico.path;
 
                 if self.creator_window.selected_icon.is_some() {
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         Message::Warning((WarnAction::Remove, WarnMessages::AppIcon))
                     }));
                 } else {
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         Message::Warning((WarnAction::Add, WarnMessages::AppIcon))
                     }));
                 }
@@ -435,13 +435,13 @@ impl Application for Window {
                 let installator = Installator::new();
                 self.current_page = Pages::IconInstallator(installator);
                 commands.push(self.update_title());
-                commands.push(command::future(async {
+                commands.push(task::future(async {
                     Message::InstallScript(add_icon_packs_install_script().await)
                 }));
             }
             Message::InstallScript(script) => {
                 if !icon_pack_installed() {
-                    commands.push(command::future(async {
+                    commands.push(task::future(async {
                         Message::InstallCommand(execute_script(script).await)
                     }));
                 }
