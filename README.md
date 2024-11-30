@@ -1,7 +1,7 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <div align="center">
   <br>
-  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/WebApps/master/res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png" width="192" />
+  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png" width="192" />
   <h1>Quick Web Apps</h1>
 
 <h3>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications
@@ -10,9 +10,9 @@ given url working inside separate window of your browser of choice.</h3>
 
   <br>
 
-  <img alt="Quick Web Apps Dark window" src="https://github.com/cosmic-utils/WebApps/blob/master/res/screenshots/window-dark.png" width="192">
-  <img alt="Quick Web Apps Creator" src="https://github.com/cosmic-utils/WebApps/blob/master/res/screenshots/window-creator.png" width="192">
-  <img alt="Quick Web Apps Icon selector" src="https://github.com/cosmic-utils/WebApps/blob/master/res/screenshots/window-icon-picker.png" width="192">
+  <img alt="Quick Web Apps Dark window" src="https://github.com/cosmic-utils/web-apps/blob/master/res/screenshots/window-dark.png" width="192">
+  <img alt="Quick Web Apps Creator" src="https://github.com/cosmic-utils/web-apps/blob/master/res/screenshots/window-creator.png" width="192">
+  <img alt="Quick Web Apps Icon selector" src="https://github.com/cosmic-utils/web-apps/blob/master/res/screenshots/window-icon-picker.png" width="192">
 
 <br><br><br>
 
@@ -25,11 +25,11 @@ given url working inside separate window of your browser of choice.</h3>
 
 Clone the repository:
 
-`git clone https://github.com/cosmic-utils/WebApps.git`
+`git clone https://github.com/cosmic-utils/web-apps.git`
 
 cd into folder
 
-`cd WebApps`
+`cd web-apps`
 
 ## Just use, [just](https://github.com/casey/just)
 
@@ -37,7 +37,7 @@ For Pop OS make sure you have [just](https://github.com/casey/just) installed.
 
 `sudo apt install just`
 
-Make sure you are in `WebApps` directory. You should be already.
+Make sure you are in `web-apps` directory. You should be already.
 
 ### Building
 
@@ -73,7 +73,7 @@ That's all. You can run `Quick Web Apps` from you app launcher.
 
 # License
 
-Code is distributed with [GPL-3.0 license](https://github.com/cosmic-utils/WebApps/blob/master/LICENSE)
+Code is distributed with [GPL-3.0 license](https://github.com/cosmic-utils/web-apps/blob/master/LICENSE)
 
 # Credits
 
