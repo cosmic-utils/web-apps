@@ -402,11 +402,34 @@ pub fn nix_browsers() -> Vec<Browser> {
 }
 
 pub fn snap_browsers() -> Vec<Browser> {
-    vec![Browser::new(
-        BrowserType::Firefox,
-        BinaryLocation::Snap,
-        "Firefox",
-        "firefox",
-        "snap/firefox/current/profiles",
-    )]
+    vec![
+        Browser::new(
+            BrowserType::Firefox,
+            BinaryLocation::Snap,
+            "Firefox",
+            "firefox",
+            "snap/firefox/current/profiles",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            BinaryLocation::Snap,
+            "Vivaldi",
+            "vivaldi.vivaldi-stable",
+            "snap/vivaldi/current/profiles",
+        ),
+        Browser::new(
+            BrowserType::Chromium,
+            BinaryLocation::Snap,
+            "Chromium",
+            "chromium",
+            "snap/chromium/current/profiles",
+        ),
+        Browser::new(
+            BrowserType::Falkon,
+            BinaryLocation::Snap,
+            "Falkon",
+            "falkon",
+            "snap/falkon/current/profiles",
+        ),
+    ]
 }
