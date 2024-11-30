@@ -10,13 +10,13 @@ given url working inside separate window of your browser of choice.</h3>
 
   <br>
 
-  <img alt="Quick Web Apps Dark window" src="https://github.com/cosmic-utils/web-apps/blob/master/res/screenshots/window-light.png" width="192">
-  <img alt="Quick Web Apps Dark window" src="https://github.com/cosmic-utils/web-apps/blob/master/res/screenshots/window-dark.png" width="192">
+  <img alt="Quick Web Apps Dark window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/0.5.4a/res/screenshots/window-light.png" width="192">
+  <img alt="Quick Web Apps Dark window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/0.5.4a/res/screenshots/window-dark.png" width="192">
 
   <br>
 
-  <img alt="Quick Web Apps Creator" src="https://github.com/cosmic-utils/web-apps/blob/master/res/screenshots/window-creator.png" width="192">
-  <img alt="Quick Web Apps Icon selector" src="https://github.com/cosmic-utils/web-apps/blob/master/res/screenshots/window-icon-picker.png" width="192">
+  <img alt="Quick Web Apps Creator" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/0.5.4a/res/screenshots/window-creator.png" width="192">
+  <img alt="Quick Web Apps Icon selector" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/0.5.4a/res/screenshots/window-icon-picker.png" width="192">
 
 <br><br><br>
 
