@@ -11,7 +11,7 @@ use std::sync::Arc;
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::app::command::set_theme;
 use cosmic::iced::alignment::Horizontal;
-use cosmic::iced::{window, Length};
+use cosmic::iced::Length;
 use cosmic::widget::Container;
 use cosmic::{app, task, Theme};
 use cosmic::{
@@ -91,7 +91,6 @@ pub enum Pages {
 
 pub struct Window {
     core: Core,
-    main_window_id: Option<window::Id>,
     main_window: Home,
     current_page: Pages,
     creator_window: creator::AppCreator,
@@ -119,7 +118,6 @@ impl Application for Window {
         let selector = IconPicker::default();
 
         let mut windows = Window {
-            main_window_id: core.main_window_id(),
             core,
             main_window: manager,
             current_page: Pages::MainWindow,
@@ -501,11 +499,7 @@ impl Window {
     }
     fn update_title(&mut self) -> Task<Message> {
         self.set_header_title(self.match_title());
-        if let Some(id) = self.main_window_id {
-            self.set_window_title(self.match_title(), id)
-        } else {
-            Task::none()
-        }
+        self.set_window_title(self.match_title())
     }
 
     fn create_valid_launcher(&mut self, mut entry: launcher::WebAppLauncher) -> anyhow::Result<()> {

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <component type="desktop-application">
     <id>io.github.elevenhsoft.WebApps</id>
     <developer id="io.github.elevenhsoft">
@@ -8,7 +8,9 @@
     <url type="vcs-browser">https://github.com/cosmic-utils/web-apps</url>
     <url type="bugtracker">https://github.com/cosmic-utils/web-apps/issues</url>
     <url type="contribute">https://github.com/cosmic-utils/web-apps</url>
-    <url type="translate">https://github.com/cosmic-utils/web-apps/tree/master/i18n</url>
+    <url
+        type="translate"
+    >https://github.com/cosmic-utils/web-apps/tree/master/i18n</url>
     <url type="donation">https://ko-fi.com/elevenhsoft</url>
 
     <name>Quick Web Apps</name>
@@ -31,8 +33,10 @@
         </ul>
     </description>
 
-    <launchable type="desktop-id">io.github.elevenhsoft.WebApps.desktop</launchable>
-    <content_rating type="oars-1.1"/>
+    <launchable
+        type="desktop-id"
+    >io.github.elevenhsoft.WebApps.desktop</launchable>
+    <content_rating type="oars-1.1" />
 
     <categories>
         <category>Utility</category>
@@ -44,16 +48,19 @@
 
     <screenshots>
         <screenshot type="default" xml:lang="en">
-            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-dark.png</image>
+            <image
+            >https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-dark.png</image>
             <caption>Installed apps</caption>
         </screenshot>
         <screenshot xml:lang="en">
-            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-creator.png
+            <image
+            >https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-creator.png
             </image>
             <caption>Creator</caption>
         </screenshot>
         <screenshot xml:lang="en">
-            <image>https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-icon-picker.png
+            <image
+            >https://raw.githubusercontent.com/elevenhsoft/WebApps/0.4.2/res/screenshots/window-icon-picker.png
             </image>
             <caption>Icon Picker</caption>
         </screenshot>
@@ -75,6 +82,12 @@
     </supports>
 
     <releases>
+        <release version="0.5.4" date="2024-11-30">
+            <description>
+                <p>Some fixes and improvements</p>
+                <p>Updated dependencies</p>
+            </description>
+        </release>
         <release version="0.5.3" date="2024-11-19">
             <description>
                 <p>Some fixes and improvements</p>
@@ -120,7 +133,8 @@
         <release version="0.4.6" date="2024-06-05">
             <description>
                 <p>Add support for PNG icons</p>
-                <p>Use xdg desktop portal file picker instead of cosmic-files</p>
+                <p
+                >Use xdg desktop portal file picker instead of cosmic-files</p>
                 <p>Add editable name from home screen for web apps</p>
                 <p>Updated dependencies</p>
             </description>
@@ -143,7 +157,8 @@
         <release version="0.4.2" date="2024-05-18">
             <description>
                 <p>Layout and styling changes and improvements</p>
-                <p>Breaking change related to locations, please read description or github repo</p>
+                <p
+                >Breaking change related to locations, please read description or github repo</p>
                 <p>Bug fixes</p>
                 <p>Improvements</p>
                 <p>New translations</p>
