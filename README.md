@@ -75,8 +75,6 @@ That's all. You can run `Quick Web Apps` from you app launcher.
 
 Code is distributed with [GPL-3.0 license](https://github.com/cosmic-utils/WebApps/blob/master/LICENSE)
 
-## This is not an official COSMIC™ application from System76
-
 # Credits
 
 Special thanks to Linux Mint team for inspiration and solutions in this awesome
