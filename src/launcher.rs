@@ -111,6 +111,7 @@ impl WebAppLauncher {
         let exec = match web_browser._binary {
             browser::BinaryLocation::System => web_browser.exec.clone(),
             browser::BinaryLocation::Nix => web_browser.exec.clone(),
+            browser::BinaryLocation::Snap => web_browser.exec.clone(),
             browser::BinaryLocation::FlatpakLocal => {
                 format!(
                     "{}/.local/share/flatpak/exports/bin/{}",

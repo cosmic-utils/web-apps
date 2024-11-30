@@ -25,6 +25,7 @@ pub enum BinaryLocation {
     Nix,
     FlatpakLocal,
     FlatpakSystem,
+    Snap,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -99,6 +100,7 @@ enum AppSource {
     Native,
     Nix,
     Flatpak,
+    Snap,
     SystemFlatpak,
 }
 
@@ -218,6 +220,15 @@ fn installed_apps() -> Vec<App> {
                     ))
                 }
             }
+            PathSource::SystemSnap => {
+                if let Some(exec) = entry.exec() {
+                    apps.push(App::new(
+                        AppSource::Snap,
+                        format!("{} (Snap)", entry.name(&locales).unwrap_or_default()),
+                        exec.to_string(),
+                    ))
+                }
+            }
             PathSource::Other(_) => {
                 if let Some(exec) = entry.exec() {
                     let str_path = entry.path.to_string_lossy();
@@ -246,7 +257,6 @@ fn installed_apps() -> Vec<App> {
                     }
                 }
             }
-            _ => continue,
         };
     }
 
@@ -257,6 +267,7 @@ pub fn get_supported_browsers() -> Vec<Browser> {
     let mut native_browsers: Vec<Browser> = supported_browsers::native_browsers();
     let mut nix_browsers: Vec<Browser> = supported_browsers::nix_browsers();
     let mut flatpak_browsers: Vec<Browser> = supported_browsers::flatpak_browsers();
+    let mut snap_browsers: Vec<Browser> = supported_browsers::snap_browsers();
 
     let mut browsers = Vec::new();
 
@@ -286,6 +297,17 @@ pub fn get_supported_browsers() -> Vec<Browser> {
             }
             AppSource::Flatpak => {
                 if let Some(installed) = flatpak_browsers
+                    .iter_mut()
+                    .find(|browser| app.exec.contains(&browser.exec))
+                {
+                    if !app.name.is_empty() {
+                        installed.update_name(app.name.clone())
+                    }
+                    browsers.push(installed.clone())
+                }
+            }
+            AppSource::Snap => {
+                if let Some(installed) = snap_browsers
                     .iter_mut()
                     .find(|browser| app.exec.contains(&browser.exec))
                 {

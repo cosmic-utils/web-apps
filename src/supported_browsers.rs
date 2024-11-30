@@ -400,3 +400,13 @@ pub fn nix_browsers() -> Vec<Browser> {
         ),
     ]
 }
+
+pub fn snap_browsers() -> Vec<Browser> {
+    vec![Browser::new(
+        BrowserType::Firefox,
+        BinaryLocation::Snap,
+        "Firefox",
+        "firefox",
+        "snap/firefox/current/profiles",
+    )]
+}
