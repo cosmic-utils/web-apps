@@ -408,28 +408,28 @@ pub fn snap_browsers() -> Vec<Browser> {
             BinaryLocation::Snap,
             "Firefox",
             "firefox",
-            "snap/firefox/current/profiles",
+            "snap/firefox/common/profiles",
         ),
         Browser::new(
             BrowserType::Chromium,
             BinaryLocation::Snap,
             "Vivaldi",
             "vivaldi.vivaldi-stable",
-            "snap/vivaldi/current/profiles",
+            "snap/vivaldi/common/profiles",
         ),
         Browser::new(
             BrowserType::Chromium,
             BinaryLocation::Snap,
             "Chromium",
             "chromium",
-            "snap/chromium/current/profiles",
+            "snap/chromium/common/profiles",
         ),
         Browser::new(
             BrowserType::Falkon,
             BinaryLocation::Snap,
             "Falkon",
             "falkon",
-            "snap/falkon/current/profiles",
+            "snap/falkon/common/profiles",
         ),
     ]
 }
