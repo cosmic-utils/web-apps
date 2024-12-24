@@ -293,8 +293,8 @@ impl AppCreator {
             .push(app_browsers)
             .push(incognito)
             .push(spacer)
-            .push(save_btn)
             .push(creator_close)
+            .push(save_btn)
             .spacing(10);
 
         let mut view_column = widget::column();

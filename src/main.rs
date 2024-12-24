@@ -14,17 +14,28 @@ use common::icons_location;
 use cosmic::{app::Settings, iced_core::Size};
 use i18n_embed::DesktopLanguageRequester;
 use tokio::{fs::File, io::AsyncWriteExt};
-use tracing::Level;
-use tracing_subscriber::FmtSubscriber;
 
 use pages::Window;
 
-fn main() -> cosmic::iced::Result {
-    let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::INFO)
-        .finish();
+fn init_logging() {
+    use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    let filter_layer = EnvFilter::try_from_default_env().unwrap_or(if cfg!(debug_assertions) {
+        EnvFilter::new(format!("warn,{}=debug", env!("CARGO_CRATE_NAME")))
+    } else {
+        EnvFilter::new("warn")
+    });
+
+    let fmt_layer = fmt::layer().with_target(false);
+
+    tracing_subscriber::registry()
+        .with(fmt_layer)
+        .with(filter_layer)
+        .init();
+}
+
+fn main() -> cosmic::iced::Result {
+    init_logging();
 
     init_localizer();
 
