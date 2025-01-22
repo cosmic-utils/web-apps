@@ -56,12 +56,12 @@ icons-installer-message = Deze aap heeft pictogrammen nodig om mee te werken. Al
 # warning.rs
 warning = U voldoet niet aan de vereisten
     .success = U kunt een nieuwe Webapp aanmaken
-    .duplicate =  - Web App invalid. Maybe you already have this Web App?
-    .wrong-icon =  - Selected icon is invalid. Select another one.
-    .app-name=  - App name must be longer than 3 characters
-    .app-url=  - You must provide valid URL starting with http:// or https://
-    .app-icon=  - You must select an Icon for your launcher
-    .app-browser=  - Please select a browser. Make sure at least one is installed system-wide or via Flatpak
+    .duplicate =  - Webapp ongeldig. Misschien heeft u deze Webapp al?
+    .wrong-icon =  - Geselecteerd pictogram is ongeldig. Seleceer een andere.
+    .app-name=  - Appnaam moet langer zijn dan 3 lettertekens.
+    .app-url=  - Geef een geldige URL op dat met http:// of https:// begint
+    .app-icon=  - Selecteer een Pictogram voor uw launcher
+    .app-browser=  - Selecteer een browser. Zorg ervoor dat ten minste één browser systeembreed of via Flatpak is geïnstalleerd.
 
 
 
