@@ -309,6 +309,13 @@ pub fn flatpak_browsers() -> Vec<Browser> {
             "io.github.zen_browser.zen",
             ".var/app/io.github.zen_browser.zen/data/profiles",
         ),
+        Browser::new(
+            BrowserType::ZenFlatpak,
+            BinaryLocation::FlatpakLocal,
+            "Zen Browser",
+            "app.zen_browser.zen",
+            ".var/app/app.zen_browser.zen/data/profiles",
+        ),
     ]
 }
 
