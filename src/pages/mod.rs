@@ -21,6 +21,7 @@ use crate::{
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::app::command::set_theme;
 use cosmic::iced::alignment::Horizontal;
+use cosmic::iced::window::Id;
 use cosmic::iced::Length;
 use cosmic::widget::Container;
 use cosmic::{app, task, Theme};
@@ -91,6 +92,7 @@ pub enum Pages {
 
 pub struct Window {
     core: Core,
+    window_id: Id,
     main_window: Home,
     current_page: Pages,
     creator_window: creator::AppCreator,
@@ -117,7 +119,14 @@ impl Application for Window {
         let creator = creator::AppCreator::new();
         let selector = IconPicker::default();
 
+        let window_id = if let Some(id) = core.main_window_id() {
+            id
+        } else {
+            Id::unique()
+        };
+
         let mut windows = Window {
+            window_id,
             core,
             main_window: manager,
             current_page: Pages::MainWindow,
@@ -510,7 +519,7 @@ impl Window {
     }
     fn update_title(&mut self) -> Task<Message> {
         self.set_header_title(self.match_title());
-        self.set_window_title(self.match_title())
+        self.set_window_title(self.match_title(), self.window_id)
     }
 
     fn create_valid_launcher(&mut self, mut entry: WebAppLauncher) -> anyhow::Result<()> {
