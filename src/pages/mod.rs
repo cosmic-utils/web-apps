@@ -3,24 +3,8 @@ pub mod home_screen;
 pub mod iconpicker;
 pub mod icons_installator;
 
-use std::path::PathBuf;
-use std::process::ExitStatus;
-use std::str::FromStr;
-use std::sync::Arc;
-
-use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
-use cosmic::app::command::set_theme;
-use cosmic::iced::alignment::Horizontal;
-use cosmic::iced::Length;
-use cosmic::widget::Container;
-use cosmic::{app, task, Theme};
-use cosmic::{
-    app::{command::Task, Core},
-    cosmic_theme, executor, style,
-    widget::{self},
-    Application, ApplicationExt, Element,
-};
-
+use crate::browser::installed_browsers;
+use crate::launcher::{webapplauncher_is_valid, WebAppLauncher};
 use crate::{
     add_icon_packs_install_script,
     common::{
@@ -34,16 +18,32 @@ use crate::{
     warning::WarnAction,
     warning::WarnMessages,
 };
-use crate::{browser, launcher};
+use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
+use cosmic::app::command::set_theme;
+use cosmic::iced::alignment::Horizontal;
+use cosmic::iced::Length;
+use cosmic::widget::Container;
+use cosmic::{app, task, Theme};
+use cosmic::{
+    app::{command::Task, Core},
+    cosmic_theme, executor, style,
+    widget::{self},
+    Application, ApplicationExt, Element,
+};
+use rand::{thread_rng, Rng};
+use std::path::PathBuf;
+use std::process::ExitStatus;
+use std::str::FromStr;
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub enum Buttons {
     SearchFavicon,
-    Edit(launcher::WebAppLauncher),
-    Delete(launcher::WebAppLauncher),
+    Edit(WebAppLauncher),
+    Delete(WebAppLauncher),
     DoneEdit((Option<String>, Option<String>)),
     DoneCreate,
-    AppNameSubmit(launcher::WebAppLauncher),
+    AppNameSubmit(WebAppLauncher),
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -237,47 +237,60 @@ impl Application for Window {
             }
             Message::Clicked(buttons) => match buttons {
                 Buttons::DoneCreate => {
-                    let new_entry = launcher::WebAppLauncher::new(
-                        self.creator_window.app_title.clone(),
-                        None,
-                        self.creator_window.app_url.clone(),
-                        self.creator_window.app_icon.clone(),
-                        self.creator_window.app_category.clone(),
-                        self.creator_window.app_browser.clone(),
-                        self.creator_window.app_parameters.clone(),
-                        self.creator_window.app_isolated,
-                        self.creator_window.app_navbar,
-                        self.creator_window.app_incognito,
-                    );
+                    let name = self.creator_window.app_title.clone();
+                    let random_code: u16 = thread_rng().gen_range(1000..10000);
+                    let codename = format!("{}{}", name.replace(' ', ""), random_code);
+                    let icon = self.creator_window.app_icon.clone();
+                    let category = self.creator_window.app_category.clone();
+                    let url = self.creator_window.app_url.clone();
+                    let custom_parameters = self.creator_window.app_parameters.clone();
+                    let isolate_profile = self.creator_window.app_isolated;
+                    let navbar = self.creator_window.app_navbar;
+                    let is_incognito = self.creator_window.app_incognito;
 
-                    self.create_valid_launcher(new_entry).unwrap();
-                }
-                Buttons::DoneEdit((new_name, old_icon)) => {
-                    if let Some(launcher) = self.main_window.launcher.to_owned() {
-                        let _deleted = launcher.remove_desktop_file();
-                        let mut edited_entry = launcher::WebAppLauncher::new(
-                            self.creator_window.app_title.clone(),
-                            Some(launcher.codename),
-                            self.creator_window.app_url.clone(),
-                            self.creator_window.app_icon.clone(),
-                            self.creator_window.app_category.clone(),
-                            self.creator_window.app_browser.clone(),
-                            self.creator_window.app_parameters.clone(),
-                            self.creator_window.app_isolated,
-                            self.creator_window.app_navbar,
-                            self.creator_window.app_incognito,
-                        );
+                    if let Some(browser) = &self.creator_window.app_browser {
+                        let new_entry = WebAppLauncher {
+                            codename,
+                            browser: browser.clone(),
+                            name,
+                            icon,
+                            category,
+                            url,
+                            custom_parameters,
+                            isolate_profile,
+                            navbar,
+                            is_incognito,
+                        };
 
-                        if new_name.is_some() {
-                            edited_entry.name = new_name.unwrap();
-                        }
-
-                        if old_icon.is_some() {
-                            edited_entry.icon = old_icon.unwrap();
-                        }
-
-                        self.create_valid_launcher(edited_entry).unwrap();
+                        self.create_valid_launcher(new_entry).unwrap();
                     }
+                }
+                Buttons::DoneEdit((_new_name, _old_icon)) => {
+                    // if let Some(launcher) = self.main_window.launcher.to_owned() {
+                    //     let _deleted = launcher.remove_desktop_file();
+                    //     let mut edited_entry = launcher::WebAppLauncher::new(
+                    //         self.creator_window.app_title.clone(),
+                    //         Some(launcher.codename),
+                    //         self.creator_window.app_url.clone(),
+                    //         self.creator_window.app_icon.clone(),
+                    //         self.creator_window.app_category.clone(),
+                    //         self.creator_window.app_browser.clone(),
+                    //         self.creator_window.app_parameters.clone(),
+                    //         self.creator_window.app_isolated,
+                    //         self.creator_window.app_navbar,
+                    //         self.creator_window.app_incognito,
+                    //     );
+
+                    //     if new_name.is_some() {
+                    //         edited_entry.name = new_name.unwrap();
+                    //     }
+
+                    //     if old_icon.is_some() {
+                    //         edited_entry.icon = old_icon.unwrap();
+                    //     }
+
+                    //     self.create_valid_launcher(edited_entry).unwrap();
+                    // }
                 }
                 Buttons::AppNameSubmit(mut launcher) => {
                     launcher.name.clone_from(&self.main_window.new_app_name);
@@ -295,9 +308,9 @@ impl Application for Window {
                     }));
                 }
                 Buttons::Edit(launcher) => {
-                    let selected_browser = browser::get_supported_browsers()
+                    let selected_browser = installed_browsers()
                         .iter()
-                        .position(|b| b.name == launcher.web_browser.name);
+                        .position(|b| b.name == launcher.browser.name);
 
                     self.creator_window.warning.remove_all_warns();
                     self.main_window.edit_mode = true;
@@ -308,9 +321,7 @@ impl Application for Window {
                     self.creator_window.app_icon.clone_from(&launcher.icon);
                     self.creator_window.app_parameters = launcher.custom_parameters;
                     self.creator_window.app_category = launcher.category;
-                    self.creator_window.app_browser =
-                        browser::Browser::web_browser(launcher.web_browser.name)
-                            .expect("browser not found");
+                    self.creator_window.app_browser = Some(launcher.browser);
                     self.creator_window.selected_browser = selected_browser;
                     self.creator_window.app_navbar = launcher.navbar;
                     self.creator_window.app_incognito = launcher.is_incognito;
@@ -502,7 +513,7 @@ impl Window {
         self.set_window_title(self.match_title())
     }
 
-    fn create_valid_launcher(&mut self, mut entry: launcher::WebAppLauncher) -> anyhow::Result<()> {
+    fn create_valid_launcher(&mut self, mut entry: WebAppLauncher) -> anyhow::Result<()> {
         if let Some(icon) = &self.creator_window.selected_icon {
             let path = move_icon(icon.path.clone(), self.creator_window.app_title.clone());
 
@@ -518,13 +529,8 @@ impl Window {
                 .remove_warn(WarnMessages::WrongIcon);
             entry.icon = path;
         }
-        if launcher::webapplauncher_is_valid(
-            &entry.web_browser,
-            &entry.icon,
-            &entry.codename,
-            &entry.name,
-            &entry.url,
-        ) && !self.creator_window.warning.show
+        if webapplauncher_is_valid(&entry.icon, &entry.codename, &entry.name, &entry.url)
+            && !self.creator_window.warning.show
         {
             let _ = entry.create().is_ok();
             self.creator_window = creator::AppCreator::new();
@@ -550,7 +556,7 @@ impl Window {
         if self.creator_window.app_icon.is_empty() {
             self.creator_window.warning.push_warn(WarnMessages::AppIcon)
         }
-        if self.creator_window.app_browser._type == browser::BrowserType::NoBrowser {
+        if self.creator_window.app_browser.is_none() {
             self.creator_window
                 .warning
                 .push_warn(WarnMessages::AppBrowser)

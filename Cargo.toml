@@ -41,6 +41,8 @@ bytes = "1.9"
 svg = "0.18"
 base64 = "0.22"
 ashpd = { version = "0.10.2", features = ["wayland"] }
+strum = "0.26"
+strum_macros = "0.26"
 freedesktop-desktop-entry = "0.7"
 
 [dependencies.i18n-embed]

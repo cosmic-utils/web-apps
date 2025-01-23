@@ -10,6 +10,7 @@ use std::{
 use base64::prelude::*;
 use bytes::Bytes;
 use cosmic::{iced_core, widget};
+use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter};
 use image::ImageReader;
 use image::{load_from_memory, GenericImageView};
 use reqwest::Client;
@@ -19,7 +20,7 @@ use tokio::io::AsyncReadExt;
 use url::Url;
 use walkdir::WalkDir;
 
-use crate::{favicon, icon_cache::IconCache};
+use crate::{favicon, icon_cache::IconCache, LOCALES};
 
 lazy_static::lazy_static! {
     static ref ICON_CACHE: Mutex<IconCache> = Mutex::new(IconCache::new());
@@ -76,6 +77,24 @@ pub fn system_icons() -> PathBuf {
 
 pub fn qwa_icons_location() -> PathBuf {
     icons_location().join("QuickWebApps")
+}
+
+pub fn fd_entries() -> Vec<DesktopEntry> {
+    let mut paths = Vec::new();
+    default_paths().for_each(|path| paths.push(path));
+
+    // this is workaround for flatpak sandbox
+    if PathBuf::from("/.flatpak-info").exists() {
+        paths.push(home_dir().join(".local/share/applications"));
+        paths.push(home_dir().join(".local/share/flatpak/exports/share/applications"));
+        paths.push("/var/lib/flatpak/exports/share/applications".into());
+        paths.push("/run/host/usr/share/applications".into());
+        paths.push("/run/host/usr/local/share/applications".into());
+    };
+
+    Iter::new(paths.into_iter())
+        .entries(Some(&LOCALES))
+        .collect::<Vec<DesktopEntry>>()
 }
 
 pub fn get_icon_name_from_url(url: &str) -> String {

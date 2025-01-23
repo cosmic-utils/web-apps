@@ -36,10 +36,9 @@ impl Home {
         let mut app_list = column().spacing(12).align_x(Alignment::Center);
         let webapps = get_webapps();
 
-        for app in webapps.iter().flatten() {
-            let used_browser = Container::new(
-                inline_input("Web browser", app.web_browser.name.clone()).width(200),
-            );
+        for app in webapps.iter() {
+            let used_browser =
+                Container::new(inline_input("Web browser", app.browser.name.clone()).width(200));
 
             let app_name = Container::new(
                 editable_input(

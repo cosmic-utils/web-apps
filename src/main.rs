@@ -5,17 +5,20 @@ mod icon_cache;
 mod launcher;
 mod localize;
 mod pages;
-mod supported_browsers;
 mod warning;
-
-use std::{os::unix::fs::PermissionsExt, process::ExitStatus};
 
 use common::icons_location;
 use cosmic::{app::Settings, iced_core::Size};
+use freedesktop_desktop_entry::get_languages_from_env;
 use i18n_embed::DesktopLanguageRequester;
+use lazy_static::lazy_static;
+use pages::Window;
+use std::{os::unix::fs::PermissionsExt, process::ExitStatus};
 use tokio::{fs::File, io::AsyncWriteExt};
 
-use pages::Window;
+lazy_static! {
+    pub static ref LOCALES: Vec<String> = get_languages_from_env();
+}
 
 fn init_logging() {
     use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};

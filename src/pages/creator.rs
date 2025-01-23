@@ -7,7 +7,7 @@ use cosmic::{
 };
 
 use crate::{
-    browser::{get_supported_browsers, Browser, BrowserType},
+    browser::{installed_browsers, Browser, BrowserModel},
     common::{self, icon_cache_get, url_valid, IconType},
     fl,
     pages::{self},
@@ -25,7 +25,7 @@ pub struct AppCreator {
     pub app_categories: Vec<String>,
     pub app_category: String,
     pub selected_category: usize,
-    pub app_browser: Browser,
+    pub app_browser: Option<Browser>,
     pub app_navbar: bool,
     pub app_incognito: bool,
     pub app_isolated: bool,
@@ -56,8 +56,12 @@ pub enum Buttons {
 
 impl AppCreator {
     pub fn new() -> Self {
-        let browsers = get_supported_browsers();
-        let browser = &browsers[0];
+        let browsers = installed_browsers();
+        let browser = if !browsers.is_empty() {
+            Some(browsers[0].clone())
+        } else {
+            None
+        };
 
         let categories = [
             fl!("web"),
@@ -81,7 +85,7 @@ impl AppCreator {
             app_categories: categories.to_vec(),
             app_category: categories[0].clone(),
             selected_category: 0,
-            app_browser: browser.clone(),
+            app_browser: browser,
             app_navbar: false,
             app_incognito: false,
             app_isolated: true,
@@ -129,13 +133,13 @@ impl AppCreator {
             Message::Browser(idx) => {
                 let browser = &self.app_browsers[idx];
                 self.selected_browser = Some(idx);
-                self.app_browser = browser.clone();
+                self.app_browser = Some(browser.clone());
 
-                commands.push(match browser._type {
-                    BrowserType::NoBrowser => task::future(async {
+                commands.push(match browser.model {
+                    None => task::future(async {
                         pages::Message::Warning((WarnAction::Add, WarnMessages::AppBrowser))
                     }),
-                    _ => task::future(async {
+                    Some(_) => task::future(async {
                         pages::Message::Warning((WarnAction::Remove, WarnMessages::AppBrowser))
                     }),
                 })
@@ -241,23 +245,28 @@ impl AppCreator {
         )
         .width(Length::Fixed(200.));
 
-        let navbar_toggle = widget::toggler(self.app_navbar)
-            .label(fl!("navbar"))
-            .on_toggle(|b| pages::Message::Creator(Message::Clicked(Buttons::Navbar(b))))
-            .spacing(10);
+        let browser_specific = if let Some(browser) = &self.app_browser {
+            match browser.model {
+                Some(BrowserModel::Firefox) | Some(BrowserModel::Zen) => Some(
+                    widget::toggler(self.app_navbar)
+                        .label(fl!("navbar"))
+                        .on_toggle(|b| {
+                            pages::Message::Creator(Message::Clicked(Buttons::Navbar(b)))
+                        })
+                        .spacing(10),
+                ),
 
-        let browser_specific = match self.app_browser._type {
-            BrowserType::Firefox
-            | BrowserType::FirefoxFlatpak
-            | BrowserType::Zen
-            | BrowserType::ZenFlatpak => navbar_toggle,
-
-            _ => widget::toggler(self.app_isolated)
-                .label(fl!("isolated-profile"))
-                .on_toggle(|b| {
-                    pages::Message::Creator(Message::Clicked(Buttons::IsolatedProfile(b)))
-                })
-                .spacing(10),
+                _ => Some(
+                    widget::toggler(self.app_isolated)
+                        .label(fl!("isolated-profile"))
+                        .on_toggle(|b| {
+                            pages::Message::Creator(Message::Clicked(Buttons::IsolatedProfile(b)))
+                        })
+                        .spacing(10),
+                ),
+            }
+        } else {
+            None
         };
 
         let incognito = widget::toggler(self.app_incognito)
@@ -267,7 +276,7 @@ impl AppCreator {
 
         let first_row = widget::row()
             .push(categories_dropdown)
-            .push(browser_specific)
+            .push_maybe(browser_specific)
             .spacing(10);
 
         let app_browsers = widget::dropdown(&self.app_browsers, self.selected_browser, |idx| {
