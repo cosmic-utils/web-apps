@@ -27,15 +27,18 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    CloseIconPicker,
+    CloseDialog,
     Editor(editor::Message),
+    Delete(widget::segmented_button::Entity),
     IconPicker(iconpicker::Message),
     IconsResult(Vec<String>),
     InsertApp(WebAppLauncher),
     LaunchUrl(String),
+    NavBar(widget::segmented_button::Entity),
     OpenFileResult(Vec<String>),
     OpenIconPicker(String),
     OpenRepositoryUrl,
+    PrepareToDelete(widget::segmented_button::Entity),
     SetIcon(Option<Icon>),
     SubscriptionChannel,
     ToggleContextPage(ContextPage),
@@ -49,6 +52,12 @@ pub enum Page {
     Editor(AppEditor),
 }
 
+#[derive(Debug, Clone)]
+pub enum Dialogs {
+    IconPicker(IconPicker),
+    Confirmation(widget::segmented_button::Entity),
+}
+
 pub struct QuickWebApps {
     core: Core,
     window_id: Id,
@@ -57,7 +66,7 @@ pub struct QuickWebApps {
     key_binds: HashMap<menu::KeyBind, MenuAction>,
     config: Config,
     page: Page,
-    iconpicker: Option<IconPicker>,
+    dialogs: Option<Dialogs>,
 }
 
 const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
@@ -99,7 +108,8 @@ impl Application for QuickWebApps {
             nav.insert()
                 .icon(widget::icon::from_name(app.icon.clone()))
                 .text(app.name.clone())
-                .data::<Page>(Page::Editor(editor::AppEditor::from(app)));
+                .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
+                .closable();
         });
 
         let mut windows = QuickWebApps {
@@ -118,7 +128,7 @@ impl Application for QuickWebApps {
                 })
                 .unwrap_or_default(),
             page: add_page,
-            iconpicker: None,
+            dialogs: None,
         };
 
         let command = windows.update_title();
@@ -146,34 +156,62 @@ impl Application for QuickWebApps {
 
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
-            Message::CloseIconPicker => {
-                self.iconpicker = None;
-            }
+            Message::CloseDialog => self.dialogs = None,
             Message::Editor(msg) => match &mut self.page {
                 Page::Editor(app_editor) => {
                     return app_editor.update(msg).map(cosmic::app::message::app)
                 }
             },
+            Message::Delete(id) => {
+                let data = self.nav.data::<Page>(id);
+
+                if let Some(page) = data {
+                    let Page::Editor(app_editor) = page;
+
+                    if let Some(browser) = &app_editor.app_browser {
+                        let launcher = WebAppLauncher {
+                            codename: app_editor.app_codename.clone(),
+                            browser: browser.clone(),
+                            name: app_editor.app_title.clone(),
+                            icon: app_editor.app_icon.clone(),
+                            category: app_editor.app_categories[app_editor.category_idx].clone(),
+                            url: app_editor.app_url.clone(),
+                            custom_parameters: app_editor.app_parameters.clone(),
+                            isolate_profile: app_editor.app_isolated,
+                            navbar: app_editor.app_navbar,
+                            is_incognito: app_editor.app_incognito,
+                        };
+
+                        let deleted = launcher.delete();
+
+                        if deleted.is_ok() {
+                            self.nav.remove(id);
+                            self.dialogs = None;
+                        };
+                    };
+                }
+            }
             Message::IconPicker(msg) => {
-                if let Some(picker) = &mut self.iconpicker {
-                    return picker.update(msg).map(cosmic::app::message::app);
+                if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
+                    return icon_picker.update(msg).map(cosmic::app::message::app);
                 };
             }
             Message::IconsResult(result) => {
-                if let Some(picker) = &mut self.iconpicker {
+                if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
                     for path in result {
                         if let Some(icon) = image_handle(path) {
-                            picker.push_icon(icon);
+                            icon_picker.push_icon(icon);
                         }
                     }
-                }
+                };
             }
             Message::InsertApp(launcher) => {
                 self.nav
                     .insert()
                     .icon(widget::icon::from_name(launcher.icon.clone()))
                     .text(launcher.name.clone())
-                    .data::<Page>(Page::Editor(editor::AppEditor::from(launcher)));
+                    .data::<Page>(Page::Editor(editor::AppEditor::from(launcher)))
+                    .closable();
             }
             Message::LaunchUrl(url) => match open::that_detached(&url) {
                 Ok(()) => {}
@@ -181,6 +219,14 @@ impl Application for QuickWebApps {
                     eprintln!("failed to open {url:?}: {err}");
                 }
             },
+            Message::NavBar(id) => {
+                let data = self.nav.data::<Page>(id);
+
+                if let Some(page) = data {
+                    self.page = page.clone();
+                    self.nav.activate(id);
+                }
+            }
             Message::OpenFileResult(file_paths) => {
                 return task::future(async {
                     for path in file_paths {
@@ -196,15 +242,16 @@ impl Application for QuickWebApps {
                 })
             }
             Message::OpenIconPicker(app_url) => {
-                self.iconpicker = Some(IconPicker::new(app_url));
+                self.dialogs = Some(Dialogs::IconPicker(IconPicker::new(app_url)));
             }
             Message::OpenRepositoryUrl => {
                 _ = open::that_detached(REPOSITORY);
             }
+            Message::PrepareToDelete(id) => self.dialogs = Some(Dialogs::Confirmation(id)),
             Message::SetIcon(icon) => {
                 let Page::Editor(app_editor) = &mut self.page;
                 app_editor.update_icon(icon);
-                self.iconpicker = None;
+                self.dialogs = None;
             }
             Message::SubscriptionChannel => {}
             Message::ToggleContextPage(context_page) => {
@@ -237,6 +284,28 @@ impl Application for QuickWebApps {
         vec![menu_bar.into()]
     }
 
+    fn nav_bar(&self) -> Option<Element<cosmic::app::Message<Message>>> {
+        if !self.core().nav_bar_active() {
+            return None;
+        }
+
+        let nav_model = self.nav_model()?;
+
+        let mut nav = widget::nav_bar(nav_model, |id| {
+            cosmic::app::message::app(Message::NavBar(id))
+        })
+        .on_close(|id| cosmic::app::message::app(Message::PrepareToDelete(id)))
+        .into_container()
+        .width(Length::Shrink)
+        .height(Length::Shrink);
+
+        if !self.core().is_condensed() {
+            nav = nav.max_width(280);
+        }
+
+        Some(Element::from(nav))
+    }
+
     fn nav_model(&self) -> Option<&nav_bar::Model> {
         Some(&self.nav)
     }
@@ -264,7 +333,7 @@ impl Application for QuickWebApps {
     }
 
     fn on_escape(&mut self) -> Task<Message> {
-        self.iconpicker = None;
+        self.dialogs = None;
         self.core.window.show_context = false;
 
         Task::none()
@@ -282,18 +351,26 @@ impl Application for QuickWebApps {
     }
 
     fn dialog(&self) -> Option<Element<Message>> {
-        if let Some(icon_picker) = &self.iconpicker {
-            let view = icon_picker.view().map(Message::IconPicker);
-
-            return Some(
-                widget::dialog()
-                    .title(fl!("icon-selector"))
+        if let Some(dialog) = &self.dialogs {
+            let element = match dialog {
+                Dialogs::IconPicker(icon_picker) => widget::dialog()
                     .secondary_action(
-                        widget::button::standard(fl!("close")).on_press(Message::CloseIconPicker),
+                        widget::button::standard(fl!("close")).on_press(Message::CloseDialog),
                     )
-                    .control(view)
-                    .into(),
-            );
+                    .control(icon_picker.view().map(Message::IconPicker)),
+                Dialogs::Confirmation(entity) => widget::dialog()
+                    .title(fl!("delete"))
+                    .primary_action(
+                        widget::button::destructive(fl!("yes"))
+                            .on_press(Message::Delete(entity.to_owned())),
+                    )
+                    .secondary_action(
+                        widget::button::suggested(fl!("no")).on_press(Message::CloseDialog),
+                    )
+                    .control(widget::text(fl!("confirm-delete"))),
+            };
+
+            return Some(element.into());
         };
 
         None

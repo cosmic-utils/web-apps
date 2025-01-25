@@ -3,6 +3,10 @@ loading=Ładowanie...
 open=Otwórz
 number={ $number }
 git-description = Commit Gita {$hash} dnia {$date}
+delete=Potwierdź usuwanie
+yes=Tak
+no=Nie
+confirm-delete=Czy jesteś pewien że chcesz usunąć tę aplikacje internetową?
 
 # header
 main-window={ $app }

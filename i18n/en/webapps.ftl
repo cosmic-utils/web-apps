@@ -3,6 +3,10 @@ loading=Loading...
 open=Open
 number={ $number }
 git-description = Git commit {$hash} on {$date}
+delete=Delete
+yes=Yes
+no=No
+confirm-delete=Are you sure you want to delete this Quick Web App?
 
 # header
 main-window={ $app }

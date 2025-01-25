@@ -18,6 +18,7 @@ use super::REPOSITORY;
 
 #[derive(Debug, Clone)]
 pub struct AppEditor {
+    pub app_codename: String,
     pub app_title: String,
     pub app_url: String,
     pub app_icon: String,
@@ -70,6 +71,7 @@ impl AppEditor {
         ];
 
         AppEditor {
+            app_codename: String::new(),
             app_title: fl!("new-webapp-title"),
             app_url: String::from(REPOSITORY),
             app_icon: String::new(),
@@ -100,6 +102,7 @@ impl AppEditor {
         ];
 
         Self {
+            app_codename: webapp_launcher.codename,
             app_title: webapp_launcher.name,
             app_url: webapp_launcher.url,
             app_icon: webapp_launcher.icon,
@@ -129,7 +132,7 @@ impl AppEditor {
                 self.category_idx = idx;
             }
             Message::Done => {
-                let codename = format!(
+                self.app_codename = format!(
                     "{}{}",
                     &self.app_title.replace(' ', ""),
                     thread_rng().gen_range(1000..10000)
@@ -138,13 +141,13 @@ impl AppEditor {
 
                 if webapplauncher_is_valid(
                     &icon_final_path,
-                    &codename,
+                    &self.app_codename,
                     &self.app_title,
                     &self.app_url,
                 ) {
                     if let Some(browser) = &self.app_browser {
                         let launcher = WebAppLauncher {
-                            codename,
+                            codename: self.app_codename.clone(),
                             browser: browser.clone(),
                             name: self.app_title.clone(),
                             icon: icon_final_path,
