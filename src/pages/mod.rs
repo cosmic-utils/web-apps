@@ -1,15 +1,16 @@
 mod editor;
 mod iconpicker;
-mod icons_installator;
+mod installator;
 
 use crate::common::{find_icon, image_handle, move_icon, qwa_icons_location, Icon};
 use crate::config::Config;
 use crate::launcher::{installed_webapps, WebAppLauncher};
+use crate::{add_icon_packs_install_script, execute_script};
 use crate::{fl, pages::iconpicker::IconPicker};
 use cosmic::app::context_drawer;
 use cosmic::cosmic_config::{self, CosmicConfigEntry};
 use cosmic::iced::alignment::Horizontal;
-use cosmic::iced::window::Id;
+use cosmic::iced::window::{self, Id};
 use cosmic::iced::{Alignment, Length, Subscription};
 use cosmic::widget::{menu, nav_bar};
 use cosmic::{
@@ -21,15 +22,25 @@ use cosmic::{
 use cosmic::{task, theme};
 use editor::AppEditor;
 use futures_util::SinkExt;
+use installator::Installator;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::process::ExitStatus;
 use std::str::FromStr;
+use std::time::Duration;
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::sync::oneshot;
 
 #[derive(Debug, Clone)]
 pub enum Message {
     CloseDialog,
     Editor(editor::Message),
     Delete(widget::segmented_button::Entity),
+    Downloader,
+    DownloaderDone,
+    DownloaderStarted,
+    DownloaderStream(String),
+    DownloaderStreamFinished,
     IconPicker(iconpicker::Message),
     IconsResult(Vec<String>),
     InsertApp(WebAppLauncher),
@@ -40,7 +51,6 @@ pub enum Message {
     OpenRepositoryUrl,
     PrepareToDelete(widget::segmented_button::Entity),
     SetIcon(Option<Icon>),
-    SubscriptionChannel,
     ToggleContextPage(ContextPage),
     UpdateConfig(Config),
     // emty message
@@ -67,6 +77,10 @@ pub struct QuickWebApps {
     config: Config,
     page: Page,
     dialogs: Option<Dialogs>,
+    downloader_window: Option<Installator>,
+    downloader_window_id: Option<window::Id>,
+    downloader_started: bool,
+    downloader_output: String,
 }
 
 const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
@@ -129,6 +143,10 @@ impl Application for QuickWebApps {
                 .unwrap_or_default(),
             page: add_page,
             dialogs: None,
+            downloader_window: None,
+            downloader_window_id: None,
+            downloader_started: false,
+            downloader_output: String::new(),
         };
 
         let command = windows.update_title();
@@ -137,21 +155,56 @@ impl Application for QuickWebApps {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        struct MySubscription;
+        let mut subscriptions = Vec::new();
 
-        Subscription::batch(vec![
-            Subscription::run_with_id(
-                std::any::TypeId::of::<MySubscription>(),
-                cosmic::iced::stream::channel(4, move |mut channel| async move {
-                    _ = channel.send(Message::SubscriptionChannel).await;
-
-                    futures_util::future::pending().await
-                }),
-            ),
+        subscriptions.push(
             self.core()
                 .watch_config::<Config>(Self::APP_ID)
                 .map(|update| Message::UpdateConfig(update.config)),
-        ])
+        );
+
+        if self.downloader_started {
+            subscriptions.push(Subscription::run_with_id(
+                1,
+                cosmic::iced::stream::channel(4, move |mut channel| async move {
+                    let script = add_icon_packs_install_script().await;
+                    let mut child = execute_script(script).await;
+                    let stdout = child
+                        .stdout
+                        .take()
+                        .expect("child did not have a handle to stdout");
+
+                    let mut reader = BufReader::new(stdout).lines();
+                    let (tx, rx) = oneshot::channel::<ExitStatus>();
+
+                    tokio::spawn(async move {
+                        let status = child
+                            .wait()
+                            .await
+                            .expect("child process encountered an error");
+
+                        tx.send(status).unwrap();
+                    });
+
+                    while let Ok(Some(line)) = reader.next_line().await {
+                        _ = channel.send(Message::DownloaderStream(line)).await;
+                    }
+
+                    match rx.await {
+                        Ok(es) => {
+                            if es.success() {
+                                let _ = channel.send(Message::DownloaderStreamFinished).await;
+                            }
+                        }
+                        Err(_) => tracing::error!("the sender dropped"),
+                    }
+
+                    futures_util::future::pending().await
+                }),
+            ));
+        }
+
+        Subscription::batch(subscriptions)
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
@@ -190,6 +243,39 @@ impl Application for QuickWebApps {
                         };
                     };
                 }
+            }
+            Message::Downloader => {
+                self.downloader_window = Some(Installator);
+
+                let (id, open) = window::open(window::Settings {
+                    ..window::Settings::default()
+                });
+
+                self.downloader_window_id = Some(id);
+
+                return open.map(move |_| cosmic::app::message::app(Message::DownloaderStarted));
+            }
+            Message::DownloaderDone => {
+                if let Some(id) = self.downloader_window_id {
+                    self.downloader_window = None;
+                    return window::close(id);
+                }
+            }
+            Message::DownloaderStarted => {
+                self.downloader_started = true;
+            }
+            Message::DownloaderStream(buffer) => {
+                self.downloader_output.push_str(&format!("{buffer:?}\n"));
+            }
+            Message::DownloaderStreamFinished => {
+                self.downloader_output
+                    .push_str(&fl!("icons-installer-finished-waiting").to_string());
+
+                return task::future(async {
+                    tokio::time::sleep(Duration::from_secs_f32(3.0)).await;
+
+                    Message::DownloaderDone
+                });
             }
             Message::IconPicker(msg) => {
                 if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
@@ -253,7 +339,6 @@ impl Application for QuickWebApps {
                 app_editor.update_icon(icon);
                 self.dialogs = None;
             }
-            Message::SubscriptionChannel => {}
             Message::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {
                     self.core.window.show_context = !self.core.window.show_context;
@@ -348,6 +433,15 @@ impl Application for QuickWebApps {
             .align_x(Horizontal::Center)
             .center_x(Length::Fill)
             .into()
+    }
+
+    fn view_window(&self, _id: window::Id) -> Element<Message> {
+        let content: Option<Element<Message>> = self
+            .downloader_window
+            .as_ref()
+            .map(|installer| installer.view(self.downloader_output.clone()));
+
+        Element::from(widget::row().push_maybe(content))
     }
 
     fn dialog(&self) -> Option<Element<Message>> {

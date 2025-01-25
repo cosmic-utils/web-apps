@@ -20,6 +20,7 @@ vergen = { version = "8", features = ["git", "gitcl"] }
 [dependencies]
 anyhow = "1"
 ashpd = { version = "0.10", features = ["wayland"] }
+async-stream = "0.3.6"
 base64 = "0.22"
 bytes = "1.9"
 dirs = "5.0"

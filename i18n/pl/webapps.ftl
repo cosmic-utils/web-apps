@@ -58,6 +58,7 @@ search=Szukaj
 # icons_installator.rs
 icons-installer-header=Proszę czekać. Trwa pobieranie ikon...
 icons-installer-message=Ta aplikacja potrzebuje ikon do działania. W przypadku braku dostępu do ikon systemowych, zainstalujemy lokalnie pakiet ikon Papirus.
+icons-installer-finished-waiting=Pobieranie ukończone. To okno zostanie zamknięte po upłynięciu 3 sekund.
 
 # warning.rs
 warning=Proszę spełnić poniższe wymagania

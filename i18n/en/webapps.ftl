@@ -58,6 +58,7 @@ search=Search
 # icons_installator.rs
 icons-installer-header=Please wait. Downloading icons...
 icons-installer-message=This app requires icons to work with. In case we don't have access to your installed icons, we are installing Papirus icon pack to local directory so you can choose one icon for your web app from this pack.
+icons-installer-finished-waiting=Downloading finished. Waiting 3 seconds to close this window..
 
 # warning.rs
 warning=You don't meet requirements

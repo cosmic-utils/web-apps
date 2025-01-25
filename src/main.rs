@@ -12,8 +12,8 @@ use freedesktop_desktop_entry::get_languages_from_env;
 use i18n_embed::DesktopLanguageRequester;
 use lazy_static::lazy_static;
 use pages::QuickWebApps;
-use std::{os::unix::fs::PermissionsExt, process::ExitStatus};
-use tokio::{fs::File, io::AsyncWriteExt};
+use std::os::unix::fs::PermissionsExt;
+use tokio::{fs::File, io::AsyncWriteExt, process::Child};
 
 lazy_static! {
     pub static ref LOCALES: Vec<String> = get_languages_from_env();
@@ -92,9 +92,10 @@ pub async fn add_icon_packs_install_script() -> String {
     temp_file.to_string()
 }
 
-pub async fn execute_script(script: String) -> ExitStatus {
+pub async fn execute_script(script: String) -> Child {
     tokio::process::Command::new(script)
-        .status()
-        .await
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
         .expect("cant execute script")
 }

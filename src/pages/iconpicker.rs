@@ -43,7 +43,7 @@ impl IconPicker {
     pub fn update(&mut self, message: Message) -> Task<pages::Message> {
         match message {
             Message::CustomIconsSearch(input) => self.icon_searching = input,
-            Message::DownloadIconsPack => todo!(),
+            Message::DownloadIconsPack => return task::message(pages::Message::Downloader),
             Message::OpenIconPickerDialog => {
                 return task::future(async move {
                     let result = SelectedFiles::open_file()
