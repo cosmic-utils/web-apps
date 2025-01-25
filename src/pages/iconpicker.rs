@@ -2,7 +2,7 @@ use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
     iced::Length,
     task, theme,
-    widget::{self, flex_row, text, text_input},
+    widget::{self},
     Element, Task,
 };
 
@@ -43,7 +43,7 @@ impl IconPicker {
     pub fn update(&mut self, message: Message) -> Task<pages::Message> {
         match message {
             Message::CustomIconsSearch(input) => self.icon_searching = input,
-            Message::DownloadIconsPack => return task::message(pages::Message::Downloader),
+            Message::DownloadIconsPack => return task::message(pages::Message::DownloaderStarted),
             Message::OpenIconPickerDialog => {
                 return task::future(async move {
                     let result = SelectedFiles::open_file()
@@ -115,30 +115,26 @@ impl IconPicker {
                     widget::row()
                         .spacing(8)
                         .push(
-                            text_input(fl!("icon-name-to-find"), &self.icon_searching)
+                            widget::text_input(fl!("icon-name-to-find"), &self.icon_searching)
                                 .on_input(Message::CustomIconsSearch)
                                 .on_submit(Message::IconSearch)
-                                .width(Length::FillPortion(3)),
+                                .width(Length::Fill),
                         )
                         .push(
-                            widget::button::custom(text(fl!("open")))
-                                .on_press(Message::OpenIconPickerDialog)
-                                .padding(8)
-                                .width(Length::FillPortion(1)),
+                            widget::button::standard(fl!("open"))
+                                .on_press(Message::OpenIconPickerDialog),
                         )
                         .push_maybe(if !icon_pack_installed() {
                             Some(
-                                widget::button::custom(text(fl!("download")))
-                                    .on_press(Message::DownloadIconsPack)
-                                    .padding(8)
-                                    .width(Length::FillPortion(1)),
+                                widget::button::standard(fl!("download"))
+                                    .on_press(Message::DownloadIconsPack),
                             )
                         } else {
                             None
                         }),
                 )
                 .push({
-                    let content = widget::container(flex_row(icons));
+                    let content = widget::container(widget::flex_row(icons));
 
                     widget::scrollable(content)
                         .width(Length::Fill)

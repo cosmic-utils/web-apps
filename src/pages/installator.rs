@@ -12,9 +12,6 @@ impl Installator {
     pub fn view(&self, output: String) -> Element<Message> {
         widget::container(widget::scrollable(
             widget::column()
-                .padding(8)
-                .spacing(20)
-                .push(widget::text::title1(fl!("icons-installer-header")))
                 .push(widget::text::heading(fl!("icons-installer-message")))
                 .push(widget::text::monotext(output)),
         ))

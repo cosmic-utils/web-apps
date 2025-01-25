@@ -7,6 +7,8 @@ delete=Potwierdź usuwanie
 yes=Tak
 no=Nie
 confirm-delete=Czy jesteś pewien że chcesz usunąć tę aplikacje internetową?
+cancel=Anuluj
+downloader-canceled=Instalacja zatrzymana.
 
 # header
 main-window={ $app }

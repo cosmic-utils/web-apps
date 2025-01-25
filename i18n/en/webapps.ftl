@@ -7,6 +7,8 @@ delete=Delete
 yes=Yes
 no=No
 confirm-delete=Are you sure you want to delete this Quick Web App?
+cancel=Cancel
+downloader-canceled=Installing stopped.
 
 # header
 main-window={ $app }

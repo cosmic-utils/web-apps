@@ -10,7 +10,7 @@ use crate::{fl, pages::iconpicker::IconPicker};
 use cosmic::app::context_drawer;
 use cosmic::cosmic_config::{self, CosmicConfigEntry};
 use cosmic::iced::alignment::Horizontal;
-use cosmic::iced::window::{self, Id};
+use cosmic::iced::window::Id;
 use cosmic::iced::{Alignment, Length, Subscription};
 use cosmic::widget::{menu, nav_bar};
 use cosmic::{
@@ -36,7 +36,6 @@ pub enum Message {
     CloseDialog,
     Editor(editor::Message),
     Delete(widget::segmented_button::Entity),
-    Downloader,
     DownloaderDone,
     DownloaderStarted,
     DownloaderStream(String),
@@ -51,6 +50,7 @@ pub enum Message {
     OpenRepositoryUrl,
     PrepareToDelete(widget::segmented_button::Entity),
     SetIcon(Option<Icon>),
+    DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(Config),
     // emty message
@@ -66,6 +66,7 @@ pub enum Page {
 pub enum Dialogs {
     IconPicker(IconPicker),
     Confirmation(widget::segmented_button::Entity),
+    IconsDownloader(Installator),
 }
 
 pub struct QuickWebApps {
@@ -77,9 +78,8 @@ pub struct QuickWebApps {
     config: Config,
     page: Page,
     dialogs: Option<Dialogs>,
-    downloader_window: Option<Installator>,
-    downloader_window_id: Option<window::Id>,
     downloader_started: bool,
+    downloader_id: usize,
     downloader_output: String,
 }
 
@@ -143,9 +143,8 @@ impl Application for QuickWebApps {
                 .unwrap_or_default(),
             page: add_page,
             dialogs: None,
-            downloader_window: None,
-            downloader_window_id: None,
             downloader_started: false,
+            downloader_id: 1,
             downloader_output: String::new(),
         };
 
@@ -165,7 +164,7 @@ impl Application for QuickWebApps {
 
         if self.downloader_started {
             subscriptions.push(Subscription::run_with_id(
-                1,
+                self.downloader_id,
                 cosmic::iced::stream::channel(4, move |mut channel| async move {
                     let script = add_icon_packs_install_script().await;
                     let mut child = execute_script(script).await;
@@ -183,7 +182,7 @@ impl Application for QuickWebApps {
                             .await
                             .expect("child process encountered an error");
 
-                        tx.send(status).unwrap();
+                        let _ = tx.send(status);
                     });
 
                     while let Ok(Some(line)) = reader.next_line().await {
@@ -244,28 +243,23 @@ impl Application for QuickWebApps {
                     };
                 }
             }
-            Message::Downloader => {
-                self.downloader_window = Some(Installator);
-
-                let (id, open) = window::open(window::Settings {
-                    ..window::Settings::default()
-                });
-
-                self.downloader_window_id = Some(id);
-
-                return open.map(move |_| cosmic::app::message::app(Message::DownloaderStarted));
-            }
             Message::DownloaderDone => {
-                if let Some(id) = self.downloader_window_id {
-                    self.downloader_window = None;
-                    return window::close(id);
-                }
+                self.downloader_started = false;
+                return task::message(Message::CloseDialog);
             }
             Message::DownloaderStarted => {
+                self.dialogs = None;
                 self.downloader_started = true;
+                self.dialogs = Some(Dialogs::IconsDownloader(Installator))
             }
             Message::DownloaderStream(buffer) => {
                 self.downloader_output.push_str(&format!("{buffer:?}\n"));
+            }
+            Message::DownloaderStop => {
+                self.downloader_started = false;
+                self.downloader_id += 1;
+                self.downloader_output
+                    .push_str(&fl!("downloader-canceled").to_string());
             }
             Message::DownloaderStreamFinished => {
                 self.downloader_output
@@ -435,15 +429,6 @@ impl Application for QuickWebApps {
             .into()
     }
 
-    fn view_window(&self, _id: window::Id) -> Element<Message> {
-        let content: Option<Element<Message>> = self
-            .downloader_window
-            .as_ref()
-            .map(|installer| installer.view(self.downloader_output.clone()));
-
-        Element::from(widget::row().push_maybe(content))
-    }
-
     fn dialog(&self) -> Option<Element<Message>> {
         if let Some(dialog) = &self.dialogs {
             let element = match dialog {
@@ -462,6 +447,16 @@ impl Application for QuickWebApps {
                         widget::button::suggested(fl!("no")).on_press(Message::CloseDialog),
                     )
                     .control(widget::text(fl!("confirm-delete"))),
+                Dialogs::IconsDownloader(installator) => widget::dialog()
+                    .title(fl!("icons-installer-header"))
+                    .primary_action(
+                        widget::button::destructive(fl!("cancel"))
+                            .on_press(Message::DownloaderStop),
+                    )
+                    .secondary_action(
+                        widget::button::suggested(fl!("close")).on_press(Message::CloseDialog),
+                    )
+                    .control(installator.view(self.downloader_output.clone())),
             };
 
             return Some(element.into());
