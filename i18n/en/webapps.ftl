@@ -35,6 +35,7 @@ sound-and-video=Sound & Video
 
 browser=Browser
 
+new-webapp-title=New Quick Web App
 title=Title
 url=URL
 download-favicon=Download favicon

@@ -35,6 +35,7 @@ sound-and-video=Dźwięk i Wideo
 
 browser=Przeglądarka
 
+new-webapp-title=Nowa aplikacja internetowa
 title=Nazwa
 url=Link
 download-favicon=Pobierz ikone

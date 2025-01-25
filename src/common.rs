@@ -201,7 +201,7 @@ pub fn move_icon(path: &str, output_name: &str) -> String {
 
     let icon_name = output_name.replace(' ', "");
 
-    if url_valid(&path) {
+    if url_valid(path) {
         let response = reqwest::blocking::get(path).expect("sending request");
 
         if response.status().is_success() {
@@ -213,8 +213,8 @@ pub fn move_icon(path: &str, output_name: &str) -> String {
         return String::new();
     };
 
-    if !is_svg(&path) {
-        if let Ok(mut file) = File::open(&path) {
+    if !is_svg(path) {
+        if let Ok(mut file) = File::open(path) {
             let mut buffer = Vec::new();
             file.read_to_end(&mut buffer).unwrap();
             let content = Bytes::from(buffer);
@@ -224,7 +224,7 @@ pub fn move_icon(path: &str, output_name: &str) -> String {
     };
 
     let save_path = icon_save_path(&icon_name);
-    copy(&path, &save_path).unwrap();
+    copy(path, &save_path).unwrap();
 
     save_path
 }

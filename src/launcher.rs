@@ -1,6 +1,6 @@
 use crate::{
     browser::{Browser, BrowserModel},
-    common::{self, move_icon},
+    common::{self},
     LOCALES,
 };
 use anyhow::Result;
@@ -212,7 +212,7 @@ impl WebAppLauncher {
         let profile_path = profile_path.to_str().unwrap();
 
         let mut exec_string = format!(
-            "{} --class WebApp-{} --name WebApp-{} --profile {} --no-remote ",
+            "{} --class QuickWebApp-{} --name QuickWebApp-{} --profile {} --no-remote ",
             self.browser.exec, self.codename, self.codename, profile_path
         );
 
@@ -231,7 +231,7 @@ impl WebAppLauncher {
 
     fn exec_chromium(&self) -> String {
         let mut exec_string = format!(
-            "{} --app={} --class=WebApp-{} --name=WebApp-{} ",
+            "{} --app={} --class=QuickWebApp-{} --name=QuickWebApp-{} ",
             self.browser.exec, self.url, self.codename, self.codename
         );
 
@@ -270,7 +270,7 @@ impl WebAppLauncher {
             let profile_path = profile_dir.to_str().unwrap();
 
             exec_string = format!(
-                "{} --portable --wmclass WebApp-{} --profile {} ",
+                "{} --portable --wmclass QuickWebApp-{} --profile {} ",
                 self.browser.exec, self.codename, profile_path
             );
         }
@@ -329,6 +329,7 @@ impl WebAppLauncher {
             writeln!(output, "Categories={};", self.category)?;
             writeln!(output, "MimeType=text/html;text/xml;application/xhtml_xml;")?;
             writeln!(output, "StartupWMClass=QuickWebApp-{}", self.codename)?;
+            writeln!(output, "StartupNotify=true")?;
             writeln!(output, "X-QWA-Codename={}", self.codename)?;
             writeln!(output, "X-QWA-Browser-Id={}", entry.appid)?;
             writeln!(output, "X-QWA-Url={}", self.url)?;
@@ -359,14 +360,4 @@ impl WebAppLauncher {
 
         Ok(())
     }
-}
-
-pub fn create_valid_launcher(mut entry: WebAppLauncher) -> anyhow::Result<()> {
-    if webapplauncher_is_valid(&entry.icon, &entry.codename, &entry.name, &entry.url) {
-        let _ = move_icon(&entry.icon, &entry.name);
-        let _ = entry.create().is_ok();
-        return Ok(());
-    };
-
-    Ok(())
 }

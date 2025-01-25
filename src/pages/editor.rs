@@ -1,5 +1,5 @@
 use cosmic::{
-    iced::{alignment::Vertical, id, Length},
+    iced::{alignment::Vertical, Length},
     style, task,
     widget::{self},
     Element, Task,
@@ -8,9 +8,9 @@ use rand::{thread_rng, Rng};
 
 use crate::{
     browser::{installed_browsers, Browser, BrowserModel},
-    common::{self, image_handle, url_valid, Icon, IconType},
+    common::{self, image_handle, move_icon, url_valid, Icon, IconType},
     fl,
-    launcher::{create_valid_launcher, WebAppLauncher},
+    launcher::{webapplauncher_is_valid, WebAppLauncher},
     pages,
 };
 
@@ -18,7 +18,6 @@ use super::REPOSITORY;
 
 #[derive(Debug, Clone)]
 pub struct AppEditor {
-    pub app_title_id: id::Id,
     pub app_title: String,
     pub app_url: String,
     pub app_icon: String,
@@ -71,8 +70,7 @@ impl AppEditor {
         ];
 
         AppEditor {
-            app_title_id: id::Id::new("app-title"),
-            app_title: String::from("New Quick Web App"),
+            app_title: fl!("new-webapp-title"),
             app_url: String::from(REPOSITORY),
             app_icon: String::new(),
             app_parameters: String::new(),
@@ -102,7 +100,6 @@ impl AppEditor {
         ];
 
         Self {
-            app_title_id: id::Id::new("app-title"),
             app_title: webapp_launcher.name,
             app_url: webapp_launcher.url,
             app_icon: webapp_launcher.icon,
@@ -126,6 +123,7 @@ impl AppEditor {
             }
             Message::Browser(idx) => {
                 self.browser_idx = Some(idx);
+                self.app_browser = Some(self.app_browsers[idx].clone());
             }
             Message::Category(idx) => {
                 self.category_idx = idx;
@@ -136,22 +134,32 @@ impl AppEditor {
                     &self.app_title.replace(' ', ""),
                     thread_rng().gen_range(1000..10000)
                 );
-                if let Some(browser) = &self.app_browser {
-                    let launcher = WebAppLauncher {
-                        codename,
-                        browser: browser.clone(),
-                        name: self.app_title.clone(),
-                        icon: self.app_icon.clone(),
-                        category: self.app_categories[self.category_idx].clone(),
-                        url: self.app_url.clone(),
-                        custom_parameters: self.app_parameters.clone(),
-                        isolate_profile: self.app_isolated,
-                        navbar: self.app_navbar,
-                        is_incognito: self.app_incognito,
-                    };
-                    let _ = create_valid_launcher(launcher.clone());
+                let icon_final_path = move_icon(&self.app_icon, &self.app_title);
 
-                    return task::future(async { pages::Message::InsertApp(launcher) });
+                if webapplauncher_is_valid(
+                    &icon_final_path,
+                    &codename,
+                    &self.app_title,
+                    &self.app_url,
+                ) {
+                    if let Some(browser) = &self.app_browser {
+                        let launcher = WebAppLauncher {
+                            codename,
+                            browser: browser.clone(),
+                            name: self.app_title.clone(),
+                            icon: icon_final_path,
+                            category: self.app_categories[self.category_idx].clone(),
+                            url: self.app_url.clone(),
+                            custom_parameters: self.app_parameters.clone(),
+                            isolate_profile: self.app_isolated,
+                            navbar: self.app_navbar,
+                            is_incognito: self.app_incognito,
+                        };
+
+                        let _ = launcher.create().is_ok();
+
+                        return task::future(async { pages::Message::InsertApp(launcher) });
+                    };
                 }
             }
             Message::Navbar(flag) => {
@@ -259,7 +267,6 @@ impl AppEditor {
                         .push(
                             widget::column().push(widget::text(fl!("title"))).push(
                                 widget::text_input("", &self.app_title)
-                                    .id(self.app_title_id.clone())
                                     .on_input(Message::Title)
                                     .width(Length::Fill),
                             ),

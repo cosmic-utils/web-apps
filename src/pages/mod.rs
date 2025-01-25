@@ -22,7 +22,7 @@ use cosmic::{task, theme};
 use editor::AppEditor;
 use futures_util::SinkExt;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::str::FromStr;
 
 #[derive(Debug, Clone)]
@@ -97,7 +97,7 @@ impl Application for QuickWebApps {
 
         installed_webapps().into_iter().for_each(|app| {
             nav.insert()
-                .icon(widget::icon::from_name("edit-symbolic"))
+                .icon(widget::icon::from_name(app.icon.clone()))
                 .text(app.name.clone())
                 .data::<Page>(Page::Editor(editor::AppEditor::from(app)));
         });
@@ -171,7 +171,7 @@ impl Application for QuickWebApps {
             Message::InsertApp(launcher) => {
                 self.nav
                     .insert()
-                    .icon(widget::icon::from_name("edit-symbolic"))
+                    .icon(widget::icon::from_name(launcher.icon.clone()))
                     .text(launcher.name.clone())
                     .data::<Page>(Page::Editor(editor::AppEditor::from(launcher)));
             }
