@@ -1,6 +1,6 @@
 use crate::{
     browser::{Browser, BrowserModel},
-    common::{self},
+    common::{self, move_icon},
     LOCALES,
 };
 use anyhow::Result;
@@ -12,7 +12,7 @@ use std::{
 };
 
 pub fn webapplauncher_is_valid(icon: &str, codename: &str, name: &str, url: &str) -> bool {
-    let installed = get_webapps();
+    let installed = installed_webapps();
 
     for app in installed.iter() {
         if !common::url_valid(url)
@@ -28,7 +28,7 @@ pub fn webapplauncher_is_valid(icon: &str, codename: &str, name: &str, url: &str
     true
 }
 
-pub fn get_webapps() -> Vec<WebAppLauncher> {
+pub fn installed_webapps() -> Vec<WebAppLauncher> {
     let mut webapps = Vec::new();
 
     match fs::read_dir(common::desktop_filepath("")) {
@@ -359,4 +359,14 @@ impl WebAppLauncher {
 
         Ok(())
     }
+}
+
+pub fn create_valid_launcher(mut entry: WebAppLauncher) -> anyhow::Result<()> {
+    if webapplauncher_is_valid(&entry.icon, &entry.codename, &entry.name, &entry.url) {
+        let _ = move_icon(&entry.icon, &entry.name);
+        let _ = entry.create().is_ok();
+        return Ok(());
+    };
+
+    Ok(())
 }

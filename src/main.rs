@@ -1,18 +1,17 @@
 mod browser;
 mod common;
+mod config;
 mod favicon;
-mod icon_cache;
 mod launcher;
 mod localize;
 mod pages;
-mod warning;
 
 use common::icons_location;
 use cosmic::{app::Settings, iced_core::Size};
 use freedesktop_desktop_entry::get_languages_from_env;
 use i18n_embed::DesktopLanguageRequester;
 use lazy_static::lazy_static;
-use pages::Window;
+use pages::QuickWebApps;
 use std::{os::unix::fs::PermissionsExt, process::ExitStatus};
 use tokio::{fs::File, io::AsyncWriteExt};
 
@@ -48,7 +47,7 @@ fn main() -> cosmic::iced::Result {
         height: 700.,
     });
 
-    cosmic::app::run::<Window>(settings, ())
+    cosmic::app::run::<QuickWebApps>(settings, ())
 }
 
 fn init_localizer() {

@@ -1,10 +1,9 @@
 use std::{
     ffi::OsStr,
-    fs::{copy, create_dir_all, File},
+    fs::{self, copy, create_dir_all, File},
     io::{Cursor, Read},
     path::PathBuf,
     str::FromStr,
-    sync::Mutex,
 };
 
 use base64::prelude::*;
@@ -13,23 +12,13 @@ use cosmic::{iced_core, widget};
 use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter};
 use image::ImageReader;
 use image::{load_from_memory, GenericImageView};
-use reqwest::Client;
+use reqwest::blocking;
 use svg::node::element::Image;
 use svg::Document;
-use tokio::io::AsyncReadExt;
 use url::Url;
 use walkdir::WalkDir;
 
-use crate::{favicon, icon_cache::IconCache, LOCALES};
-
-lazy_static::lazy_static! {
-    static ref ICON_CACHE: Mutex<IconCache> = Mutex::new(IconCache::new());
-}
-
-pub fn icon_cache_get(name: &'static str, size: u16) -> widget::icon::Icon {
-    let mut icon_cache = ICON_CACHE.lock().unwrap();
-    icon_cache.get(name, size)
-}
+use crate::{favicon, LOCALES};
 
 pub fn url_valid(url: &str) -> bool {
     Url::parse(url).is_ok()
@@ -207,13 +196,13 @@ fn icon_save_path(icon_name: &str) -> String {
         .to_string()
 }
 
-pub fn move_icon(path: String, output_name: String) -> String {
+pub fn move_icon(path: &str, output_name: &str) -> String {
     create_dir_all(qwa_icons_location()).expect("cant create folder for your icons");
 
     let icon_name = output_name.replace(' ', "");
 
     if url_valid(&path) {
-        let response = reqwest::blocking::get(&path).expect("sending request");
+        let response = reqwest::blocking::get(path).expect("sending request");
 
         if response.status().is_success() {
             let content: Bytes = response.bytes().expect("getting image bytes");
@@ -240,10 +229,10 @@ pub fn move_icon(path: String, output_name: String) -> String {
     save_path
 }
 
-pub async fn image_handle(path: String) -> Option<Icon> {
+pub fn image_handle(path: String) -> Option<Icon> {
     if url_valid(&path) {
-        if let Ok(response) = Client::new().get(&path).send().await {
-            if let Ok(bytes) = response.bytes().await {
+        if let Ok(response) = blocking::Client::new().get(&path).send() {
+            if let Ok(bytes) = response.bytes() {
                 let options = usvg::Options::default();
                 if let Ok(parsed) = usvg::Tree::from_data(&bytes, &options) {
                     let size = parsed.size();
@@ -276,8 +265,8 @@ pub async fn image_handle(path: String) -> Option<Icon> {
         } else {
             let mut data: Vec<_> = Vec::new();
 
-            if let Ok(mut file) = tokio::fs::File::open(&result_path).await {
-                let _ = file.read_to_end(&mut data).await;
+            if let Ok(mut file) = fs::File::open(&result_path) {
+                let _ = file.read_to_end(&mut data);
             }
 
             if let Ok(image_reader) = ImageReader::new(Cursor::new(&data)).with_guessed_format() {

@@ -5,7 +5,7 @@ edition = "2021"
 description = "Web applications at your fingertips"
 authors = ["hepp3n", "cosmic-utils"]
 license = "GPL-3.0-only"
-repository = "https://github.com/cosmic-utils/web-apps.git"
+repository = "https://github.com/cosmic-utils/web-apps"
 
 [[bin]]
 path = "src/main.rs"
@@ -14,6 +14,9 @@ name = "quick-webapps"
 [profile.dev]
 opt-level = 1
 
+[build-dependencies]
+vergen = { version = "8", features = ["git", "gitcl"] }
+
 [dependencies]
 anyhow = "1"
 ashpd = { version = "0.10", features = ["wayland"] }
@@ -21,11 +24,13 @@ base64 = "0.22"
 bytes = "1.9"
 dirs = "5.0"
 freedesktop-desktop-entry = { git = "https://github.com/pop-os/freedesktop-desktop-entry" }
+futures-util = "0.3"
 i18n-embed-fl = "0.9"
 i18n-embed = { version = "0.15", features = ["fluent-system", "desktop-requester"]}
 image = "0.25"
 lazy_static = "1.5"
 once_cell = "1.2"
+open = "5.3"
 rand = "0.8"
 reqwest = { version = "0.12", features = ["blocking", "json"] }
 rust-embed = "8.5"

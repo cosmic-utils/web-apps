@@ -2,10 +2,13 @@ app=Quick Web Apps
 loading=Loading...
 open=Open
 number={ $number }
+git-description = Git commit {$hash} on {$date}
 
 # header
 main-window={ $app }
-create=Create
+view=View
+create=Done
+new-app=Create new
 edit=Edit
 close=Close
 create-new-webapp=Create new Web App
@@ -34,6 +37,7 @@ browser=Browser
 
 title=Title
 url=URL
+download-favicon=Download favicon
 non-standard-arguments=Non-standard arguments
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Nav Bar
@@ -44,6 +48,7 @@ private-mode=Private Mode
 icon-name-to-find=Icon name to find
 my-icons=My icons
 download=Download
+search=Search
 
 # icons_installator.rs
 icons-installer-header=Please wait. Downloading icons...

@@ -1,110 +1,75 @@
-pub mod creator;
-pub mod home_screen;
-pub mod iconpicker;
-pub mod icons_installator;
+mod editor;
+mod iconpicker;
+mod icons_installator;
 
-use crate::browser::installed_browsers;
-use crate::launcher::{webapplauncher_is_valid, WebAppLauncher};
-use crate::{
-    add_icon_packs_install_script,
-    common::{
-        self, find_icon, find_icons, get_icon_name_from_url, icon_cache_get, image_handle,
-        move_icon, qwa_icons_location,
-    },
-    execute_script, fl, icon_pack_installed,
-    pages::home_screen::Home,
-    pages::iconpicker::IconPicker,
-    pages::icons_installator::Installator,
-    warning::WarnAction,
-    warning::WarnMessages,
-};
-use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
-use cosmic::app::command::set_theme;
+use crate::common::{find_icon, image_handle, move_icon, qwa_icons_location, Icon};
+use crate::config::Config;
+use crate::launcher::{installed_webapps, WebAppLauncher};
+use crate::{fl, pages::iconpicker::IconPicker};
+use cosmic::app::context_drawer;
+use cosmic::cosmic_config::{self, CosmicConfigEntry};
 use cosmic::iced::alignment::Horizontal;
 use cosmic::iced::window::Id;
-use cosmic::iced::Length;
-use cosmic::widget::Container;
-use cosmic::{app, task, Theme};
+use cosmic::iced::{Alignment, Length, Subscription};
+use cosmic::widget::{menu, nav_bar};
 use cosmic::{
     app::{command::Task, Core},
-    cosmic_theme, executor, style,
+    cosmic_theme,
     widget::{self},
     Application, ApplicationExt, Element,
 };
-use rand::{thread_rng, Rng};
-use std::path::PathBuf;
-use std::process::ExitStatus;
+use cosmic::{task, theme};
+use editor::AppEditor;
+use futures_util::SinkExt;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::sync::Arc;
 
-#[derive(Debug, Clone)]
-pub enum Buttons {
-    SearchFavicon,
-    Edit(WebAppLauncher),
-    Delete(WebAppLauncher),
-    DoneEdit((Option<String>, Option<String>)),
-    DoneCreate,
-    AppNameSubmit(WebAppLauncher),
-}
-
-#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 pub enum Message {
-    None,
-    OpenHome,
-    OpenCreator,
-    CloseCreator,
-    OpenIconPicker,
-    OpenIconPickerDialog,
+    CloseIconPicker,
+    Editor(editor::Message),
+    IconPicker(iconpicker::Message),
+    IconsResult(Vec<String>),
+    InsertApp(WebAppLauncher),
+    LaunchUrl(String),
     OpenFileResult(Vec<String>),
-    Creator(creator::Message),
-    LoadingDone,
-
-    EditAppName(bool),
-    AppNameInput(String),
-    Clicked(Buttons),
-    // icons
-    CustomIconsSearch(String),
-    MyIcons,
-    PerformIconSearch,
-    FoundIcons(Vec<String>),
-    PushIcon(Option<common::Icon>),
-    SetIcon(common::Icon),
-    SelectIcon(common::Icon),
-
-    Warning((WarnAction, WarnMessages)),
-
-    // Installator
-    DownloadIconsPack,
-    InstallScript(String),
-    InstallCommand(ExitStatus),
-
-    SystemTheme,
+    OpenIconPicker(String),
+    OpenRepositoryUrl,
+    SetIcon(Option<Icon>),
+    SubscriptionChannel,
+    ToggleContextPage(ContextPage),
+    UpdateConfig(Config),
+    // emty message
+    None,
 }
 
 #[derive(Debug, Clone)]
-pub enum Pages {
-    MainWindow,
-    AppCreator,
-    IconPicker,
-    IconInstallator(Installator),
+pub enum Page {
+    Editor(AppEditor),
 }
 
-pub struct Window {
+pub struct QuickWebApps {
     core: Core,
     window_id: Id,
-    main_window: Home,
-    current_page: Pages,
-    creator_window: creator::AppCreator,
-    icon_selector: IconPicker,
+    context_page: ContextPage,
+    nav: nav_bar::Model,
+    key_binds: HashMap<menu::KeyBind, MenuAction>,
+    config: Config,
+    page: Page,
+    iconpicker: Option<IconPicker>,
 }
 
-impl Application for Window {
-    type Executor = executor::Default;
+const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
+const APP_ICON: &[u8] =
+    include_bytes!("../../res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png");
+
+impl Application for QuickWebApps {
+    type Executor = cosmic::executor::Default;
     type Flags = ();
     type Message = Message;
 
-    const APP_ID: &'static str = "io.github.elevenhsoft.WebApps";
+    const APP_ID: &'static str = "io.github.hepp3n.WebApps";
 
     fn core(&self) -> &Core {
         &self.core
@@ -115,460 +80,289 @@ impl Application for Window {
     }
 
     fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Message>) {
-        let manager = Home::new();
-        let creator = creator::AppCreator::new();
-        let selector = IconPicker::default();
-
         let window_id = if let Some(id) = core.main_window_id() {
             id
         } else {
             Id::unique()
         };
 
-        let mut windows = Window {
+        let add_page = Page::Editor(AppEditor::new());
+        let mut nav = nav_bar::Model::default();
+
+        nav.insert()
+            .icon(widget::icon::from_name("list-add-symbolic"))
+            .text(fl!("new-app"))
+            .data::<Page>(add_page.clone())
+            .activate();
+
+        installed_webapps().into_iter().for_each(|app| {
+            nav.insert()
+                .icon(widget::icon::from_name("edit-symbolic"))
+                .text(app.name.clone())
+                .data::<Page>(Page::Editor(editor::AppEditor::from(app)));
+        });
+
+        let mut windows = QuickWebApps {
             window_id,
             core,
-            main_window: manager,
-            current_page: Pages::MainWindow,
-            creator_window: creator,
-            icon_selector: selector,
+            context_page: ContextPage::About,
+            nav,
+            key_binds: HashMap::new(),
+            config: cosmic_config::Config::new(Self::APP_ID, Config::VERSION)
+                .map(|context| match Config::get_entry(&context) {
+                    Ok(config) => config,
+                    Err((errors, config)) => {
+                        tracing::error!("error loading app config: {:#?}", errors);
+                        config
+                    }
+                })
+                .unwrap_or_default(),
+            page: add_page,
+            iconpicker: None,
         };
 
-        let commands = vec![
-            windows.update_title(),
-            task::future(async { cosmic::app::Message::App(Message::SystemTheme) }),
-        ];
+        let command = windows.update_title();
 
-        (windows, Task::batch(commands))
+        (windows, command)
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        struct MySubscription;
+
+        Subscription::batch(vec![
+            Subscription::run_with_id(
+                std::any::TypeId::of::<MySubscription>(),
+                cosmic::iced::stream::channel(4, move |mut channel| async move {
+                    _ = channel.send(Message::SubscriptionChannel).await;
+
+                    futures_util::future::pending().await
+                }),
+            ),
+            self.core()
+                .watch_config::<Config>(Self::APP_ID)
+                .map(|update| Message::UpdateConfig(update.config)),
+        ])
+    }
+
+    fn update(&mut self, message: Message) -> Task<Message> {
+        match message {
+            Message::CloseIconPicker => {
+                self.iconpicker = None;
+            }
+            Message::Editor(msg) => match &mut self.page {
+                Page::Editor(app_editor) => {
+                    return app_editor.update(msg).map(cosmic::app::message::app)
+                }
+            },
+            Message::IconPicker(msg) => {
+                if let Some(picker) = &mut self.iconpicker {
+                    return picker.update(msg).map(cosmic::app::message::app);
+                };
+            }
+            Message::IconsResult(result) => {
+                if let Some(picker) = &mut self.iconpicker {
+                    for path in result {
+                        if let Some(icon) = image_handle(path) {
+                            picker.push_icon(icon);
+                        }
+                    }
+                }
+            }
+            Message::InsertApp(launcher) => {
+                self.nav
+                    .insert()
+                    .icon(widget::icon::from_name("edit-symbolic"))
+                    .text(launcher.name.clone())
+                    .data::<Page>(Page::Editor(editor::AppEditor::from(launcher)));
+            }
+            Message::LaunchUrl(url) => match open::that_detached(&url) {
+                Ok(()) => {}
+                Err(err) => {
+                    eprintln!("failed to open {url:?}: {err}");
+                }
+            },
+            Message::OpenFileResult(file_paths) => {
+                return task::future(async {
+                    for path in file_paths {
+                        let Ok(buf) = PathBuf::from_str(&path);
+                        let icon_name = buf.file_stem();
+
+                        if let Some(file_stem) = icon_name {
+                            move_icon(&path, file_stem.to_str().unwrap());
+                        };
+                    }
+
+                    Message::IconsResult(find_icon(qwa_icons_location(), String::new()).await)
+                })
+            }
+            Message::OpenIconPicker(app_url) => {
+                self.iconpicker = Some(IconPicker::new(app_url));
+            }
+            Message::OpenRepositoryUrl => {
+                _ = open::that_detached(REPOSITORY);
+            }
+            Message::SetIcon(icon) => {
+                let Page::Editor(app_editor) = &mut self.page;
+                app_editor.update_icon(icon);
+                self.iconpicker = None;
+            }
+            Message::SubscriptionChannel => {}
+            Message::ToggleContextPage(context_page) => {
+                if self.context_page == context_page {
+                    self.core.window.show_context = !self.core.window.show_context;
+                } else {
+                    self.context_page = context_page;
+                    self.core.window.show_context = true;
+                }
+            }
+
+            Message::UpdateConfig(config) => {
+                self.config = config;
+            }
+            Message::None => (),
+        };
+
+        Task::none()
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
-        let go_home_icon = icon_cache_get("go-home-symbolic", 16);
-        let go_creator = icon_cache_get("document-new-symbolic", 16);
-        let cosmic_theme::Spacing { space_xxs, .. } = self.core().system_theme().cosmic().spacing;
+        let menu_bar = menu::bar(vec![menu::Tree::with_children(
+            menu::root(fl!("view")),
+            menu::items(
+                &self.key_binds,
+                vec![menu::Item::Button(fl!("app"), None, MenuAction::About)],
+            ),
+        )]);
 
-        vec![
-            widget::button::custom(go_home_icon)
-                .on_press(Message::OpenHome)
-                .padding(space_xxs)
-                .class(style::Button::Icon)
-                .into(),
-            widget::button::custom(go_creator)
-                .on_press(Message::OpenCreator)
-                .padding(space_xxs)
-                .class(style::Button::Icon)
-                .into(),
-        ]
+        vec![menu_bar.into()]
     }
 
-    fn update(&mut self, message: Self::Message) -> Task<Message> {
-        let mut commands: Vec<Task<Message>> = Vec::new();
+    fn nav_model(&self) -> Option<&nav_bar::Model> {
+        Some(&self.nav)
+    }
 
-        match message {
-            Message::OpenHome => {
-                self.current_page = Pages::MainWindow;
-                commands.push(self.update_title());
-            }
+    fn on_nav_select(&mut self, id: nav_bar::Id) -> Task<Message> {
+        self.nav.activate(id);
+        if let Some(page) = self.nav.data::<Page>(id) {
+            self.page = page.clone()
+        }
+        Task::none()
+    }
 
-            Message::OpenCreator => {
-                self.current_page = Pages::AppCreator;
-                self.init_warning_box();
-                commands.push(self.update_title());
-            }
-            Message::CloseCreator => {
-                self.current_page = Pages::MainWindow;
-                self.creator_window = creator::AppCreator::new();
-                commands.push(self.update_title());
-            }
-            Message::Creator(message) => {
-                commands.push(self.creator_window.update(message).map(|mess| mess));
-            }
-            Message::Warning((action, message)) => {
-                match action {
-                    WarnAction::Add => self.creator_window.warning.push_warn(message),
-                    WarnAction::Remove => self.creator_window.warning.remove_warn(message),
-                };
-            }
-            Message::OpenIconPicker => {
-                self.current_page = Pages::IconPicker;
-                commands.push(self.update_title())
-            }
-            Message::OpenIconPickerDialog => {
-                commands.push(task::future(async move {
-                    let result = SelectedFiles::open_file()
-                        .title("Open multiple images")
-                        .accept_label("Attach")
-                        .modal(true)
-                        .multiple(true)
-                        .filter(FileFilter::new("PNG Image").glob("*.png"))
-                        .filter(FileFilter::new("SVG Images").glob("*.svg"))
-                        .send()
-                        .await
-                        .unwrap()
-                        .response();
-
-                    if let Ok(result) = result {
-                        let files = result
-                            .uris()
-                            .iter()
-                            .map(|file| file.path().to_string())
-                            .collect::<Vec<String>>();
-
-                        cosmic::app::message::app(Message::OpenFileResult(files))
-                    } else {
-                        cosmic::app::message::none()
-                    }
-                }));
-            }
-            Message::OpenFileResult(result) => {
-                commands.push(task::future(async {
-                    for path in result {
-                        let Ok(buf) = PathBuf::from_str(&path);
-
-                        let icon_name = buf.file_stem();
-                        if let Some(file_stem) = icon_name {
-                            move_icon(path.to_string(), file_stem.to_str().unwrap().to_string());
-                        };
-                    }
-
-                    Message::FoundIcons(find_icon(qwa_icons_location(), String::new()).await)
-                }));
-            }
-            Message::EditAppName(flag) => {
-                if !flag {
-                    self.main_window.new_app_name.clear()
-                }
-
-                self.main_window.edit_appname = flag;
-            }
-            Message::AppNameInput(new_name) => {
-                self.main_window.new_app_name = new_name;
-            }
-            Message::Clicked(buttons) => match buttons {
-                Buttons::DoneCreate => {
-                    let name = self.creator_window.app_title.clone();
-                    let random_code: u16 = thread_rng().gen_range(1000..10000);
-                    let codename = format!("{}{}", name.replace(' ', ""), random_code);
-                    let icon = self.creator_window.app_icon.clone();
-                    let category = self.creator_window.app_category.clone();
-                    let url = self.creator_window.app_url.clone();
-                    let custom_parameters = self.creator_window.app_parameters.clone();
-                    let isolate_profile = self.creator_window.app_isolated;
-                    let navbar = self.creator_window.app_navbar;
-                    let is_incognito = self.creator_window.app_incognito;
-
-                    if let Some(browser) = &self.creator_window.app_browser {
-                        let new_entry = WebAppLauncher {
-                            codename,
-                            browser: browser.clone(),
-                            name,
-                            icon,
-                            category,
-                            url,
-                            custom_parameters,
-                            isolate_profile,
-                            navbar,
-                            is_incognito,
-                        };
-
-                        self.create_valid_launcher(new_entry).unwrap();
-                    }
-                }
-                Buttons::DoneEdit((_new_name, _old_icon)) => {
-                    // if let Some(launcher) = self.main_window.launcher.to_owned() {
-                    //     let _deleted = launcher.remove_desktop_file();
-                    //     let mut edited_entry = launcher::WebAppLauncher::new(
-                    //         self.creator_window.app_title.clone(),
-                    //         Some(launcher.codename),
-                    //         self.creator_window.app_url.clone(),
-                    //         self.creator_window.app_icon.clone(),
-                    //         self.creator_window.app_category.clone(),
-                    //         self.creator_window.app_browser.clone(),
-                    //         self.creator_window.app_parameters.clone(),
-                    //         self.creator_window.app_isolated,
-                    //         self.creator_window.app_navbar,
-                    //         self.creator_window.app_incognito,
-                    //     );
-
-                    //     if new_name.is_some() {
-                    //         edited_entry.name = new_name.unwrap();
-                    //     }
-
-                    //     if old_icon.is_some() {
-                    //         edited_entry.icon = old_icon.unwrap();
-                    //     }
-
-                    //     self.create_valid_launcher(edited_entry).unwrap();
-                    // }
-                }
-                Buttons::AppNameSubmit(mut launcher) => {
-                    launcher.name.clone_from(&self.main_window.new_app_name);
-                    self.main_window
-                        .launcher
-                        .clone_from(&Some(launcher.clone()));
-
-                    self.main_window.new_app_name.clear();
-
-                    commands.push(task::future(async {
-                        Message::Clicked(Buttons::DoneEdit((
-                            Some(launcher.name),
-                            Some(launcher.icon),
-                        )))
-                    }));
-                }
-                Buttons::Edit(launcher) => {
-                    let selected_browser = installed_browsers()
-                        .iter()
-                        .position(|b| b.name == launcher.browser.name);
-
-                    self.creator_window.warning.remove_all_warns();
-                    self.main_window.edit_mode = true;
-                    self.main_window.launcher = Some(launcher.clone());
-
-                    self.creator_window.app_title = launcher.name;
-                    self.creator_window.app_url = launcher.url;
-                    self.creator_window.app_icon.clone_from(&launcher.icon);
-                    self.creator_window.app_parameters = launcher.custom_parameters;
-                    self.creator_window.app_category = launcher.category;
-                    self.creator_window.app_browser = Some(launcher.browser);
-                    self.creator_window.selected_browser = selected_browser;
-                    self.creator_window.app_navbar = launcher.navbar;
-                    self.creator_window.app_incognito = launcher.is_incognito;
-                    self.creator_window.edit_mode = true;
-
-                    commands.push(task::future(async {
-                        if let Some(res) = image_handle(launcher.icon).await {
-                            return Message::SetIcon(res);
-                        }
-                        Message::None
-                    }));
-                }
-                Buttons::Delete(launcher) => {
-                    let _ = launcher.delete();
-                }
-                Buttons::SearchFavicon => {
-                    if common::url_valid(&self.creator_window.app_url) {
-                        self.icon_selector.icons.clear();
-                        let url = self.creator_window.app_url.clone();
-
-                        let name = get_icon_name_from_url(&self.creator_window.app_url);
-                        commands.push(task::future(async {
-                            Message::FoundIcons(find_icons(name, url).await)
-                        }))
-                    }
-                }
-            },
-            Message::MyIcons => {
-                let icon_name = self.icon_selector.icon_searching.clone();
-
-                commands.push(task::future(async {
-                    Message::FoundIcons(find_icon(qwa_icons_location(), icon_name).await)
-                }))
-            }
-            Message::PerformIconSearch => {
-                self.icon_selector.icons.clear();
-
-                let name = if self.icon_selector.icon_searching.is_empty()
-                    && !self.creator_window.app_url.is_empty()
-                {
-                    get_icon_name_from_url(&self.creator_window.app_url)
-                } else {
-                    self.icon_selector.icon_searching.clone()
-                };
-
-                let icons = find_icons(name, self.creator_window.app_url.clone());
-
-                if !self.creator_window.app_url.is_empty()
-                    || !self.icon_selector.icon_searching.is_empty()
-                {
-                    return Task::perform(icons, |icons| {
-                        app::message::Message::App(Message::FoundIcons(icons))
-                    });
-                }
-            }
-            Message::CustomIconsSearch(input) => {
-                self.icon_selector.icon_searching = input;
-            }
-            Message::FoundIcons(result) => {
-                self.icon_selector.icons.clear();
-                result.into_iter().for_each(|path| {
-                    commands.push(task::future(async {
-                        Message::PushIcon(image_handle(path).await)
-                    }));
-                });
-            }
-            Message::PushIcon(icon) => {
-                if icon.is_some() {
-                    commands.push(task::future(async {
-                        Message::Warning((WarnAction::Remove, WarnMessages::AppIcon))
-                    }));
-                };
-
-                if let Some(ico) = icon {
-                    if !self.icon_selector.icons.contains(&ico) {
-                        self.icon_selector.icons.push(ico);
-                    }
-                };
-
-                self.icon_selector
-                    .icons
-                    .sort_by_key(|icon| !icon.is_favicon);
-
-                commands.push(task::future(async { Message::LoadingDone }));
-            }
-            Message::LoadingDone => {
-                if !self.icon_selector.icons.is_empty() {
-                    self.creator_window.selected_icon = Some(self.icon_selector.icons[0].clone());
-
-                    if self.creator_window.selected_icon.is_some() {
-                        commands.push(task::future(async {
-                            Message::Warning((WarnAction::Remove, WarnMessages::AppIcon))
-                        }));
-                    }
-                }
-            }
-            Message::SetIcon(icon) => {
-                self.current_page = Pages::AppCreator;
-
-                self.current_page = Pages::AppCreator;
-                self.creator_window.selected_icon = Some(icon.clone());
-
-                commands.push(task::future(async { Message::SelectIcon(icon) }));
-            }
-            Message::SelectIcon(ico) => {
-                self.creator_window.selected_icon = Some(ico.clone());
-                self.creator_window.app_icon = ico.path;
-
-                if self.creator_window.selected_icon.is_some() {
-                    commands.push(task::future(async {
-                        Message::Warning((WarnAction::Remove, WarnMessages::AppIcon))
-                    }));
-                } else {
-                    commands.push(task::future(async {
-                        Message::Warning((WarnAction::Add, WarnMessages::AppIcon))
-                    }));
-                }
-            }
-            Message::DownloadIconsPack => {
-                let installator = Installator::new();
-                self.current_page = Pages::IconInstallator(installator);
-                commands.push(self.update_title());
-                commands.push(task::future(async {
-                    Message::InstallScript(add_icon_packs_install_script().await)
-                }));
-            }
-            Message::InstallScript(script) => {
-                if !icon_pack_installed() {
-                    commands.push(task::future(async {
-                        Message::InstallCommand(execute_script(script).await)
-                    }));
-                }
-            }
-            Message::InstallCommand(exit_status) => {
-                if ExitStatus::success(&exit_status) {
-                    self.current_page = Pages::MainWindow;
-                }
-                commands.push(self.update_title())
-            }
-            Message::SystemTheme => {
-                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
-                    commands.push(set_theme(Theme::custom(Arc::new(
-                        cosmic_theme::Theme::preferred_theme(),
-                    ))))
-                }
-            }
-            Message::None => {}
+    fn context_drawer(&self) -> Option<context_drawer::ContextDrawer<Message>> {
+        if !self.core.window.show_context {
+            return None;
         }
 
-        Task::batch(commands)
+        Some(match self.context_page {
+            ContextPage::About => context_drawer::context_drawer(
+                self.about(),
+                Message::ToggleContextPage(ContextPage::About),
+            )
+            .title(fl!("app")),
+        })
+    }
+
+    fn on_escape(&mut self) -> Task<Message> {
+        self.iconpicker = None;
+        self.core.window.show_context = false;
+
+        Task::none()
     }
 
     fn view(&self) -> Element<Message> {
-        let view = match &self.current_page {
-            Pages::MainWindow => self.main_window.view(),
-            Pages::AppCreator => self
-                .creator_window
-                .view(self.creator_window.warning.clone()),
-            Pages::IconPicker => self.icon_selector.view(),
-            Pages::IconInstallator(installator) => installator.view(),
-        };
+        let Page::Editor(content) = &self.page;
 
-        Container::new(view)
+        widget::container(content.view().map(Message::Editor))
             .width(Length::Fill)
             .height(Length::Fill)
             .align_x(Horizontal::Center)
             .center_x(Length::Fill)
             .into()
     }
+
+    fn dialog(&self) -> Option<Element<Message>> {
+        if let Some(icon_picker) = &self.iconpicker {
+            let view = icon_picker.view().map(Message::IconPicker);
+
+            return Some(
+                widget::dialog()
+                    .title(fl!("icon-selector"))
+                    .secondary_action(
+                        widget::button::standard(fl!("close")).on_press(Message::CloseIconPicker),
+                    )
+                    .control(view)
+                    .into(),
+            );
+        };
+
+        None
+    }
 }
 
-impl Window {
+impl QuickWebApps {
+    pub fn about(&self) -> Element<Message> {
+        let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
+
+        let icon = widget::image(widget::image::Handle::from_bytes(APP_ICON));
+
+        let title = widget::text::title3(fl!("app"));
+
+        let hash = env!("VERGEN_GIT_SHA");
+        let _short_hash: String = hash.chars().take(7).collect();
+        let _date = env!("VERGEN_GIT_COMMIT_DATE");
+
+        let link = widget::button::link(REPOSITORY)
+            .on_press(Message::OpenRepositoryUrl)
+            .padding(0);
+
+        widget::column()
+            .push(icon)
+            .push(title)
+            .push(link)
+            .push(
+                widget::button::link(fl!(
+                    "git-description",
+                    hash = _short_hash.as_str(),
+                    date = _date
+                ))
+                .on_press(Message::LaunchUrl(format!("{REPOSITORY}/commits/{hash}")))
+                .padding(0),
+            )
+            .align_x(Alignment::Center)
+            .spacing(space_xxs)
+            .into()
+    }
+
     fn match_title(&self) -> String {
-        match self.current_page {
-            Pages::MainWindow => fl!("app"),
-            Pages::AppCreator => {
-                if self.creator_window.edit_mode {
-                    format!("{} {}", fl!("edit"), self.creator_window.app_title)
-                } else {
-                    fl!("create-new-webapp")
-                }
-            }
-            Pages::IconPicker => fl!("icon-selector"),
-            Pages::IconInstallator(_) => fl!("icon-installer"),
+        match &self.page {
+            Page::Editor(editor) => format!("{} {}", fl!("edit"), editor.app_title),
         }
     }
+
     fn update_title(&mut self) -> Task<Message> {
         self.set_header_title(self.match_title());
         self.set_window_title(self.match_title(), self.window_id)
     }
+}
 
-    fn create_valid_launcher(&mut self, mut entry: WebAppLauncher) -> anyhow::Result<()> {
-        if let Some(icon) = &self.creator_window.selected_icon {
-            let path = move_icon(icon.path.clone(), self.creator_window.app_title.clone());
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+pub enum ContextPage {
+    #[default]
+    About,
+}
 
-            if path.is_empty() {
-                self.creator_window
-                    .warning
-                    .push_warn(WarnMessages::WrongIcon);
-                return Ok(());
-            }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MenuAction {
+    About,
+}
 
-            self.creator_window
-                .warning
-                .remove_warn(WarnMessages::WrongIcon);
-            entry.icon = path;
-        }
-        if webapplauncher_is_valid(&entry.icon, &entry.codename, &entry.name, &entry.url)
-            && !self.creator_window.warning.show
-        {
-            let _ = entry.create().is_ok();
-            self.creator_window = creator::AppCreator::new();
-            self.current_page = Pages::MainWindow;
-            return Ok(());
-        };
+impl menu::action::MenuAction for MenuAction {
+    type Message = Message;
 
-        self.creator_window
-            .warning
-            .push_warn(WarnMessages::Duplicate);
-        Ok(())
-    }
-
-    fn init_warning_box(&mut self) {
-        self.creator_window.warning.remove_all_warns();
-
-        if self.creator_window.app_title.is_empty() || self.creator_window.app_title.len() <= 3 {
-            self.creator_window.warning.push_warn(WarnMessages::AppName)
-        }
-        if self.creator_window.app_url.is_empty() {
-            self.creator_window.warning.push_warn(WarnMessages::AppUrl)
-        }
-        if self.creator_window.app_icon.is_empty() {
-            self.creator_window.warning.push_warn(WarnMessages::AppIcon)
-        }
-        if self.creator_window.app_browser.is_none() {
-            self.creator_window
-                .warning
-                .push_warn(WarnMessages::AppBrowser)
+    fn message(&self) -> Self::Message {
+        match self {
+            MenuAction::About => Message::ToggleContextPage(ContextPage::About),
         }
     }
 }

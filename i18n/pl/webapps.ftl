@@ -2,10 +2,13 @@ app=Quick Web Apps
 loading=Ładowanie...
 open=Otwórz
 number={ $number }
+git-description = Commit Gita {$hash} dnia {$date}
 
 # header
 main-window={ $app }
-create=Stwórz
+view=Widow
+create=Zrobione
+new-app=Nowa aplikacja
 edit=Edytuj
 close=Zamknij
 create-new-webapp=Stwórz nową Web Appke
@@ -34,6 +37,7 @@ browser=Przeglądarka
 
 title=Nazwa
 url=Link
+download-favicon=Pobierz ikone
 non-standard-arguments=Niestandardowe argumenty
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Pasek nawigacyjny
@@ -44,6 +48,7 @@ private-mode=Tryb prywatny
 icon-name-to-find=Nazwa ikony do znalezienia
 my-icons=Moje ikony
 download=Pobierz
+search=Szukaj
 
 # icons_installator.rs
 icons-installer-header=Proszę czekać. Trwa pobieranie ikon...

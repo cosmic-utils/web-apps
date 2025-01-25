@@ -5,14 +5,10 @@ use cosmic::{
     Element,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Installator;
 
 impl Installator {
-    pub fn new() -> Self {
-        Self {}
-    }
-
     pub fn view(&self) -> Element<Message> {
         let header = text(fl!("icons-installer-header")).size(20);
         let info_message = text(fl!("icons-installer-message"));
