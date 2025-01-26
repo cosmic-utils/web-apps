@@ -5,6 +5,8 @@ use cosmic::{
     Element, Task,
 };
 use rand::{thread_rng, Rng};
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 use crate::{
     browser::{installed_browsers, Browser, BrowserModel},
@@ -15,6 +17,43 @@ use crate::{
 };
 
 use super::REPOSITORY;
+
+#[derive(Debug, Clone, EnumIter)]
+pub enum Categories {
+    AudioVideo,
+    Audio,
+    Video,
+    Development,
+    Education,
+    Game,
+    Graphics,
+    Network,
+    Office,
+    Science,
+    Settings,
+    System,
+    Utility,
+}
+
+impl AsRef<str> for Categories {
+    fn as_ref(&self) -> &str {
+        match self {
+            Categories::AudioVideo => "Audio & Video",
+            Categories::Audio => "Audio",
+            Categories::Video => "Video",
+            Categories::Development => "Development",
+            Categories::Education => "Education",
+            Categories::Game => "Game",
+            Categories::Graphics => "Graphics",
+            Categories::Network => "Network",
+            Categories::Office => "Office",
+            Categories::Science => "Science",
+            Categories::Settings => "Settings",
+            Categories::System => "System",
+            Categories::Utility => "Utility",
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct AppEditor {
@@ -58,17 +97,7 @@ impl AppEditor {
             None
         };
 
-        let categories = [
-            fl!("web"),
-            fl!("accessories"),
-            fl!("education"),
-            fl!("games"),
-            fl!("graphics"),
-            fl!("internet"),
-            fl!("office"),
-            fl!("programming"),
-            fl!("sound-and-video"),
-        ];
+        let categories = Categories::iter().map(|c| c.as_ref().to_string()).collect();
 
         AppEditor {
             app_codename: String::new(),
@@ -76,7 +105,7 @@ impl AppEditor {
             app_url: String::from(REPOSITORY),
             app_icon: String::new(),
             app_parameters: String::new(),
-            app_categories: categories.to_vec(),
+            app_categories: categories,
             category_idx: 0,
             app_browser: browser,
             app_navbar: false,
@@ -89,17 +118,10 @@ impl AppEditor {
     }
 
     pub fn from(webapp_launcher: WebAppLauncher) -> Self {
-        let categories = [
-            fl!("web"),
-            fl!("accessories"),
-            fl!("education"),
-            fl!("games"),
-            fl!("graphics"),
-            fl!("internet"),
-            fl!("office"),
-            fl!("programming"),
-            fl!("sound-and-video"),
-        ];
+        let categories: Vec<String> = Categories::iter().map(|c| c.as_ref().to_string()).collect();
+        let category = categories
+            .iter()
+            .position(|c| c == &webapp_launcher.category);
 
         Self {
             app_codename: webapp_launcher.codename,
@@ -107,8 +129,8 @@ impl AppEditor {
             app_url: webapp_launcher.url,
             app_icon: webapp_launcher.icon,
             app_parameters: webapp_launcher.custom_parameters,
-            app_categories: categories.to_vec(),
-            category_idx: 0,
+            app_categories: categories,
+            category_idx: category.unwrap_or_default(),
             app_browser: Some(webapp_launcher.browser),
             app_navbar: webapp_launcher.navbar,
             app_incognito: webapp_launcher.is_incognito,
