@@ -42,13 +42,13 @@ pub enum Message {
     DownloaderStreamFinished,
     IconPicker(iconpicker::Message),
     IconsResult(Vec<String>),
-    InsertApp(WebAppLauncher),
     LaunchUrl(String),
     NavBar(widget::segmented_button::Entity),
     OpenFileResult(Vec<String>),
     OpenIconPicker(String),
     OpenRepositoryUrl,
     PrepareToDelete(widget::segmented_button::Entity),
+    ReloadNavbarItems,
     SetIcon(Option<Icon>),
     DownloaderStop,
     ToggleContextPage(ContextPage),
@@ -110,21 +110,7 @@ impl Application for QuickWebApps {
         };
 
         let add_page = Page::Editor(AppEditor::new());
-        let mut nav = nav_bar::Model::default();
-
-        nav.insert()
-            .icon(widget::icon::from_name("list-add-symbolic"))
-            .text(fl!("new-app"))
-            .data::<Page>(add_page.clone())
-            .activate();
-
-        installed_webapps().into_iter().for_each(|app| {
-            nav.insert()
-                .icon(widget::icon::from_name(app.icon.clone()))
-                .text(app.name.clone())
-                .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
-                .closable();
-        });
+        let nav = nav_bar::Model::default();
 
         let mut windows = QuickWebApps {
             window_id,
@@ -148,9 +134,12 @@ impl Application for QuickWebApps {
             downloader_output: String::new(),
         };
 
-        let command = windows.update_title();
+        let tasks = vec![
+            windows.update_title(),
+            task::message(Message::ReloadNavbarItems),
+        ];
 
-        (windows, command)
+        (windows, task::batch(tasks))
     }
 
     fn subscription(&self) -> Subscription<Message> {
@@ -287,14 +276,6 @@ impl Application for QuickWebApps {
                     }
                 };
             }
-            Message::InsertApp(launcher) => {
-                self.nav
-                    .insert()
-                    .icon(widget::icon::from_name(launcher.icon.clone()))
-                    .text(launcher.name.clone())
-                    .data::<Page>(Page::Editor(editor::AppEditor::from(launcher)))
-                    .closable();
-            }
             Message::LaunchUrl(url) => match open::that_detached(&url) {
                 Ok(()) => {}
                 Err(err) => {
@@ -330,6 +311,27 @@ impl Application for QuickWebApps {
                 _ = open::that_detached(REPOSITORY);
             }
             Message::PrepareToDelete(id) => self.dialogs = Some(Dialogs::Confirmation(id)),
+            Message::ReloadNavbarItems => {
+                self.nav.clear();
+
+                self.nav
+                    .insert()
+                    .icon(widget::icon::from_name("list-add-symbolic"))
+                    .text(fl!("new-app"))
+                    .data::<Page>(Page::Editor(AppEditor::new()))
+                    .activate();
+
+                installed_webapps().into_iter().for_each(|app| {
+                    self.nav
+                        .insert()
+                        .icon(widget::icon::from_name(app.icon.clone()))
+                        .text(app.name.clone())
+                        .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
+                        .closable();
+                });
+
+                self.page = Page::Editor(AppEditor::new());
+            }
             Message::SetIcon(icon) => {
                 let Page::Editor(app_editor) = &mut self.page;
                 app_editor.update_icon(icon);

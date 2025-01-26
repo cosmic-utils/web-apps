@@ -11,18 +11,9 @@ use std::{
     path::PathBuf,
 };
 
-pub fn webapplauncher_is_valid(icon: &str, codename: &str, name: &str, url: &str) -> bool {
-    let installed = installed_webapps();
-
-    for app in installed.iter() {
-        if !common::url_valid(url)
-            || (name.is_empty() || app.name == name)
-            || icon.is_empty()
-            || (codename.is_empty() || app.codename == codename)
-            || url.is_empty()
-        {
-            return false;
-        }
+pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
+    if !common::url_valid(url) || name.is_empty() || icon.is_empty() || url.is_empty() {
+        return false;
     }
 
     true
@@ -316,6 +307,10 @@ impl WebAppLauncher {
 
     pub fn create(&self) -> Result<()> {
         if let Some(entry) = &self.browser.entry {
+            if self.qwa_desktop_path().exists() {
+                remove_file(self.qwa_desktop_path())?;
+            }
+
             let mut output = File::create(self.qwa_desktop_path())?;
 
             writeln!(output, "[Desktop Entry]")?;
@@ -344,18 +339,9 @@ impl WebAppLauncher {
 
     pub fn delete(&self) -> Result<()> {
         if self.qwa_desktop_path().exists() {
-            if remove_file(self.qwa_desktop_path()).is_ok() {
-                tracing::info!("Removed desktop entry from: {:?}", self.qwa_desktop_path());
-            }
-
             let profile_path = self.browser.profile_path.join(&self.codename);
-
-            if remove_dir_all(&profile_path).is_ok() {
-                tracing::info!(
-                    "Removed profile directory from: {}",
-                    profile_path.to_str().unwrap()
-                );
-            };
+            remove_file(self.qwa_desktop_path())?;
+            remove_dir_all(&profile_path)?;
         }
 
         Ok(())

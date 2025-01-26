@@ -201,6 +201,12 @@ pub fn move_icon(path: &str, output_name: &str) -> String {
 
     let icon_name = output_name.replace(' ', "");
 
+    let Ok(p) = PathBuf::from_str(&icon_save_path(&icon_name));
+
+    if p.exists() {
+        return p.to_str().unwrap().to_string();
+    }
+
     if url_valid(path) {
         let response = reqwest::blocking::get(path).expect("sending request");
 

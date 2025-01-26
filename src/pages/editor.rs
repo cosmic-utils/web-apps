@@ -38,7 +38,7 @@ pub enum Categories {
 impl AsRef<str> for Categories {
     fn as_ref(&self) -> &str {
         match self {
-            Categories::AudioVideo => "Audio & Video",
+            Categories::AudioVideo => "AudioVideo",
             Categories::Audio => "Audio",
             Categories::Video => "Video",
             Categories::Development => "Development",
@@ -51,6 +51,26 @@ impl AsRef<str> for Categories {
             Categories::Settings => "Settings",
             Categories::System => "System",
             Categories::Utility => "Utility",
+        }
+    }
+}
+
+impl std::fmt::Display for Categories {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Categories::AudioVideo => write!(f, "Audio & Video"),
+            Categories::Audio => write!(f, "Audio"),
+            Categories::Video => write!(f, "Video"),
+            Categories::Development => write!(f, "Development"),
+            Categories::Education => write!(f, "Education"),
+            Categories::Game => write!(f, "Game"),
+            Categories::Graphics => write!(f, "Graphics"),
+            Categories::Network => write!(f, "Network"),
+            Categories::Office => write!(f, "Office"),
+            Categories::Science => write!(f, "Science"),
+            Categories::Settings => write!(f, "Settings"),
+            Categories::System => write!(f, "System"),
+            Categories::Utility => write!(f, "Utility"),
         }
     }
 }
@@ -97,7 +117,7 @@ impl AppEditor {
             None
         };
 
-        let categories = Categories::iter().map(|c| c.as_ref().to_string()).collect();
+        let categories = Categories::iter().map(|c| format!("{}", c)).collect();
 
         AppEditor {
             app_codename: String::new(),
@@ -118,7 +138,7 @@ impl AppEditor {
     }
 
     pub fn from(webapp_launcher: WebAppLauncher) -> Self {
-        let categories: Vec<String> = Categories::iter().map(|c| c.as_ref().to_string()).collect();
+        let categories: Vec<String> = Categories::iter().map(|c| format!("{}", c)).collect();
         let category = categories
             .iter()
             .position(|c| c == &webapp_launcher.category);
@@ -159,19 +179,16 @@ impl AppEditor {
                 self.category_idx = Some(idx);
             }
             Message::Done => {
-                self.app_codename = format!(
-                    "{}{}",
-                    &self.app_title.replace(' ', ""),
-                    thread_rng().gen_range(1000..10000)
-                );
+                if self.app_codename.is_empty() {
+                    self.app_codename = format!(
+                        "{}{}",
+                        &self.app_title.replace(' ', ""),
+                        thread_rng().gen_range(1000..10000)
+                    );
+                }
                 let icon_final_path = move_icon(&self.app_icon, &self.app_title);
 
-                if webapplauncher_is_valid(
-                    &icon_final_path,
-                    &self.app_codename,
-                    &self.app_title,
-                    &self.app_url,
-                ) {
+                if webapplauncher_is_valid(&icon_final_path, &self.app_title, &self.app_url) {
                     if let Some(browser) = &self.app_browser {
                         let launcher = WebAppLauncher {
                             codename: self.app_codename.clone(),
@@ -188,10 +205,10 @@ impl AppEditor {
                         };
 
                         let _ = launcher.create().is_ok();
-
-                        return task::future(async { pages::Message::InsertApp(launcher) });
                     };
                 }
+
+                return task::message(pages::Message::ReloadNavbarItems);
             }
             Message::Navbar(flag) => {
                 self.app_navbar = flag;
