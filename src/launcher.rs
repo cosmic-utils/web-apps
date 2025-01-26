@@ -1,6 +1,7 @@
 use crate::{
     browser::{Browser, BrowserModel},
     common::{self},
+    pages::editor::Category,
     LOCALES,
 };
 use anyhow::Result;
@@ -62,7 +63,7 @@ pub struct WebAppLauncher {
     pub browser: Browser,
     pub name: String,
     pub icon: String,
-    pub category: String,
+    pub category: Category,
     pub url: String,
     pub custom_parameters: String,
     pub isolate_profile: bool,
@@ -88,7 +89,7 @@ impl From<DesktopEntry> for WebAppLauncher {
                 ),
                 name: value.name(&LOCALES).unwrap_or_default().to_string(),
                 icon: value.icon().unwrap_or_default().to_string(),
-                category: value.categories().unwrap_or_default().concat(),
+                category: Category::from(value.categories().unwrap_or_default().concat()),
                 url: group.entry("X-QWA-Url").unwrap_or_default().to_string(),
                 custom_parameters: group
                     .entry("X-QWA-Parameters")
@@ -115,7 +116,7 @@ impl From<DesktopEntry> for WebAppLauncher {
                 browser: Browser::none(),
                 name: String::new(),
                 icon: String::new(),
-                category: String::new(),
+                category: Category::default(),
                 url: String::new(),
                 custom_parameters: String::new(),
                 isolate_profile: false,
@@ -321,7 +322,7 @@ impl WebAppLauncher {
             writeln!(output, "Terminal=false")?;
             writeln!(output, "Type=Application")?;
             writeln!(output, "Icon={}", self.icon)?;
-            writeln!(output, "Categories={};", self.category)?;
+            writeln!(output, "Categories={};", self.category.as_ref())?;
             writeln!(output, "MimeType=text/html;text/xml;application/xhtml_xml;")?;
             writeln!(output, "StartupWMClass=QuickWebApp-{}", self.codename)?;
             writeln!(output, "StartupNotify=true")?;

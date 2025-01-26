@@ -18,60 +18,93 @@ use crate::{
 
 use super::REPOSITORY;
 
-#[derive(Debug, Clone, EnumIter)]
-pub enum Categories {
-    AudioVideo,
-    Audio,
-    Video,
-    Development,
-    Education,
-    Game,
-    Graphics,
-    Network,
-    Office,
-    Science,
-    Settings,
-    System,
-    Utility,
+#[repr(u8)]
+#[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq)]
+pub enum Category {
+    #[default]
+    Audio = 0,
+    AudioVideo = 1,
+    Video = 2,
+    Development = 3,
+    Education = 4,
+    Game = 5,
+    Graphics = 6,
+    Network = 7,
+    Office = 8,
+    Science = 9,
+    Settings = 10,
+    System = 11,
+    Utility = 12,
 }
 
-impl AsRef<str> for Categories {
+impl AsRef<str> for Category {
     fn as_ref(&self) -> &str {
         match self {
-            Categories::AudioVideo => "AudioVideo",
-            Categories::Audio => "Audio",
-            Categories::Video => "Video",
-            Categories::Development => "Development",
-            Categories::Education => "Education",
-            Categories::Game => "Game",
-            Categories::Graphics => "Graphics",
-            Categories::Network => "Network",
-            Categories::Office => "Office",
-            Categories::Science => "Science",
-            Categories::Settings => "Settings",
-            Categories::System => "System",
-            Categories::Utility => "Utility",
+            Category::Audio => "Audio",
+            Category::AudioVideo => "AudioVideo",
+            Category::Video => "Video",
+            Category::Development => "Development",
+            Category::Education => "Education",
+            Category::Game => "Game",
+            Category::Graphics => "Graphics",
+            Category::Network => "Network",
+            Category::Office => "Office",
+            Category::Science => "Science",
+            Category::Settings => "Settings",
+            Category::System => "System",
+            Category::Utility => "Utility",
         }
     }
 }
 
-impl std::fmt::Display for Categories {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Categories::AudioVideo => write!(f, "Audio & Video"),
-            Categories::Audio => write!(f, "Audio"),
-            Categories::Video => write!(f, "Video"),
-            Categories::Development => write!(f, "Development"),
-            Categories::Education => write!(f, "Education"),
-            Categories::Game => write!(f, "Game"),
-            Categories::Graphics => write!(f, "Graphics"),
-            Categories::Network => write!(f, "Network"),
-            Categories::Office => write!(f, "Office"),
-            Categories::Science => write!(f, "Science"),
-            Categories::Settings => write!(f, "Settings"),
-            Categories::System => write!(f, "System"),
-            Categories::Utility => write!(f, "Utility"),
+impl From<String> for Category {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "Audio" => Category::Audio,
+            "AudioVideo" => Category::AudioVideo,
+            "Video" => Category::Video,
+            "Development" => Category::Development,
+            "Education" => Category::Education,
+            "Game" => Category::Education,
+            "Graphics" => Category::Graphics,
+            "Network" => Category::Network,
+            "Office" => Category::Office,
+            "Science" => Category::Science,
+            "Settings" => Category::Settings,
+            "System" => Category::System,
+            "Utility" => Category::Utility,
+            _ => Self::default(),
         }
+    }
+}
+
+impl Category {
+    pub fn name(&self) -> String {
+        match self {
+            Category::Audio => String::from("Audio"),
+            Category::AudioVideo => String::from("Audio & Video"),
+            Category::Video => String::from("Video"),
+            Category::Development => String::from("Development"),
+            Category::Education => String::from("Education"),
+            Category::Game => String::from("Game"),
+            Category::Graphics => String::from("Graphics"),
+            Category::Network => String::from("Network"),
+            Category::Office => String::from("Office"),
+            Category::Science => String::from("Science"),
+            Category::Settings => String::from("Settings"),
+            Category::System => String::from("System"),
+            Category::Utility => String::from("Utility"),
+        }
+    }
+
+    pub fn from_index(index: u8) -> Self {
+        Self::iter()
+            .find(|i| i.to_owned() as u8 == index)
+            .unwrap_or_default()
+    }
+
+    pub fn to_vec() -> Vec<String> {
+        Self::iter().map(|c| c.name()).collect()
     }
 }
 
@@ -82,15 +115,16 @@ pub struct AppEditor {
     pub app_url: String,
     pub app_icon: String,
     pub app_parameters: String,
-    pub app_categories: Vec<String>,
-    pub category_idx: Option<usize>,
+    pub app_category: Category,
     pub app_browser: Option<Browser>,
     pub app_navbar: bool,
     pub app_incognito: bool,
     pub app_isolated: bool,
     pub selected_icon: Option<Icon>,
-    pub app_browsers: Vec<Browser>,
+    pub browsers: Vec<Browser>,
     pub browser_idx: Option<usize>,
+    pub categories: Vec<String>,
+    pub category_idx: Option<usize>,
 }
 
 #[derive(Debug, Clone)]
@@ -117,7 +151,7 @@ impl AppEditor {
             None
         };
 
-        let categories = Categories::iter().map(|c| format!("{}", c)).collect();
+        let categories = Category::iter().map(|c| c.name()).collect::<Vec<String>>();
 
         AppEditor {
             app_codename: String::new(),
@@ -125,28 +159,30 @@ impl AppEditor {
             app_url: String::from(REPOSITORY),
             app_icon: String::new(),
             app_parameters: String::new(),
-            app_categories: categories,
-            category_idx: Some(0),
+            app_category: Category::default(),
             app_browser: browser,
             app_navbar: false,
             app_incognito: false,
             app_isolated: true,
             selected_icon: None,
-            app_browsers: browsers,
+            browsers,
             browser_idx: Some(0),
+            categories,
+            category_idx: Some(0),
         }
     }
 
     pub fn from(webapp_launcher: WebAppLauncher) -> Self {
-        let categories: Vec<String> = Categories::iter().map(|c| format!("{}", c)).collect();
-        let category = categories
-            .iter()
-            .position(|c| c == &webapp_launcher.category);
-        let app_browsers = installed_browsers();
-        let browser_idx = app_browsers
+        let category_idx = Category::iter().position(|c| c == webapp_launcher.category);
+        let category = Category::from_index(category_idx.unwrap_or_default() as u8);
+        println!("{:?}", category);
+        let categories = Category::to_vec();
+
+        let selected_icon = image_handle(webapp_launcher.icon.clone());
+        let browsers = installed_browsers();
+        let browser_idx = browsers
             .iter()
             .position(|b| b.model == webapp_launcher.browser.model);
-        let selected_icon = image_handle(webapp_launcher.icon.clone());
 
         Self {
             app_codename: webapp_launcher.codename,
@@ -154,15 +190,16 @@ impl AppEditor {
             app_url: webapp_launcher.url,
             app_icon: webapp_launcher.icon,
             app_parameters: webapp_launcher.custom_parameters,
-            app_categories: categories,
-            category_idx: category,
+            app_category: category,
             app_browser: Some(webapp_launcher.browser),
             app_navbar: webapp_launcher.navbar,
             app_incognito: webapp_launcher.is_incognito,
             app_isolated: webapp_launcher.isolate_profile,
             selected_icon,
-            app_browsers,
+            browsers,
             browser_idx,
+            categories,
+            category_idx,
         }
     }
 
@@ -173,9 +210,10 @@ impl AppEditor {
             }
             Message::Browser(idx) => {
                 self.browser_idx = Some(idx);
-                self.app_browser = Some(self.app_browsers[idx].clone());
+                self.app_browser = Some(self.browsers[idx].clone());
             }
             Message::Category(idx) => {
+                self.app_category = Category::from_index(idx as u8);
                 self.category_idx = Some(idx);
             }
             Message::Done => {
@@ -195,8 +233,7 @@ impl AppEditor {
                             browser: browser.clone(),
                             name: self.app_title.clone(),
                             icon: icon_final_path,
-                            category: self.app_categories[self.category_idx.unwrap_or_default()]
-                                .clone(),
+                            category: self.app_category.clone(),
                             url: self.app_url.clone(),
                             custom_parameters: self.app_parameters.clone(),
                             isolate_profile: self.app_isolated,
@@ -302,11 +339,9 @@ impl AppEditor {
                                             .push(widget::text::title1(&self.app_title))
                                             .push(widget::text::title4(format!(
                                                 "{}: {}",
-                                                self.app_categories
-                                                    [self.category_idx.unwrap_or_default()],
-                                                self.app_browsers
-                                                    [self.browser_idx.unwrap_or_default()]
-                                                .name
+                                                self.app_category.as_ref(),
+                                                self.browsers[self.browser_idx.unwrap_or_default()]
+                                                    .name
                                             ))),
                                     )
                                     .height(Length::Fixed(96.))
@@ -353,7 +388,7 @@ impl AppEditor {
                     widget::row()
                         .push(
                             widget::dropdown(
-                                &self.app_categories,
+                                &self.categories,
                                 self.category_idx,
                                 Message::Category,
                             )
@@ -383,7 +418,7 @@ impl AppEditor {
                 .push(
                     widget::row()
                         .push(
-                            widget::dropdown(&self.app_browsers, self.browser_idx, |idx| {
+                            widget::dropdown(&self.browsers, self.browser_idx, |idx| {
                                 Message::Browser(idx)
                             })
                             .width(Length::Fixed(200.)),
