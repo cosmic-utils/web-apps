@@ -9,6 +9,10 @@ no=No
 confirm-delete=Are you sure you want to delete this Quick Web App?
 cancel=Cancel
 downloader-canceled=Installing stopped.
+help=Help
+about=About
+support-me=Support me
+support-body=If you find this app useful, please consider to support author, by optional donation :)
 
 # header
 main-window={ $app }

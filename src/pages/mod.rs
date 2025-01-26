@@ -355,10 +355,10 @@ impl Application for QuickWebApps {
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
         let menu_bar = menu::bar(vec![menu::Tree::with_children(
-            menu::root(fl!("view")),
+            menu::root(fl!("help")),
             menu::items(
                 &self.key_binds,
-                vec![menu::Item::Button(fl!("app"), None, MenuAction::About)],
+                vec![menu::Item::Button(fl!("about"), None, MenuAction::About)],
             ),
         )]);
 
@@ -409,7 +409,7 @@ impl Application for QuickWebApps {
                 self.about(),
                 Message::ToggleContextPage(ContextPage::About),
             )
-            .title(fl!("app")),
+            .title(fl!("about")),
         })
     }
 
@@ -472,22 +472,18 @@ impl QuickWebApps {
     pub fn about(&self) -> Element<Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
-        let icon = widget::image(widget::image::Handle::from_bytes(APP_ICON));
-
-        let title = widget::text::title3(fl!("app"));
-
         let hash = env!("VERGEN_GIT_SHA");
         let _short_hash: String = hash.chars().take(7).collect();
         let _date = env!("VERGEN_GIT_COMMIT_DATE");
 
-        let link = widget::button::link(REPOSITORY)
-            .on_press(Message::OpenRepositoryUrl)
-            .padding(0);
-
         widget::column()
-            .push(icon)
-            .push(title)
-            .push(link)
+            .push(widget::image(widget::image::Handle::from_bytes(APP_ICON)))
+            .push(widget::text::title3(fl!("app")))
+            .push(
+                widget::button::link(REPOSITORY)
+                    .on_press(Message::OpenRepositoryUrl)
+                    .padding(0),
+            )
             .push(
                 widget::button::link(fl!(
                     "git-description",
@@ -496,6 +492,19 @@ impl QuickWebApps {
                 ))
                 .on_press(Message::LaunchUrl(format!("{REPOSITORY}/commits/{hash}")))
                 .padding(0),
+            )
+            .push(
+                widget::column()
+                    .push(widget::text::title3(fl!("support-me")))
+                    .push(widget::text::body(fl!("support-body")))
+                    .push(widget::button::link("paypal.me/elevenhsoft").on_press(
+                        Message::LaunchUrl("https://paypal.me/elevenhsoft".to_string()),
+                    ))
+                    .push(widget::button::link("ko-fi.com/elevenhsoft").on_press(
+                        Message::LaunchUrl("https://ko-fi.com/elevenhsoft".to_string()),
+                    ))
+                    .align_x(Alignment::Center)
+                    .spacing(space_xxs),
             )
             .align_x(Alignment::Center)
             .spacing(space_xxs)

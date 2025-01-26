@@ -9,6 +9,10 @@ no=Nie
 confirm-delete=Czy jesteś pewien że chcesz usunąć tę aplikacje internetową?
 cancel=Anuluj
 downloader-canceled=Instalacja zatrzymana.
+help=Pomoc
+about=O aplikacji
+support-me=Wesprzyj mnie
+support-body=Jeśli uważasz tę aplikacje za przydatną, rozważ wsparcie autora dobrowolną wpłata :)
 
 # header
 main-window={ $app }
