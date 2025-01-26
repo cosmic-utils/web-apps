@@ -63,7 +63,7 @@ pub struct AppEditor {
     pub app_icon: String,
     pub app_parameters: String,
     pub app_categories: Vec<String>,
-    pub category_idx: usize,
+    pub category_idx: Option<usize>,
     pub app_browser: Option<Browser>,
     pub app_navbar: bool,
     pub app_incognito: bool,
@@ -106,7 +106,7 @@ impl AppEditor {
             app_icon: String::new(),
             app_parameters: String::new(),
             app_categories: categories,
-            category_idx: 0,
+            category_idx: Some(0),
             app_browser: browser,
             app_navbar: false,
             app_incognito: false,
@@ -122,6 +122,10 @@ impl AppEditor {
         let category = categories
             .iter()
             .position(|c| c == &webapp_launcher.category);
+        let app_browsers = installed_browsers();
+        let browser_idx = app_browsers
+            .iter()
+            .position(|b| b.model == webapp_launcher.browser.model);
 
         Self {
             app_codename: webapp_launcher.codename,
@@ -130,14 +134,14 @@ impl AppEditor {
             app_icon: webapp_launcher.icon,
             app_parameters: webapp_launcher.custom_parameters,
             app_categories: categories,
-            category_idx: category.unwrap_or_default(),
+            category_idx: category,
             app_browser: Some(webapp_launcher.browser),
             app_navbar: webapp_launcher.navbar,
             app_incognito: webapp_launcher.is_incognito,
             app_isolated: webapp_launcher.isolate_profile,
             selected_icon: None,
-            app_browsers: installed_browsers(),
-            browser_idx: Some(0),
+            app_browsers,
+            browser_idx,
         }
     }
 
@@ -151,7 +155,7 @@ impl AppEditor {
                 self.app_browser = Some(self.app_browsers[idx].clone());
             }
             Message::Category(idx) => {
-                self.category_idx = idx;
+                self.category_idx = Some(idx);
             }
             Message::Done => {
                 self.app_codename = format!(
@@ -173,7 +177,8 @@ impl AppEditor {
                             browser: browser.clone(),
                             name: self.app_title.clone(),
                             icon: icon_final_path,
-                            category: self.app_categories[self.category_idx].clone(),
+                            category: self.app_categories[self.category_idx.unwrap_or_default()]
+                                .clone(),
                             url: self.app_url.clone(),
                             custom_parameters: self.app_parameters.clone(),
                             isolate_profile: self.app_isolated,
@@ -279,7 +284,8 @@ impl AppEditor {
                                             .push(widget::text::title1(&self.app_title))
                                             .push(widget::text::title4(format!(
                                                 "{}: {}",
-                                                self.app_categories[self.category_idx],
+                                                self.app_categories
+                                                    [self.category_idx.unwrap_or_default()],
                                                 self.app_browsers
                                                     [self.browser_idx.unwrap_or_default()]
                                                 .name
@@ -330,7 +336,7 @@ impl AppEditor {
                         .push(
                             widget::dropdown(
                                 &self.app_categories,
-                                Some(self.category_idx),
+                                self.category_idx,
                                 Message::Category,
                             )
                             .width(Length::Fixed(200.)),

@@ -226,7 +226,9 @@ impl Application for QuickWebApps {
                             browser: browser.clone(),
                             name: app_editor.app_title.clone(),
                             icon: app_editor.app_icon.clone(),
-                            category: app_editor.app_categories[app_editor.category_idx].clone(),
+                            category: app_editor.app_categories
+                                [app_editor.category_idx.unwrap_or_default()]
+                            .clone(),
                             url: app_editor.app_url.clone(),
                             custom_parameters: app_editor.app_parameters.clone(),
                             isolate_profile: app_editor.app_isolated,
