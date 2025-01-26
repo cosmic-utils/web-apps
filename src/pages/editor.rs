@@ -126,6 +126,7 @@ impl AppEditor {
         let browser_idx = app_browsers
             .iter()
             .position(|b| b.model == webapp_launcher.browser.model);
+        let selected_icon = image_handle(webapp_launcher.icon.clone());
 
         Self {
             app_codename: webapp_launcher.codename,
@@ -139,7 +140,7 @@ impl AppEditor {
             app_navbar: webapp_launcher.navbar,
             app_incognito: webapp_launcher.is_incognito,
             app_isolated: webapp_launcher.isolate_profile,
-            selected_icon: None,
+            selected_icon,
             app_browsers,
             browser_idx,
         }
