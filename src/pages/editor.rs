@@ -429,7 +429,17 @@ impl AppEditor {
                                 .spacing(12),
                         )
                         .push(widget::horizontal_space())
-                        .push(widget::button::suggested(fl!("create")).on_press(Message::Done))
+                        .push(widget::button::suggested(fl!("create")).on_press_maybe(
+                            if webapplauncher_is_valid(
+                                &self.app_icon,
+                                &self.app_title,
+                                &self.app_url,
+                            ) {
+                                Some(Message::Done)
+                            } else {
+                                None
+                            },
+                        ))
                         .spacing(12),
                 )
                 .spacing(12),
