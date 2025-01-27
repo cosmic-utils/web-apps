@@ -175,7 +175,6 @@ impl AppEditor {
     pub fn from(webapp_launcher: WebAppLauncher) -> Self {
         let category_idx = Category::iter().position(|c| c == webapp_launcher.category);
         let category = Category::from_index(category_idx.unwrap_or_default() as u8);
-        println!("{:?}", category);
         let categories = Category::to_vec();
 
         let selected_icon = image_handle(webapp_launcher.icon.clone());
@@ -339,7 +338,7 @@ impl AppEditor {
                                             .push(widget::text::title1(&self.app_title))
                                             .push(widget::text::title4(format!(
                                                 "{}: {}",
-                                                self.app_category.as_ref(),
+                                                self.app_category.name(),
                                                 self.browsers[self.browser_idx.unwrap_or_default()]
                                                     .name
                                             ))),

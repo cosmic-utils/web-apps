@@ -228,6 +228,7 @@ impl Application for QuickWebApps {
                         if deleted.is_ok() {
                             self.nav.remove(id);
                             self.dialogs = None;
+                            self.page = Page::Editor(AppEditor::new())
                         };
                     };
                 }
