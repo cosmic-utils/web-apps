@@ -449,7 +449,7 @@ impl Application for QuickWebApps {
                     .secondary_action(
                         widget::button::suggested(fl!("no")).on_press(Message::CloseDialog),
                     )
-                    .control(widget::text(fl!("confirm-delete"))),
+                    .body(fl!("confirm-delete")),
                 Dialogs::IconsDownloader(installator) => widget::dialog()
                     .title(fl!("icons-installer-header"))
                     .primary_action(

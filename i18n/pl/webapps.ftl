@@ -26,6 +26,7 @@ icon-selector=Selektor ikon
 icon-installer=Instalator pakietu ikon Papirus
 
 # common.rs
+select-category=Wybierz kategorie
 select-browser=Wybierz przeglądarke
 
 # home_screen.rs

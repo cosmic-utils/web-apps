@@ -26,6 +26,7 @@ icon-selector=Icon selector
 icon-installer=Papirus Icons Installer
 
 # common.rs
+select-category=Select Category
 select-browser=Select Browser
 
 # home_screen.rs

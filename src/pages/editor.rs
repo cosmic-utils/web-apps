@@ -319,130 +319,101 @@ impl AppEditor {
     pub fn view(&self) -> Element<Message> {
         widget::container(
             widget::column()
+                .spacing(24)
                 .push(
-                    widget::column()
-                        .spacing(8)
+                    widget::row()
+                        .spacing(12)
                         .push(
-                            widget::row()
-                                .push(
-                                    widget::container(
-                                        self.icon_element(self.selected_icon.clone()),
-                                    )
-                                    .width(96.)
-                                    .height(96.)
-                                    .align_y(Vertical::Center),
-                                )
-                                .push(
-                                    widget::container(
-                                        widget::column()
-                                            .push(widget::text::title1(&self.app_title))
-                                            .push(widget::text::title4(format!(
-                                                "{}: {}",
-                                                self.app_category.name(),
-                                                self.browsers[self.browser_idx.unwrap_or_default()]
-                                                    .name
-                                            ))),
-                                    )
-                                    .height(Length::Fixed(96.))
-                                    .align_y(Vertical::Center),
-                                ),
+                            widget::container(self.icon_element(self.selected_icon.clone()))
+                                .width(96.)
+                                .height(96.)
+                                .align_y(Vertical::Center),
                         )
                         .push(
-                            widget::column().push(widget::text(fl!("title"))).push(
-                                widget::text_input("", &self.app_title)
-                                    .on_input(Message::Title)
-                                    .width(Length::Fill),
-                            ),
-                        )
-                        .push(
-                            widget::column().push(widget::text(fl!("url"))).push(
-                                widget::row()
-                                    .spacing(8)
-                                    .push(
-                                        widget::text_input("", &self.app_url)
-                                            .on_input(Message::Url)
-                                            .width(Length::Fill),
-                                    )
-                                    .push(
-                                        widget::button::suggested(fl!("download-favicon"))
-                                            .on_press_maybe(if url_valid(&self.app_url) {
-                                                Some(Message::SearchFavicon)
-                                            } else {
-                                                None
-                                            }),
-                                    ),
-                            ),
-                        )
-                        .push(
-                            widget::column()
-                                .push(widget::text(fl!("non-standard-arguments")))
-                                .push(
-                                    widget::text_input("", &self.app_parameters)
-                                        .on_input(Message::Arguments)
-                                        .width(Length::Fill),
-                                ),
+                            widget::container(
+                                widget::column()
+                                    .spacing(12)
+                                    .push(widget::text::title1(&self.app_title))
+                                    .push(widget::text::title4(format!(
+                                        "{}: {}",
+                                        self.app_category.name(),
+                                        self.browsers[self.browser_idx.unwrap_or_default()].name
+                                    ))),
+                            )
+                            .height(Length::Fixed(96.))
+                            .align_y(Vertical::Center),
                         ),
                 )
                 .push(
-                    widget::row()
-                        .push(
+                    widget::settings::section()
+                        .add(
+                            widget::text_input::inline_input(fl!("title"), &self.app_title)
+                                .on_input(Message::Title),
+                        )
+                        .add(widget::settings::item_row(vec![
+                            widget::text_input::inline_input(fl!("url"), &self.app_url)
+                                .on_input(Message::Url)
+                                .into(),
+                            widget::button::standard(fl!("download-favicon"))
+                                .on_press_maybe(if url_valid(&self.app_url) {
+                                    Some(Message::SearchFavicon)
+                                } else {
+                                    None
+                                })
+                                .into(),
+                        ]))
+                        .add(widget::settings::item(
+                            fl!("select-category"),
                             widget::dropdown(
                                 &self.categories,
                                 self.category_idx,
                                 Message::Category,
+                            ),
+                        ))
+                        .add(widget::settings::item(
+                            fl!("select-browser"),
+                            widget::dropdown(&self.browsers, self.browser_idx, Message::Browser),
+                        ))
+                        .add(
+                            widget::text_input::inline_input(
+                                fl!("non-standard-arguments"),
+                                &self.app_parameters,
                             )
-                            .width(Length::Fixed(200.)),
+                            .on_input(Message::Arguments),
                         )
-                        .push_maybe(if let Some(browser) = &self.app_browser {
+                        .add_maybe(if let Some(browser) = &self.app_browser {
                             match browser.model {
-                                Some(BrowserModel::Firefox) | Some(BrowserModel::Zen) => Some(
-                                    widget::toggler(self.app_navbar)
-                                        .label(fl!("navbar"))
-                                        .on_toggle(Message::Navbar)
-                                        .spacing(12),
-                                ),
-
-                                _ => Some(
+                                Some(BrowserModel::Firefox) | Some(BrowserModel::Zen) => {
+                                    widget::settings::item(
+                                        fl!("navbar"),
+                                        widget::toggler(self.app_navbar).on_toggle(Message::Navbar),
+                                    )
+                                    .into()
+                                }
+                                _ => widget::settings::item(
+                                    fl!("isolated-profile"),
                                     widget::toggler(self.app_isolated)
-                                        .label(fl!("isolated-profile"))
-                                        .on_toggle(Message::IsolatedProfile)
-                                        .spacing(12),
-                                ),
+                                        .on_toggle(Message::IsolatedProfile),
+                                )
+                                .into(),
                             }
                         } else {
                             None
                         })
-                        .spacing(12),
+                        .add(widget::settings::item(
+                            fl!("private-mode"),
+                            widget::toggler(self.app_incognito).on_toggle(Message::Incognito),
+                        )),
                 )
-                .push(
-                    widget::row()
-                        .push(
-                            widget::dropdown(&self.browsers, self.browser_idx, |idx| {
-                                Message::Browser(idx)
-                            })
-                            .width(Length::Fixed(200.)),
-                        )
-                        .push(
-                            widget::toggler(self.app_incognito)
-                                .label(fl!("private-mode"))
-                                .on_toggle(Message::Incognito)
-                                .spacing(12),
-                        )
-                        .push(widget::horizontal_space())
-                        .push(widget::button::suggested(fl!("create")).on_press_maybe(
-                            if webapplauncher_is_valid(
-                                &self.app_icon,
-                                &self.app_title,
-                                &self.app_url,
-                            ) {
-                                Some(Message::Done)
-                            } else {
-                                None
-                            },
-                        ))
-                        .spacing(12),
-                )
-                .spacing(12),
+                .push(widget::row().push(widget::horizontal_space()).push(
+                    widget::button::suggested(fl!("create")).on_press_maybe(
+                        if webapplauncher_is_valid(&self.app_icon, &self.app_title, &self.app_url) {
+                            Some(Message::Done)
+                        } else {
+                            None
+                        },
+                    ),
+                )),
         )
         .max_width(1000)
         .into()
