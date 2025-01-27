@@ -512,15 +512,9 @@ impl QuickWebApps {
             .into()
     }
 
-    fn match_title(&self) -> String {
-        match &self.page {
-            Page::Editor(editor) => format!("{} {}", fl!("edit"), editor.app_title),
-        }
-    }
-
     fn update_title(&mut self) -> Task<Message> {
-        self.set_header_title(self.match_title());
-        self.set_window_title(self.match_title(), self.window_id)
+        self.set_header_title(fl!("app"));
+        self.set_window_title(fl!("app"), self.window_id)
     }
 }
 
