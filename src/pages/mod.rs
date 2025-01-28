@@ -1,6 +1,5 @@
 pub mod editor;
 mod iconpicker;
-mod installator;
 
 use crate::common::{find_icon, image_handle, move_icon, qwa_icons_location, Icon};
 use crate::config::Config;
@@ -22,7 +21,6 @@ use cosmic::{
 use cosmic::{task, theme};
 use editor::AppEditor;
 use futures_util::SinkExt;
-use installator::Installator;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::ExitStatus;
@@ -66,7 +64,7 @@ pub enum Page {
 pub enum Dialogs {
     IconPicker(IconPicker),
     Confirmation(widget::segmented_button::Entity),
-    IconsDownloader(Installator),
+    IconsDownloader,
 }
 
 pub struct QuickWebApps {
@@ -240,7 +238,7 @@ impl Application for QuickWebApps {
             Message::DownloaderStarted => {
                 self.dialogs = None;
                 self.downloader_started = true;
-                self.dialogs = Some(Dialogs::IconsDownloader(Installator))
+                self.dialogs = Some(Dialogs::IconsDownloader)
             }
             Message::DownloaderStream(buffer) => {
                 self.downloader_output.push_str(&format!("{buffer:?}\n"));
@@ -450,16 +448,16 @@ impl Application for QuickWebApps {
                         widget::button::suggested(fl!("no")).on_press(Message::CloseDialog),
                     )
                     .body(fl!("confirm-delete")),
-                Dialogs::IconsDownloader(installator) => widget::dialog()
+                Dialogs::IconsDownloader => widget::dialog()
                     .title(fl!("icons-installer-header"))
+                    .body(self.downloader_output.clone())
                     .primary_action(
                         widget::button::destructive(fl!("cancel"))
                             .on_press(Message::DownloaderStop),
                     )
                     .secondary_action(
                         widget::button::suggested(fl!("close")).on_press(Message::CloseDialog),
-                    )
-                    .control(installator.view(self.downloader_output.clone())),
+                    ),
             };
 
             return Some(element.into());
