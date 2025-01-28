@@ -4,7 +4,7 @@ use cosmic::{
     widget::{self},
     Element, Task,
 };
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -220,7 +220,7 @@ impl AppEditor {
                     self.app_codename = format!(
                         "{}{}",
                         &self.app_title.replace(' ', ""),
-                        thread_rng().gen_range(1000..10000)
+                        rng().random_range(1000..10000)
                     );
                 }
                 let icon_final_path = move_icon(&self.app_icon, &self.app_title);
