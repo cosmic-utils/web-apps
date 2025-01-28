@@ -20,6 +20,8 @@ use walkdir::WalkDir;
 
 use crate::{favicon, LOCALES};
 
+const ICON_SIZE: u32 = 42;
+
 pub fn url_valid(url: &str) -> bool {
     Url::parse(url).is_ok()
 }
@@ -111,8 +113,8 @@ pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
                             let options = usvg::Options::default();
                             if let Ok(parsed) = usvg::Tree::from_str(&buffer, &options) {
                                 let size = parsed.size();
-                                if size.width() >= 64.0
-                                    && size.height() >= 64.0
+                                if size.width() >= ICON_SIZE as f32
+                                    && size.height() >= ICON_SIZE as f32
                                     && !icons.contains(&path.to_string())
                                 {
                                     icons.push(path.to_string())
@@ -123,8 +125,8 @@ pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
                 } else if let Some(path) = entry.path().to_str() {
                     if let Ok(image) = ImageReader::open(path) {
                         if let Ok(img) = image.decode() {
-                            if img.width() >= 64
-                                && img.height() >= 64
+                            if img.width() >= ICON_SIZE
+                                && img.height() >= ICON_SIZE
                                 && !icons.contains(&path.to_string())
                             {
                                 icons.push(path.to_string())
@@ -251,7 +253,7 @@ pub fn image_handle(path: String) -> Option<Icon> {
                     ImageReader::new(Cursor::new(&bytes)).with_guessed_format()
                 {
                     if let Ok(image) = image_reader.decode() {
-                        if image.width() >= 96 && image.height() >= 96 {
+                        if image.width() >= ICON_SIZE && image.height() >= ICON_SIZE {
                             let handle = iced_core::image::Handle::from_bytes(bytes);
                             return Some(Icon::new(IconType::Raster(handle), path, true));
                         }
@@ -277,7 +279,7 @@ pub fn image_handle(path: String) -> Option<Icon> {
 
             if let Ok(image_reader) = ImageReader::new(Cursor::new(&data)).with_guessed_format() {
                 if let Ok(image) = image_reader.decode() {
-                    if image.width() >= 96 && image.height() >= 96 {
+                    if image.width() >= ICON_SIZE && image.height() >= ICON_SIZE {
                         let handle = iced_core::image::Handle::from_bytes(data);
 
                         return Some(Icon::new(IconType::Raster(handle), path, false));
