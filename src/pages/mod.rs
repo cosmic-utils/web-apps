@@ -498,6 +498,9 @@ impl QuickWebApps {
                 widget::column()
                     .push(widget::text::title3(fl!("support-me")))
                     .push(widget::text::body(fl!("support-body")))
+                    .push(widget::button::link("github.com/sponsors/hepp3n").on_press(
+                        Message::LaunchUrl("https://github.com/sponsors/hepp3n".to_string()),
+                    ))
                     .push(widget::button::link("paypal.me/elevenhsoft").on_press(
                         Message::LaunchUrl("https://paypal.me/elevenhsoft".to_string()),
                     ))
