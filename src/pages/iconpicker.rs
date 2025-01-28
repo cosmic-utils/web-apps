@@ -1,5 +1,6 @@
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
+    cosmic_theme,
     iced::Length,
     task, theme,
     widget::{self},
@@ -91,58 +92,55 @@ impl IconPicker {
     }
 
     pub fn view(&self) -> Element<Message> {
+        let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
+
         let mut icons: Vec<Element<Message>> = Vec::new();
 
         for ico in self.icons.iter() {
             let btn = match ico.clone().icon {
                 common::IconType::Raster(icon) => widget::button::custom(widget::image(icon))
-                    .width(Length::Fixed(64.))
-                    .height(Length::Fixed(64.))
+                    .width(Length::Fixed(48.))
+                    .height(Length::Fixed(48.))
                     .on_press(Message::SetIcon(Some(ico.clone())))
                     .class(theme::Button::Icon),
                 common::IconType::Svg(icon) => widget::button::custom(widget::svg(icon))
-                    .width(Length::Fixed(64.))
-                    .height(Length::Fixed(64.))
+                    .width(Length::Fixed(48.))
+                    .height(Length::Fixed(48.))
                     .on_press(Message::SetIcon(Some(ico.clone())))
                     .class(theme::Button::Icon),
             };
             icons.push(btn.into());
         }
 
-        widget::container(
-            widget::column()
-                .push(
-                    widget::row()
-                        .spacing(8)
-                        .push(
-                            widget::text_input(fl!("icon-name-to-find"), &self.icon_searching)
-                                .on_input(Message::CustomIconsSearch)
-                                .on_submit(Message::IconSearch)
-                                .width(Length::Fill),
-                        )
-                        .push(
-                            widget::button::standard(fl!("open"))
-                                .on_press(Message::OpenIconPickerDialog),
-                        )
-                        .push_maybe(if !icon_pack_installed() {
-                            Some(
-                                widget::button::standard(fl!("download"))
-                                    .on_press(Message::DownloadIconsPack),
-                            )
-                        } else {
-                            None
-                        }),
+        let mut elements: Vec<Element<Message>> = vec![
+            widget::text_input::inline_input(fl!("icon-name-to-find"), &self.icon_searching)
+                .on_input(Message::CustomIconsSearch)
+                .on_submit(Message::IconSearch)
+                .into(),
+            widget::button::standard(fl!("open"))
+                .on_press(Message::OpenIconPickerDialog)
+                .into(),
+        ];
+        if !icon_pack_installed() {
+            elements.push(
+                widget::button::standard(fl!("download"))
+                    .on_press(Message::DownloadIconsPack)
+                    .into(),
+            )
+        }
+        widget::settings::section()
+            .add(widget::settings::item_row(elements))
+            .add_maybe(if !icons.is_empty() {
+                Some(
+                    widget::container(
+                        widget::scrollable(widget::settings::flex_item_row(icons))
+                            .spacing(space_xxs),
+                    )
+                    .max_height(600.0),
                 )
-                .push({
-                    let content = widget::container(widget::flex_row(icons));
-
-                    widget::scrollable(content)
-                        .width(Length::Fill)
-                        .height(Length::Fill)
-                })
-                .spacing(10),
-        )
-        .padding(8)
-        .into()
+            } else {
+                None
+            })
+            .into()
     }
 }

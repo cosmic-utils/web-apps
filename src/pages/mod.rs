@@ -434,7 +434,8 @@ impl Application for QuickWebApps {
         if let Some(dialog) = &self.dialogs {
             let element = match dialog {
                 Dialogs::IconPicker(icon_picker) => widget::dialog()
-                    .secondary_action(
+                    .title(fl!("icon-selector"))
+                    .primary_action(
                         widget::button::standard(fl!("close")).on_press(Message::CloseDialog),
                     )
                     .control(icon_picker.view().map(Message::IconPicker)),
