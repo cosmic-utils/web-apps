@@ -63,7 +63,7 @@ pub enum Page {
 #[derive(Debug, Clone)]
 pub enum Dialogs {
     IconPicker(IconPicker),
-    Confirmation(widget::segmented_button::Entity),
+    Confirmation((widget::segmented_button::Entity, String)),
     IconsDownloader,
 }
 
@@ -196,6 +196,14 @@ impl Application for QuickWebApps {
     fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::CloseDialog => self.dialogs = None,
+            Message::ConfirmDeletion(id) => {
+                let data = self.nav.data::<Page>(id);
+
+                if let Some(page) = data {
+                    let Page::Editor(app_editor) = page;
+                    self.dialogs = Some(Dialogs::Confirmation((id, app_editor.app_title.clone())))
+                };
+            }
             Message::Editor(msg) => match &mut self.page {
                 Page::Editor(app_editor) => {
                     return app_editor.update(msg).map(cosmic::app::message::app)
@@ -307,7 +315,6 @@ impl Application for QuickWebApps {
             Message::OpenRepositoryUrl => {
                 _ = open::that_detached(REPOSITORY);
             }
-            Message::ConfirmDeletion(id) => self.dialogs = Some(Dialogs::Confirmation(id)),
             Message::ReloadNavbarItems => {
                 self.nav.clear();
 
@@ -439,7 +446,7 @@ impl Application for QuickWebApps {
                         widget::button::standard(fl!("close")).on_press(Message::CloseDialog),
                     )
                     .control(icon_picker.view().map(Message::IconPicker)),
-                Dialogs::Confirmation(entity) => widget::dialog()
+                Dialogs::Confirmation((entity, title)) => widget::dialog()
                     .title(fl!("delete"))
                     .primary_action(
                         widget::button::destructive(fl!("yes"))
@@ -448,7 +455,7 @@ impl Application for QuickWebApps {
                     .secondary_action(
                         widget::button::suggested(fl!("no")).on_press(Message::CloseDialog),
                     )
-                    .body(fl!("confirm-delete")),
+                    .body(fl!("confirm-delete", app_title = title)),
                 Dialogs::IconsDownloader => widget::dialog()
                     .title(fl!("icons-installer-header"))
                     .body(self.downloader_output.clone())
