@@ -5,28 +5,8 @@ set -e
 gh_repo="papirus-icon-theme"
 gh_desc="Papirus icon theme"
 
-cat <<- EOF
-
-
-
-      ppppp                         ii
-      pp   pp     aaaaa   ppppp          rr  rrr   uu   uu     sssss
-      ppppp     aa   aa   pp   pp   ii   rrrr      uu   uu   ssss
-      pp        aa   aa   pp   pp   ii   rr        uu   uu      ssss
-      pp          aaaaa   ppppp     ii   rr          uuuuu   sssss
-                          pp
-                          pp
-
-
-  $gh_desc
-  https://github.com/PapirusDevelopmentTeam/$gh_repo
-
-
-EOF
-
 : "${LOCAL_DESTDIR:=$HOME/.local/share/icons}"
-#: "${FLATPAK_DESTDIR:=$HOME/.var/app/io.github.elevenhsoft.WebApps/data/icons}"
-: "${EXTRA_THEMES=ePapirus ePapirus-Dark Papirus-Dark Papirus-Light}"
+: "${EXTRA_THEMES=Papirus-Dark Papirus-Light}"
 : "${TAG:=master}"
 
 temp_file="$(mktemp -u)"

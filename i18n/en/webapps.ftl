@@ -2,10 +2,23 @@ app=Quick Web Apps
 loading=Loading...
 open=Open
 number={ $number }
+git-description = Git commit {$hash} on {$date}
+delete=Delete
+yes=Yes
+no=No
+confirm-delete=Are you sure you want to delete this Quick Web App?
+cancel=Cancel
+downloader-canceled=Installing stopped.
+help=Help
+about=About
+support-me=Support me
+support-body=If you find this app useful, please consider to support author, by optional donation :)
 
 # header
 main-window={ $app }
-create=Create
+view=View
+create=Done
+new-app=Create new
 edit=Edit
 close=Close
 create-new-webapp=Create new Web App
@@ -13,6 +26,7 @@ icon-selector=Icon selector
 icon-installer=Papirus Icons Installer
 
 # common.rs
+select-category=Select Category
 select-browser=Select Browser
 
 # home_screen.rs
@@ -32,8 +46,10 @@ sound-and-video=Sound & Video
 
 browser=Browser
 
+new-webapp-title=New Quick Web App
 title=Title
 url=URL
+download-favicon=Download favicon
 non-standard-arguments=Non-standard arguments
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Nav Bar
@@ -44,10 +60,12 @@ private-mode=Private Mode
 icon-name-to-find=Icon name to find
 my-icons=My icons
 download=Download
+search=Search
 
 # icons_installator.rs
 icons-installer-header=Please wait. Downloading icons...
 icons-installer-message=This app requires icons to work with. In case we don't have access to your installed icons, we are installing Papirus icon pack to local directory so you can choose one icon for your web app from this pack.
+icons-installer-finished-waiting=Downloading finished. Waiting 3 seconds to close this window..
 
 # warning.rs
 warning=You don't meet requirements

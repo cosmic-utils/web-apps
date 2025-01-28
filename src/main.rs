@@ -1,21 +1,23 @@
 mod browser;
 mod common;
+mod config;
 mod favicon;
-mod icon_cache;
 mod launcher;
 mod localize;
 mod pages;
-mod supported_browsers;
-mod warning;
-
-use std::{os::unix::fs::PermissionsExt, process::ExitStatus};
 
 use common::icons_location;
 use cosmic::{app::Settings, iced_core::Size};
+use freedesktop_desktop_entry::get_languages_from_env;
 use i18n_embed::DesktopLanguageRequester;
-use tokio::{fs::File, io::AsyncWriteExt};
+use lazy_static::lazy_static;
+use pages::QuickWebApps;
+use std::os::unix::fs::PermissionsExt;
+use tokio::{fs::File, io::AsyncWriteExt, process::Child};
 
-use pages::Window;
+lazy_static! {
+    pub static ref LOCALES: Vec<String> = get_languages_from_env();
+}
 
 fn init_logging() {
     use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
@@ -45,7 +47,7 @@ fn main() -> cosmic::iced::Result {
         height: 700.,
     });
 
-    cosmic::app::run::<Window>(settings, ())
+    cosmic::app::run::<QuickWebApps>(settings, ())
 }
 
 fn init_localizer() {
@@ -90,9 +92,10 @@ pub async fn add_icon_packs_install_script() -> String {
     temp_file.to_string()
 }
 
-pub async fn execute_script(script: String) -> ExitStatus {
+pub async fn execute_script(script: String) -> Child {
     tokio::process::Command::new(script)
-        .status()
-        .await
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
         .expect("cant execute script")
 }

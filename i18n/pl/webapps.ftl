@@ -2,10 +2,23 @@ app=Quick Web Apps
 loading=Ładowanie...
 open=Otwórz
 number={ $number }
+git-description = Commit Gita {$hash} dnia {$date}
+delete=Potwierdź usuwanie
+yes=Tak
+no=Nie
+confirm-delete=Czy jesteś pewien że chcesz usunąć tę aplikacje internetową?
+cancel=Anuluj
+downloader-canceled=Instalacja zatrzymana.
+help=Pomoc
+about=O aplikacji
+support-me=Wesprzyj mnie
+support-body=Jeśli uważasz tę aplikacje za przydatną, rozważ wsparcie autora dobrowolną wpłata :)
 
 # header
 main-window={ $app }
-create=Stwórz
+view=Widow
+create=Zrobione
+new-app=Nowa aplikacja
 edit=Edytuj
 close=Zamknij
 create-new-webapp=Stwórz nową Web Appke
@@ -13,6 +26,7 @@ icon-selector=Selektor ikon
 icon-installer=Instalator pakietu ikon Papirus
 
 # common.rs
+select-category=Wybierz kategorie
 select-browser=Wybierz przeglądarke
 
 # home_screen.rs
@@ -32,8 +46,10 @@ sound-and-video=Dźwięk i Wideo
 
 browser=Przeglądarka
 
+new-webapp-title=Nowa aplikacja internetowa
 title=Nazwa
 url=Link
+download-favicon=Pobierz ikone
 non-standard-arguments=Niestandardowe argumenty
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Pasek nawigacyjny
@@ -44,10 +60,12 @@ private-mode=Tryb prywatny
 icon-name-to-find=Nazwa ikony do znalezienia
 my-icons=Moje ikony
 download=Pobierz
+search=Szukaj
 
 # icons_installator.rs
 icons-installer-header=Proszę czekać. Trwa pobieranie ikon...
 icons-installer-message=Ta aplikacja potrzebuje ikon do działania. W przypadku braku dostępu do ikon systemowych, zainstalujemy lokalnie pakiet ikon Papirus.
+icons-installer-finished-waiting=Pobieranie ukończone. To okno zostanie zamknięte po upłynięciu 3 sekund.
 
 # warning.rs
 warning=Proszę spełnić poniższe wymagania

@@ -1,11 +1,11 @@
 [package]
 name = "webapps"
-version = "0.5.4"
+version = "1.0.0"
 edition = "2021"
 description = "Web applications at your fingertips"
-authors = ["cosmic-utils"]
+authors = ["hepp3n", "cosmic-utils"]
 license = "GPL-3.0-only"
-repository = "https://github.com/cosmic-utils/web-apps.git"
+repository = "https://github.com/cosmic-utils/web-apps"
 
 [[bin]]
 path = "src/main.rs"
@@ -13,48 +13,65 @@ name = "quick-webapps"
 
 [profile.dev]
 opt-level = 1
-overflow-checks = false
+
+[build-dependencies]
+vergen = { version = "8", features = ["git", "gitcl"] }
 
 [dependencies]
 anyhow = "1"
+ashpd = { version = "0.10", features = ["wayland"] }
+base64 = "0.22"
+bytes = "1.9"
+dirs = "5.0"
+freedesktop-desktop-entry = { git = "https://github.com/pop-os/freedesktop-desktop-entry" }
+futures-util = "0.3"
+i18n-embed-fl = "0.9"
+i18n-embed = { version = "0.15", features = ["fluent-system", "desktop-requester"]}
+image = "0.25"
+lazy_static = "1.5"
+once_cell = "1.2"
+open = "5.3"
+rand = "0.8"
+reqwest = { version = "0.12", features = ["blocking", "json"] }
+rust-embed = "8.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+strum = "0.26"
+strum_macros = "0.26"
+svg = "0.18"
+tokio = { version = "1.4", features = ["full"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3.18", default-features = false, features = [
+tracing-subscriber = { version = "0.3", default-features = false, features = [
   "std",
   "fmt",
   "env-filter",
 ] }
-tokio = { version = "1.4", features = ["full"] }
-reqwest = { version = "0.12", features = ["blocking", "json"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-rand = "0.8.5"
 url = "2.5"
-walkdir = "2.5"
-dirs = "5.0"
-once_cell = "1.20"
-image = "0.25"
 usvg = "0.44"
-lazy_static = "1.5"
-rust-embed = "8.5"
-i18n-embed-fl = "0.9"
-bytes = "1.9"
-svg = "0.18"
-base64 = "0.22"
-ashpd = { version = "0.10.2", features = ["wayland"] }
-freedesktop-desktop-entry = "0.7"
-
-[dependencies.i18n-embed]
-version = "0.15"
-features = ["fluent-system", "desktop-requester"]
+walkdir = "2.5"
 
 [dependencies.libcosmic]
-git = "https://github.com/pop-os/libcosmic"
-default-features = false
-features = ["tokio", "winit", "wgpu"]
+git = "https://github.com/pop-os/libcosmic.git"
+features = [
+    # Accessibility support
+    "a11y",
+    # Uses cosmic-settings-daemon to watch for config file changes
+    "dbus-config",
+    # Support creating additional application windows.
+    "multi-window",
+    # On app startup, focuses an existing instance if the app is already open
+    "single-instance",
+    # Uses tokio as the executor for the runtime
+    "tokio",
+    # Windowing support for X11, Windows, Mac, & Redox
+    "winit",
+    # Add Wayland support to winit
+    "wayland",
+    # GPU-accelerated rendering
+    "wgpu",
+]
 
-# [patch.'https://github.com/pop-os/libcosmic']
-# libcosmic = { path = "../libcosmic" }
-
+# Packaging for Deb #
 [package.metadata.deb]
 license-file = "LICENSE"
 assets = [
@@ -80,6 +97,7 @@ assets = [
   ],
 ]
 
+# Packaging for RPM #
 [package.metadata.generate-rpm]
 assets = [
   { source = "target/release/quick-webapps", dest = "/usr/bin/", mode = "755" },
@@ -88,6 +106,7 @@ assets = [
   { source = "res/icons/hicolor/**/*", dest = "/usr/share/icons/hicolor/", mode = "644" },
 ]
 
+# Packaging for Aur #
 [package.metadata.aur]
 files = [
   [

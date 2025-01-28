@@ -1,34 +1,24 @@
 use std::{
     ffi::OsStr,
-    fs::{copy, create_dir_all, File},
+    fs::{self, copy, create_dir_all, File},
     io::{Cursor, Read},
     path::PathBuf,
     str::FromStr,
-    sync::Mutex,
 };
 
 use base64::prelude::*;
 use bytes::Bytes;
 use cosmic::{iced_core, widget};
+use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter};
 use image::ImageReader;
 use image::{load_from_memory, GenericImageView};
-use reqwest::Client;
+use reqwest::blocking;
 use svg::node::element::Image;
 use svg::Document;
-use tokio::io::AsyncReadExt;
 use url::Url;
 use walkdir::WalkDir;
 
-use crate::{favicon, icon_cache::IconCache};
-
-lazy_static::lazy_static! {
-    static ref ICON_CACHE: Mutex<IconCache> = Mutex::new(IconCache::new());
-}
-
-pub fn icon_cache_get(name: &'static str, size: u16) -> widget::icon::Icon {
-    let mut icon_cache = ICON_CACHE.lock().unwrap();
-    icon_cache.get(name, size)
-}
+use crate::{favicon, LOCALES};
 
 pub fn url_valid(url: &str) -> bool {
     Url::parse(url).is_ok()
@@ -76,6 +66,24 @@ pub fn system_icons() -> PathBuf {
 
 pub fn qwa_icons_location() -> PathBuf {
     icons_location().join("QuickWebApps")
+}
+
+pub fn fd_entries() -> Vec<DesktopEntry> {
+    let mut paths = Vec::new();
+    default_paths().for_each(|path| paths.push(path));
+
+    // this is workaround for flatpak sandbox
+    if PathBuf::from("/.flatpak-info").exists() {
+        paths.push(home_dir().join(".local/share/applications"));
+        paths.push(home_dir().join(".local/share/flatpak/exports/share/applications"));
+        paths.push("/var/lib/flatpak/exports/share/applications".into());
+        paths.push("/run/host/usr/share/applications".into());
+        paths.push("/run/host/usr/local/share/applications".into());
+    };
+
+    Iter::new(paths.into_iter())
+        .entries(Some(&LOCALES))
+        .collect::<Vec<DesktopEntry>>()
 }
 
 pub fn get_icon_name_from_url(url: &str) -> String {
@@ -188,13 +196,19 @@ fn icon_save_path(icon_name: &str) -> String {
         .to_string()
 }
 
-pub fn move_icon(path: String, output_name: String) -> String {
+pub fn move_icon(path: &str, output_name: &str) -> String {
     create_dir_all(qwa_icons_location()).expect("cant create folder for your icons");
 
     let icon_name = output_name.replace(' ', "");
 
-    if url_valid(&path) {
-        let response = reqwest::blocking::get(&path).expect("sending request");
+    let Ok(p) = PathBuf::from_str(&icon_save_path(&icon_name));
+
+    if p.exists() {
+        return p.to_str().unwrap().to_string();
+    }
+
+    if url_valid(path) {
+        let response = reqwest::blocking::get(path).expect("sending request");
 
         if response.status().is_success() {
             let content: Bytes = response.bytes().expect("getting image bytes");
@@ -205,8 +219,8 @@ pub fn move_icon(path: String, output_name: String) -> String {
         return String::new();
     };
 
-    if !is_svg(&path) {
-        if let Ok(mut file) = File::open(&path) {
+    if !is_svg(path) {
+        if let Ok(mut file) = File::open(path) {
             let mut buffer = Vec::new();
             file.read_to_end(&mut buffer).unwrap();
             let content = Bytes::from(buffer);
@@ -216,15 +230,15 @@ pub fn move_icon(path: String, output_name: String) -> String {
     };
 
     let save_path = icon_save_path(&icon_name);
-    copy(&path, &save_path).unwrap();
+    copy(path, &save_path).unwrap();
 
     save_path
 }
 
-pub async fn image_handle(path: String) -> Option<Icon> {
+pub fn image_handle(path: String) -> Option<Icon> {
     if url_valid(&path) {
-        if let Ok(response) = Client::new().get(&path).send().await {
-            if let Ok(bytes) = response.bytes().await {
+        if let Ok(response) = blocking::Client::new().get(&path).send() {
+            if let Ok(bytes) = response.bytes() {
                 let options = usvg::Options::default();
                 if let Ok(parsed) = usvg::Tree::from_data(&bytes, &options) {
                     let size = parsed.size();
@@ -257,8 +271,8 @@ pub async fn image_handle(path: String) -> Option<Icon> {
         } else {
             let mut data: Vec<_> = Vec::new();
 
-            if let Ok(mut file) = tokio::fs::File::open(&result_path).await {
-                let _ = file.read_to_end(&mut data).await;
+            if let Ok(mut file) = fs::File::open(&result_path) {
+                let _ = file.read_to_end(&mut data);
             }
 
             if let Ok(image_reader) = ImageReader::new(Cursor::new(&data)).with_guessed_format() {
