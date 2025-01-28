@@ -294,21 +294,21 @@ impl AppEditor {
         let ico = if let Some(ico) = icon {
             match ico.icon {
                 IconType::Raster(data) => widget::button::custom(widget::image(data))
-                    .width(Length::Fixed(64.))
-                    .height(Length::Fixed(64.))
+                    .width(Length::Fixed(92.0))
+                    .height(Length::Fixed(92.0))
                     .class(style::Button::Icon)
                     .on_press(Message::OpenIconPicker(self.app_url.clone())),
 
                 IconType::Svg(data) => widget::button::custom(widget::svg(data))
-                    .width(Length::Fixed(64.))
-                    .height(Length::Fixed(64.))
+                    .width(Length::Fixed(92.0))
+                    .height(Length::Fixed(92.0))
                     .class(style::Button::Icon)
                     .on_press(Message::OpenIconPicker(self.app_url.clone())),
             }
         } else {
             widget::button::custom(widget::icon::from_name("folder-pictures-symbolic"))
-                .width(Length::Fixed(64.))
-                .height(Length::Fixed(64.))
+                .width(Length::Fixed(92.0))
+                .height(Length::Fixed(92.0))
                 .class(style::Button::Icon)
                 .on_press(Message::OpenIconPicker(self.app_url.clone()))
         };
