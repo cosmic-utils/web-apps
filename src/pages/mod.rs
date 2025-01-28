@@ -45,7 +45,7 @@ pub enum Message {
     OpenFileResult(Vec<String>),
     OpenIconPicker(String),
     OpenRepositoryUrl,
-    PrepareToDelete(widget::segmented_button::Entity),
+    ConfirmDeletion(widget::segmented_button::Entity),
     ReloadNavbarItems,
     SetIcon(Option<Icon>),
     DownloaderStop,
@@ -307,7 +307,7 @@ impl Application for QuickWebApps {
             Message::OpenRepositoryUrl => {
                 _ = open::that_detached(REPOSITORY);
             }
-            Message::PrepareToDelete(id) => self.dialogs = Some(Dialogs::Confirmation(id)),
+            Message::ConfirmDeletion(id) => self.dialogs = Some(Dialogs::Confirmation(id)),
             Message::ReloadNavbarItems => {
                 self.nav.clear();
 
@@ -374,7 +374,7 @@ impl Application for QuickWebApps {
         let mut nav = widget::nav_bar(nav_model, |id| {
             cosmic::app::message::app(Message::NavBar(id))
         })
-        .on_close(|id| cosmic::app::message::app(Message::PrepareToDelete(id)))
+        .on_close(|id| cosmic::app::message::app(Message::ConfirmDeletion(id)))
         .into_container()
         .width(Length::Shrink)
         .height(Length::Shrink);

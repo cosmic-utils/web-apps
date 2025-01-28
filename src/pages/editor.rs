@@ -223,7 +223,7 @@ impl AppEditor {
                         rng().random_range(1000..10000)
                     );
                 }
-                let icon_final_path = move_icon(&self.app_icon, &self.app_title);
+                let icon_final_path = move_icon(&self.app_icon, &self.app_codename);
 
                 if webapplauncher_is_valid(&icon_final_path, &self.app_title, &self.app_url) {
                     if let Some(browser) = &self.app_browser {

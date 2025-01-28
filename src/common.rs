@@ -204,7 +204,7 @@ pub fn move_icon(path: &str, output_name: &str) -> String {
     let Ok(p) = PathBuf::from_str(&icon_save_path(&icon_name));
 
     if p.exists() {
-        return p.to_str().unwrap().to_string();
+        std::fs::remove_file(p).unwrap();
     }
 
     if url_valid(path) {
