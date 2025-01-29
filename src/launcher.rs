@@ -113,7 +113,7 @@ impl From<DesktopEntry> for WebAppLauncher {
             },
             None => Self {
                 codename: String::new(),
-                browser: Browser::none(),
+                browser: Browser::default(),
                 name: String::new(),
                 icon: String::new(),
                 category: Category::default(),
