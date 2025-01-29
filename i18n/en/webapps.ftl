@@ -30,7 +30,10 @@ select-category=Select Category
 select-browser=Select Browser
 
 # home_screen.rs
-installed-header=You have { $number } web apps installed:
+installed-header=You have { $number -> 
+        [1] 1 web app
+        *[other] { $number} web apps 
+    } installed:
 not-installed-header=You don't have any web app installed. Please, press create button and create one.
 
 # creator.rs
