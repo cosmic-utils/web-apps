@@ -52,9 +52,10 @@ impl BrowserModel {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub enum BrowserSource {
     Flatpak,
+    #[default]
     Native,
     NativeLocal,
     Nix,
@@ -62,7 +63,7 @@ pub enum BrowserSource {
     SystemFlatpak,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Browser {
     pub model: Option<BrowserModel>,
     pub source: BrowserSource,
@@ -79,17 +80,6 @@ impl AsRef<str> for Browser {
 }
 
 impl Browser {
-    pub fn none() -> Self {
-        Self {
-            model: None,
-            source: BrowserSource::Native,
-            entry: None,
-            name: String::new(),
-            exec: String::new(),
-            profile_path: PathBuf::new(),
-        }
-    }
-
     fn create(entry: DesktopEntry) -> Self {
         let mut name = entry.name(&LOCALES).unwrap_or_default().to_string();
         let exec = entry.exec().unwrap_or_default().to_string();
@@ -145,7 +135,7 @@ impl Browser {
             };
         }
 
-        Self::none()
+        Browser::default()
     }
 
     pub fn from_appid(appid: String) -> Self {
@@ -156,7 +146,7 @@ impl Browser {
             return Self::create(entry.clone());
         };
 
-        Self::none()
+        Browser::default()
     }
 
     pub fn from_path(path: &PathBuf) -> Self {
@@ -166,7 +156,7 @@ impl Browser {
             return Self::create(entry);
         }
 
-        Self::none()
+        Browser::default()
     }
 }
 
