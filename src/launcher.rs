@@ -1,5 +1,5 @@
 use crate::{
-    browser::{Browser, BrowserModel},
+    browser::{Browser, BrowserModel, Chromium, Falkon, Firefox},
     common::{self},
     pages::editor::Category,
     LOCALES,
@@ -128,171 +128,61 @@ impl From<DesktopEntry> for WebAppLauncher {
 }
 
 impl WebAppLauncher {
-    fn create_firefox_userjs(
-        &self,
-        is_zen_browser: bool,
-        path: PathBuf,
-        create_navbar: bool,
-    ) -> bool {
-        let mut file = File::create(&path)
-            .unwrap_or_else(|_| panic!("failed to create user.js in {:?}", path));
-
-        let navbar_pref = if create_navbar {
-            b"user_pref(\"browser.tabs.inTitlebar\", 2);\n"
-        } else {
-            b"user_pref(\"browser.tabs.inTitlebar\", 0);\n"
-        };
-        let Ok(_) = file.write_all(navbar_pref) else {
-            return false;
-        };
-
-        match is_zen_browser {
-            true => file
-                .write_all(include_bytes!(
-                    "../data/runtime/zen-browser/profile/user.js"
-                ))
-                .is_ok(),
-            false => file
-                .write_all(include_bytes!("../data/runtime/firefox/profile/user.js"))
-                .is_ok(),
-        }
-    }
-
-    fn create_user_chrome_css(
-        &self,
-        is_zen_browser: bool,
-        path: PathBuf,
-        create_navbar: bool,
-    ) -> bool {
-        let mut file = File::create(&path)
-            .unwrap_or_else(|_| panic!("cant create userChrome.css in {:?}", path));
-
-        if create_navbar {
-            file.write_all(b"").is_ok()
-        } else {
-            match is_zen_browser {
-                true => file
-                    .write_all(include_bytes!(
-                        "../data/runtime/zen-browser/profile/chrome/userChrome.css"
-                    ))
-                    .is_ok(),
-                false => file
-                    .write_all(include_bytes!(
-                        "../data/runtime/firefox/profile/chrome/userChrome.css"
-                    ))
-                    .is_ok(),
-            }
-        }
-    }
-
-    fn exec_firefox(&self, is_zen_browser: bool) -> String {
+    fn exec_firefox(&self, zen_browser: bool) -> String {
         let profile_path = self.browser.profile_path.join(&self.codename);
-        let user_js_path = profile_path.join("user.js");
-        let mut user_chrome_css = profile_path.join("chrome");
 
-        tracing::info!("Creating profile directory in: {:?}", &profile_path);
-        create_dir_all(&profile_path)
-            .unwrap_or_else(|_| panic!("cant create profile dir in {:?}", &profile_path));
-        create_dir_all(&user_chrome_css)
-            .unwrap_or_else(|_| panic!("cant create chrome dir in {:?}", &user_chrome_css));
-
-        user_chrome_css = user_chrome_css.join("userChrome.css");
-
-        self.create_firefox_userjs(is_zen_browser, user_js_path, self.navbar);
-        self.create_user_chrome_css(is_zen_browser, user_chrome_css, self.navbar);
-
-        let profile_path = profile_path.to_str().unwrap();
-
-        let mut exec_string = format!(
-            "{} --class QuickWebApp-{} --name QuickWebApp-{} --profile {} --no-remote ",
-            self.browser.exec, self.codename, self.codename, profile_path
-        );
-
-        if self.is_incognito {
-            exec_string.push_str("--private-window ");
-        }
-
-        if !self.custom_parameters.is_empty() {
-            exec_string.push_str(&format!("{} ", self.custom_parameters));
-        }
-
-        exec_string.push_str(&self.url);
-
-        exec_string
+        Firefox::builder(self.browser.exec.clone())
+            .url(self.url.clone())
+            .codename(self.codename.clone())
+            .navbar(self.navbar)
+            .isolated(self.isolate_profile)
+            .profile_path(profile_path)
+            .zen_browser(zen_browser)
+            .private_mode(self.is_incognito)
+            .custom_args(self.custom_parameters.clone())
+            .build()
     }
 
-    fn exec_chromium(&self) -> String {
-        let mut exec_string = format!(
-            "{} --app={} --class=QuickWebApp-{} --name=QuickWebApp-{} ",
-            self.browser.exec, self.url, self.codename, self.codename
-        );
+    fn exec_chromium(&self, microsoft_edge: bool) -> String {
+        let profile_dir = self.browser.profile_path.join(&self.codename);
 
-        if self.isolate_profile {
-            let profile_dir = self.browser.profile_path.join(&self.codename);
-
-            tracing::info!("Creating profile directory in: {:?}", &profile_dir);
-            let _ = create_dir_all(&profile_dir);
-            let profile_path = profile_dir.to_str().unwrap();
-            exec_string.push_str(&format!("--user-data-dir={} ", profile_path));
-        }
-
-        if self.is_incognito {
-            if self.browser.name.starts_with("Microsoft Edge") {
-                exec_string.push_str("--inprivate ");
-            } else {
-                exec_string.push_str("--incognito ");
-            }
-        }
-
-        if !self.custom_parameters.is_empty() {
-            exec_string.push_str(&format!("{} ", self.custom_parameters));
-        }
-
-        exec_string
+        Chromium::builder(self.browser.exec.clone())
+            .url(self.url.clone())
+            .codename(self.codename.clone())
+            .isolated(self.isolate_profile)
+            .profile_path(profile_dir)
+            .ms_edge(microsoft_edge)
+            .private_mode(self.is_incognito)
+            .custom_args(self.custom_parameters.clone())
+            .build()
     }
 
     fn exec_falkon(&self) -> String {
-        let mut exec_string = String::new();
+        let profile_dir = self.browser.profile_path.join(&self.codename);
 
-        if self.isolate_profile {
-            let profile_dir = self.browser.profile_path.join(&self.codename);
-            tracing::info!("Creating profile directory in: {:?}", &profile_dir);
-            let _ = create_dir_all(&profile_dir);
-
-            let profile_path = profile_dir.to_str().unwrap();
-
-            exec_string = format!(
-                "{} --portable --wmclass QuickWebApp-{} --profile {} ",
-                self.browser.exec, self.codename, profile_path
-            );
-        }
-
-        if self.is_incognito {
-            exec_string.push_str("--private-browsing ");
-        }
-
-        if !self.custom_parameters.is_empty() {
-            exec_string.push_str(&format!("{} ", self.custom_parameters));
-        }
-
-        exec_string.push_str(&format!("--no-remote --current-tab {}", self.url));
-
-        exec_string
+        Falkon::builder(self.browser.exec.clone())
+            .url(self.url.clone())
+            .codename(self.codename.clone())
+            .isolated(self.isolate_profile)
+            .profile_path(profile_dir)
+            .private_mode(self.is_incognito)
+            .custom_args(self.custom_parameters.clone())
+            .build()
     }
 
     fn exec_string(&self) -> String {
         if let Some(model) = &self.browser.model {
             return match model {
-                BrowserModel::Brave => self.exec_chromium(),
-                BrowserModel::Chrome => self.exec_chromium(),
-                BrowserModel::Chromium => self.exec_chromium(),
-                BrowserModel::Cromite => self.exec_chromium(),
+                BrowserModel::Brave => self.exec_chromium(false),
+                BrowserModel::Chrome => self.exec_chromium(false),
+                BrowserModel::Chromium => self.exec_chromium(false),
+                BrowserModel::Cromite => self.exec_chromium(false),
                 BrowserModel::Falkon => self.exec_falkon(),
                 BrowserModel::Firefox => self.exec_firefox(false),
                 BrowserModel::Floorp => self.exec_firefox(false),
                 BrowserModel::Librewolf => self.exec_firefox(false),
-                BrowserModel::MicrosoftEdge => self.exec_chromium(),
-                BrowserModel::Vivaldi => self.exec_chromium(),
+                BrowserModel::MicrosoftEdge => self.exec_chromium(true),
+                BrowserModel::Vivaldi => self.exec_chromium(false),
                 BrowserModel::Waterfox => self.exec_firefox(false),
                 BrowserModel::Zen => self.exec_firefox(true),
             };

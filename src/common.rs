@@ -232,7 +232,7 @@ pub fn move_icon(path: &str, output_name: &str) -> String {
     };
 
     let save_path = icon_save_path(&icon_name);
-    copy(path, &save_path).unwrap();
+    let _ = copy(path, &save_path);
 
     save_path
 }

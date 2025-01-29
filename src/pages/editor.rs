@@ -383,23 +383,41 @@ impl AppEditor {
                         )
                         .add_maybe(if let Some(browser) = &self.app_browser {
                             match browser.model {
-                                Some(BrowserModel::Firefox) | Some(BrowserModel::Zen) => {
-                                    widget::settings::item(
-                                        fl!("navbar"),
-                                        widget::toggler(self.app_navbar).on_toggle(Message::Navbar),
-                                    )
-                                    .into()
-                                }
-                                _ => widget::settings::item(
-                                    fl!("isolated-profile"),
-                                    widget::toggler(self.app_isolated)
-                                        .on_toggle(Message::IsolatedProfile),
+                                Some(BrowserModel::Firefox)
+                                | Some(BrowserModel::Zen)
+                                | Some(BrowserModel::Librewolf)
+                                | Some(BrowserModel::Waterfox) => widget::settings::item(
+                                    fl!("navbar"),
+                                    widget::toggler(self.app_navbar).on_toggle(Message::Navbar),
                                 )
                                 .into(),
+                                _ => None,
                             }
                         } else {
                             None
                         })
+                        .add(widget::settings::item(
+                            fl!("isolated-profile"),
+                            widget::toggler(self.app_isolated).on_toggle_maybe(
+                                if let Some(browser) = &self.app_browser {
+                                    match browser.model {
+                                        Some(BrowserModel::Firefox)
+                                        | Some(BrowserModel::Zen)
+                                        | Some(BrowserModel::Librewolf)
+                                        | Some(BrowserModel::Waterfox) => {
+                                            if self.app_navbar {
+                                                Message::IsolatedProfile.into()
+                                            } else {
+                                                None
+                                            }
+                                        }
+                                        _ => Message::IsolatedProfile.into(),
+                                    }
+                                } else {
+                                    None
+                                },
+                            ),
+                        ))
                         .add(widget::settings::item(
                             fl!("private-mode"),
                             widget::toggler(self.app_incognito).on_toggle(Message::Incognito),
