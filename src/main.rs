@@ -43,7 +43,7 @@ fn main() -> cosmic::iced::Result {
 
     let mut settings = Settings::default();
     settings = settings.size(Size {
-        width: 700.,
+        width: 920.,
         height: 700.,
     });
 
