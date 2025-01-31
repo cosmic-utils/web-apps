@@ -26,8 +26,6 @@ Hey! This app is fully distributed for **free** with **free license**.
 I'm doing it with **passion** in my **free time**. Trying to keep it stable and bug free as long as I can.
 However, would be nice if you could bring me some coffee so I can work longer on it :)
 
-<iframe src="https://github.com/sponsors/hepp3n/card" title="Sponsor hepp3n" height="225" width="600" style="border: 0;"></iframe>
-
 # Thanks!
 
 # Installation
