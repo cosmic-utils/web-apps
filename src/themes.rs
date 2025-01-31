@@ -4,22 +4,22 @@ use cosmic::cosmic_theme::{self, ThemeBuilder};
 pub enum Theme {
     #[default]
     Default,
-    Custom(Box<cosmic_theme::Theme>),
+    Custom((String, Box<cosmic_theme::Theme>)),
 }
 
 impl AsRef<str> for Theme {
     fn as_ref(&self) -> &str {
         match self {
             Theme::Default => "COSMIC",
-            Theme::Custom(theme) => &theme.name,
+            Theme::Custom(theme) => &theme.0,
         }
     }
 }
 
-impl From<String> for Theme {
-    fn from(value: String) -> Self {
+impl Theme {
+    pub fn build(name: String, value: String) -> Self {
         if let Ok(palette) = ron::from_str::<ThemeBuilder>(&value) {
-            return Self::Custom(Box::new(palette.build()));
+            return Self::Custom((name, Box::new(palette.build())));
         }
 
         Self::Default

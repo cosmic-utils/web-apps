@@ -218,20 +218,7 @@ impl Application for QuickWebApps {
                 self.theme_idx = Some(idx);
                 let selected = self.themes_list[idx].clone();
 
-                match selected {
-                    Theme::Default => {
-                        let is_dark = cosmic::theme::is_dark();
-
-                        if is_dark {
-                            return set_theme(cosmic::Theme::dark());
-                        }
-
-                        return set_theme(cosmic::Theme::light());
-                    }
-                    Theme::Custom(theme) => {
-                        tasks.push(set_theme(cosmic::Theme::custom(Arc::new(*theme))))
-                    }
-                }
+                tasks.push(task::message(Message::UpdateTheme(Box::new(selected))));
             }
             Message::CloseDialog => self.dialogs = None,
             Message::ConfirmDeletion(id) => {
@@ -368,6 +355,8 @@ impl Application for QuickWebApps {
                 if let Ok(files) = dir {
                     for path in files {
                         let dir_entry = path.unwrap();
+                        let file_name = dir_entry.file_name();
+                        let theme_name = file_name.to_str().unwrap().replace(".ron", "");
                         let metadata = std::fs::metadata(dir_entry.path());
 
                         if let Ok(meta) = metadata {
@@ -377,7 +366,8 @@ impl Application for QuickWebApps {
                                 let mut file = std::fs::File::open(dir_entry.path()).unwrap();
                                 let _ = file.read_to_string(&mut content);
 
-                                self.themes_list.push(Theme::from(content));
+                                self.themes_list
+                                    .push(Theme::build(theme_name.to_string(), content));
                             }
                         }
                     }
@@ -466,15 +456,9 @@ impl Application for QuickWebApps {
             Message::UpdateTheme(theme) => {
                 let set_theme = match *theme {
                     Theme::Default => {
-                        let is_dark = cosmic::theme::is_dark();
-
-                        if is_dark {
-                            return set_theme(cosmic::Theme::dark());
-                        }
-
-                        return set_theme(cosmic::Theme::light());
+                        return set_theme(cosmic::theme::system_preference());
                     }
-                    Theme::Custom(theme) => set_theme(cosmic::Theme::custom(Arc::new(*theme))),
+                    Theme::Custom(theme) => set_theme(cosmic::Theme::custom(Arc::new(*theme.1))),
                 };
                 tasks.push(set_theme);
             }
