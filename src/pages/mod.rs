@@ -364,7 +364,10 @@ impl Application for QuickWebApps {
             menu::root(fl!("help")),
             menu::items(
                 &self.key_binds,
-                vec![menu::Item::Button(fl!("about"), None, MenuAction::About)],
+                vec![
+                    menu::Item::Button(fl!("settings"), None, MenuAction::Settings),
+                    menu::Item::Button(fl!("about"), None, MenuAction::About),
+                ],
             ),
         )]);
 
@@ -416,6 +419,11 @@ impl Application for QuickWebApps {
                 Message::ToggleContextPage(ContextPage::About),
             )
             .title(fl!("about")),
+            ContextPage::Settings => context_drawer::context_drawer(
+                self.settings(),
+                Message::ToggleContextPage(ContextPage::Settings),
+            )
+            .title(fl!("settings")),
         })
     }
 
@@ -524,6 +532,20 @@ impl QuickWebApps {
             .into()
     }
 
+    fn settings(&self) -> Element<Message> {
+        let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
+
+        let hash = env!("VERGEN_GIT_SHA");
+        let _short_hash: String = hash.chars().take(7).collect();
+        let _date = env!("VERGEN_GIT_COMMIT_DATE");
+
+        widget::column()
+            .push(widget::settings::section())
+            .align_x(Alignment::Center)
+            .spacing(space_xxs)
+            .into()
+    }
+
     fn update_title(&mut self) -> Task<Message> {
         self.set_header_title(fl!("app"));
         self.set_window_title(fl!("app"), self.window_id)
@@ -534,11 +556,13 @@ impl QuickWebApps {
 pub enum ContextPage {
     #[default]
     About,
+    Settings,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum MenuAction {
     About,
+    Settings,
 }
 
 impl menu::action::MenuAction for MenuAction {
@@ -547,6 +571,7 @@ impl menu::action::MenuAction for MenuAction {
     fn message(&self) -> Self::Message {
         match self {
             MenuAction::About => Message::ToggleContextPage(ContextPage::About),
+            MenuAction::Settings => Message::ToggleContextPage(ContextPage::Settings),
         }
     }
 }

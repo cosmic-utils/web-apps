@@ -44,7 +44,7 @@ fn main() -> cosmic::iced::Result {
     let mut settings = Settings::default();
     settings = settings.size(Size {
         width: 920.,
-        height: 700.,
+        height: 800.,
     });
 
     cosmic::app::run::<QuickWebApps>(settings, ())

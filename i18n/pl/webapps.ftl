@@ -13,6 +13,7 @@ help=Pomoc
 about=O aplikacji
 support-me=Wesprzyj mnie
 support-body=Jeśli uważasz tę aplikacje za przydatną, rozważ wsparcie autora dobrowolną wpłata :)
+settings=Ustawienia
 
 # header
 main-window={ $app }
