@@ -5,6 +5,7 @@ mod favicon;
 mod launcher;
 mod localize;
 mod pages;
+mod themes;
 
 use common::icons_location;
 use cosmic::{app::Settings, iced_core::Size};

@@ -1,11 +1,14 @@
 pub mod editor;
 mod iconpicker;
 
-use crate::common::{find_icon, image_handle, move_icon, qwa_icons_location, Icon};
+use crate::common::{find_icon, image_handle, move_icon, qwa_icons_location, themes_path, Icon};
 use crate::config::Config;
 use crate::launcher::{installed_webapps, WebAppLauncher};
+use crate::themes::Theme;
 use crate::{add_icon_packs_install_script, execute_script};
 use crate::{fl, pages::iconpicker::IconPicker};
+use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
+use cosmic::app::command::set_theme;
 use cosmic::app::context_drawer;
 use cosmic::cosmic_config::{self, CosmicConfigEntry};
 use cosmic::iced::alignment::Horizontal;
@@ -22,15 +25,19 @@ use cosmic::{task, theme};
 use editor::AppEditor;
 use futures_util::SinkExt;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::fs::read_dir;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
 use std::str::FromStr;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::oneshot;
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    ChangeUserTheme(usize),
     CloseDialog,
     Editor(editor::Message),
     Delete(widget::segmented_button::Entity),
@@ -40,17 +47,21 @@ pub enum Message {
     DownloaderStreamFinished,
     IconPicker(iconpicker::Message),
     IconsResult(Vec<String>),
+    ImportThemeFilePicker,
     LaunchUrl(String),
+    LoadThemes,
     NavBar(widget::segmented_button::Entity),
     OpenFileResult(Vec<String>),
     OpenIconPicker(String),
     OpenRepositoryUrl,
+    OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
     ReloadNavbarItems,
     SetIcon(Option<Icon>),
     DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(Config),
+    UpdateTheme(Box<Theme>),
     // emty message
     None,
 }
@@ -79,6 +90,8 @@ pub struct QuickWebApps {
     downloader_started: bool,
     downloader_id: usize,
     downloader_output: String,
+    themes_list: Vec<Theme>,
+    theme_idx: Option<usize>,
 }
 
 const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
@@ -130,11 +143,15 @@ impl Application for QuickWebApps {
             downloader_started: false,
             downloader_id: 1,
             downloader_output: String::new(),
+            themes_list: vec![Theme::Default],
+            theme_idx: Some(0),
         };
 
         let tasks = vec![
             windows.update_title(),
             task::message(Message::ReloadNavbarItems),
+            task::message(Message::LoadThemes),
+            task::message(Message::UpdateTheme(Box::new(Theme::Default))),
         ];
 
         (windows, task::batch(tasks))
@@ -194,7 +211,28 @@ impl Application for QuickWebApps {
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
+        let mut tasks: Vec<Task<Message>> = Vec::new();
+
         match message {
+            Message::ChangeUserTheme(idx) => {
+                self.theme_idx = Some(idx);
+                let selected = self.themes_list[idx].clone();
+
+                match selected {
+                    Theme::Default => {
+                        let is_dark = cosmic::theme::is_dark();
+
+                        if is_dark {
+                            return set_theme(cosmic::Theme::dark());
+                        }
+
+                        return set_theme(cosmic::Theme::light());
+                    }
+                    Theme::Custom(theme) => {
+                        tasks.push(set_theme(cosmic::Theme::custom(Arc::new(*theme))))
+                    }
+                }
+            }
             Message::CloseDialog => self.dialogs = None,
             Message::ConfirmDeletion(id) => {
                 let data = self.nav.data::<Page>(id);
@@ -281,12 +319,70 @@ impl Application for QuickWebApps {
                     }
                 };
             }
+            Message::ImportThemeFilePicker => {
+                return task::future(async {
+                    let result = SelectedFiles::open_file()
+                        .title("Open Theme")
+                        .accept_label("Open")
+                        .modal(true)
+                        .multiple(false)
+                        .filter(FileFilter::new("Ron Theme").glob("*.ron"))
+                        .send()
+                        .await
+                        .unwrap()
+                        .response();
+
+                    if let Ok(result) = result {
+                        let files = result
+                            .uris()
+                            .iter()
+                            .map(|file| file.path().to_string())
+                            .collect::<Vec<String>>();
+
+                        if !files.is_empty() {
+                            return Message::OpenThemeResult(
+                                urlencoding::decode(&files[0])
+                                    .unwrap_or_default()
+                                    .to_string(),
+                            );
+                        }
+                        Message::None
+                    } else {
+                        Message::None
+                    }
+                })
+            }
             Message::LaunchUrl(url) => match open::that_detached(&url) {
                 Ok(()) => {}
                 Err(err) => {
                     eprintln!("failed to open {url:?}: {err}");
                 }
             },
+            Message::LoadThemes => {
+                self.themes_list.clear();
+                self.themes_list.push(Theme::Default);
+
+                let folder = themes_path("");
+                let dir = read_dir(folder);
+
+                if let Ok(files) = dir {
+                    for path in files {
+                        let dir_entry = path.unwrap();
+                        let metadata = std::fs::metadata(dir_entry.path());
+
+                        if let Ok(meta) = metadata {
+                            if meta.is_file() {
+                                let mut content: String = String::new();
+
+                                let mut file = std::fs::File::open(dir_entry.path()).unwrap();
+                                let _ = file.read_to_string(&mut content);
+
+                                self.themes_list.push(Theme::from(content));
+                            }
+                        }
+                    }
+                }
+            }
             Message::NavBar(id) => {
                 let data = self.nav.data::<Page>(id);
 
@@ -314,6 +410,20 @@ impl Application for QuickWebApps {
             }
             Message::OpenRepositoryUrl => {
                 _ = open::that_detached(REPOSITORY);
+            }
+            Message::OpenThemeResult(theme) => {
+                if !theme.is_empty() {
+                    let from_path = Path::new(&theme);
+                    if let Some(file_name) = from_path.file_name() {
+                        let file_name = file_name.to_string_lossy();
+                        let destination = themes_path(&file_name);
+                        if !destination.exists() {
+                            let _ = std::fs::copy(from_path, destination);
+                        }
+                    }
+                }
+
+                tasks.push(task::message(Message::LoadThemes));
             }
             Message::ReloadNavbarItems => {
                 self.nav.clear();
@@ -353,10 +463,25 @@ impl Application for QuickWebApps {
             Message::UpdateConfig(config) => {
                 self.config = config;
             }
+            Message::UpdateTheme(theme) => {
+                let set_theme = match *theme {
+                    Theme::Default => {
+                        let is_dark = cosmic::theme::is_dark();
+
+                        if is_dark {
+                            return set_theme(cosmic::Theme::dark());
+                        }
+
+                        return set_theme(cosmic::Theme::light());
+                    }
+                    Theme::Custom(theme) => set_theme(cosmic::Theme::custom(Arc::new(*theme))),
+                };
+                tasks.push(set_theme);
+            }
             Message::None => (),
         };
 
-        Task::none()
+        Task::batch(tasks)
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
@@ -540,7 +665,22 @@ impl QuickWebApps {
         let _date = env!("VERGEN_GIT_COMMIT_DATE");
 
         widget::column()
-            .push(widget::settings::section())
+            .push(
+                widget::settings::section()
+                    .add(widget::settings::item(
+                        fl!("import-theme"),
+                        widget::button::standard(fl!("open"))
+                            .on_press(Message::ImportThemeFilePicker),
+                    ))
+                    .add(widget::settings::item(
+                        fl!("imported-themes"),
+                        widget::dropdown(
+                            &self.themes_list,
+                            self.theme_idx,
+                            Message::ChangeUserTheme,
+                        ),
+                    )),
+            )
             .align_x(Alignment::Center)
             .spacing(space_xxs)
             .into()

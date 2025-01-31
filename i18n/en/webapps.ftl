@@ -14,6 +14,8 @@ about=About
 support-me=Support me
 support-body=If you find this app useful, please consider to support author, by optional donation :)
 settings=Settings
+import-theme=Import theme
+imported-themes=Imported themes
 
 # header
 main-window={ $app }

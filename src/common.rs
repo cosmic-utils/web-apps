@@ -51,6 +51,16 @@ pub fn home_dir() -> PathBuf {
     PathBuf::new()
 }
 
+pub fn themes_path(theme_file: &str) -> PathBuf {
+    let path = home_dir().join(".local/share/quick-webapps/themes");
+
+    if !path.exists() {
+        create_dir_all(&path).unwrap();
+    }
+
+    path.join(theme_file)
+}
+
 pub fn desktop_filepath(filename: &str) -> PathBuf {
     let mut home = home_dir();
     home.push(".local/share/applications");
