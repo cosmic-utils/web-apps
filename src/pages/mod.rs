@@ -90,7 +90,7 @@ impl Application for QuickWebApps {
     type Flags = ();
     type Message = Message;
 
-    const APP_ID: &'static str = "io.github.hepp3n.WebApps";
+    const APP_ID: &'static str = "dev.heppen.webapps";
 
     fn core(&self) -> &Core {
         &self.core

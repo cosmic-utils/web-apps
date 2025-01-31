@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <component type="desktop-application">
-    <id>io.github.elevenhsoft.WebApps</id>
-    <developer id="io.github.elevenhsoft">
-        <name>elevenhsoft</name>
+    <id>dev.heppen.webapps</id>
+    <developer id="dev.heppen">
+        <name>hepp3n</name>
     </developer>
     <url type="homepage">https://github.com/cosmic-utils/web-apps</url>
     <url type="vcs-browser">https://github.com/cosmic-utils/web-apps</url>
     <url type="bugtracker">https://github.com/cosmic-utils/web-apps/issues</url>
     <url type="contribute">https://github.com/cosmic-utils/web-apps</url>
-    <url type="translate">https://github.com/cosmic-utils/web-apps/tree/master/i18n</url>
-    <url type="donation">https://ko-fi.com/elevenhsoft</url>
+    <url
+        type="translate"
+    >https://github.com/cosmic-utils/web-apps/tree/master/i18n</url>
+    <url type="donation">https://github.com/sponsors/hepp3n</url>
 
     <name>Quick Web Apps</name>
     <summary>Web applications at your fingertips</summary>
@@ -32,7 +34,7 @@
     </description>
 
     <description xml:lang="fr">
-        <p>Applications Web Rapides écrites avec amour et libcosmic.  
+        <p>Applications Web Rapides écrites avec amour et libcosmic.
         Transformez n'importe quelle URL en Application Web, exécutée dans une fenêtre distincte de n'importe quel navigateur installé sur votre système, sélectionné selon vos préférences.
         S'intègre à votre environnement de bureau (icône épinglable sur le dock).
         </p>
@@ -44,7 +46,7 @@
         </ul>
     </description>
 
-    <launchable type="desktop-id">io.github.elevenhsoft.WebApps.desktop</launchable>
+    <launchable type="desktop-id">dev.heppen.webapps.desktop</launchable>
     <content_rating type="oars-1.1" />
 
     <categories>
@@ -96,6 +98,11 @@
     </supports>
 
     <releases>
+        <release version="1.0.0">
+            <description>
+                <p>Many improvements and new interface</p>
+            </description>
+        </release>
         <release version="0.5.4" date="2024-11-30">
             <description>
                 <p>Some fixes and improvements</p>

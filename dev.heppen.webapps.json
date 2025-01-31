@@ -1,11 +1,9 @@
 {
-  "app-id": "io.github.elevenhsoft.WebApps",
+  "app-id": "dev.heppen.webapps",
   "runtime": "org.freedesktop.Platform",
   "runtime-version": "24.08",
   "sdk": "org.freedesktop.Sdk",
-  "sdk-extensions": [
-    "org.freedesktop.Sdk.Extension.rust-stable"
-  ],
+  "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
   "base": "com.system76.Cosmic.BaseApp",
   "base-version": "stable",
   "command": "quick-webapps",

@@ -4,6 +4,6 @@ Exec=quick-webapps
 Terminal=false
 Type=Application
 StartupNotify=true
-Icon=io.github.elevenhsoft.WebApps
+Icon=dev.heppen.webapps
 Categories=X-COSMIC;Utility;
 Keywords=App;Software;Manager;

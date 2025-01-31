@@ -1,5 +1,5 @@
 name := 'quick-webapps'
-export APPID := 'io.github.elevenhsoft.WebApps'
+export APPID := 'dev.heppen.webapps'
 
 rootdir := ''
 prefix := '/usr'
