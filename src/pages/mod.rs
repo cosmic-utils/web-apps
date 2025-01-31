@@ -83,7 +83,7 @@ pub struct QuickWebApps {
 
 const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 const APP_ICON: &[u8] =
-    include_bytes!("../../res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png");
+    include_bytes!("../../res/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
 
 impl Application for QuickWebApps {
     type Executor = cosmic::executor::Default;
