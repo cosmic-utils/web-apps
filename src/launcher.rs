@@ -23,7 +23,7 @@ pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
 pub fn installed_webapps() -> Vec<WebAppLauncher> {
     let mut webapps = Vec::new();
 
-    match fs::read_dir(common::desktop_filepath("")) {
+    match fs::read_dir(dirs::data_dir().unwrap_or_default().join("applications")) {
         Ok(entries) => {
             for entry in entries {
                 match entry {
@@ -31,7 +31,9 @@ pub fn installed_webapps() -> Vec<WebAppLauncher> {
                         let entry_fn = entry.file_name();
                         let filename = entry_fn.to_str().unwrap();
 
-                        if filename.starts_with("QuickWebApp-") && filename.ends_with(".desktop") {
+                        if filename.starts_with("dev.heppen.webapps.")
+                            && filename.ends_with(".desktop")
+                        {
                             let fde = DesktopEntry::from_path(entry.path(), Some(&LOCALES));
 
                             match fde {
@@ -202,7 +204,10 @@ impl WebAppLauncher {
             desktop_entry.push_str("Type=Application\n");
             desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
             desktop_entry.push_str("MimeType=text/html;text/xml;application/xhtml_xml;\n");
-            desktop_entry.push_str(&format!("StartupWMClass=QuickWebApp-{}\n", self.codename));
+            desktop_entry.push_str(&format!(
+                "StartupWMClass=dev.heppen.webapps.{}\n",
+                self.codename
+            ));
             desktop_entry.push_str("StartupNotify=true\n");
             desktop_entry.push_str(&format!("X-QWA-Codename={}\n", self.codename));
             desktop_entry.push_str(&format!("X-QWA-Browser-Id={}\n", entry.appid));
@@ -228,7 +233,7 @@ impl WebAppLauncher {
                 proxy
                     .install(
                         token,
-                        &format!("QuickWebApp-{}.desktop", self.codename),
+                        &format!("dev.heppen.webapps.{}.desktop", self.codename),
                         &desktop_entry,
                     )
                     .await?;
@@ -241,7 +246,7 @@ impl WebAppLauncher {
     pub async fn delete(&self) -> Result<()> {
         let proxy = DynamicLauncherProxy::new().await?;
         proxy
-            .uninstall(&format!("QuickWebApp-{}.desktop", self.codename))
+            .uninstall(&format!("dev.heppen.webapps.{}.desktop", self.codename))
             .await?;
         let profile_path = self.browser.profile_path.join(&self.codename);
         remove_dir_all(&profile_path)?;
