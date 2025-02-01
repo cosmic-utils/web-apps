@@ -37,43 +37,38 @@ pub fn is_svg(path: &str) -> bool {
     false
 }
 
-pub fn home_dir() -> PathBuf {
-    let home = std::env::var("HOME");
+pub fn themes_path(theme_file: &str) -> PathBuf {
+    if let Some(xdg_data) = dirs::data_dir() {
+        let path = xdg_data.join("quick-webapps/themes");
 
-    if let Some(path) = dirs::home_dir() {
-        return path;
-    }
+        if !path.exists() {
+            create_dir_all(&path).unwrap();
+        }
 
-    if let Ok(path) = home {
-        return PathBuf::from_str(&path).unwrap();
+        return path.join(theme_file);
     }
 
     PathBuf::new()
 }
 
-pub fn themes_path(theme_file: &str) -> PathBuf {
-    let path = home_dir().join(".local/share/quick-webapps/themes");
-
-    if !path.exists() {
-        create_dir_all(&path).unwrap();
+pub fn desktop_filepath(filename: &str) -> PathBuf {
+    if let Some(xdg_data) = dirs::data_dir() {
+        return xdg_data.join("applications").join(filename);
     }
 
-    path.join(theme_file)
-}
-
-pub fn desktop_filepath(filename: &str) -> PathBuf {
-    let mut home = home_dir();
-    home.push(".local/share/applications");
-    home.join(filename)
+    PathBuf::new()
 }
 
 pub fn icons_location() -> PathBuf {
-    home_dir().join(".local/share/icons")
+    if let Some(xdg_data) = dirs::data_dir() {
+        return xdg_data.join("icons");
+    }
+
+    PathBuf::new()
 }
 
 pub fn system_icons() -> PathBuf {
-    let Ok(path) = PathBuf::from_str("/usr/share/icons");
-    path
+    PathBuf::from_str("/usr/share/icons").unwrap_or_default()
 }
 
 pub fn qwa_icons_location() -> PathBuf {
@@ -86,8 +81,10 @@ pub fn fd_entries() -> Vec<DesktopEntry> {
 
     // this is workaround for flatpak sandbox
     if PathBuf::from("/.flatpak-info").exists() {
-        paths.push(home_dir().join(".local/share/applications"));
-        paths.push(home_dir().join(".local/share/flatpak/exports/share/applications"));
+        if let Some(xdg_data) = dirs::data_dir() {
+            paths.push(xdg_data.join("applications"));
+            paths.push(xdg_data.join("flatpak/exports/share/applications"));
+        }
         paths.push("/var/lib/flatpak/exports/share/applications".into());
         paths.push("/run/host/usr/share/applications".into());
         paths.push("/run/host/usr/local/share/applications".into());

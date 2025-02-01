@@ -1,7 +1,4 @@
-use crate::{
-    common::{fd_entries, home_dir},
-    LOCALES,
-};
+use crate::{common::fd_entries, LOCALES};
 use freedesktop_desktop_entry::{matching::find_entry_from_appid, DesktopEntry, PathSource};
 use std::{
     fs::{create_dir_all, remove_file, File},
@@ -409,16 +406,8 @@ impl Browser {
     fn create(entry: DesktopEntry) -> Self {
         let mut name = entry.name(&LOCALES).unwrap_or_default().to_string();
         let exec = entry.exec().unwrap_or_default().to_string();
-        let is_flatpak = entry.flatpak().is_some();
-        let profile_path = match is_flatpak {
-            true => home_dir()
-                .join(".var/app/")
-                .join(&entry.appid)
-                .join("data/profiles"),
-            false => home_dir()
-                .join(".local/share/quick-webapps/")
-                .join(&entry.appid),
-        };
+        let xdg_data = dirs::data_dir().unwrap_or_default();
+        let profile_path = xdg_data.join("quick-webapps").join(&entry.appid);
 
         if let Some(model) = BrowserModel::from(&entry.appid) {
             let source = match PathSource::guess_from(&entry.path) {
