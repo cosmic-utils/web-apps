@@ -14,8 +14,6 @@
     "--device=dri",
     "--share=network",
     "--filesystem=host-os:ro",
-    "--filesystem=xdg-download:ro",
-    "--filesystem=~/.var/app:rw",
     "--talk-name=com.system76.CosmicSettingsDaemon"
   ],
   "build-options": {

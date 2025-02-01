@@ -82,7 +82,7 @@
     </supports>
 
     <releases>
-        <release version="1.0.0" date="2025-02-01>
+        <release version="1.0.0" date="2025-02-01">
             <description>
                 <p>Breaking changes, require creating web apps from scratch, also not compatible with previous releases...</p>
                 <p>Many improvements and new interface</p>

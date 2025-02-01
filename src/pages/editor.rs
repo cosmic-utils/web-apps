@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use cosmic::{
     iced::{alignment::Vertical, Length},
     style, task,
@@ -227,7 +229,7 @@ impl AppEditor {
 
                 if webapplauncher_is_valid(&icon_final_path, &self.app_title, &self.app_url) {
                     if let Some(browser) = &self.app_browser {
-                        let launcher = WebAppLauncher {
+                        let launcher = Arc::new(WebAppLauncher {
                             codename: self.app_codename.clone(),
                             browser: browser.clone(),
                             name: self.app_title.clone(),
@@ -238,13 +240,16 @@ impl AppEditor {
                             isolate_profile: self.app_isolated,
                             navbar: self.app_navbar,
                             is_incognito: self.app_incognito,
-                        };
+                        });
 
-                        let _ = launcher.create().is_ok();
+                        let arc_launcher = Arc::clone(&launcher);
+
+                        return task::future(async move {
+                            arc_launcher.create().await.unwrap();
+                            pages::Message::ReloadNavbarItems
+                        });
                     };
                 }
-
-                return task::message(pages::Message::ReloadNavbarItems);
             }
             Message::Navbar(flag) => {
                 self.app_navbar = flag;

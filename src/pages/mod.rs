@@ -40,6 +40,7 @@ pub enum Message {
     CloseDialog,
     Editor(editor::Message),
     Delete(widget::segmented_button::Entity),
+    DeletionDone(widget::segmented_button::Entity),
     DownloaderDone,
     DownloaderStarted,
     DownloaderStream(String),
@@ -241,15 +242,17 @@ impl Application for QuickWebApps {
                             is_incognito: app_editor.app_incognito,
                         };
 
-                        let deleted = launcher.delete();
-
-                        if deleted.is_ok() {
-                            self.nav.remove(id);
-                            self.dialogs = None;
-                            self.page = Page::Editor(AppEditor::new())
-                        };
+                        return task::future(async move {
+                            launcher.delete().await.unwrap();
+                            Message::DeletionDone(id)
+                        });
                     };
                 }
+            }
+            Message::DeletionDone(id) => {
+                self.nav.remove(id);
+                self.dialogs = None;
+                self.page = Page::Editor(AppEditor::new())
             }
             Message::DownloaderDone => {
                 self.downloader_started = false;

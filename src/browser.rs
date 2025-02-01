@@ -480,7 +480,7 @@ pub fn installed_browsers() -> Vec<Browser> {
 
     for entry in fd_entries() {
         if let Some(comments) = entry.comment(&LOCALES) {
-            if comments.contains("Quick Web Apps") {
+            if comments.contains("Quick Web App") {
                 continue;
             }
         }

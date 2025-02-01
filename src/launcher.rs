@@ -5,11 +5,11 @@ use crate::{
     LOCALES,
 };
 use anyhow::Result;
+use ashpd::desktop::dynamic_launcher::{DynamicLauncherProxy, PrepareInstallOptions};
 use freedesktop_desktop_entry::DesktopEntry;
 use std::{
-    fs::{self, create_dir_all, remove_dir_all, remove_file, File},
-    io::Write,
-    path::PathBuf,
+    fs::{self, create_dir_all, remove_dir_all, File},
+    io::Read,
 };
 
 pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
@@ -191,49 +191,60 @@ impl WebAppLauncher {
         String::new()
     }
 
-    fn qwa_desktop_path(&self) -> PathBuf {
-        let filename = format!("QuickWebApp-{}.desktop", self.codename);
-        common::desktop_filepath(&filename)
-    }
-
-    pub fn create(&self) -> Result<()> {
+    pub async fn create(&self) -> Result<()> {
         if let Some(entry) = &self.browser.entry {
-            if self.qwa_desktop_path().exists() {
-                remove_file(self.qwa_desktop_path())?;
+            let proxy = DynamicLauncherProxy::new().await?;
+
+            let mut desktop_entry = String::from("[Desktop Entry]\n");
+            desktop_entry.push_str("Comment=Quick Web App\n");
+            desktop_entry.push_str(&format!("Exec={}\n", self.exec_string()));
+            desktop_entry.push_str("Terminal=false\n");
+            desktop_entry.push_str("Type=Application\n");
+            desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
+            desktop_entry.push_str("MimeType=text/html;text/xml;application/xhtml_xml;\n");
+            desktop_entry.push_str(&format!("StartupWMClass=QuickWebApp-{}\n", self.codename));
+            desktop_entry.push_str("StartupNotify=true\n");
+            desktop_entry.push_str(&format!("X-QWA-Codename={}\n", self.codename));
+            desktop_entry.push_str(&format!("X-QWA-Browser-Id={}\n", entry.appid));
+            desktop_entry.push_str(&format!("X-QWA-Url={}\n", self.url));
+            desktop_entry.push_str(&format!("X-QWA-Navbar={}\n", self.navbar));
+            desktop_entry.push_str(&format!("X-QWA-Private={}\n", self.is_incognito));
+            desktop_entry.push_str(&format!("X-QWA-Isolated={}\n", self.isolate_profile));
+            desktop_entry.push_str(&format!("X-QWA-Parameters={}\n", self.custom_parameters));
+
+            if let Ok(mut f) = File::open(&self.icon) {
+                let metadata = std::fs::metadata(&self.icon).expect("unable to read metadata");
+                let mut buffer = vec![0; metadata.len() as usize];
+                f.read_exact(&mut buffer).expect("buffer overflow");
+
+                let icon = ashpd::desktop::Icon::Bytes(buffer);
+
+                let response = proxy
+                    .prepare_install(None, &self.name, icon, PrepareInstallOptions::default())
+                    .await?
+                    .response()?;
+                let token = response.token();
+
+                proxy
+                    .install(
+                        token,
+                        &format!("QuickWebApp-{}.desktop", self.codename),
+                        &desktop_entry,
+                    )
+                    .await?;
             }
-
-            let mut output = File::create(self.qwa_desktop_path())?;
-
-            writeln!(output, "[Desktop Entry]")?;
-            writeln!(output, "Version=1.0")?;
-            writeln!(output, "Name={}", self.name)?;
-            writeln!(output, "Comment=Quick Web Apps")?;
-            writeln!(output, "Exec={}", self.exec_string())?;
-            writeln!(output, "Terminal=false")?;
-            writeln!(output, "Type=Application")?;
-            writeln!(output, "Icon={}", self.icon)?;
-            writeln!(output, "Categories={};", self.category.as_ref())?;
-            writeln!(output, "MimeType=text/html;text/xml;application/xhtml_xml;")?;
-            writeln!(output, "StartupWMClass=QuickWebApp-{}", self.codename)?;
-            writeln!(output, "StartupNotify=true")?;
-            writeln!(output, "X-QWA-Codename={}", self.codename)?;
-            writeln!(output, "X-QWA-Browser-Id={}", entry.appid)?;
-            writeln!(output, "X-QWA-Url={}", self.url)?;
-            writeln!(output, "X-QWA-Navbar={}", self.navbar)?;
-            writeln!(output, "X-QWA-Private={}", self.is_incognito)?;
-            writeln!(output, "X-QWA-Isolated={}", self.isolate_profile)?;
-            writeln!(output, "X-QWA-Parameters={}", self.custom_parameters)?;
         }
 
         Ok(())
     }
 
-    pub fn delete(&self) -> Result<()> {
-        if self.qwa_desktop_path().exists() {
-            let profile_path = self.browser.profile_path.join(&self.codename);
-            remove_file(self.qwa_desktop_path())?;
-            remove_dir_all(&profile_path)?;
-        }
+    pub async fn delete(&self) -> Result<()> {
+        let proxy = DynamicLauncherProxy::new().await?;
+        proxy
+            .uninstall(&format!("QuickWebApp-{}.desktop", self.codename))
+            .await?;
+        let profile_path = self.browser.profile_path.join(&self.codename);
+        remove_dir_all(&profile_path)?;
 
         Ok(())
     }
