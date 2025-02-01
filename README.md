@@ -4,16 +4,14 @@
   <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/res/icons/hicolor/256x256/apps/dev.heppen.webapps.png" width="192" />
   <h1>Quick Web Apps</h1>
 
-<h3>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications
-from
-given url working inside separate window of your browser of choice.</h3>
+    <h3>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window of your browser of choice.</h3>
 
   <br>
 
-  <img alt="Quick Web Apps Light window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/res/screenshots/window-light.png" width="192">
-  <img alt="Quick Web Apps Dark window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/res/screenshots/window-dark.png" width="192">
+  <img alt="Quick Web Apps Light window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0a/res/screenshots/window-light.png" width="256">
+  <img alt="Quick Web Apps Dark window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0a/res/screenshots/window-dark.png" width="256">
 
-<br><br><br>
+  <br><br><br>
 
   <a href='https://flathub.org/apps/io.github.elevenhsoft.WebApps'>
     <img width='240' alt='Download on Flathub' src='https://flathub.org/api/badge?locale=en'/>
