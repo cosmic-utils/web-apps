@@ -14,6 +14,7 @@
     "--device=dri",
     "--share=network",
     "--filesystem=host-os:ro",
+    "--filesystem=xdg-download:ro",
     "--filesystem=xdg-config/cosmic:create",
     "--filesystem=xdg-data/flatpak:ro",
     "--filesystem=xdg-data/applications:rw",
