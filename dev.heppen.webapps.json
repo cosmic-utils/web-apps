@@ -13,13 +13,14 @@
     "--socket=wayland",
     "--device=dri",
     "--share=network",
-    "--filesystem=host-os",
-    "--filesystem=/var/lib/flatpak:ro",
-    "--filesystem=~/.local/share/flatpak:ro",
-    "--filesystem=~/.local/share/applications:rw",
-    "--filesystem=~/.local/share/icons:create",
-    "--filesystem=~/.local/share/quick-webapps:create",
-    "--filesystem=~/.var/app:rw"
+    "--filesystem=host-os:ro",
+    "--filesystem=xdg-config/cosmic:create",
+    "--filesystem=xdg-data/flatpak:ro",
+    "--filesystem=xdg-data/applications:rw",
+    "--filesystem=xdg-data/icons:create",
+    "--filesystem=xdg-data/quick-webapps:create",
+    "--filesystem=~/.var/app:rw",
+    "--talk-name=com.system76.CosmicSettingsDaemon"
   ],
   "build-options": {
     "append-path": "/usr/lib/sdk/rust-stable/bin"
