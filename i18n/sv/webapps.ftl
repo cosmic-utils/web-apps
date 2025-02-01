@@ -2,9 +2,24 @@ app=Snabba webbappar
 loading=Laddar...
 open=Öppna
 number={ $number }
+git-description = Git commit {$hash} på {$date}
+delete=Radera
+yes=Ja
+no=Nej
+confirm-delete=Är du säker på att du vill radera { $app }?
+cancel=Avbryt
+downloader-canceled=Installationen avbröts.
+help=Hjälp
+about=Om
+support-me=Stöd mig
+support-body=Om du tycker att det här programmet är användbart, överväg att stödja utvecklaren genom valfri donation :)
+settings=Inställningar
+import-theme=Importera tema
+imported-themes=Importerade teman
 
 # header
 main-window={ $app }
+view=Visa
 create=Skapa
 edit=Editera
 close=Stäng
@@ -13,10 +28,14 @@ icon-selector=Ikonväljare
 icon-installer=Installationsprogram för Papirus ikoner
 
 # common.rs
+select-category=Välj kategori
 select-browser=Välj webbläsare
 
 # home_screen.rs
-installed-header=Du har { $number } webb appar installerade:
+installed-header=Du har{ $number ->
+        [1] 1 webbapp
+        *[other] { $number} webappar
+    } installerade:
 not-installed-header=Du har ingen webbapp installerad. Vänligen tryck på skapa knappen och skapa en.
 
 # creator.rs
@@ -32,8 +51,11 @@ sound-and-video=Ljud & Video
 
 browser=Webbläsare
 
+new-webapp-title=Ny Snabb webbapp
+
 title=Titel
 url=URL
+download-favicon=Ladda ner favicon
 non-standard-arguments=Icke-standardiserade argument
 # behåll navigeringsfältet, isolerad profil och privat läge litet antal tecken
 navbar=Navigeringsfältet
@@ -44,10 +66,12 @@ private-mode=Privat läge
 icon-name-to-find=Ikonnamn att hitta
 my-icons=Mina ikoner
 download=Ladda ner
+search=Sök
 
 # icons_installator.rs
 icons-installer-header=Please wait. Laddar ner ikoner...
 icons-installer-message=Detta program kräver ikoner att jobba med. Om vi ​​inte har tillgång till dina installerade ikoner, installerar vi Papirus ikonpaketet till en lokal katalog så att du kan välja en ikon för din webbapp från detta paket.
+icons-installer-finished-waiting=Nedladdningen är klar. Väntar 3 sekunder på att stänga det här fönstret..
 
 
 # warning.rs
