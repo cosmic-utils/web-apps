@@ -2,15 +2,14 @@ pub mod editor;
 mod iconpicker;
 
 use crate::common::{find_icon, image_handle, move_icon, qwa_icons_location, themes_path, Icon};
-use crate::config::Config;
+use crate::config::AppConfig;
 use crate::launcher::{installed_webapps, WebAppLauncher};
 use crate::themes::Theme;
-use crate::{add_icon_packs_install_script, execute_script};
+use crate::{add_icon_packs_install_script, execute_script, APP_ICON, APP_ID, REPOSITORY};
 use crate::{fl, pages::iconpicker::IconPicker};
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::app::command::set_theme;
 use cosmic::app::context_drawer;
-use cosmic::cosmic_config::{self, CosmicConfigEntry};
 use cosmic::iced::alignment::Horizontal;
 use cosmic::iced::window::Id;
 use cosmic::iced::{Alignment, Length, Subscription};
@@ -60,7 +59,7 @@ pub enum Message {
     SetIcon(Option<Icon>),
     DownloaderStop,
     ToggleContextPage(ContextPage),
-    UpdateConfig(Config),
+    UpdateConfig(AppConfig),
     UpdateTheme(Box<Theme>),
     // emty message
     None,
@@ -84,7 +83,7 @@ pub struct QuickWebApps {
     context_page: ContextPage,
     nav: nav_bar::Model,
     key_binds: HashMap<menu::KeyBind, MenuAction>,
-    config: Config,
+    config: AppConfig,
     page: Page,
     dialogs: Option<Dialogs>,
     downloader_started: bool,
@@ -94,16 +93,12 @@ pub struct QuickWebApps {
     theme_idx: Option<usize>,
 }
 
-const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
-const APP_ICON: &[u8] =
-    include_bytes!("../../res/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
-
 impl Application for QuickWebApps {
     type Executor = cosmic::executor::Default;
     type Flags = ();
     type Message = Message;
 
-    const APP_ID: &'static str = "dev.heppen.webapps";
+    const APP_ID: &'static str = APP_ID;
 
     fn core(&self) -> &Core {
         &self.core
@@ -119,7 +114,7 @@ impl Application for QuickWebApps {
         } else {
             Id::unique()
         };
-
+        let config = AppConfig::config();
         let add_page = Page::Editor(AppEditor::new());
         let nav = nav_bar::Model::default();
 
@@ -129,15 +124,7 @@ impl Application for QuickWebApps {
             context_page: ContextPage::About,
             nav,
             key_binds: HashMap::new(),
-            config: cosmic_config::Config::new(Self::APP_ID, Config::VERSION)
-                .map(|context| match Config::get_entry(&context) {
-                    Ok(config) => config,
-                    Err((errors, config)) => {
-                        tracing::error!("error loading app config: {:#?}", errors);
-                        config
-                    }
-                })
-                .unwrap_or_default(),
+            config,
             page: add_page,
             dialogs: None,
             downloader_started: false,
@@ -162,7 +149,7 @@ impl Application for QuickWebApps {
 
         subscriptions.push(
             self.core()
-                .watch_config::<Config>(Self::APP_ID)
+                .watch_config::<AppConfig>(Self::APP_ID)
                 .map(|update| Message::UpdateConfig(update.config)),
         );
 
@@ -366,12 +353,24 @@ impl Application for QuickWebApps {
                                 let mut file = std::fs::File::open(dir_entry.path()).unwrap();
                                 let _ = file.read_to_string(&mut content);
 
-                                self.themes_list
-                                    .push(Theme::build(theme_name.to_string(), content));
+                                let theme = Theme::build(theme_name.to_string(), content);
+
+                                if theme_name == self.config.app_theme {
+                                    tasks.push(task::message(Message::UpdateTheme(Box::new(
+                                        theme.clone(),
+                                    ))));
+                                }
+
+                                self.themes_list.push(theme);
                             }
                         }
                     }
                 }
+
+                self.theme_idx = self.themes_list.iter().position(|c| match c {
+                    Theme::Default => self.config.app_theme == "COSMIC",
+                    Theme::Custom(theme) => self.config.app_theme == theme.0,
+                })
             }
             Message::NavBar(id) => {
                 let data = self.nav.data::<Page>(id);
@@ -456,9 +455,17 @@ impl Application for QuickWebApps {
             Message::UpdateTheme(theme) => {
                 let set_theme = match *theme {
                     Theme::Default => {
-                        return set_theme(cosmic::theme::system_preference());
+                        if let Some(handler) = AppConfig::config_handler() {
+                            let _ = self.config.set_app_theme(&handler, "COSMIC".into());
+                        };
+                        set_theme(cosmic::theme::system_preference())
                     }
-                    Theme::Custom(theme) => set_theme(cosmic::Theme::custom(Arc::new(*theme.1))),
+                    Theme::Custom(theme) => {
+                        if let Some(handler) = AppConfig::config_handler() {
+                            let _ = self.config.set_app_theme(&handler, theme.0);
+                        };
+                        set_theme(cosmic::Theme::custom(Arc::new(*theme.1)))
+                    }
                 };
                 tasks.push(set_theme);
             }
