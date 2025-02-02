@@ -15,7 +15,7 @@ use crate::{
     browser::{installed_browsers, Browser, BrowserModel},
     common::{self, image_handle, move_icon, url_valid, Icon, IconType},
     fl,
-    launcher::{webapplauncher_is_valid, WebAppLauncher},
+    launcher::{launch_webapp, webapplauncher_is_valid, WebAppLauncher},
     pages,
 };
 
@@ -138,6 +138,7 @@ pub enum Message {
     Done,
     Incognito(bool),
     IsolatedProfile(bool),
+    LaunchApp,
     Navbar(bool),
     OpenIconPicker(String),
     SearchFavicon,
@@ -260,14 +261,23 @@ impl AppEditor {
                     };
                 }
             }
-            Message::Navbar(flag) => {
-                self.app_navbar = flag;
-            }
             Message::Incognito(flag) => {
                 self.app_incognito = flag;
             }
             Message::IsolatedProfile(flag) => {
                 self.app_isolated = flag;
+            }
+            Message::LaunchApp => {
+                let app_id = Arc::new(self.app_codename.clone());
+                let cloned_id = Arc::clone(&app_id);
+                return task::future(async move {
+                    launch_webapp(cloned_id).await.unwrap();
+
+                    pages::Message::None
+                });
+            }
+            Message::Navbar(flag) => {
+                self.app_navbar = flag;
             }
             Message::OpenIconPicker(app_url) => {
                 return task::future(async { pages::Message::OpenIconPicker(app_url) })
@@ -437,15 +447,26 @@ impl AppEditor {
                             widget::toggler(self.app_incognito).on_toggle(Message::Incognito),
                         )),
                 )
-                .push(widget::row().push(widget::horizontal_space()).push(
-                    widget::button::suggested(fl!("create")).on_press_maybe(
-                        if webapplauncher_is_valid(&self.app_icon, &self.app_title, &self.app_url) {
-                            Some(Message::Done)
-                        } else {
-                            None
-                        },
-                    ),
-                )),
+                .push(
+                    widget::row()
+                        .spacing(8)
+                        .push(widget::horizontal_space())
+                        .push(
+                            widget::button::standard(fl!("run-app"))
+                                .on_press_maybe(Some(Message::LaunchApp)),
+                        )
+                        .push(widget::button::suggested(fl!("create")).on_press_maybe(
+                            if webapplauncher_is_valid(
+                                &self.app_icon,
+                                &self.app_title,
+                                &self.app_url,
+                            ) {
+                                Some(Message::Done)
+                            } else {
+                                None
+                            },
+                        )),
+                ),
         )
         .max_width(1000)
         .into()

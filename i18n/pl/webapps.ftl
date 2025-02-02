@@ -16,6 +16,7 @@ support-body=Jeśli uważasz tę aplikacje za przydatną, rozważ wsparcie autor
 settings=Ustawienia
 import-theme=Zaimportuj motyw
 imported-themes=Zaimportowane motywy
+run-app=Uruchom aplikacje
 
 # header
 main-window={ $app }

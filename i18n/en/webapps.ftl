@@ -16,6 +16,7 @@ support-body=If you find this app useful, please consider to support author, by 
 settings=Settings
 import-theme=Import theme
 imported-themes=Imported themes
+run-app=Run app
 
 # header
 main-window={ $app }

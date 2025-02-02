@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, File},
     io::Read,
+    sync::Arc,
 };
 use tokio::fs::{remove_dir_all, remove_file};
 
@@ -242,4 +243,17 @@ impl WebAppLauncher {
 
         Ok(())
     }
+}
+
+pub async fn launch_webapp(app_id: Arc<String>) -> anyhow::Result<()> {
+    let proxy = DynamicLauncherProxy::new().await?;
+
+    proxy
+        .launch(
+            &format!("dev.heppen.webapps.{}.desktop", app_id),
+            ashpd::desktop::dynamic_launcher::LaunchOptions::default(),
+        )
+        .await?;
+
+    Ok(())
 }
