@@ -1,7 +1,9 @@
 pub mod editor;
 mod iconpicker;
 
-use crate::common::{find_icon, image_handle, move_icon, qwa_icons_location, themes_path, Icon};
+use crate::common::{
+    database_path, find_icon, image_handle, move_icon, qwa_icons_location, themes_path, Icon,
+};
 use crate::config::AppConfig;
 use crate::launcher::{installed_webapps, WebAppLauncher};
 use crate::themes::Theme;
@@ -23,9 +25,10 @@ use cosmic::{
 use cosmic::{task, theme};
 use editor::AppEditor;
 use futures_util::SinkExt;
+use ron::ser::to_string_pretty;
 use std::collections::HashMap;
 use std::fs::read_dir;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
 use std::str::FromStr;
@@ -57,6 +60,7 @@ pub enum Message {
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
     ReloadNavbarItems,
+    SaveLauncher(Arc<WebAppLauncher>),
     SetIcon(Option<Icon>),
     DownloaderStop,
     ToggleContextPage(ContextPage),
@@ -437,6 +441,18 @@ impl Application for QuickWebApps {
                 });
 
                 self.page = Page::Editor(AppEditor::new());
+            }
+            Message::SaveLauncher(launcher) => {
+                let location = database_path(&format!("{}.ron", launcher.codename));
+                let content = to_string_pretty(&*launcher, ron::ser::PrettyConfig::default());
+
+                if let Ok(content) = content {
+                    let file = std::fs::File::create(location);
+
+                    if let Ok(mut f) = file {
+                        let _ = f.write_all(content.as_bytes());
+                    }
+                }
             }
             Message::SetIcon(icon) => {
                 let Page::Editor(app_editor) = &mut self.page;

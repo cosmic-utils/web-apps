@@ -51,9 +51,15 @@ pub fn themes_path(theme_file: &str) -> PathBuf {
     PathBuf::new()
 }
 
-pub fn desktop_filepath(filename: &str) -> PathBuf {
+pub fn database_path(entry: &str) -> PathBuf {
     if let Some(xdg_data) = dirs::data_dir() {
-        return xdg_data.join("applications").join(filename);
+        let path = xdg_data.join("quick-webapps/database");
+
+        if !path.exists() {
+            create_dir_all(&path).unwrap();
+        }
+
+        return path.join(entry);
     }
 
     PathBuf::new()

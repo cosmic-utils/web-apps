@@ -7,6 +7,7 @@ use cosmic::{
     Element, Task,
 };
 use rand::{rng, Rng};
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -21,7 +22,7 @@ use crate::{
 use super::REPOSITORY;
 
 #[repr(u8)]
-#[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Category {
     #[default]
     Audio = 0,
@@ -244,10 +245,18 @@ impl AppEditor {
 
                         let arc_launcher = Arc::clone(&launcher);
 
-                        return task::future(async move {
+                        let mut tasks: Vec<Task<pages::Message>> = Vec::new();
+
+                        tasks.push(task::future(async move {
                             arc_launcher.create().await.unwrap();
                             pages::Message::ReloadNavbarItems
-                        });
+                        }));
+
+                        let arc_launcher = Arc::clone(&launcher);
+
+                        tasks.push(task::message(pages::Message::SaveLauncher(arc_launcher)));
+
+                        return task::batch(tasks);
                     };
                 }
             }

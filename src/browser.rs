@@ -1,5 +1,6 @@
 use crate::{common::fd_entries, LOCALES};
 use freedesktop_desktop_entry::{matching::find_entry_from_appid, DesktopEntry, PathSource};
+use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir_all, remove_file, File},
     io::Write,
@@ -330,7 +331,7 @@ impl Chromium {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, Deserialize, Serialize)]
 pub enum BrowserModel {
     Brave,
     Chrome,
@@ -375,7 +376,7 @@ impl BrowserModel {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum BrowserSource {
     Flatpak,
     #[default]
@@ -386,10 +387,12 @@ pub enum BrowserSource {
     SystemFlatpak,
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Browser {
     pub model: Option<BrowserModel>,
     pub source: BrowserSource,
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
     pub entry: Option<DesktopEntry>,
     pub name: String,
     pub exec: String,
@@ -407,7 +410,7 @@ impl Browser {
         let mut name = entry.name(&LOCALES).unwrap_or_default().to_string();
         let exec = entry.exec().unwrap_or_default().to_string();
         let xdg_data = dirs::data_dir().unwrap_or_default();
-        let profile_path = xdg_data.join("quick-webapps").join(&entry.appid);
+        let profile_path = xdg_data.join("quick-webapps/profiles").join(&entry.appid);
 
         if let Some(model) = BrowserModel::from(&entry.appid) {
             let source = match PathSource::guess_from(&entry.path) {

@@ -1,16 +1,18 @@
 use crate::{
     browser::{Browser, BrowserModel, Chromium, Falkon, Firefox},
-    common::{self},
+    common::{self, database_path},
     pages::editor::Category,
     LOCALES,
 };
 use anyhow::Result;
 use ashpd::desktop::dynamic_launcher::{DynamicLauncherProxy, PrepareInstallOptions};
 use freedesktop_desktop_entry::DesktopEntry;
+use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self, create_dir_all, remove_dir_all, File},
+    fs::{self, File},
     io::Read,
 };
+use tokio::fs::{remove_dir_all, remove_file};
 
 pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
     if !common::url_valid(url) || name.is_empty() || icon.is_empty() || url.is_empty() {
@@ -23,43 +25,29 @@ pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
 pub fn installed_webapps() -> Vec<WebAppLauncher> {
     let mut webapps = Vec::new();
 
-    match fs::read_dir(dirs::data_dir().unwrap_or_default().join("applications")) {
-        Ok(entries) => {
-            for entry in entries {
-                match entry {
-                    Ok(entry) => {
-                        let entry_fn = entry.file_name();
-                        let filename = entry_fn.to_str().unwrap();
+    if let Ok(entries) = fs::read_dir(database_path("")) {
+        for entry in entries {
+            match entry {
+                Ok(entry) => {
+                    let file = std::fs::File::open(entry.path());
+                    let mut content = String::new();
 
-                        if filename.starts_with("dev.heppen.webapps.")
-                            && filename.ends_with(".desktop")
-                        {
-                            let fde = DesktopEntry::from_path(entry.path(), Some(&LOCALES));
-
-                            match fde {
-                                Ok(fde) => webapps.push(WebAppLauncher::from(fde)),
-                                Err(e) => tracing::error!(
-                                    "Error reading desktop entry for {}: \n{}",
-                                    filename,
-                                    e
-                                ),
-                            }
+                    if let Ok(mut f) = file {
+                        f.read_to_string(&mut content).unwrap();
+                        if let Ok(success) = ron::from_str::<WebAppLauncher>(&content) {
+                            webapps.push(success);
                         }
                     }
-                    Err(e) => tracing::error!("Error reading directory: {}", e),
                 }
+                Err(e) => tracing::error!("Error reading directory: {}", e),
             }
-        }
-        Err(_) => {
-            create_dir_all(common::desktop_filepath(""))
-                .expect("Cannot create local applications dir");
         }
     }
 
     webapps
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WebAppLauncher {
     pub codename: String,
     pub browser: Browser,
@@ -249,7 +237,8 @@ impl WebAppLauncher {
             .uninstall(&format!("dev.heppen.webapps.{}.desktop", self.codename))
             .await?;
         let profile_path = self.browser.profile_path.join(&self.codename);
-        remove_dir_all(&profile_path)?;
+        remove_dir_all(&profile_path).await?;
+        remove_file(database_path(&format!("{}.ron", self.codename))).await?;
 
         Ok(())
     }
