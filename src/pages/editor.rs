@@ -128,6 +128,7 @@ pub struct AppEditor {
     pub browser_idx: Option<usize>,
     pub categories: Vec<String>,
     pub category_idx: Option<usize>,
+    pub is_installed: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -173,10 +174,11 @@ impl AppEditor {
             browser_idx: Some(0),
             categories,
             category_idx: Some(0),
+            is_installed: false,
         }
     }
 
-    pub fn from(webapp_launcher: WebAppLauncher) -> Self {
+    pub fn from(webapp_launcher: WebAppLauncher, installed: bool) -> Self {
         let category_idx = Category::iter().position(|c| c == webapp_launcher.category);
         let category = Category::from_index(category_idx.unwrap_or_default() as u8);
         let categories = Category::to_vec();
@@ -203,6 +205,7 @@ impl AppEditor {
             browser_idx,
             categories,
             category_idx,
+            is_installed: installed,
         }
     }
 
@@ -446,10 +449,14 @@ impl AppEditor {
                     widget::row()
                         .spacing(8)
                         .push(widget::horizontal_space())
-                        .push(
-                            widget::button::standard(fl!("run-app"))
-                                .on_press_maybe(Some(Message::LaunchApp)),
-                        )
+                        .push_maybe(if self.is_installed {
+                            Some(
+                                widget::button::standard(fl!("run-app"))
+                                    .on_press(Message::LaunchApp),
+                            )
+                        } else {
+                            None
+                        })
                         .push(widget::button::suggested(fl!("create")).on_press_maybe(
                             if webapplauncher_is_valid(
                                 &self.app_icon,
