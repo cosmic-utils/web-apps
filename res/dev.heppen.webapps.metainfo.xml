@@ -4,7 +4,7 @@
     <developer id="dev.heppen">
         <name>hepp3n</name>
     </developer>
-    <url type="homepage">https://github.com/cosmic-utils/web-apps</url>
+    <url type="homepage">https://webapps.heppen.dev</url>
     <url type="vcs-browser">https://github.com/cosmic-utils/web-apps</url>
     <url type="bugtracker">https://github.com/cosmic-utils/web-apps/issues</url>
     <url type="contribute">https://github.com/cosmic-utils/web-apps</url>
@@ -23,24 +23,21 @@
             Turn Any URL into a Web App, running in a separate window of any browser installed on your system, selected according to your preference.
             Integrates with your desktop environment (icon pinnable to the dock).
         </p>
+        <!--fr translation-->
+        <p xml:lang="fr">Applications Web Rapides écrites avec amour et libcosmic.
+        Transformez n'importe quelle URL en Application Web, exécutée dans une fenêtre distincte de n'importe quel navigateur installé sur votre système, sélectionné selon vos préférences.
+        S'intègre à votre environnement de bureau (icône épinglable sur le dock).
+        </p>
         <ul>
             <li>Fast and easy to use</li>
             <li>Works out of the box</li>
             <li>In-app icon pack installer</li>
             <li>Supports most mainstream browsers</li>
-        </ul>
-    </description>
-
-    <description xml:lang="fr">
-        <p>Applications Web Rapides écrites avec amour et libcosmic.
-        Transformez n'importe quelle URL en Application Web, exécutée dans une fenêtre distincte de n'importe quel navigateur installé sur votre système, sélectionné selon vos préférences.
-        S'intègre à votre environnement de bureau (icône épinglable sur le dock).
-        </p>
-        <ul>
-            <li>Rapide et facile à utiliser</li>
-            <li>Fonctionne immédiatement</li>
-            <li>Installateur de pack d'icônes intégré</li>
-            <li>Compatible avec la plupart des navigateurs principaux</li>
+            <!--fr translation-->
+            <li xml:lang="fr">Rapide et facile à utiliser</li>
+            <li xml:lang="fr">Fonctionne immédiatement</li>
+            <li xml:lang="fr">Installateur de pack d'icônes intégré</li>
+            <li xml:lang="fr">Compatible avec la plupart des navigateurs principaux</li>
         </ul>
     </description>
 
@@ -56,11 +53,11 @@
     </provides>
 
     <screenshots>
-        <screenshot type="default" xml:lang="en">
+        <screenshot type="default">
             <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0a/res/screenshots/window-light.png</image>
             <caption>Light Theme</caption>
         </screenshot>
-        <screenshot xml:lang="en">
+        <screenshot>
             <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0a/res/screenshots/window-dark.png</image>
             <caption>Dark Theme</caption>
         </screenshot>
@@ -82,103 +79,10 @@
     </supports>
 
     <releases>
-        <release version="1.0.0" date="2025-02-01">
+        <release version="1.0.0" date="2025-02-03">
             <description>
                 <p>Breaking changes, require creating web apps from scratch, also not compatible with previous releases...</p>
                 <p>Many improvements and new interface</p>
-            </description>
-        </release>
-        <release version="0.5.4" date="2024-11-30">
-            <description>
-                <p>Some fixes and improvements</p>
-                <p>Updated dependencies</p>
-            </description>
-        </release>
-        <release version="0.5.3" date="2024-11-19">
-            <description>
-                <p>Some fixes and improvements</p>
-                <p>Updated dependencies</p>
-            </description>
-        </release>
-        <release version="0.5.2" date="2024-10-30">
-            <description>
-                <p>Some fixes and improvements</p>
-                <p>Updated dependencies</p>
-            </description>
-        </release>
-        <release version="0.5.1" date="2024-10-08">
-            <description>
-                <p>Some fixes and improvements</p>
-                <p>Support for system browsers</p>
-                <p>Updated dependencies</p>
-            </description>
-        </release>
-        <release version="0.5.0" date="2024-09-28">
-            <description>
-                <p>Some fixes and improvements</p>
-                <p>Updated dependencies</p>
-            </description>
-        </release>
-        <release version="0.4.9" date="2024-09-25">
-            <description>
-                <p>Fixed web app validation in creator</p>
-                <p>Updated dependencies</p>
-            </description>
-        </release>
-        <release version="0.4.8" date="2024-09-16">
-            <description>
-                <p>Just a fixed release to resolve some packaging issue</p>
-            </description>
-        </release>
-        <release version="0.4.7" date="2024-09-16">
-            <description>
-                <p>Many fixes and improvements</p>
-                <p>Updated dependencies</p>
-            </description>
-        </release>
-        <release version="0.4.6" date="2024-06-05">
-            <description>
-                <p>Add support for PNG icons</p>
-                <p>Use xdg desktop portal file picker instead of cosmic-files</p>
-                <p>Add editable name from home screen for web apps</p>
-                <p>Updated dependencies</p>
-            </description>
-        </release>
-        <release version="0.4.5" date="2024-05-25">
-            <description>
-                <p>Add spanish translation</p>
-            </description>
-        </release>
-        <release version="0.4.4" date="2024-05-22">
-            <description>
-                <p>Add italian translation</p>
-            </description>
-        </release>
-        <release version="0.4.3" date="2024-05-19">
-            <description>
-                <p>Fixed previous breaking change</p>
-            </description>
-        </release>
-        <release version="0.4.2" date="2024-05-18">
-            <description>
-                <p>Layout and styling changes and improvements</p>
-                <p>Breaking change related to locations, please read description or github repo</p>
-                <p>Bug fixes</p>
-                <p>Improvements</p>
-                <p>New translations</p>
-            </description>
-        </release>
-        <release version="0.4.1" date="2024-05-16">
-            <description>
-                <p>Bug fixes</p>
-                <p>Improvements</p>
-                <p>Cleanup code</p>
-                <p>New translations</p>
-            </description>
-        </release>
-        <release version="0.4.0" date="2024-05-13">
-            <description>
-                <p>First stable release</p>
             </description>
         </release>
     </releases>
