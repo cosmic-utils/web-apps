@@ -453,6 +453,8 @@ impl Application for QuickWebApps {
                         let _ = f.write_all(content.as_bytes());
                     }
                 }
+
+                return task::message(Message::ReloadNavbarItems);
             }
             Message::SetIcon(icon) => {
                 let Page::Editor(app_editor) = &mut self.page;

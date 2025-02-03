@@ -246,18 +246,13 @@ impl AppEditor {
 
                         let arc_launcher = Arc::clone(&launcher);
 
-                        let mut tasks: Vec<Task<pages::Message>> = Vec::new();
-
-                        tasks.push(task::future(async move {
+                        return task::future(async move {
                             if arc_launcher.create().await.is_ok() {
-                                return pages::Message::SaveLauncher(arc_launcher);
+                                pages::Message::SaveLauncher(arc_launcher)
+                            } else {
+                                pages::Message::None
                             }
-                            pages::Message::None
-                        }));
-
-                        tasks.push(task::message(pages::Message::ReloadNavbarItems));
-
-                        return task::batch(tasks);
+                        });
                     };
                 }
             }
