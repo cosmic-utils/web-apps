@@ -3,7 +3,9 @@
   "runtime": "org.freedesktop.Platform",
   "runtime-version": "24.08",
   "sdk": "org.freedesktop.Sdk",
-  "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.rust-stable"
+  ],
   "base": "com.system76.Cosmic.BaseApp",
   "base-version": "stable",
   "command": "quick-webapps",
@@ -15,7 +17,8 @@
     "--share=network",
     "--filesystem=host-os:ro",
     "--filesystem=xdg-data/flatpak:ro",
-    "--talk-name=com.system76.CosmicSettingsDaemon"
+    "--talk-name=com.system76.CosmicSettingsDaemon",
+    "--talk-name=org.freedesktop.Flatpak"
   ],
   "build-options": {
     "append-path": "/usr/lib/sdk/rust-stable/bin"

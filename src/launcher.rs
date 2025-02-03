@@ -1,6 +1,6 @@
 use crate::{
     browser::{Browser, BrowserModel, Chromium, Falkon, Firefox},
-    common::{self, database_path},
+    common::{self, database_path, is_sandboxed},
     pages::editor::Category,
     LOCALES,
 };
@@ -122,7 +122,7 @@ impl WebAppLauncher {
     fn exec_firefox(&self, zen_browser: bool) -> String {
         let profile_path = self.browser.profile_path.join(&self.codename);
 
-        Firefox::builder(self.browser.exec.clone())
+        Firefox::builder(is_sandboxed(), self.browser.exec.clone())
             .url(self.url.clone())
             .codename(self.codename.clone())
             .navbar(self.navbar)
@@ -137,7 +137,7 @@ impl WebAppLauncher {
     fn exec_chromium(&self, microsoft_edge: bool) -> String {
         let profile_dir = self.browser.profile_path.join(&self.codename);
 
-        Chromium::builder(self.browser.exec.clone())
+        Chromium::builder(is_sandboxed(), self.browser.exec.clone())
             .url(self.url.clone())
             .codename(self.codename.clone())
             .isolated(self.isolate_profile)
@@ -151,7 +151,7 @@ impl WebAppLauncher {
     fn exec_falkon(&self) -> String {
         let profile_dir = self.browser.profile_path.join(&self.codename);
 
-        Falkon::builder(self.browser.exec.clone())
+        Falkon::builder(is_sandboxed(), self.browser.exec.clone())
             .url(self.url.clone())
             .codename(self.codename.clone())
             .isolated(self.isolate_profile)
@@ -214,7 +214,14 @@ impl WebAppLauncher {
                 let icon = ashpd::desktop::Icon::Bytes(buffer);
 
                 let response = proxy
-                    .prepare_install(None, &self.name, icon, PrepareInstallOptions::default())
+                    .prepare_install(
+                        None,
+                        &self.name,
+                        icon,
+                        PrepareInstallOptions::default()
+                            .editable_icon(false)
+                            .editable_name(false),
+                    )
                     .await?
                     .response()?;
                 let token = response.token();

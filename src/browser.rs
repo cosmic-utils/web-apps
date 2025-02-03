@@ -5,12 +5,14 @@ use std::{
     fs::{create_dir_all, remove_file, File},
     io::Write,
     path::PathBuf,
+    str::FromStr,
 };
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 #[derive(Debug, Clone)]
 pub struct Firefox {
+    pub sandboxed: bool,
     pub exec: String,
     pub codename: String,
     pub url: String,
@@ -23,8 +25,9 @@ pub struct Firefox {
 }
 
 impl Firefox {
-    pub fn builder(browser_exec: String) -> Self {
+    pub fn builder(sandboxed: bool, browser_exec: String) -> Self {
         Self {
+            sandboxed,
             exec: browser_exec,
             codename: String::new(),
             url: String::new(),
@@ -139,7 +142,13 @@ impl Firefox {
     }
 
     pub fn build(&mut self) -> String {
-        let mut exec = format!("{} --no-remote {}", self.exec, self.codename);
+        let mut exec = match self.sandboxed {
+            true => format!(
+                "flatpak-spawn --host {} --no-remote {}",
+                self.exec, self.codename
+            ),
+            false => format!("{} --no-remote {}", self.exec, self.codename),
+        };
 
         if self.private {
             exec.push_str(" --private-window");
@@ -161,6 +170,7 @@ impl Firefox {
 
 #[derive(Debug, Clone)]
 pub struct Falkon {
+    pub sandboxed: bool,
     pub exec: String,
     pub codename: String,
     pub url: String,
@@ -171,8 +181,9 @@ pub struct Falkon {
 }
 
 impl Falkon {
-    pub fn builder(browser_exec: String) -> Self {
+    pub fn builder(sandboxed: bool, browser_exec: String) -> Self {
         Self {
+            sandboxed,
             exec: browser_exec,
             codename: String::new(),
             url: String::new(),
@@ -219,7 +230,13 @@ impl Falkon {
     }
 
     pub fn build(&mut self) -> String {
-        let mut exec = format!("{} --no-remote --current-tab {}", self.exec, self.codename);
+        let mut exec = match self.sandboxed {
+            true => format!(
+                "flatpak-spawn --host {} --no-remote --current-tab {}",
+                self.exec, self.codename
+            ),
+            false => format!("{} --no-remote --current-tab {}", self.exec, self.codename),
+        };
 
         if self.private {
             exec.push_str(" --private-browsing");
@@ -241,6 +258,7 @@ impl Falkon {
 
 #[derive(Debug, Clone)]
 pub struct Chromium {
+    pub sandboxed: bool,
     pub exec: String,
     pub codename: String,
     pub url: String,
@@ -252,8 +270,9 @@ pub struct Chromium {
 }
 
 impl Chromium {
-    pub fn builder(browser_exec: String) -> Self {
+    pub fn builder(sandboxed: bool, browser_exec: String) -> Self {
         Self {
+            sandboxed,
             exec: browser_exec,
             codename: String::new(),
             url: String::new(),
@@ -309,7 +328,13 @@ impl Chromium {
     }
 
     pub fn build(&mut self) -> String {
-        let mut exec = format!("{} {} {}", self.exec, self.url, self.codename);
+        let mut exec = match self.sandboxed {
+            true => format!(
+                "flatpak-spawn --host {} {} {}",
+                self.exec, self.url, self.codename
+            ),
+            false => format!("{} {} {}", self.exec, self.url, self.codename),
+        };
 
         if self.private {
             if self.ms_edge {
@@ -408,7 +433,6 @@ impl AsRef<str> for Browser {
 impl Browser {
     fn create(entry: DesktopEntry) -> Self {
         let mut name = entry.name(&LOCALES).unwrap_or_default().to_string();
-        let exec = entry.exec().unwrap_or_default().to_string();
         let xdg_data = dirs::data_dir().unwrap_or_default();
         let profile_path = xdg_data.join("quick-webapps/profiles").join(&entry.appid);
 
@@ -443,12 +467,32 @@ impl Browser {
                 _ => (),
             }
 
+            let executable = match source {
+                BrowserSource::Native
+                | BrowserSource::NativeLocal
+                | BrowserSource::Nix
+                | BrowserSource::Snap => entry.exec().unwrap_or_default().to_string(),
+                BrowserSource::Flatpak => dirs::home_dir()
+                    .unwrap_or_default()
+                    .join(".local/share/flatpak/exports/bin")
+                    .join(&entry.appid)
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
+                BrowserSource::SystemFlatpak => PathBuf::from_str("/var/lib/flatpak/exports/bin")
+                    .unwrap_or_default()
+                    .join(&entry.appid)
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
+            };
+
             return Self {
                 model: Some(model),
                 source,
                 entry: Some(entry),
                 name,
-                exec,
+                exec: executable,
                 profile_path,
             };
         }

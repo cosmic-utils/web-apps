@@ -81,12 +81,16 @@ pub fn qwa_icons_location() -> PathBuf {
     icons_location().join("QuickWebApps")
 }
 
+pub fn is_sandboxed() -> bool {
+    PathBuf::from("/.flatpak-info").exists()
+}
+
 pub fn fd_entries() -> Vec<DesktopEntry> {
     let mut paths = Vec::new();
     default_paths().for_each(|path| paths.push(path));
 
     // this is workaround for flatpak sandbox
-    if PathBuf::from("/.flatpak-info").exists() {
+    if is_sandboxed() {
         if let Some(xdg_data) = dirs::data_dir() {
             paths.push(xdg_data.join("applications"));
             paths.push(xdg_data.join("flatpak/exports/share/applications"));
