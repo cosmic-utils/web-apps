@@ -50,16 +50,25 @@
 
     <provides>
         <id>com.system76.CosmicApplication</id>
+        <id>io.github.elevenhsoft.WebApps</id>
     </provides>
+
+    <replaces>
+        <id>io.github.elevenhsoft.WebApps</id>
+    </replaces>
 
     <screenshots>
         <screenshot type="default">
-            <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0a/res/screenshots/window-light.png</image>
+            <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-light.png</image>
             <caption>Light Theme</caption>
         </screenshot>
         <screenshot>
-            <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0a/res/screenshots/window-dark.png</image>
+            <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-dark.png</image>
             <caption>Dark Theme</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-rose-pine.png</image>
+            <caption>Rose Pine Theme and more additional themes</caption>
         </screenshot>
     </screenshots>
 
