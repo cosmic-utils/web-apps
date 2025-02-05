@@ -16,9 +16,9 @@
     "--device=dri",
     "--share=network",
     "--filesystem=host-os:ro",
+    "--filesystem=xdg-data/flatpak:ro",
     "--filesystem=xdg-data/applications",
-    "--filesystem=xdg-data/flatpak",
-    "--talk-name=com.system76.CosmicSettingsDaemon",
+    "--talk-name=com.system76.CosmicSettingsDaemon"
   ],
   "build-options": {
     "append-path": "/usr/lib/sdk/rust-stable/bin"
