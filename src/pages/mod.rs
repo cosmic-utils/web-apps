@@ -233,24 +233,27 @@ impl Application for QuickWebApps {
                     let Page::Editor(app_editor) = page;
 
                     if let Some(browser) = &app_editor.app_browser {
-                        let launcher = WebAppLauncher {
-                            codename: app_editor.app_codename.clone(),
-                            browser: browser.clone(),
-                            name: app_editor.app_title.clone(),
-                            icon: app_editor.app_icon.clone(),
-                            category: app_editor.app_category.clone(),
-                            url: app_editor.app_url.clone(),
-                            custom_parameters: app_editor.app_parameters.clone(),
-                            isolate_profile: app_editor.app_isolated,
-                            navbar: app_editor.app_navbar,
-                            is_incognito: app_editor.app_incognito,
-                        };
+                        if let Some(entry) = &browser.entry {
+                            let launcher = WebAppLauncher {
+                                appid: entry.appid.clone(),
+                                codename: app_editor.app_codename.clone(),
+                                browser: browser.clone(),
+                                name: app_editor.app_title.clone(),
+                                icon: app_editor.app_icon.clone(),
+                                category: app_editor.app_category.clone(),
+                                url: app_editor.app_url.clone(),
+                                custom_parameters: app_editor.app_parameters.clone(),
+                                isolate_profile: app_editor.app_isolated,
+                                navbar: app_editor.app_navbar,
+                                is_incognito: app_editor.app_incognito,
+                            };
 
-                        return task::future(async move {
-                            launcher.delete().await.unwrap();
-                            Message::DeletionDone(id)
-                        });
-                    };
+                            return task::future(async move {
+                                launcher.delete().await.unwrap();
+                                Message::DeletionDone(id)
+                            });
+                        };
+                    }
                 }
             }
             Message::DeletionDone(id) => {

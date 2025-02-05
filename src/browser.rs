@@ -40,7 +40,7 @@ impl Firefox {
 
     pub fn codename(&mut self, codename: String) -> &mut Self {
         self.codename = format!(
-            "--class QuickWebApp-{} --name QuickWebApp-{}",
+            "--class dev.heppen.webapps.{} --name dev.heppen.webapps.{}",
             codename, codename
         );
         self
@@ -120,7 +120,7 @@ impl Firefox {
             self.create_user_chrome_css(path.clone());
         }
 
-        self.user_dir = format!(" --profile {}", path.to_str().unwrap());
+        self.user_dir = format!(" --profile \"{}\"", path.to_str().unwrap());
         self
     }
 
@@ -185,7 +185,7 @@ impl Falkon {
     }
 
     pub fn codename(&mut self, codename: String) -> &mut Self {
-        self.codename = format!("--wmclass QuickWebApp-{}", codename);
+        self.codename = format!("--wmclass dev.heppen.webapps.{}", codename);
         self
     }
 
@@ -205,7 +205,7 @@ impl Falkon {
             let _ = create_dir_all(&path);
         }
 
-        self.user_dir = format!(" --profile {}", path.to_str().unwrap());
+        self.user_dir = format!(" --profile \"{}\"", path.to_str().unwrap());
         self
     }
 
@@ -268,7 +268,7 @@ impl Chromium {
 
     pub fn codename(&mut self, codename: String) -> &mut Self {
         self.codename = format!(
-            "--class=QuickWebApp-{} --name=QuickWebApp-{}",
+            "--class=dev.heppen.webapps.{} --name=dev.heppen.webapps.{}",
             codename, codename
         );
         self
@@ -290,7 +290,7 @@ impl Chromium {
             let _ = create_dir_all(&path);
         }
 
-        self.user_dir = format!(" --user-data-dir={}", path.to_str().unwrap());
+        self.user_dir = format!(" --user-data-dir=\"{}\"", path.to_str().unwrap());
         self
     }
 

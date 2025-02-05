@@ -16,8 +16,8 @@
     "--device=dri",
     "--share=network",
     "--filesystem=host-os:ro",
-    "--filesystem=xdg-data/applications:rw",
-    "--filesystem=xdg-data/flatpak/exports/share/applications:ro",
+    "--filesystem=xdg-data/applications",
+    "--filesystem=xdg-data/flatpak",
     "--talk-name=com.system76.CosmicSettingsDaemon",
     "--talk-name=org.freedesktop.Flatpak"
   ],

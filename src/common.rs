@@ -67,13 +67,9 @@ pub fn database_path(entry: &str) -> PathBuf {
 
 pub fn desktop_files_location(filename: &str) -> PathBuf {
     if let Some(xdg_data) = dirs::data_dir() {
-        if filename.is_empty() {
-            return xdg_data.join("applications");
-        } else {
-            return xdg_data
-                .join("applications")
-                .join(format!("dev.heppen.webapps.{}.desktop", filename));
-        }
+        return xdg_data
+            .join("applications")
+            .join(format!("dev.heppen.webapps.{}.desktop", filename));
     }
 
     PathBuf::new()
@@ -104,6 +100,9 @@ pub fn fd_entries() -> Vec<DesktopEntry> {
 
     // this is workaround for flatpak sandbox
     if is_sandboxed() {
+        if let Some(home) = dirs::home_dir() {
+            paths.push(home.join(".local/share/flatpak/exports/share/applications"));
+        }
         paths.push("/var/lib/flatpak/exports/share/applications".into());
         paths.push("/run/host/usr/share/applications".into());
         paths.push("/run/host/usr/local/share/applications".into());

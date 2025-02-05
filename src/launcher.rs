@@ -36,8 +36,9 @@ pub fn installed_webapps() -> Vec<WebAppLauncher> {
 
                     if let Ok(mut f) = file {
                         f.read_to_string(&mut content).unwrap();
-                        if let Ok(success) = ron::from_str::<WebAppLauncher>(&content) {
-                            webapps.push(success);
+                        if let Ok(mut launcher) = ron::from_str::<WebAppLauncher>(&content) {
+                            launcher.browser = Browser::from_appid(launcher.appid.clone());
+                            webapps.push(launcher);
                         }
                     }
                 }
@@ -51,6 +52,7 @@ pub fn installed_webapps() -> Vec<WebAppLauncher> {
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WebAppLauncher {
+    pub appid: String,
     pub codename: String,
     pub browser: Browser,
     pub name: String,
@@ -69,6 +71,10 @@ impl From<DesktopEntry> for WebAppLauncher {
 
         match group {
             Some(group) => Self {
+                appid: group
+                    .entry("X-QWA-Browser-Id")
+                    .unwrap_or_default()
+                    .to_string(),
                 codename: group
                     .entry("X-QWA-Codename")
                     .unwrap_or_default()
@@ -104,6 +110,7 @@ impl From<DesktopEntry> for WebAppLauncher {
                     .unwrap_or_default(),
             },
             None => Self {
+                appid: String::new(),
                 codename: String::new(),
                 browser: Browser::default(),
                 name: String::new(),
@@ -184,32 +191,36 @@ impl WebAppLauncher {
     }
 
     pub async fn create(&self) -> Result<()> {
-        if let Some(entry) = &self.browser.entry {
-            let mut desktop_entry = String::from("[Desktop Entry]\n");
-            desktop_entry.push_str(&format!("Name={}\n", self.name));
-            desktop_entry.push_str("Comment=Quick Web App\n");
-            desktop_entry.push_str(&format!("Exec={}\n", self.exec_string()));
-            desktop_entry.push_str(&format!("Icon={}\n", self.icon));
-            desktop_entry.push_str("Terminal=false\n");
-            desktop_entry.push_str("Type=Application\n");
-            desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
-            desktop_entry.push_str("MimeType=text/html;text/xml;application/xhtml_xml;\n");
-            desktop_entry.push_str(&format!(
-                "StartupWMClass=dev.heppen.webapps.{}\n",
-                self.codename
-            ));
-            desktop_entry.push_str("StartupNotify=true\n");
-            desktop_entry.push_str(&format!("X-QWA-Codename={}\n", self.codename));
-            desktop_entry.push_str(&format!("X-QWA-Browser-Id={}\n", entry.appid));
-            desktop_entry.push_str(&format!("X-QWA-Url={}\n", self.url));
-            desktop_entry.push_str(&format!("X-QWA-Navbar={}\n", self.navbar));
-            desktop_entry.push_str(&format!("X-QWA-Private={}\n", self.is_incognito));
-            desktop_entry.push_str(&format!("X-QWA-Isolated={}\n", self.isolate_profile));
-            desktop_entry.push_str(&format!("X-QWA-Parameters={}\n", self.custom_parameters));
+        let entry_location = desktop_files_location(&self.codename);
 
-            if let Ok(mut f) = File::open(desktop_files_location(&self.codename)).await {
-                f.write_all(desktop_entry.as_bytes()).await?;
-            }
+        if entry_location.exists() {
+            let _ = std::fs::remove_file(&entry_location);
+        }
+
+        let mut desktop_entry = String::from("[Desktop Entry]\n");
+        desktop_entry.push_str(&format!("Name={}\n", self.name));
+        desktop_entry.push_str("Comment=Quick Web App\n");
+        desktop_entry.push_str(&format!("Exec={}\n", self.exec_string()));
+        desktop_entry.push_str(&format!("Icon={}\n", self.icon));
+        desktop_entry.push_str("Terminal=false\n");
+        desktop_entry.push_str("Type=Application\n");
+        desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
+        desktop_entry.push_str("MimeType=text/html;text/xml;application/xhtml_xml;\n");
+        desktop_entry.push_str(&format!(
+            "StartupWMClass=dev.heppen.webapps.{}\n",
+            self.codename
+        ));
+        desktop_entry.push_str("StartupNotify=true\n");
+        desktop_entry.push_str(&format!("X-QWA-Codename={}\n", self.codename));
+        desktop_entry.push_str(&format!("X-QWA-Browser-Id={}\n", self.appid));
+        desktop_entry.push_str(&format!("X-QWA-Url={}\n", self.url));
+        desktop_entry.push_str(&format!("X-QWA-Navbar={}\n", self.navbar));
+        desktop_entry.push_str(&format!("X-QWA-Private={}\n", self.is_incognito));
+        desktop_entry.push_str(&format!("X-QWA-Isolated={}\n", self.isolate_profile));
+        desktop_entry.push_str(&format!("X-QWA-Parameters={}\n", self.custom_parameters));
+
+        if let Ok(mut f) = File::create(entry_location).await {
+            f.write_all(desktop_entry.as_bytes()).await?;
         }
 
         Ok(())

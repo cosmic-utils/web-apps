@@ -234,29 +234,32 @@ impl AppEditor {
 
                 if webapplauncher_is_valid(&icon_final_path, &self.app_title, &self.app_url) {
                     if let Some(browser) = &self.app_browser {
-                        let launcher = Arc::new(WebAppLauncher {
-                            codename: self.app_codename.clone(),
-                            browser: browser.clone(),
-                            name: self.app_title.clone(),
-                            icon: icon_final_path,
-                            category: self.app_category.clone(),
-                            url: self.app_url.clone(),
-                            custom_parameters: self.app_parameters.clone(),
-                            isolate_profile: self.app_isolated,
-                            navbar: self.app_navbar,
-                            is_incognito: self.app_incognito,
-                        });
+                        if let Some(entry) = &browser.entry {
+                            let launcher = Arc::new(WebAppLauncher {
+                                appid: entry.appid.clone(),
+                                codename: self.app_codename.clone(),
+                                browser: browser.clone(),
+                                name: self.app_title.clone(),
+                                icon: icon_final_path,
+                                category: self.app_category.clone(),
+                                url: self.app_url.clone(),
+                                custom_parameters: self.app_parameters.clone(),
+                                isolate_profile: self.app_isolated,
+                                navbar: self.app_navbar,
+                                is_incognito: self.app_incognito,
+                            });
 
-                        let arc_launcher = Arc::clone(&launcher);
+                            let arc_launcher = Arc::clone(&launcher);
 
-                        return task::future(async move {
-                            if arc_launcher.create().await.is_ok() {
-                                pages::Message::SaveLauncher(arc_launcher)
-                            } else {
-                                pages::Message::None
-                            }
-                        });
-                    };
+                            return task::future(async move {
+                                if arc_launcher.create().await.is_ok() {
+                                    pages::Message::SaveLauncher(arc_launcher)
+                                } else {
+                                    pages::Message::None
+                                }
+                            });
+                        };
+                    }
                 }
             }
             Message::Incognito(flag) => {
