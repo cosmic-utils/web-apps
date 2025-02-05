@@ -12,7 +12,6 @@ use strum_macros::EnumIter;
 
 #[derive(Debug, Clone)]
 pub struct Firefox {
-    pub sandboxed: bool,
     pub exec: String,
     pub codename: String,
     pub url: String,
@@ -25,9 +24,8 @@ pub struct Firefox {
 }
 
 impl Firefox {
-    pub fn builder(sandboxed: bool, browser_exec: String) -> Self {
+    pub fn builder(browser_exec: String) -> Self {
         Self {
-            sandboxed,
             exec: browser_exec,
             codename: String::new(),
             url: String::new(),
@@ -142,13 +140,7 @@ impl Firefox {
     }
 
     pub fn build(&mut self) -> String {
-        let mut exec = match self.sandboxed {
-            true => format!(
-                "flatpak-spawn --host {} --no-remote {}",
-                self.exec, self.codename
-            ),
-            false => format!("{} --no-remote {}", self.exec, self.codename),
-        };
+        let mut exec = format!("{} --no-remote {}", self.exec, self.codename);
 
         if self.private {
             exec.push_str(" --private-window");
@@ -170,7 +162,6 @@ impl Firefox {
 
 #[derive(Debug, Clone)]
 pub struct Falkon {
-    pub sandboxed: bool,
     pub exec: String,
     pub codename: String,
     pub url: String,
@@ -181,9 +172,8 @@ pub struct Falkon {
 }
 
 impl Falkon {
-    pub fn builder(sandboxed: bool, browser_exec: String) -> Self {
+    pub fn builder(browser_exec: String) -> Self {
         Self {
-            sandboxed,
             exec: browser_exec,
             codename: String::new(),
             url: String::new(),
@@ -230,13 +220,7 @@ impl Falkon {
     }
 
     pub fn build(&mut self) -> String {
-        let mut exec = match self.sandboxed {
-            true => format!(
-                "flatpak-spawn --host {} --no-remote --current-tab {}",
-                self.exec, self.codename
-            ),
-            false => format!("{} --no-remote --current-tab {}", self.exec, self.codename),
-        };
+        let mut exec = format!("{} --no-remote --current-tab {}", self.exec, self.codename);
 
         if self.private {
             exec.push_str(" --private-browsing");
@@ -258,7 +242,6 @@ impl Falkon {
 
 #[derive(Debug, Clone)]
 pub struct Chromium {
-    pub sandboxed: bool,
     pub exec: String,
     pub codename: String,
     pub url: String,
@@ -270,9 +253,8 @@ pub struct Chromium {
 }
 
 impl Chromium {
-    pub fn builder(sandboxed: bool, browser_exec: String) -> Self {
+    pub fn builder(browser_exec: String) -> Self {
         Self {
-            sandboxed,
             exec: browser_exec,
             codename: String::new(),
             url: String::new(),
@@ -328,13 +310,7 @@ impl Chromium {
     }
 
     pub fn build(&mut self) -> String {
-        let mut exec = match self.sandboxed {
-            true => format!(
-                "flatpak-spawn --host {} {} {}",
-                self.exec, self.url, self.codename
-            ),
-            false => format!("{} {} {}", self.exec, self.url, self.codename),
-        };
+        let mut exec = format!("{} {} {}", self.exec, self.url, self.codename);
 
         if self.private {
             if self.ms_edge {
@@ -534,7 +510,7 @@ pub fn installed_browsers() -> Vec<Browser> {
 
         let browser = Browser::from_path(&entry.path);
 
-        if browser.model.is_some() {
+        if browser.model.is_some() && !apps.contains(&browser) {
             apps.push(browser);
         }
     }

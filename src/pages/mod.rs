@@ -436,7 +436,7 @@ impl Application for QuickWebApps {
                         .insert()
                         .icon(widget::icon::from_name(app.icon.clone()))
                         .text(app.name.clone())
-                        .data::<Page>(Page::Editor(editor::AppEditor::from(app, true)))
+                        .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
                         .closable();
                 });
 

@@ -1,19 +1,20 @@
 use crate::{
     browser::{Browser, BrowserModel, Chromium, Falkon, Firefox},
-    common::{self, database_path, is_sandboxed},
+    common::{self, database_path, desktop_files_location},
     pages::editor::Category,
     LOCALES,
 };
 use anyhow::Result;
-use ashpd::desktop::dynamic_launcher::{DynamicLauncherProxy, PrepareInstallOptions};
 use freedesktop_desktop_entry::DesktopEntry;
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self, File},
+    fs::{self},
     io::Read,
-    sync::Arc,
 };
-use tokio::fs::{remove_dir_all, remove_file};
+use tokio::{
+    fs::{remove_dir_all, remove_file, File},
+    io::AsyncWriteExt,
+};
 
 pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
     if !common::url_valid(url) || name.is_empty() || icon.is_empty() || url.is_empty() {
@@ -122,7 +123,7 @@ impl WebAppLauncher {
     fn exec_firefox(&self, zen_browser: bool) -> String {
         let profile_path = self.browser.profile_path.join(&self.codename);
 
-        Firefox::builder(is_sandboxed(), self.browser.exec.clone())
+        Firefox::builder(self.browser.exec.clone())
             .url(self.url.clone())
             .codename(self.codename.clone())
             .navbar(self.navbar)
@@ -137,7 +138,7 @@ impl WebAppLauncher {
     fn exec_chromium(&self, microsoft_edge: bool) -> String {
         let profile_dir = self.browser.profile_path.join(&self.codename);
 
-        Chromium::builder(is_sandboxed(), self.browser.exec.clone())
+        Chromium::builder(self.browser.exec.clone())
             .url(self.url.clone())
             .codename(self.codename.clone())
             .isolated(self.isolate_profile)
@@ -151,7 +152,7 @@ impl WebAppLauncher {
     fn exec_falkon(&self) -> String {
         let profile_dir = self.browser.profile_path.join(&self.codename);
 
-        Falkon::builder(is_sandboxed(), self.browser.exec.clone())
+        Falkon::builder(self.browser.exec.clone())
             .url(self.url.clone())
             .codename(self.codename.clone())
             .isolated(self.isolate_profile)
@@ -184,11 +185,11 @@ impl WebAppLauncher {
 
     pub async fn create(&self) -> Result<()> {
         if let Some(entry) = &self.browser.entry {
-            let proxy = DynamicLauncherProxy::new().await?;
-
             let mut desktop_entry = String::from("[Desktop Entry]\n");
+            desktop_entry.push_str(&format!("Name={}\n", self.name));
             desktop_entry.push_str("Comment=Quick Web App\n");
             desktop_entry.push_str(&format!("Exec={}\n", self.exec_string()));
+            desktop_entry.push_str(&format!("Icon={}\n", self.icon));
             desktop_entry.push_str("Terminal=false\n");
             desktop_entry.push_str("Type=Application\n");
             desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
@@ -206,33 +207,8 @@ impl WebAppLauncher {
             desktop_entry.push_str(&format!("X-QWA-Isolated={}\n", self.isolate_profile));
             desktop_entry.push_str(&format!("X-QWA-Parameters={}\n", self.custom_parameters));
 
-            if let Ok(mut f) = File::open(&self.icon) {
-                let metadata = std::fs::metadata(&self.icon).expect("unable to read metadata");
-                let mut buffer = vec![0; metadata.len() as usize];
-                f.read_exact(&mut buffer).expect("buffer overflow");
-
-                let icon = ashpd::desktop::Icon::Bytes(buffer);
-
-                let response = proxy
-                    .prepare_install(
-                        None,
-                        &self.name,
-                        icon,
-                        PrepareInstallOptions::default()
-                            .editable_icon(false)
-                            .editable_name(false),
-                    )
-                    .await?
-                    .response()?;
-                let token = response.token();
-
-                proxy
-                    .install(
-                        token,
-                        &format!("dev.heppen.webapps.{}.desktop", self.codename),
-                        &desktop_entry,
-                    )
-                    .await?;
+            if let Ok(mut f) = File::open(desktop_files_location(&self.codename)).await {
+                f.write_all(desktop_entry.as_bytes()).await?;
             }
         }
 
@@ -240,11 +216,8 @@ impl WebAppLauncher {
     }
 
     pub async fn delete(&self) -> Result<()> {
-        let proxy = DynamicLauncherProxy::new().await?;
-        proxy
-            .uninstall(&format!("dev.heppen.webapps.{}.desktop", self.codename))
-            .await?;
         let profile_path = self.browser.profile_path.join(&self.codename);
+        remove_file(desktop_files_location(&self.codename)).await?;
         remove_dir_all(&profile_path).await?;
         remove_file(database_path(&format!("{}.ron", self.codename))).await?;
 
@@ -252,15 +225,15 @@ impl WebAppLauncher {
     }
 }
 
-pub async fn launch_webapp(app_id: Arc<String>) -> anyhow::Result<()> {
-    let proxy = DynamicLauncherProxy::new().await?;
-
-    proxy
-        .launch(
-            &format!("dev.heppen.webapps.{}.desktop", app_id),
-            ashpd::desktop::dynamic_launcher::LaunchOptions::default(),
-        )
-        .await?;
-
-    Ok(())
-}
+//pub async fn launch_webapp(app_id: Arc<String>) -> anyhow::Result<()> {
+//    let proxy = DynamicLauncherProxy::new().await?;
+//
+//    proxy
+//        .launch(
+//            &format!("dev.heppen.webapps.{}.desktop", app_id),
+//            ashpd::desktop::dynamic_launcher::LaunchOptions::default(),
+//        )
+//        .await?;
+//
+//    Ok(())
+//}

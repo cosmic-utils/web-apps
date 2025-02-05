@@ -15,7 +15,7 @@ use crate::{
     browser::{installed_browsers, Browser, BrowserModel},
     common::{self, image_handle, move_icon, url_valid, Icon, IconType},
     fl,
-    launcher::{launch_webapp, webapplauncher_is_valid, WebAppLauncher},
+    launcher::{webapplauncher_is_valid, WebAppLauncher},
     pages,
 };
 
@@ -128,7 +128,7 @@ pub struct AppEditor {
     pub browser_idx: Option<usize>,
     pub categories: Vec<String>,
     pub category_idx: Option<usize>,
-    pub is_installed: bool,
+    //pub is_installed: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -139,7 +139,7 @@ pub enum Message {
     Done,
     Incognito(bool),
     IsolatedProfile(bool),
-    LaunchApp,
+    //LaunchApp,
     Navbar(bool),
     OpenIconPicker(String),
     SearchFavicon,
@@ -174,11 +174,11 @@ impl AppEditor {
             browser_idx: Some(0),
             categories,
             category_idx: Some(0),
-            is_installed: false,
+            //is_installed: false,
         }
     }
 
-    pub fn from(webapp_launcher: WebAppLauncher, installed: bool) -> Self {
+    pub fn from(webapp_launcher: WebAppLauncher) -> Self {
         let category_idx = Category::iter().position(|c| c == webapp_launcher.category);
         let category = Category::from_index(category_idx.unwrap_or_default() as u8);
         let categories = Category::to_vec();
@@ -205,7 +205,7 @@ impl AppEditor {
             browser_idx,
             categories,
             category_idx,
-            is_installed: installed,
+            //is_installed: installed,
         }
     }
 
@@ -265,15 +265,15 @@ impl AppEditor {
             Message::IsolatedProfile(flag) => {
                 self.app_isolated = flag;
             }
-            Message::LaunchApp => {
-                let app_id = Arc::new(self.app_codename.clone());
-                let cloned_id = Arc::clone(&app_id);
-                return task::future(async move {
-                    launch_webapp(cloned_id).await.unwrap();
-
-                    pages::Message::None
-                });
-            }
+            //Message::LaunchApp => {
+            //let app_id = Arc::new(self.app_codename.clone());
+            //let cloned_id = Arc::clone(&app_id);
+            //return task::future(async move {
+            //    launch_webapp(cloned_id).await.unwrap();
+            //
+            //    pages::Message::None
+            //});
+            //}
             Message::Navbar(flag) => {
                 self.app_navbar = flag;
             }
@@ -449,14 +449,14 @@ impl AppEditor {
                     widget::row()
                         .spacing(8)
                         .push(widget::horizontal_space())
-                        .push_maybe(if self.is_installed {
-                            Some(
-                                widget::button::standard(fl!("run-app"))
-                                    .on_press(Message::LaunchApp),
-                            )
-                        } else {
-                            None
-                        })
+                        //.push_maybe(if self.is_installed {
+                        //    Some(
+                        //        widget::button::standard(fl!("run-app"))
+                        //            .on_press(Message::LaunchApp),
+                        //    )
+                        //} else {
+                        //    None
+                        //})
                         .push(widget::button::suggested(fl!("create")).on_press_maybe(
                             if webapplauncher_is_valid(
                                 &self.app_icon,

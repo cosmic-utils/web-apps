@@ -65,6 +65,20 @@ pub fn database_path(entry: &str) -> PathBuf {
     PathBuf::new()
 }
 
+pub fn desktop_files_location(filename: &str) -> PathBuf {
+    if let Some(xdg_data) = dirs::data_dir() {
+        if filename.is_empty() {
+            return xdg_data.join("applications");
+        } else {
+            return xdg_data
+                .join("applications")
+                .join(format!("dev.heppen.webapps.{}.desktop", filename));
+        }
+    }
+
+    PathBuf::new()
+}
+
 pub fn icons_location() -> PathBuf {
     if let Some(xdg_data) = dirs::data_dir() {
         return xdg_data.join("icons");
@@ -87,18 +101,19 @@ pub fn is_sandboxed() -> bool {
 
 pub fn fd_entries() -> Vec<DesktopEntry> {
     let mut paths = Vec::new();
-    default_paths().for_each(|path| paths.push(path));
 
     // this is workaround for flatpak sandbox
     if is_sandboxed() {
-        if let Some(xdg_data) = dirs::data_dir() {
-            paths.push(xdg_data.join("applications"));
-            paths.push(xdg_data.join("flatpak/exports/share/applications"));
-        }
         paths.push("/var/lib/flatpak/exports/share/applications".into());
         paths.push("/run/host/usr/share/applications".into());
         paths.push("/run/host/usr/local/share/applications".into());
     };
+
+    default_paths().for_each(|path| {
+        if !paths.contains(&path) {
+            paths.push(path)
+        }
+    });
 
     Iter::new(paths.into_iter())
         .entries(Some(&LOCALES))
