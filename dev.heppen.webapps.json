@@ -19,7 +19,6 @@
     "--filesystem=xdg-data/applications",
     "--filesystem=xdg-data/flatpak",
     "--talk-name=com.system76.CosmicSettingsDaemon",
-    "--talk-name=org.freedesktop.Flatpak"
   ],
   "build-options": {
     "append-path": "/usr/lib/sdk/rust-stable/bin"
