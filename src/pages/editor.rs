@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use cosmic::{
     iced::{alignment::Vertical, Length},
     style, task,
@@ -5,6 +7,7 @@ use cosmic::{
     Element, Task,
 };
 use rand::{rng, Rng};
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -19,7 +22,7 @@ use crate::{
 use super::REPOSITORY;
 
 #[repr(u8)]
-#[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Category {
     #[default]
     Audio = 0,
@@ -125,6 +128,7 @@ pub struct AppEditor {
     pub browser_idx: Option<usize>,
     pub categories: Vec<String>,
     pub category_idx: Option<usize>,
+    //pub is_installed: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -135,6 +139,7 @@ pub enum Message {
     Done,
     Incognito(bool),
     IsolatedProfile(bool),
+    //LaunchApp,
     Navbar(bool),
     OpenIconPicker(String),
     SearchFavicon,
@@ -169,6 +174,7 @@ impl AppEditor {
             browser_idx: Some(0),
             categories,
             category_idx: Some(0),
+            //is_installed: false,
         }
     }
 
@@ -199,6 +205,7 @@ impl AppEditor {
             browser_idx,
             categories,
             category_idx,
+            //is_installed: installed,
         }
     }
 
@@ -227,33 +234,51 @@ impl AppEditor {
 
                 if webapplauncher_is_valid(&icon_final_path, &self.app_title, &self.app_url) {
                     if let Some(browser) = &self.app_browser {
-                        let launcher = WebAppLauncher {
-                            codename: self.app_codename.clone(),
-                            browser: browser.clone(),
-                            name: self.app_title.clone(),
-                            icon: icon_final_path,
-                            category: self.app_category.clone(),
-                            url: self.app_url.clone(),
-                            custom_parameters: self.app_parameters.clone(),
-                            isolate_profile: self.app_isolated,
-                            navbar: self.app_navbar,
-                            is_incognito: self.app_incognito,
+                        if let Some(entry) = &browser.entry {
+                            let launcher = Arc::new(WebAppLauncher {
+                                appid: entry.appid.clone(),
+                                codename: self.app_codename.clone(),
+                                browser: browser.clone(),
+                                name: self.app_title.clone(),
+                                icon: icon_final_path,
+                                category: self.app_category.clone(),
+                                url: self.app_url.clone(),
+                                custom_parameters: self.app_parameters.clone(),
+                                isolate_profile: self.app_isolated,
+                                navbar: self.app_navbar,
+                                is_incognito: self.app_incognito,
+                            });
+
+                            let arc_launcher = Arc::clone(&launcher);
+
+                            return task::future(async move {
+                                if arc_launcher.create().await.is_ok() {
+                                    pages::Message::SaveLauncher(arc_launcher)
+                                } else {
+                                    pages::Message::None
+                                }
+                            });
                         };
-
-                        let _ = launcher.create().is_ok();
-                    };
+                    }
                 }
-
-                return task::message(pages::Message::ReloadNavbarItems);
-            }
-            Message::Navbar(flag) => {
-                self.app_navbar = flag;
             }
             Message::Incognito(flag) => {
                 self.app_incognito = flag;
             }
             Message::IsolatedProfile(flag) => {
                 self.app_isolated = flag;
+            }
+            //Message::LaunchApp => {
+            //let app_id = Arc::new(self.app_codename.clone());
+            //let cloned_id = Arc::clone(&app_id);
+            //return task::future(async move {
+            //    launch_webapp(cloned_id).await.unwrap();
+            //
+            //    pages::Message::None
+            //});
+            //}
+            Message::Navbar(flag) => {
+                self.app_navbar = flag;
             }
             Message::OpenIconPicker(app_url) => {
                 return task::future(async { pages::Message::OpenIconPicker(app_url) })
@@ -383,37 +408,70 @@ impl AppEditor {
                         )
                         .add_maybe(if let Some(browser) = &self.app_browser {
                             match browser.model {
-                                Some(BrowserModel::Firefox) | Some(BrowserModel::Zen) => {
-                                    widget::settings::item(
-                                        fl!("navbar"),
-                                        widget::toggler(self.app_navbar).on_toggle(Message::Navbar),
-                                    )
-                                    .into()
-                                }
-                                _ => widget::settings::item(
-                                    fl!("isolated-profile"),
-                                    widget::toggler(self.app_isolated)
-                                        .on_toggle(Message::IsolatedProfile),
+                                Some(BrowserModel::Firefox)
+                                | Some(BrowserModel::Zen)
+                                | Some(BrowserModel::Librewolf)
+                                | Some(BrowserModel::Waterfox) => widget::settings::item(
+                                    fl!("navbar"),
+                                    widget::toggler(self.app_navbar).on_toggle(Message::Navbar),
                                 )
                                 .into(),
+                                _ => None,
                             }
                         } else {
                             None
                         })
                         .add(widget::settings::item(
+                            fl!("isolated-profile"),
+                            widget::toggler(self.app_isolated).on_toggle_maybe(
+                                if let Some(browser) = &self.app_browser {
+                                    match browser.model {
+                                        Some(BrowserModel::Firefox)
+                                        | Some(BrowserModel::Zen)
+                                        | Some(BrowserModel::Librewolf)
+                                        | Some(BrowserModel::Waterfox) => {
+                                            if self.app_navbar {
+                                                Message::IsolatedProfile.into()
+                                            } else {
+                                                None
+                                            }
+                                        }
+                                        _ => Message::IsolatedProfile.into(),
+                                    }
+                                } else {
+                                    None
+                                },
+                            ),
+                        ))
+                        .add(widget::settings::item(
                             fl!("private-mode"),
                             widget::toggler(self.app_incognito).on_toggle(Message::Incognito),
                         )),
                 )
-                .push(widget::row().push(widget::horizontal_space()).push(
-                    widget::button::suggested(fl!("create")).on_press_maybe(
-                        if webapplauncher_is_valid(&self.app_icon, &self.app_title, &self.app_url) {
-                            Some(Message::Done)
-                        } else {
-                            None
-                        },
-                    ),
-                )),
+                .push(
+                    widget::row()
+                        .spacing(8)
+                        .push(widget::horizontal_space())
+                        //.push_maybe(if self.is_installed {
+                        //    Some(
+                        //        widget::button::standard(fl!("run-app"))
+                        //            .on_press(Message::LaunchApp),
+                        //    )
+                        //} else {
+                        //    None
+                        //})
+                        .push(widget::button::suggested(fl!("create")).on_press_maybe(
+                            if webapplauncher_is_valid(
+                                &self.app_icon,
+                                &self.app_title,
+                                &self.app_url,
+                            ) {
+                                Some(Message::Done)
+                            } else {
+                                None
+                            },
+                        )),
+                ),
         )
         .max_width(1000)
         .into()

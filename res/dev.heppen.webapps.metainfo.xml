@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<component type="desktop-application">
+    <id>dev.heppen.webapps</id>
+    <developer id="dev.heppen">
+        <name>hepp3n</name>
+    </developer>
+    <url type="homepage">https://webapps.heppen.dev</url>
+    <url type="vcs-browser">https://github.com/cosmic-utils/web-apps</url>
+    <url type="bugtracker">https://github.com/cosmic-utils/web-apps/issues</url>
+    <url type="contribute">https://github.com/cosmic-utils/web-apps</url>
+    <url type="translate">https://github.com/cosmic-utils/web-apps/tree/master/i18n</url>
+    <url type="donation">https://github.com/sponsors/hepp3n</url>
+
+    <name>Quick Web Apps</name>
+    <summary>Web applications at your fingertips</summary>
+    <summary xml:lang="fr">Applications web à portée de main</summary>
+
+    <metadata_license>MIT</metadata_license>
+    <project_license>GPL-3.0-only</project_license>
+
+    <description>
+        <p>Quick Web Apps written with love and libcosmic.
+            Turn Any URL into a Web App, running in a separate window of any browser installed on your system, selected according to your preference.
+            Integrates with your desktop environment (icon pinnable to the dock).
+        </p>
+        <!--fr translation-->
+        <p xml:lang="fr">Applications Web Rapides écrites avec amour et libcosmic.
+        Transformez n'importe quelle URL en Application Web, exécutée dans une fenêtre distincte de n'importe quel navigateur installé sur votre système, sélectionné selon vos préférences.
+        S'intègre à votre environnement de bureau (icône épinglable sur le dock).
+        </p>
+        <ul>
+            <li>Fast and easy to use</li>
+            <li>Works out of the box</li>
+            <li>In-app icon pack installer</li>
+            <li>Supports most mainstream browsers</li>
+            <!--fr translation-->
+            <li xml:lang="fr">Rapide et facile à utiliser</li>
+            <li xml:lang="fr">Fonctionne immédiatement</li>
+            <li xml:lang="fr">Installateur de pack d'icônes intégré</li>
+            <li xml:lang="fr">Compatible avec la plupart des navigateurs principaux</li>
+        </ul>
+    </description>
+
+    <launchable type="desktop-id">dev.heppen.webapps.desktop</launchable>
+    <content_rating type="oars-1.1" />
+
+    <categories>
+        <category>Utility</category>
+    </categories>
+
+    <provides>
+        <id>com.system76.CosmicApplication</id>
+        <id>io.github.elevenhsoft.WebApps</id>
+    </provides>
+
+    <replaces>
+        <id>io.github.elevenhsoft.WebApps</id>
+    </replaces>
+
+    <screenshots>
+        <screenshot type="default">
+            <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-light.png</image>
+            <caption>Light Theme</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-dark.png</image>
+            <caption>Dark Theme</caption>
+        </screenshot>
+        <screenshot>
+            <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-rose-pine.png</image>
+            <caption>Rose Pine Theme and more additional themes</caption>
+        </screenshot>
+    </screenshots>
+
+    <branding>
+        <color type="primary" scheme_preference="light">#94ebeb</color>
+        <color type="primary" scheme_preference="dark">#578383</color>
+    </branding>
+
+    <requires>
+        <display_length compare="ge">640</display_length>
+        <internet>always</internet>
+    </requires>
+
+    <supports>
+        <control>keyboard</control>
+        <control>pointing</control>
+    </supports>
+
+    <releases>
+        <release version="1.0.0" date="2025-02-03">
+            <description>
+                <p>Breaking changes, require creating web apps from scratch, also not compatible with previous releases...</p>
+                <p>Many improvements and new interface</p>
+            </description>
+        </release>
+    </releases>
+</component>

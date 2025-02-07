@@ -1,15 +1,19 @@
 use crate::{
-    browser::{Browser, BrowserModel},
-    common::{self},
+    browser::{Browser, BrowserModel, Chromium, Falkon, Firefox},
+    common::{self, database_path, desktop_files_location},
     pages::editor::Category,
     LOCALES,
 };
 use anyhow::Result;
 use freedesktop_desktop_entry::DesktopEntry;
+use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self, create_dir_all, remove_dir_all, remove_file, File},
-    io::Write,
-    path::PathBuf,
+    fs::{self},
+    io::Read,
+};
+use tokio::{
+    fs::{remove_dir_all, remove_file, File},
+    io::AsyncWriteExt,
 };
 
 pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
@@ -23,42 +27,32 @@ pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
 pub fn installed_webapps() -> Vec<WebAppLauncher> {
     let mut webapps = Vec::new();
 
-    match fs::read_dir(common::desktop_filepath("")) {
-        Ok(entries) => {
-            for entry in entries {
-                match entry {
-                    Ok(entry) => {
-                        let entry_fn = entry.file_name();
-                        let filename = entry_fn.to_str().unwrap();
+    if let Ok(entries) = fs::read_dir(database_path("")) {
+        for entry in entries {
+            match entry {
+                Ok(entry) => {
+                    let file = std::fs::File::open(entry.path());
+                    let mut content = String::new();
 
-                        if filename.starts_with("QuickWebApp-") && filename.ends_with(".desktop") {
-                            let fde = DesktopEntry::from_path(entry.path(), Some(&LOCALES));
-
-                            match fde {
-                                Ok(fde) => webapps.push(WebAppLauncher::from(fde)),
-                                Err(e) => tracing::error!(
-                                    "Error reading desktop entry for {}: \n{}",
-                                    filename,
-                                    e
-                                ),
-                            }
+                    if let Ok(mut f) = file {
+                        f.read_to_string(&mut content).unwrap();
+                        if let Ok(mut launcher) = ron::from_str::<WebAppLauncher>(&content) {
+                            launcher.browser = Browser::from_appid(launcher.appid.clone());
+                            webapps.push(launcher);
                         }
                     }
-                    Err(e) => tracing::error!("Error reading directory: {}", e),
                 }
+                Err(e) => tracing::error!("Error reading directory: {}", e),
             }
-        }
-        Err(_) => {
-            create_dir_all(common::desktop_filepath(""))
-                .expect("Cannot create local applications dir");
         }
     }
 
     webapps
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct WebAppLauncher {
+    pub appid: String,
     pub codename: String,
     pub browser: Browser,
     pub name: String,
@@ -77,6 +71,10 @@ impl From<DesktopEntry> for WebAppLauncher {
 
         match group {
             Some(group) => Self {
+                appid: group
+                    .entry("X-QWA-Browser-Id")
+                    .unwrap_or_default()
+                    .to_string(),
                 codename: group
                     .entry("X-QWA-Codename")
                     .unwrap_or_default()
@@ -112,6 +110,7 @@ impl From<DesktopEntry> for WebAppLauncher {
                     .unwrap_or_default(),
             },
             None => Self {
+                appid: String::new(),
                 codename: String::new(),
                 browser: Browser::default(),
                 name: String::new(),
@@ -128,171 +127,61 @@ impl From<DesktopEntry> for WebAppLauncher {
 }
 
 impl WebAppLauncher {
-    fn create_firefox_userjs(
-        &self,
-        is_zen_browser: bool,
-        path: PathBuf,
-        create_navbar: bool,
-    ) -> bool {
-        let mut file = File::create(&path)
-            .unwrap_or_else(|_| panic!("failed to create user.js in {:?}", path));
-
-        let navbar_pref = if create_navbar {
-            b"user_pref(\"browser.tabs.inTitlebar\", 2);\n"
-        } else {
-            b"user_pref(\"browser.tabs.inTitlebar\", 0);\n"
-        };
-        let Ok(_) = file.write_all(navbar_pref) else {
-            return false;
-        };
-
-        match is_zen_browser {
-            true => file
-                .write_all(include_bytes!(
-                    "../data/runtime/zen-browser/profile/user.js"
-                ))
-                .is_ok(),
-            false => file
-                .write_all(include_bytes!("../data/runtime/firefox/profile/user.js"))
-                .is_ok(),
-        }
-    }
-
-    fn create_user_chrome_css(
-        &self,
-        is_zen_browser: bool,
-        path: PathBuf,
-        create_navbar: bool,
-    ) -> bool {
-        let mut file = File::create(&path)
-            .unwrap_or_else(|_| panic!("cant create userChrome.css in {:?}", path));
-
-        if create_navbar {
-            file.write_all(b"").is_ok()
-        } else {
-            match is_zen_browser {
-                true => file
-                    .write_all(include_bytes!(
-                        "../data/runtime/zen-browser/profile/chrome/userChrome.css"
-                    ))
-                    .is_ok(),
-                false => file
-                    .write_all(include_bytes!(
-                        "../data/runtime/firefox/profile/chrome/userChrome.css"
-                    ))
-                    .is_ok(),
-            }
-        }
-    }
-
-    fn exec_firefox(&self, is_zen_browser: bool) -> String {
+    fn exec_firefox(&self, zen_browser: bool) -> String {
         let profile_path = self.browser.profile_path.join(&self.codename);
-        let user_js_path = profile_path.join("user.js");
-        let mut user_chrome_css = profile_path.join("chrome");
 
-        tracing::info!("Creating profile directory in: {:?}", &profile_path);
-        create_dir_all(&profile_path)
-            .unwrap_or_else(|_| panic!("cant create profile dir in {:?}", &profile_path));
-        create_dir_all(&user_chrome_css)
-            .unwrap_or_else(|_| panic!("cant create chrome dir in {:?}", &user_chrome_css));
-
-        user_chrome_css = user_chrome_css.join("userChrome.css");
-
-        self.create_firefox_userjs(is_zen_browser, user_js_path, self.navbar);
-        self.create_user_chrome_css(is_zen_browser, user_chrome_css, self.navbar);
-
-        let profile_path = profile_path.to_str().unwrap();
-
-        let mut exec_string = format!(
-            "{} --class QuickWebApp-{} --name QuickWebApp-{} --profile {} --no-remote ",
-            self.browser.exec, self.codename, self.codename, profile_path
-        );
-
-        if self.is_incognito {
-            exec_string.push_str("--private-window ");
-        }
-
-        if !self.custom_parameters.is_empty() {
-            exec_string.push_str(&format!("{} ", self.custom_parameters));
-        }
-
-        exec_string.push_str(&self.url);
-
-        exec_string
+        Firefox::builder(self.browser.exec.clone())
+            .url(self.url.clone())
+            .codename(self.codename.clone())
+            .navbar(self.navbar)
+            .isolated(self.isolate_profile)
+            .profile_path(profile_path)
+            .zen_browser(zen_browser)
+            .private_mode(self.is_incognito)
+            .custom_args(self.custom_parameters.clone())
+            .build()
     }
 
-    fn exec_chromium(&self) -> String {
-        let mut exec_string = format!(
-            "{} --app={} --class=QuickWebApp-{} --name=QuickWebApp-{} ",
-            self.browser.exec, self.url, self.codename, self.codename
-        );
+    fn exec_chromium(&self, microsoft_edge: bool) -> String {
+        let profile_dir = self.browser.profile_path.join(&self.codename);
 
-        if self.isolate_profile {
-            let profile_dir = self.browser.profile_path.join(&self.codename);
-
-            tracing::info!("Creating profile directory in: {:?}", &profile_dir);
-            let _ = create_dir_all(&profile_dir);
-            let profile_path = profile_dir.to_str().unwrap();
-            exec_string.push_str(&format!("--user-data-dir={} ", profile_path));
-        }
-
-        if self.is_incognito {
-            if self.browser.name.starts_with("Microsoft Edge") {
-                exec_string.push_str("--inprivate ");
-            } else {
-                exec_string.push_str("--incognito ");
-            }
-        }
-
-        if !self.custom_parameters.is_empty() {
-            exec_string.push_str(&format!("{} ", self.custom_parameters));
-        }
-
-        exec_string
+        Chromium::builder(self.browser.exec.clone())
+            .url(self.url.clone())
+            .codename(self.codename.clone())
+            .isolated(self.isolate_profile)
+            .profile_path(profile_dir)
+            .ms_edge(microsoft_edge)
+            .private_mode(self.is_incognito)
+            .custom_args(self.custom_parameters.clone())
+            .build()
     }
 
     fn exec_falkon(&self) -> String {
-        let mut exec_string = String::new();
+        let profile_dir = self.browser.profile_path.join(&self.codename);
 
-        if self.isolate_profile {
-            let profile_dir = self.browser.profile_path.join(&self.codename);
-            tracing::info!("Creating profile directory in: {:?}", &profile_dir);
-            let _ = create_dir_all(&profile_dir);
-
-            let profile_path = profile_dir.to_str().unwrap();
-
-            exec_string = format!(
-                "{} --portable --wmclass QuickWebApp-{} --profile {} ",
-                self.browser.exec, self.codename, profile_path
-            );
-        }
-
-        if self.is_incognito {
-            exec_string.push_str("--private-browsing ");
-        }
-
-        if !self.custom_parameters.is_empty() {
-            exec_string.push_str(&format!("{} ", self.custom_parameters));
-        }
-
-        exec_string.push_str(&format!("--no-remote --current-tab {}", self.url));
-
-        exec_string
+        Falkon::builder(self.browser.exec.clone())
+            .url(self.url.clone())
+            .codename(self.codename.clone())
+            .isolated(self.isolate_profile)
+            .profile_path(profile_dir)
+            .private_mode(self.is_incognito)
+            .custom_args(self.custom_parameters.clone())
+            .build()
     }
 
     fn exec_string(&self) -> String {
         if let Some(model) = &self.browser.model {
             return match model {
-                BrowserModel::Brave => self.exec_chromium(),
-                BrowserModel::Chrome => self.exec_chromium(),
-                BrowserModel::Chromium => self.exec_chromium(),
-                BrowserModel::Cromite => self.exec_chromium(),
+                BrowserModel::Brave => self.exec_chromium(false),
+                BrowserModel::Chrome => self.exec_chromium(false),
+                BrowserModel::Chromium => self.exec_chromium(false),
+                BrowserModel::Cromite => self.exec_chromium(false),
                 BrowserModel::Falkon => self.exec_falkon(),
                 BrowserModel::Firefox => self.exec_firefox(false),
                 BrowserModel::Floorp => self.exec_firefox(false),
                 BrowserModel::Librewolf => self.exec_firefox(false),
-                BrowserModel::MicrosoftEdge => self.exec_chromium(),
-                BrowserModel::Vivaldi => self.exec_chromium(),
+                BrowserModel::MicrosoftEdge => self.exec_chromium(true),
+                BrowserModel::Vivaldi => self.exec_chromium(false),
                 BrowserModel::Waterfox => self.exec_firefox(false),
                 BrowserModel::Zen => self.exec_firefox(true),
             };
@@ -301,50 +190,61 @@ impl WebAppLauncher {
         String::new()
     }
 
-    fn qwa_desktop_path(&self) -> PathBuf {
-        let filename = format!("QuickWebApp-{}.desktop", self.codename);
-        common::desktop_filepath(&filename)
-    }
+    pub async fn create(&self) -> Result<()> {
+        let entry_location = desktop_files_location(&self.codename);
 
-    pub fn create(&self) -> Result<()> {
-        if let Some(entry) = &self.browser.entry {
-            if self.qwa_desktop_path().exists() {
-                remove_file(self.qwa_desktop_path())?;
-            }
+        if entry_location.exists() {
+            let _ = std::fs::remove_file(&entry_location);
+        }
 
-            let mut output = File::create(self.qwa_desktop_path())?;
+        let mut desktop_entry = String::from("[Desktop Entry]\n");
+        desktop_entry.push_str(&format!("Name={}\n", self.name));
+        desktop_entry.push_str("Comment=Quick Web App\n");
+        desktop_entry.push_str(&format!("Exec={}\n", self.exec_string()));
+        desktop_entry.push_str(&format!("Icon={}\n", self.icon));
+        desktop_entry.push_str("Terminal=false\n");
+        desktop_entry.push_str("Type=Application\n");
+        desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
+        desktop_entry.push_str("MimeType=text/html;text/xml;application/xhtml_xml;\n");
+        desktop_entry.push_str(&format!(
+            "StartupWMClass=dev.heppen.webapps.{}\n",
+            self.codename
+        ));
+        desktop_entry.push_str("StartupNotify=true\n");
+        desktop_entry.push_str(&format!("X-QWA-Codename={}\n", self.codename));
+        desktop_entry.push_str(&format!("X-QWA-Browser-Id={}\n", self.appid));
+        desktop_entry.push_str(&format!("X-QWA-Url={}\n", self.url));
+        desktop_entry.push_str(&format!("X-QWA-Navbar={}\n", self.navbar));
+        desktop_entry.push_str(&format!("X-QWA-Private={}\n", self.is_incognito));
+        desktop_entry.push_str(&format!("X-QWA-Isolated={}\n", self.isolate_profile));
+        desktop_entry.push_str(&format!("X-QWA-Parameters={}\n", self.custom_parameters));
 
-            writeln!(output, "[Desktop Entry]")?;
-            writeln!(output, "Version=1.0")?;
-            writeln!(output, "Name={}", self.name)?;
-            writeln!(output, "Comment=Quick Web Apps")?;
-            writeln!(output, "Exec={}", self.exec_string())?;
-            writeln!(output, "Terminal=false")?;
-            writeln!(output, "Type=Application")?;
-            writeln!(output, "Icon={}", self.icon)?;
-            writeln!(output, "Categories={};", self.category.as_ref())?;
-            writeln!(output, "MimeType=text/html;text/xml;application/xhtml_xml;")?;
-            writeln!(output, "StartupWMClass=QuickWebApp-{}", self.codename)?;
-            writeln!(output, "StartupNotify=true")?;
-            writeln!(output, "X-QWA-Codename={}", self.codename)?;
-            writeln!(output, "X-QWA-Browser-Id={}", entry.appid)?;
-            writeln!(output, "X-QWA-Url={}", self.url)?;
-            writeln!(output, "X-QWA-Navbar={}", self.navbar)?;
-            writeln!(output, "X-QWA-Private={}", self.is_incognito)?;
-            writeln!(output, "X-QWA-Isolated={}", self.isolate_profile)?;
-            writeln!(output, "X-QWA-Parameters={}", self.custom_parameters)?;
+        if let Ok(mut f) = File::create(entry_location).await {
+            f.write_all(desktop_entry.as_bytes()).await?;
         }
 
         Ok(())
     }
 
-    pub fn delete(&self) -> Result<()> {
-        if self.qwa_desktop_path().exists() {
-            let profile_path = self.browser.profile_path.join(&self.codename);
-            remove_file(self.qwa_desktop_path())?;
-            remove_dir_all(&profile_path)?;
-        }
+    pub async fn delete(&self) -> Result<()> {
+        let profile_path = self.browser.profile_path.join(&self.codename);
+        remove_file(desktop_files_location(&self.codename)).await?;
+        remove_dir_all(&profile_path).await?;
+        remove_file(database_path(&format!("{}.ron", self.codename))).await?;
 
         Ok(())
     }
 }
+
+//pub async fn launch_webapp(app_id: Arc<String>) -> anyhow::Result<()> {
+//    let proxy = DynamicLauncherProxy::new().await?;
+//
+//    proxy
+//        .launch(
+//            &format!("dev.heppen.webapps.{}.desktop", app_id),
+//            ashpd::desktop::dynamic_launcher::LaunchOptions::default(),
+//        )
+//        .await?;
+//
+//    Ok(())
+//}

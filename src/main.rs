@@ -5,6 +5,7 @@ mod favicon;
 mod launcher;
 mod localize;
 mod pages;
+mod themes;
 
 use common::icons_location;
 use cosmic::{app::Settings, iced_core::Size};
@@ -18,6 +19,12 @@ use tokio::{fs::File, io::AsyncWriteExt, process::Child};
 lazy_static! {
     pub static ref LOCALES: Vec<String> = get_languages_from_env();
 }
+
+pub const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
+pub const CONFIG_VERSION: u64 = 1;
+pub const APP_ID: &str = "dev.heppen.webapps";
+pub const APP_ICON: &[u8] =
+    include_bytes!("../res/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
 
 fn init_logging() {
     use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
@@ -43,8 +50,8 @@ fn main() -> cosmic::iced::Result {
 
     let mut settings = Settings::default();
     settings = settings.size(Size {
-        width: 700.,
-        height: 700.,
+        width: 920.,
+        height: 800.,
     });
 
     cosmic::app::run::<QuickWebApps>(settings, ())

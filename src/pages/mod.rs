@@ -1,13 +1,17 @@
 pub mod editor;
 mod iconpicker;
 
-use crate::common::{find_icon, image_handle, move_icon, qwa_icons_location, Icon};
-use crate::config::Config;
+use crate::common::{
+    database_path, find_icon, image_handle, move_icon, qwa_icons_location, themes_path, Icon,
+};
+use crate::config::AppConfig;
 use crate::launcher::{installed_webapps, WebAppLauncher};
-use crate::{add_icon_packs_install_script, execute_script};
+use crate::themes::Theme;
+use crate::{add_icon_packs_install_script, execute_script, APP_ICON, APP_ID, REPOSITORY};
 use crate::{fl, pages::iconpicker::IconPicker};
+use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
+use cosmic::app::command::set_theme;
 use cosmic::app::context_drawer;
-use cosmic::cosmic_config::{self, CosmicConfigEntry};
 use cosmic::iced::alignment::Horizontal;
 use cosmic::iced::window::Id;
 use cosmic::iced::{Alignment, Length, Subscription};
@@ -21,36 +25,47 @@ use cosmic::{
 use cosmic::{task, theme};
 use editor::AppEditor;
 use futures_util::SinkExt;
+use ron::ser::to_string_pretty;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::fs::read_dir;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
 use std::str::FromStr;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::oneshot;
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    ChangeUserTheme(usize),
     CloseDialog,
     Editor(editor::Message),
     Delete(widget::segmented_button::Entity),
+    DeletionDone(widget::segmented_button::Entity),
     DownloaderDone,
     DownloaderStarted,
     DownloaderStream(String),
     DownloaderStreamFinished,
     IconPicker(iconpicker::Message),
     IconsResult(Vec<String>),
+    ImportThemeFilePicker,
     LaunchUrl(String),
+    LoadThemes,
     NavBar(widget::segmented_button::Entity),
     OpenFileResult(Vec<String>),
     OpenIconPicker(String),
     OpenRepositoryUrl,
+    OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
     ReloadNavbarItems,
+    SaveLauncher(Arc<WebAppLauncher>),
     SetIcon(Option<Icon>),
     DownloaderStop,
     ToggleContextPage(ContextPage),
-    UpdateConfig(Config),
+    UpdateConfig(AppConfig),
+    UpdateTheme(Box<Theme>),
     // emty message
     None,
 }
@@ -73,24 +88,22 @@ pub struct QuickWebApps {
     context_page: ContextPage,
     nav: nav_bar::Model,
     key_binds: HashMap<menu::KeyBind, MenuAction>,
-    config: Config,
+    config: AppConfig,
     page: Page,
     dialogs: Option<Dialogs>,
     downloader_started: bool,
     downloader_id: usize,
     downloader_output: String,
+    themes_list: Vec<Theme>,
+    theme_idx: Option<usize>,
 }
-
-const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
-const APP_ICON: &[u8] =
-    include_bytes!("../../res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png");
 
 impl Application for QuickWebApps {
     type Executor = cosmic::executor::Default;
     type Flags = ();
     type Message = Message;
 
-    const APP_ID: &'static str = "io.github.hepp3n.WebApps";
+    const APP_ID: &'static str = APP_ID;
 
     fn core(&self) -> &Core {
         &self.core
@@ -106,7 +119,7 @@ impl Application for QuickWebApps {
         } else {
             Id::unique()
         };
-
+        let config = AppConfig::config();
         let add_page = Page::Editor(AppEditor::new());
         let nav = nav_bar::Model::default();
 
@@ -116,25 +129,21 @@ impl Application for QuickWebApps {
             context_page: ContextPage::About,
             nav,
             key_binds: HashMap::new(),
-            config: cosmic_config::Config::new(Self::APP_ID, Config::VERSION)
-                .map(|context| match Config::get_entry(&context) {
-                    Ok(config) => config,
-                    Err((errors, config)) => {
-                        tracing::error!("error loading app config: {:#?}", errors);
-                        config
-                    }
-                })
-                .unwrap_or_default(),
+            config,
             page: add_page,
             dialogs: None,
             downloader_started: false,
             downloader_id: 1,
             downloader_output: String::new(),
+            themes_list: vec![Theme::Default],
+            theme_idx: Some(0),
         };
 
         let tasks = vec![
             windows.update_title(),
             task::message(Message::ReloadNavbarItems),
+            task::message(Message::LoadThemes),
+            task::message(Message::UpdateTheme(Box::new(Theme::Default))),
         ];
 
         (windows, task::batch(tasks))
@@ -145,7 +154,7 @@ impl Application for QuickWebApps {
 
         subscriptions.push(
             self.core()
-                .watch_config::<Config>(Self::APP_ID)
+                .watch_config::<AppConfig>(Self::APP_ID)
                 .map(|update| Message::UpdateConfig(update.config)),
         );
 
@@ -194,7 +203,15 @@ impl Application for QuickWebApps {
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
+        let mut tasks: Vec<Task<Message>> = Vec::new();
+
         match message {
+            Message::ChangeUserTheme(idx) => {
+                self.theme_idx = Some(idx);
+                let selected = self.themes_list[idx].clone();
+
+                tasks.push(task::message(Message::UpdateTheme(Box::new(selected))));
+            }
             Message::CloseDialog => self.dialogs = None,
             Message::ConfirmDeletion(id) => {
                 let data = self.nav.data::<Page>(id);
@@ -216,28 +233,33 @@ impl Application for QuickWebApps {
                     let Page::Editor(app_editor) = page;
 
                     if let Some(browser) = &app_editor.app_browser {
-                        let launcher = WebAppLauncher {
-                            codename: app_editor.app_codename.clone(),
-                            browser: browser.clone(),
-                            name: app_editor.app_title.clone(),
-                            icon: app_editor.app_icon.clone(),
-                            category: app_editor.app_category.clone(),
-                            url: app_editor.app_url.clone(),
-                            custom_parameters: app_editor.app_parameters.clone(),
-                            isolate_profile: app_editor.app_isolated,
-                            navbar: app_editor.app_navbar,
-                            is_incognito: app_editor.app_incognito,
-                        };
+                        if let Some(entry) = &browser.entry {
+                            let launcher = WebAppLauncher {
+                                appid: entry.appid.clone(),
+                                codename: app_editor.app_codename.clone(),
+                                browser: browser.clone(),
+                                name: app_editor.app_title.clone(),
+                                icon: app_editor.app_icon.clone(),
+                                category: app_editor.app_category.clone(),
+                                url: app_editor.app_url.clone(),
+                                custom_parameters: app_editor.app_parameters.clone(),
+                                isolate_profile: app_editor.app_isolated,
+                                navbar: app_editor.app_navbar,
+                                is_incognito: app_editor.app_incognito,
+                            };
 
-                        let deleted = launcher.delete();
-
-                        if deleted.is_ok() {
-                            self.nav.remove(id);
-                            self.dialogs = None;
-                            self.page = Page::Editor(AppEditor::new())
+                            return task::future(async move {
+                                launcher.delete().await.unwrap();
+                                Message::DeletionDone(id)
+                            });
                         };
-                    };
+                    }
                 }
+            }
+            Message::DeletionDone(id) => {
+                self.nav.remove(id);
+                self.dialogs = None;
+                self.page = Page::Editor(AppEditor::new())
             }
             Message::DownloaderDone => {
                 self.downloader_started = false;
@@ -281,12 +303,85 @@ impl Application for QuickWebApps {
                     }
                 };
             }
+            Message::ImportThemeFilePicker => {
+                return task::future(async {
+                    let result = SelectedFiles::open_file()
+                        .title("Open Theme")
+                        .accept_label("Open")
+                        .modal(true)
+                        .multiple(false)
+                        .filter(FileFilter::new("Ron Theme").glob("*.ron"))
+                        .send()
+                        .await
+                        .unwrap()
+                        .response();
+
+                    if let Ok(result) = result {
+                        let files = result
+                            .uris()
+                            .iter()
+                            .map(|file| file.path().to_string())
+                            .collect::<Vec<String>>();
+
+                        if !files.is_empty() {
+                            return Message::OpenThemeResult(
+                                urlencoding::decode(&files[0])
+                                    .unwrap_or_default()
+                                    .to_string(),
+                            );
+                        }
+                        Message::None
+                    } else {
+                        Message::None
+                    }
+                })
+            }
             Message::LaunchUrl(url) => match open::that_detached(&url) {
                 Ok(()) => {}
                 Err(err) => {
                     eprintln!("failed to open {url:?}: {err}");
                 }
             },
+            Message::LoadThemes => {
+                self.themes_list.clear();
+                self.themes_list.push(Theme::Default);
+
+                let folder = themes_path("");
+                let dir = read_dir(folder);
+
+                if let Ok(files) = dir {
+                    for path in files {
+                        let dir_entry = path.unwrap();
+                        let file_name = dir_entry.file_name();
+                        let theme_name = file_name.to_str().unwrap().replace(".ron", "");
+                        let metadata = std::fs::metadata(dir_entry.path());
+
+                        if let Ok(meta) = metadata {
+                            if meta.is_file() {
+                                let mut content: String = String::new();
+
+                                let mut file = std::fs::File::open(dir_entry.path()).unwrap();
+                                let _ = file.read_to_string(&mut content);
+
+                                let theme = Theme::build(theme_name.to_string(), content);
+
+                                if theme_name == self.config.app_theme {
+                                    tasks.push(task::message(Message::UpdateTheme(Box::new(
+                                        theme.clone(),
+                                    ))));
+                                }
+
+                                self.themes_list.push(theme);
+                            }
+                        }
+                    }
+                }
+
+                self.theme_idx = self.themes_list.iter().position(|c| match c {
+                    Theme::Default => self.config.app_theme == "COSMIC",
+                    Theme::Custom(theme) => self.config.app_theme == theme.0,
+                })
+            }
             Message::NavBar(id) => {
                 let data = self.nav.data::<Page>(id);
 
@@ -315,6 +410,20 @@ impl Application for QuickWebApps {
             Message::OpenRepositoryUrl => {
                 _ = open::that_detached(REPOSITORY);
             }
+            Message::OpenThemeResult(theme) => {
+                if !theme.is_empty() {
+                    let from_path = Path::new(&theme);
+                    if let Some(file_name) = from_path.file_name() {
+                        let file_name = file_name.to_string_lossy();
+                        let destination = themes_path(&file_name);
+                        if !destination.exists() {
+                            let _ = std::fs::copy(from_path, destination);
+                        }
+                    }
+                }
+
+                tasks.push(task::message(Message::LoadThemes));
+            }
             Message::ReloadNavbarItems => {
                 self.nav.clear();
 
@@ -336,6 +445,20 @@ impl Application for QuickWebApps {
 
                 self.page = Page::Editor(AppEditor::new());
             }
+            Message::SaveLauncher(launcher) => {
+                let location = database_path(&format!("{}.ron", launcher.codename));
+                let content = to_string_pretty(&*launcher, ron::ser::PrettyConfig::default());
+
+                if let Ok(content) = content {
+                    let file = std::fs::File::create(location);
+
+                    if let Ok(mut f) = file {
+                        let _ = f.write_all(content.as_bytes());
+                    }
+                }
+
+                return task::message(Message::ReloadNavbarItems);
+            }
             Message::SetIcon(icon) => {
                 let Page::Editor(app_editor) = &mut self.page;
                 app_editor.update_icon(icon);
@@ -353,10 +476,27 @@ impl Application for QuickWebApps {
             Message::UpdateConfig(config) => {
                 self.config = config;
             }
+            Message::UpdateTheme(theme) => {
+                let set_theme = match *theme {
+                    Theme::Default => {
+                        if let Some(handler) = AppConfig::config_handler() {
+                            let _ = self.config.set_app_theme(&handler, "COSMIC".into());
+                        };
+                        set_theme(cosmic::theme::system_preference())
+                    }
+                    Theme::Custom(theme) => {
+                        if let Some(handler) = AppConfig::config_handler() {
+                            let _ = self.config.set_app_theme(&handler, theme.0);
+                        };
+                        set_theme(cosmic::Theme::custom(Arc::new(*theme.1)))
+                    }
+                };
+                tasks.push(set_theme);
+            }
             Message::None => (),
         };
 
-        Task::none()
+        Task::batch(tasks)
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
@@ -364,7 +504,10 @@ impl Application for QuickWebApps {
             menu::root(fl!("help")),
             menu::items(
                 &self.key_binds,
-                vec![menu::Item::Button(fl!("about"), None, MenuAction::About)],
+                vec![
+                    menu::Item::Button(fl!("settings"), None, MenuAction::Settings),
+                    menu::Item::Button(fl!("about"), None, MenuAction::About),
+                ],
             ),
         )]);
 
@@ -416,6 +559,11 @@ impl Application for QuickWebApps {
                 Message::ToggleContextPage(ContextPage::About),
             )
             .title(fl!("about")),
+            ContextPage::Settings => context_drawer::context_drawer(
+                self.settings(),
+                Message::ToggleContextPage(ContextPage::Settings),
+            )
+            .title(fl!("settings")),
         })
     }
 
@@ -524,6 +672,35 @@ impl QuickWebApps {
             .into()
     }
 
+    fn settings(&self) -> Element<Message> {
+        let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
+
+        let hash = env!("VERGEN_GIT_SHA");
+        let _short_hash: String = hash.chars().take(7).collect();
+        let _date = env!("VERGEN_GIT_COMMIT_DATE");
+
+        widget::column()
+            .push(
+                widget::settings::section()
+                    .add(widget::settings::item(
+                        fl!("import-theme"),
+                        widget::button::standard(fl!("open"))
+                            .on_press(Message::ImportThemeFilePicker),
+                    ))
+                    .add(widget::settings::item(
+                        fl!("imported-themes"),
+                        widget::dropdown(
+                            &self.themes_list,
+                            self.theme_idx,
+                            Message::ChangeUserTheme,
+                        ),
+                    )),
+            )
+            .align_x(Alignment::Center)
+            .spacing(space_xxs)
+            .into()
+    }
+
     fn update_title(&mut self) -> Task<Message> {
         self.set_header_title(fl!("app"));
         self.set_window_title(fl!("app"), self.window_id)
@@ -534,11 +711,13 @@ impl QuickWebApps {
 pub enum ContextPage {
     #[default]
     About,
+    Settings,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum MenuAction {
     About,
+    Settings,
 }
 
 impl menu::action::MenuAction for MenuAction {
@@ -547,6 +726,7 @@ impl menu::action::MenuAction for MenuAction {
     fn message(&self) -> Self::Message {
         match self {
             MenuAction::About => Message::ToggleContextPage(ContextPage::About),
+            MenuAction::Settings => Message::ToggleContextPage(ContextPage::Settings),
         }
     }
 }
