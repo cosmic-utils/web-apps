@@ -13,6 +13,10 @@ help = Hulp
 about = Over
 support-me = Doneer aan de maker
 support-body = Als u deze app nuttig vindt, overweeg dan om de auteur financieel tegemoet te komen, door middel van een optionele donatie :)
+settings = Instellingen
+import-theme = Thema importeren
+imported-themes = Geïmporteerde thema's
+run-app = App uitvoeren
 
 # header
 main-window = { $app }
@@ -79,13 +83,3 @@ warning = U voldoet niet aan de vereisten
     .app-url=  - Geef een geldige URL op dat met http:// of https:// begint
     .app-icon=  - Selecteer een Pictogram voor uw launcher
     .app-browser=  - Selecteer een browser. Zorg ervoor dat ten minste één browser systeembreed of via Flatpak is geïnstalleerd.
-
-
-
-
-
-
-
-
-
-
