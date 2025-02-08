@@ -17,7 +17,7 @@ select-browser=Seleziona Browser
 
 # home_screen.rs
 installed-header=Tu hai { $number } web app installate:
-not-installed-header=Non hai nessuna app web installata. Per favore, premi il pulsante Crea e creane una.
+not-installed-header=Non hai nessuna web app installata. Per favore, premi il pulsante Crea e creane una.
 
 # creator.rs
 web=Web
