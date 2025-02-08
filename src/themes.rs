@@ -3,14 +3,16 @@ use cosmic::cosmic_theme::{self, ThemeBuilder};
 #[derive(Debug, Default, Clone)]
 pub enum Theme {
     #[default]
-    Default,
+    Light,
+    Dark,
     Custom((String, Box<cosmic_theme::Theme>)),
 }
 
 impl AsRef<str> for Theme {
     fn as_ref(&self) -> &str {
         match self {
-            Theme::Default => "COSMIC",
+            Theme::Light => "COSMIC Light",
+            Theme::Dark => "COSMIC Dark",
             Theme::Custom(theme) => &theme.0,
         }
     }
@@ -22,6 +24,6 @@ impl Theme {
             return Self::Custom((name, Box::new(palette.build())));
         }
 
-        Self::Default
+        Self::Light
     }
 }

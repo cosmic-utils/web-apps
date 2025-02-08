@@ -135,7 +135,7 @@ impl Application for QuickWebApps {
             downloader_started: false,
             downloader_id: 1,
             downloader_output: String::new(),
-            themes_list: vec![Theme::Default],
+            themes_list: vec![Theme::Light, Theme::Dark],
             theme_idx: Some(0),
         };
 
@@ -143,7 +143,7 @@ impl Application for QuickWebApps {
             windows.update_title(),
             task::message(Message::ReloadNavbarItems),
             task::message(Message::LoadThemes),
-            task::message(Message::UpdateTheme(Box::new(Theme::Default))),
+            task::message(Message::UpdateTheme(Box::new(Theme::Light))),
         ];
 
         (windows, task::batch(tasks))
@@ -344,7 +344,8 @@ impl Application for QuickWebApps {
             },
             Message::LoadThemes => {
                 self.themes_list.clear();
-                self.themes_list.push(Theme::Default);
+                self.themes_list.push(Theme::Light);
+                self.themes_list.push(Theme::Dark);
 
                 let folder = themes_path("");
                 let dir = read_dir(folder);
@@ -378,7 +379,8 @@ impl Application for QuickWebApps {
                 }
 
                 self.theme_idx = self.themes_list.iter().position(|c| match c {
-                    Theme::Default => self.config.app_theme == "COSMIC",
+                    Theme::Light => self.config.app_theme == "COSMIC Light",
+                    Theme::Dark => self.config.app_theme == "COSMIC Dark",
                     Theme::Custom(theme) => self.config.app_theme == theme.0,
                 })
             }
@@ -478,11 +480,17 @@ impl Application for QuickWebApps {
             }
             Message::UpdateTheme(theme) => {
                 let set_theme = match *theme {
-                    Theme::Default => {
+                    Theme::Light => {
                         if let Some(handler) = AppConfig::config_handler() {
-                            let _ = self.config.set_app_theme(&handler, "COSMIC".into());
+                            let _ = self.config.set_app_theme(&handler, "COSMIC Light".into());
                         };
-                        set_theme(cosmic::theme::system_preference())
+                        set_theme(cosmic::theme::system_light())
+                    }
+                    Theme::Dark => {
+                        if let Some(handler) = AppConfig::config_handler() {
+                            let _ = self.config.set_app_theme(&handler, "COSMIC Dark".into());
+                        };
+                        set_theme(cosmic::theme::system_dark())
                     }
                     Theme::Custom(theme) => {
                         if let Some(handler) = AppConfig::config_handler() {
