@@ -16,6 +16,7 @@
     "--device=dri",
     "--share=network",
     "--filesystem=host-os:ro",
+    "--filesystem=/var/lib/flatpak:ro",
     "--filesystem=xdg-data/flatpak:ro",
     "--filesystem=xdg-data/applications",
     "--filesystem=xdg-data/icons",
