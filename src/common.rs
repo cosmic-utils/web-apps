@@ -76,8 +76,8 @@ pub fn desktop_files_location(filename: &str) -> PathBuf {
 }
 
 pub fn icons_location() -> PathBuf {
-    if let Some(xdg_data) = dirs::data_dir() {
-        return xdg_data.join("icons");
+    if let Some(home_dir) = dirs::home_dir() {
+        return home_dir.join(".local/share/icons");
     }
 
     PathBuf::new()
