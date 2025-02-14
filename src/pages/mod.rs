@@ -484,13 +484,13 @@ impl Application for QuickWebApps {
                         if let Some(handler) = AppConfig::config_handler() {
                             let _ = self.config.set_app_theme(&handler, "COSMIC Light".into());
                         };
-                        set_theme(cosmic::theme::system_light())
+                        set_theme(cosmic::theme::Theme::light())
                     }
                     Theme::Dark => {
                         if let Some(handler) = AppConfig::config_handler() {
                             let _ = self.config.set_app_theme(&handler, "COSMIC Dark".into());
                         };
-                        set_theme(cosmic::theme::system_dark())
+                        set_theme(cosmic::theme::Theme::dark())
                     }
                     Theme::Custom(theme) => {
                         if let Some(handler) = AppConfig::config_handler() {
