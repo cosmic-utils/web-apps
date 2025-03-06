@@ -1,6 +1,6 @@
 [package]
 name = "webapps"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 description = "Web applications at your fingertips"
 authors = ["hepp3n", "cosmic-utils"]
