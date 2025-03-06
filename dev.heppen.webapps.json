@@ -18,7 +18,7 @@
     "--filesystem=host-os:ro",
     "--filesystem=/var/lib/flatpak:ro",
     "--filesystem=xdg-data/flatpak:ro",
-    "--filesystem=xdg-data/applications",
+    "--filesystem=xdg-data/applications:create",
     "--filesystem=xdg-data/icons",
     "--talk-name=com.system76.CosmicSettingsDaemon"
   ],
