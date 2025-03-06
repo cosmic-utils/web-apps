@@ -20,6 +20,7 @@
     "--filesystem=xdg-data/flatpak:ro",
     "--filesystem=xdg-data/applications:create",
     "--filesystem=xdg-data/icons",
+    "--filesystem=xdg-config/cosmic",
     "--talk-name=com.system76.CosmicSettingsDaemon"
   ],
   "build-options": {
