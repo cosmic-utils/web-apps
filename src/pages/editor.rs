@@ -19,8 +19,6 @@ use crate::{
     pages,
 };
 
-use super::REPOSITORY;
-
 #[repr(u8)]
 #[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Category {
@@ -160,8 +158,8 @@ impl AppEditor {
 
         AppEditor {
             app_codename: String::new(),
-            app_title: fl!("new-webapp-title"),
-            app_url: String::from(REPOSITORY),
+            app_title: String::new(),
+            app_url: String::new(),
             app_icon: String::new(),
             app_parameters: String::new(),
             app_category: Category::default(),
