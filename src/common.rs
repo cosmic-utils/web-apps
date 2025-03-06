@@ -67,9 +67,13 @@ pub fn database_path(entry: &str) -> PathBuf {
 
 pub fn desktop_files_location(filename: &str) -> PathBuf {
     if let Some(xdg_data) = dirs::data_dir() {
-        return xdg_data
-            .join("applications")
-            .join(format!("dev.heppen.webapps.{}.desktop", filename));
+        let dir = xdg_data.join("applications");
+
+        if !dir.exists() {
+            let _ = create_dir_all(&dir);
+        }
+
+        return dir.join(format!("dev.heppen.webapps.{}.desktop", filename));
     }
 
     PathBuf::new()
