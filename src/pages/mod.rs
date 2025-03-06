@@ -123,6 +123,8 @@ impl Application for QuickWebApps {
         let add_page = Page::Editor(AppEditor::new());
         let nav = nav_bar::Model::default();
 
+        let themes_list = Vec::new();
+
         let mut windows = QuickWebApps {
             window_id,
             core,
@@ -135,7 +137,7 @@ impl Application for QuickWebApps {
             downloader_started: false,
             downloader_id: 1,
             downloader_output: String::new(),
-            themes_list: vec![Theme::Light, Theme::Dark],
+            themes_list,
             theme_idx: Some(0),
         };
 
@@ -344,8 +346,11 @@ impl Application for QuickWebApps {
             },
             Message::LoadThemes => {
                 self.themes_list.clear();
-                self.themes_list.push(Theme::Light);
-                self.themes_list.push(Theme::Dark);
+
+                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
+                    self.themes_list.push(Theme::Light);
+                    self.themes_list.push(Theme::Dark);
+                }
 
                 let folder = themes_path("");
                 let dir = read_dir(folder);
@@ -479,7 +484,14 @@ impl Application for QuickWebApps {
                 self.config = config;
             }
             Message::UpdateTheme(theme) => {
-                let set_theme = match *theme {
+                if let Theme::Custom(theme) = *theme {
+                    if let Some(handler) = AppConfig::config_handler() {
+                        let _ = self.config.set_app_theme(&handler, theme.0);
+                    };
+                    return set_theme(cosmic::Theme::custom(Arc::new(*theme.1)));
+                };
+
+                let theme_selector = match *theme {
                     Theme::Light => {
                         if let Some(handler) = AppConfig::config_handler() {
                             let _ = self.config.set_app_theme(&handler, "COSMIC Light".into());
@@ -492,14 +504,12 @@ impl Application for QuickWebApps {
                         };
                         set_theme(cosmic::theme::Theme::dark())
                     }
-                    Theme::Custom(theme) => {
-                        if let Some(handler) = AppConfig::config_handler() {
-                            let _ = self.config.set_app_theme(&handler, theme.0);
-                        };
-                        set_theme(cosmic::Theme::custom(Arc::new(*theme.1)))
-                    }
+                    _ => Task::none(),
                 };
-                tasks.push(set_theme);
+
+                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
+                    tasks.push(theme_selector);
+                }
             }
             Message::None => (),
         };
@@ -682,10 +692,6 @@ impl QuickWebApps {
 
     fn settings(&self) -> Element<Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
-
-        let hash = env!("VERGEN_GIT_SHA");
-        let _short_hash: String = hash.chars().take(7).collect();
-        let _date = env!("VERGEN_GIT_COMMIT_DATE");
 
         widget::column()
             .push(
