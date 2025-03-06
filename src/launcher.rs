@@ -7,6 +7,7 @@ use crate::{
 use anyhow::Result;
 use freedesktop_desktop_entry::DesktopEntry;
 use serde::{Deserialize, Serialize};
+use tracing::debug;
 use std::{
     fs::{self},
     io::Read,
@@ -191,6 +192,9 @@ impl WebAppLauncher {
     }
 
     pub async fn create(&self) -> Result<()> {
+
+        debug!("create {:?}", self);
+        
         let entry_location = desktop_files_location(&self.codename);
 
         if entry_location.exists() {

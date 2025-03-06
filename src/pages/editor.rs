@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use cosmic::{
-    iced::{alignment::Vertical, Length},
+    iced::{alignment::Vertical, futures::executor::block_on, Length},
     style, task,
     widget::{self},
     Element, Task,
@@ -181,7 +181,7 @@ impl AppEditor {
         let category = Category::from_index(category_idx.unwrap_or_default() as u8);
         let categories = Category::to_vec();
 
-        let selected_icon = image_handle(webapp_launcher.icon.clone());
+        let selected_icon = block_on(image_handle(webapp_launcher.icon.clone()));
         let browsers = installed_browsers();
         let browser_idx = browsers
             .iter()
@@ -228,7 +228,7 @@ impl AppEditor {
                         rng().random_range(1000..10000)
                     );
                 }
-                let icon_final_path = move_icon(&self.app_icon, &self.app_codename);
+                let icon_final_path = block_on(move_icon(&self.app_icon, &self.app_codename));
 
                 if webapplauncher_is_valid(&icon_final_path, &self.app_title, &self.app_url) {
                     if let Some(browser) = &self.app_browser {
@@ -289,7 +289,7 @@ impl AppEditor {
                     let paths = common::find_icons(name, url).await;
 
                     for path in paths {
-                        if let Some(icon) = image_handle(path) {
+                        if let Some(icon) = image_handle(path).await {
                             return pages::Message::SetIcon(Some(icon));
                         }
                     }
