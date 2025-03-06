@@ -60,6 +60,7 @@ pub enum Message {
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
     ReloadNavbarItems,
+    ResetSettings,
     SaveLauncher(Arc<WebAppLauncher>),
     SetIcon(Option<Icon>),
     DownloaderStop,
@@ -452,6 +453,13 @@ impl Application for QuickWebApps {
 
                 self.page = Page::Editor(AppEditor::new());
             }
+            Message::ResetSettings => {
+                if let Some(handler) = AppConfig::config_handler() {
+                    let _ = self.config.set_app_theme(&handler, String::new());
+                };
+
+                return set_theme(cosmic::Theme::light());
+            }
             Message::SaveLauncher(launcher) => {
                 let location = database_path(&format!("{}.ron", launcher.codename));
                 let content = to_string_pretty(&*launcher, ron::ser::PrettyConfig::default());
@@ -708,6 +716,10 @@ impl QuickWebApps {
                             self.theme_idx,
                             Message::ChangeUserTheme,
                         ),
+                    ))
+                    .add(widget::settings::item(
+                        fl!("reset-settings"),
+                        widget::button::standard(fl!("reset")).on_press(Message::ResetSettings),
                     )),
             )
             .align_x(Alignment::Center)

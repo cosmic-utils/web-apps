@@ -17,6 +17,8 @@ settings=Ustawienia
 import-theme=Zaimportuj motyw
 imported-themes=Zaimportowane motywy
 run-app=Uruchom aplikacje
+reset-settings=Przywróć ustawienia
+reset=Przywróc
 
 # header
 main-window={ $app }
