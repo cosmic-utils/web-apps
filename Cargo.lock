@@ -4849,7 +4849,6 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "encoding_rs",
- "futures-channel",
  "futures-core",
  "futures-util",
  "h2",
@@ -6640,7 +6639,7 @@ dependencies = [
 
 [[package]]
 name = "webapps"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "ashpd 0.10.2",

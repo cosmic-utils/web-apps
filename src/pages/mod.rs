@@ -13,6 +13,7 @@ use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::app::command::set_theme;
 use cosmic::app::context_drawer;
 use cosmic::iced::alignment::Horizontal;
+use cosmic::iced::futures::executor::block_on;
 use cosmic::iced::window::Id;
 use cosmic::iced::{Alignment, Length, Subscription};
 use cosmic::widget::{menu, nav_bar};
@@ -300,7 +301,7 @@ impl Application for QuickWebApps {
             Message::IconsResult(result) => {
                 if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
                     for path in result {
-                        if let Some(icon) = image_handle(path) {
+                        if let Some(icon) = block_on(image_handle(path)) {
                             icon_picker.push_icon(icon);
                         }
                     }
@@ -405,7 +406,7 @@ impl Application for QuickWebApps {
                         let icon_name = buf.file_stem();
 
                         if let Some(file_stem) = icon_name {
-                            move_icon(&path, file_stem.to_str().unwrap());
+                            move_icon(&path, file_stem.to_str().unwrap()).await;
                         };
                     }
 

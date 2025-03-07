@@ -12,7 +12,6 @@ use cosmic::{iced_core, widget};
 use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter};
 use image::ImageReader;
 use image::{load_from_memory, GenericImageView};
-use reqwest::blocking;
 use svg::node::element::Image;
 use svg::Document;
 use url::Url;
@@ -233,7 +232,7 @@ fn icon_save_path(icon_name: &str) -> String {
         .to_string()
 }
 
-pub fn move_icon(path: &str, output_name: &str) -> String {
+pub async fn move_icon(path: &str, output_name: &str) -> String {
     create_dir_all(qwa_icons_location()).expect("cant create folder for your icons");
 
     let icon_name = output_name.replace(' ', "");
@@ -245,10 +244,10 @@ pub fn move_icon(path: &str, output_name: &str) -> String {
     }
 
     if url_valid(path) {
-        let response = reqwest::blocking::get(path).expect("sending request");
+        let response = reqwest::get(path).await.expect("sending request");
 
         if response.status().is_success() {
-            let content: Bytes = response.bytes().expect("getting image bytes");
+            let content: Bytes = response.bytes().await.expect("getting image bytes");
 
             return convert_raster_to_svg_format(content, &icon_name);
         }
@@ -272,10 +271,10 @@ pub fn move_icon(path: &str, output_name: &str) -> String {
     save_path
 }
 
-pub fn image_handle(path: String) -> Option<Icon> {
+pub async fn image_handle(path: String) -> Option<Icon> {
     if url_valid(&path) {
-        if let Ok(response) = blocking::Client::new().get(&path).send() {
-            if let Ok(bytes) = response.bytes() {
+        if let Ok(response) = reqwest::Client::new().get(&path).send().await {
+            if let Ok(bytes) = response.bytes().await {
                 let options = usvg::Options::default();
                 if let Ok(parsed) = usvg::Tree::from_data(&bytes, &options) {
                     let size = parsed.size();
