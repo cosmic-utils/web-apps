@@ -17,6 +17,8 @@ settings = Instellingen
 import-theme = Thema importeren
 imported-themes = Geïmporteerde thema's
 run-app = App uitvoeren
+reset-settings = Instellingen herstellen
+reset = Resetten
 
 # header
 main-window = { $app }
