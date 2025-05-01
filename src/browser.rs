@@ -1,5 +1,5 @@
 use crate::{common::fd_entries, LOCALES};
-use freedesktop_desktop_entry::{matching::find_entry_from_appid, DesktopEntry, PathSource};
+use freedesktop_desktop_entry::{find_app_by_id, unicase, DesktopEntry, PathSource};
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{create_dir_all, remove_file, File},
@@ -478,7 +478,7 @@ impl Browser {
 
     pub fn from_appid(appid: String) -> Self {
         let entries = fd_entries();
-        let entry = find_entry_from_appid(&entries, &appid);
+        let entry = find_app_by_id(&entries, unicase::Ascii::new(&appid));
 
         if let Some(entry) = entry {
             return Self::create(entry.clone());

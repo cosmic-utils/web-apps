@@ -10,7 +10,6 @@ use crate::themes::Theme;
 use crate::{add_icon_packs_install_script, execute_script, APP_ICON, APP_ID, REPOSITORY};
 use crate::{fl, pages::iconpicker::IconPicker};
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
-use cosmic::app::command::set_theme;
 use cosmic::app::context_drawer;
 use cosmic::iced::alignment::Horizontal;
 use cosmic::iced::futures::executor::block_on;
@@ -18,10 +17,11 @@ use cosmic::iced::window::Id;
 use cosmic::iced::{Alignment, Length, Subscription};
 use cosmic::widget::{menu, nav_bar};
 use cosmic::{
-    app::{command::Task, Core},
+    app::Core,
+    command::set_theme,
     cosmic_theme,
     widget::{self},
-    Application, ApplicationExt, Element,
+    Action, Application, ApplicationExt, Element, Task,
 };
 use cosmic::{task, theme};
 use editor::AppEditor;
@@ -115,7 +115,7 @@ impl Application for QuickWebApps {
         &mut self.core
     }
 
-    fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Message>) {
+    fn init(core: Core, _flags: Self::Flags) -> (Self, cosmic::Task<cosmic::Action<Message>>) {
         let window_id = if let Some(id) = core.main_window_id() {
             id
         } else {
@@ -206,15 +206,17 @@ impl Application for QuickWebApps {
         Subscription::batch(subscriptions)
     }
 
-    fn update(&mut self, message: Message) -> Task<Message> {
-        let mut tasks: Vec<Task<Message>> = Vec::new();
+    fn update(&mut self, message: Message) -> cosmic::Task<cosmic::Action<Message>> {
+        let mut tasks: Vec<cosmic::Task<cosmic::Action<Message>>> = Vec::new();
 
         match message {
             Message::ChangeUserTheme(idx) => {
                 self.theme_idx = Some(idx);
                 let selected = self.themes_list[idx].clone();
 
-                tasks.push(task::message(Message::UpdateTheme(Box::new(selected))));
+                tasks.push(task::message(cosmic::action::app(Message::UpdateTheme(
+                    Box::new(selected),
+                ))));
             }
             Message::CloseDialog => self.dialogs = None,
             Message::ConfirmDeletion(id) => {
@@ -226,9 +228,7 @@ impl Application for QuickWebApps {
                 };
             }
             Message::Editor(msg) => match &mut self.page {
-                Page::Editor(app_editor) => {
-                    return app_editor.update(msg).map(cosmic::app::message::app)
-                }
+                Page::Editor(app_editor) => tasks.push(app_editor.update(msg)),
             },
             Message::Delete(id) => {
                 let data = self.nav.data::<Page>(id);
@@ -254,7 +254,7 @@ impl Application for QuickWebApps {
 
                             return task::future(async move {
                                 launcher.delete().await.unwrap();
-                                Message::DeletionDone(id)
+                                cosmic::action::app(Message::DeletionDone(id))
                             });
                         };
                     }
@@ -267,7 +267,7 @@ impl Application for QuickWebApps {
             }
             Message::DownloaderDone => {
                 self.downloader_started = false;
-                return task::message(Message::CloseDialog);
+                return task::message(cosmic::action::app(Message::CloseDialog));
             }
             Message::DownloaderStarted => {
                 self.dialogs = None;
@@ -290,12 +290,12 @@ impl Application for QuickWebApps {
                 return task::future(async {
                     tokio::time::sleep(Duration::from_secs_f32(3.0)).await;
 
-                    Message::DownloaderDone
+                    cosmic::action::app(Message::DownloaderDone)
                 });
             }
             Message::IconPicker(msg) => {
                 if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
-                    return icon_picker.update(msg).map(cosmic::app::message::app);
+                    tasks.push(icon_picker.update(msg));
                 };
             }
             Message::IconsResult(result) => {
@@ -328,15 +328,15 @@ impl Application for QuickWebApps {
                             .collect::<Vec<String>>();
 
                         if !files.is_empty() {
-                            return Message::OpenThemeResult(
+                            let _ = cosmic::action::app(Message::OpenThemeResult(
                                 urlencoding::decode(&files[0])
                                     .unwrap_or_default()
                                     .to_string(),
-                            );
+                            ));
                         }
-                        Message::None
+                        cosmic::action::none()
                     } else {
-                        Message::None
+                        cosmic::action::none()
                     }
                 })
             }
@@ -374,9 +374,9 @@ impl Application for QuickWebApps {
                                 let theme = Theme::build(theme_name.to_string(), content);
 
                                 if theme_name == self.config.app_theme {
-                                    tasks.push(task::message(Message::UpdateTheme(Box::new(
-                                        theme.clone(),
-                                    ))));
+                                    tasks.push(task::message(cosmic::action::app(
+                                        Message::UpdateTheme(Box::new(theme.clone())),
+                                    )));
                                 }
 
                                 self.themes_list.push(theme);
@@ -399,20 +399,20 @@ impl Application for QuickWebApps {
                     self.nav.activate(id);
                 }
             }
-            Message::OpenFileResult(file_paths) => {
-                return task::future(async {
-                    for path in file_paths {
-                        let Ok(buf) = PathBuf::from_str(&path);
-                        let icon_name = buf.file_stem();
+            Message::OpenFileResult(file_paths) => tasks.push(task::future(async {
+                for path in file_paths {
+                    let Ok(buf) = PathBuf::from_str(&path);
+                    let icon_name = buf.file_stem();
 
-                        if let Some(file_stem) = icon_name {
-                            move_icon(&path, file_stem.to_str().unwrap()).await;
-                        };
-                    }
+                    if let Some(file_stem) = icon_name {
+                        move_icon(&path, file_stem.to_str().unwrap()).await;
+                    };
+                }
 
-                    Message::IconsResult(find_icon(qwa_icons_location(), String::new()).await)
-                })
-            }
+                cosmic::action::app(Message::IconsResult(
+                    find_icon(qwa_icons_location(), String::new()).await,
+                ))
+            })),
             Message::OpenIconPicker(app_url) => {
                 self.dialogs = Some(Dialogs::IconPicker(IconPicker::new(app_url)));
             }
@@ -459,7 +459,7 @@ impl Application for QuickWebApps {
                     let _ = self.config.set_app_theme(&handler, String::new());
                 };
 
-                return set_theme(cosmic::Theme::light());
+                return cosmic::command::set_theme(cosmic::Theme::light());
             }
             Message::SaveLauncher(launcher) => {
                 let location = database_path(&format!("{}.ron", launcher.codename));
@@ -541,20 +541,18 @@ impl Application for QuickWebApps {
         vec![menu_bar.into()]
     }
 
-    fn nav_bar(&self) -> Option<Element<cosmic::app::Message<Message>>> {
+    fn nav_bar(&self) -> Option<Element<Action<Message>>> {
         if !self.core().nav_bar_active() {
             return None;
         }
 
         let nav_model = self.nav_model()?;
 
-        let mut nav = widget::nav_bar(nav_model, |id| {
-            cosmic::app::message::app(Message::NavBar(id))
-        })
-        .on_close(|id| cosmic::app::message::app(Message::ConfirmDeletion(id)))
-        .into_container()
-        .width(Length::Shrink)
-        .height(Length::Shrink);
+        let mut nav = widget::nav_bar(nav_model, |id| cosmic::action::app(Message::NavBar(id)))
+            .on_close(|id| cosmic::action::app(Message::ConfirmDeletion(id)))
+            .into_container()
+            .width(Length::Shrink)
+            .height(Length::Shrink);
 
         if !self.core().is_condensed() {
             nav = nav.max_width(280);
@@ -567,7 +565,7 @@ impl Application for QuickWebApps {
         Some(&self.nav)
     }
 
-    fn on_nav_select(&mut self, id: nav_bar::Id) -> Task<Message> {
+    fn on_nav_select(&mut self, id: nav_bar::Id) -> Task<Action<Message>> {
         self.nav.activate(id);
         if let Some(page) = self.nav.data::<Page>(id) {
             self.page = page.clone()
@@ -594,7 +592,7 @@ impl Application for QuickWebApps {
         })
     }
 
-    fn on_escape(&mut self) -> Task<Message> {
+    fn on_escape(&mut self) -> Task<Action<Message>> {
         self.dialogs = None;
         self.core.window.show_context = false;
 
@@ -728,7 +726,7 @@ impl QuickWebApps {
             .into()
     }
 
-    fn update_title(&mut self) -> Task<Message> {
+    fn update_title(&mut self) -> Task<Action<Message>> {
         self.set_header_title(fl!("app"));
         self.set_window_title(fl!("app"), self.window_id)
     }

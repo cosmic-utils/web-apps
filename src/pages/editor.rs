@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use cosmic::{
     iced::{alignment::Vertical, futures::executor::block_on, Length},
+    action::Action,
     style, task,
     widget::{self},
     Element, Task,
@@ -207,7 +208,7 @@ impl AppEditor {
         }
     }
 
-    pub fn update(&mut self, message: Message) -> Task<pages::Message> {
+    pub fn update(&mut self, message: Message) -> Task<Action<pages::Message>> {
         match message {
             Message::Arguments(args) => {
                 self.app_parameters = args;

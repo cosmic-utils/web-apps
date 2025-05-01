@@ -1,5 +1,6 @@
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
+    action::Action,
     cosmic_theme,
     iced::Length,
     task, theme,
@@ -41,7 +42,7 @@ impl IconPicker {
         self.icons.push(icon);
     }
 
-    pub fn update(&mut self, message: Message) -> Task<pages::Message> {
+    pub fn update(&mut self, message: Message) -> Task<Action<pages::Message>> {
         match message {
             Message::CustomIconsSearch(input) => self.icon_searching = input,
             Message::DownloadIconsPack => return task::message(pages::Message::DownloaderStarted),
@@ -115,7 +116,7 @@ impl IconPicker {
         let mut elements: Vec<Element<Message>> = vec![
             widget::text_input::inline_input(fl!("icon-name-to-find"), &self.icon_searching)
                 .on_input(Message::CustomIconsSearch)
-                .on_submit(Message::IconSearch)
+                .on_submit(|_| Message::IconSearch)
                 .into(),
             widget::button::standard(fl!("open"))
                 .on_press(Message::OpenIconPickerDialog)
