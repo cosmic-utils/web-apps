@@ -16,6 +16,9 @@ support-body=Om du tycker att det här programmet är användbart, överväg att
 settings=Inställningar
 import-theme=Importera tema
 imported-themes=Importerade teman
+run-app=Kör app
+reset-settings=Återställ inställningar
+reset=Återställ
 
 # header
 main-window={ $app }
