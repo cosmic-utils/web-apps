@@ -36,9 +36,9 @@ select-category = Categorie selecteren
 select-browser = Browser selecteren
 
 # home_screen.rs
-installed-header = U heeft { $number ->
-    [1] 1 webapp
-    *[other] { $number } webapps
+installed-header = U heeft {$number} { $number ->
+    [one] webapp
+    *[other] webapps
   } geïnstalleerd:
 not-installed-header = U heeft geen webapps geïnstalleerd. Druk op de knop Aanmaken om er een aan te maken.
 
@@ -81,7 +81,7 @@ warning = U voldoet niet aan de vereisten
     .success = U kunt een nieuwe Webapp aanmaken
     .duplicate =  - Webapp ongeldig. Misschien heeft u deze Webapp al?
     .wrong-icon =  - Geselecteerd pictogram is ongeldig. Seleceer een andere.
-    .app-name=  - Appnaam moet langer zijn dan 3 lettertekens.
+    .app-name=  - Appnaam moet langer zijn dan 3 krakters.
     .app-url=  - Geef een geldige URL op dat met http:// of https:// begint
     .app-icon=  - Selecteer een Pictogram voor uw launcher
     .app-browser=  - Selecteer een browser. Zorg ervoor dat ten minste één browser systeembreed of via Flatpak is geïnstalleerd.
