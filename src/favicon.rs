@@ -25,8 +25,7 @@ pub async fn download_favicon(url: &str) -> anyhow::Result<Vec<String>> {
     if let Some(domain) = url.domain() {
         let request = Client::new()
             .get(format!(
-                "https://www.faviconextractor.com/api/favicon/{}",
-                domain
+                "https://www.faviconextractor.com/api/favicon/{domain}"
             ))
             .send()
             .await?;

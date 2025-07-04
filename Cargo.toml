@@ -11,9 +11,6 @@ repository = "https://github.com/cosmic-utils/web-apps"
 path = "src/main.rs"
 name = "quick-webapps"
 
-[profile.dev]
-opt-level = 1
-
 [build-dependencies]
 vergen = { version = "8", features = ["git", "gitcl"] }
 
@@ -21,12 +18,15 @@ vergen = { version = "8", features = ["git", "gitcl"] }
 anyhow = "1"
 ashpd = { version = "0.11", features = ["wayland"] }
 base64 = "0.22"
-bytes = "1.9"
-dirs = "6.0"
+bytes = "1"
+dirs = "6"
 freedesktop-desktop-entry = { git = "https://github.com/pop-os/freedesktop-desktop-entry" }
 futures-util = "0.3"
 i18n-embed-fl = "0.9"
-i18n-embed = { version = "0.15", features = ["fluent-system", "desktop-requester"]}
+i18n-embed = { version = "0.15", features = [
+  "fluent-system",
+  "desktop-requester",
+] }
 image = "0.25"
 lazy_static = "1.5"
 once_cell = "1.2"
@@ -34,9 +34,9 @@ open = "5.3"
 rand = "0.9"
 reqwest = { version = "0.12", features = ["json"] }
 ron = "0.10"
-rust-embed = "8.5"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+rust-embed = "8.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 strum = "0.27"
 strum_macros = "0.27"
 svg = "0.18"
@@ -55,22 +55,22 @@ walkdir = "2.5"
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic.git"
 features = [
-    # Accessibility support
-    "a11y",
-    # Uses cosmic-settings-daemon to watch for config file changes
-    "dbus-config",
-    # Support creating additional application windows.
-    "multi-window",
-    # On app startup, focuses an existing instance if the app is already open
-    "single-instance",
-    # Uses tokio as the executor for the runtime
-    "tokio",
-    # Windowing support for X11, Windows, Mac, & Redox
-    "winit",
-    # Add Wayland support to winit
-    "wayland",
-    # GPU-accelerated rendering
-    "wgpu",
+  # Accessibility support
+  "a11y",
+  # Uses cosmic-settings-daemon to watch for config file changes
+  "dbus-config",
+  # Support creating additional application windows.
+  "multi-window",
+  # On app startup, focuses an existing instance if the app is already open
+  "single-instance",
+  # Uses tokio as the executor for the runtime
+  "tokio",
+  # Windowing support for X11, Windows, Mac, & Redox
+  "winit",
+  # Add Wayland support to winit
+  "wayland",
+  # GPU-accelerated rendering
+  "wgpu",
 ]
 
 # Packaging for Deb #
@@ -83,12 +83,12 @@ assets = [
     "755",
   ],
   [
-    "res/io.github.elevenhsoft.WebApps.desktop",
+    "res/dev.heppen.webapps.desktop",
     "usr/share/applications/",
     "644",
   ],
   [
-    "res/io.github.elevenhsoft.WebApps.metainfo.xml",
+    "res/dev.heppen.webapps.metainfo.xml",
     "usr/share/metainfo/",
     "644",
   ],
@@ -103,7 +103,7 @@ assets = [
 [package.metadata.generate-rpm]
 assets = [
   { source = "target/release/quick-webapps", dest = "/usr/bin/", mode = "755" },
-  { source = "LICENSE", dest = "/usr/share/doc/wizard/LICENSE", doc = true, mode = "644" },
+  { source = "LICENSE", dest = "/usr/share/doc/quick-webapps/LICENSE", doc = true, mode = "644" },
   { source = "res/*.desktop", dest = "/usr/share/applications/", mode = "644" },
   { source = "res/icons/hicolor/**/*", dest = "/usr/share/icons/hicolor/", mode = "644" },
 ]
@@ -112,43 +112,43 @@ assets = [
 [package.metadata.aur]
 files = [
   [
-    "res/io.github.elevenhsoft.WebApps.desktop",
-    "/usr/share/applications/io.github.elevenhsoft.WebApps.desktop",
+    "res/dev.heppen.webapps.desktop",
+    "/usr/share/applications/dev.heppen.webapps.desktop",
   ],
   [
-    "res/io.github.elevenhsoft.WebApps.metainfo.xml",
-    "/usr/share/metainfo/io.github.elevenhsoft.WebApps.metainfo.xml",
+    "res/dev.heppen.webapps.metainfo.xml",
+    "/usr/share/metainfo/dev.heppen.webapps.metainfo.xml",
   ],
   [
     "LICENSE",
     "/usr/share/doc/quick-webapps/LICENSE",
   ],
   [
-    "res/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.png",
-    "/usr/share/icons/hicolor/16x16/apps/io.github.elevenhsoft.WebApps.png",
+    "res/icons/hicolor/16x16/apps/dev.heppen.webapps.png",
+    "/usr/share/icons/hicolor/16x16/apps/dev.heppen.webapps.png",
   ],
   [
-    "res/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.png",
-    "/usr/share/icons/hicolor/24x24/apps/io.github.elevenhsoft.WebApps.png",
+    "res/icons/hicolor/24x24/apps/dev.heppen.webapps.png",
+    "/usr/share/icons/hicolor/24x24/apps/dev.heppen.webapps.png",
   ],
   [
-    "res/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.png",
-    "/usr/share/icons/hicolor/32x32/apps/io.github.elevenhsoft.WebApps.png",
+    "res/icons/hicolor/32x32/apps/dev.heppen.webapps.png",
+    "/usr/share/icons/hicolor/32x32/apps/dev.heppen.webapps.png",
   ],
   [
-    "res/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.png",
-    "/usr/share/icons/hicolor/48x48/apps/io.github.elevenhsoft.WebApps.png",
+    "res/icons/hicolor/48x48/apps/dev.heppen.webapps.png",
+    "/usr/share/icons/hicolor/48x48/apps/dev.heppen.webapps.png",
   ],
   [
-    "res/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.png",
-    "/usr/share/icons/hicolor/64x64/apps/io.github.elevenhsoft.WebApps.png",
+    "res/icons/hicolor/64x64/apps/dev.heppen.webapps.png",
+    "/usr/share/icons/hicolor/64x64/apps/dev.heppen.webapps.png",
   ],
   [
-    "res/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.png",
-    "/usr/share/icons/hicolor/128x128/apps/io.github.elevenhsoft.WebApps.png",
+    "res/icons/hicolor/128x128/apps/dev.heppen.webapps.png",
+    "/usr/share/icons/hicolor/128x128/apps/dev.heppen.webapps.png",
   ],
   [
-    "res/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png",
-    "/usr/share/icons/hicolor/256x256/apps/io.github.elevenhsoft.WebApps.png",
+    "res/icons/hicolor/256x256/apps/dev.heppen.webapps.png",
+    "/usr/share/icons/hicolor/256x256/apps/dev.heppen.webapps.png",
   ],
 ]

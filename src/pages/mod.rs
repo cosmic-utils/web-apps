@@ -1,42 +1,55 @@
 pub mod editor;
 mod iconpicker;
 
-use crate::common::{
-    database_path, find_icon, image_handle, move_icon, qwa_icons_location, themes_path, Icon,
+use crate::{
+    add_icon_packs_install_script,
+    common::{
+        database_path, find_icon, image_handle, move_icon, qwa_icons_location, themes_path, Icon,
+    },
+    config::AppConfig,
+    execute_script, fl,
+    launcher::{installed_webapps, WebAppLauncher},
+    pages::iconpicker::IconPicker,
+    themes::Theme,
+    APP_ICON, APP_ID, REPOSITORY,
 };
-use crate::config::AppConfig;
-use crate::launcher::{installed_webapps, WebAppLauncher};
-use crate::themes::Theme;
-use crate::{add_icon_packs_install_script, execute_script, APP_ICON, APP_ID, REPOSITORY};
-use crate::{fl, pages::iconpicker::IconPicker};
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
-use cosmic::app::context_drawer;
-use cosmic::iced::alignment::Horizontal;
-use cosmic::iced::futures::executor::block_on;
-use cosmic::iced::window::Id;
-use cosmic::iced::{Alignment, Length, Subscription};
-use cosmic::widget::{menu, nav_bar};
 use cosmic::{
-    app::Core,
+    app::{context_drawer, Core, Task},
     command::set_theme,
     cosmic_theme,
-    widget::{self},
-    Action, Application, ApplicationExt, Element, Task,
+    iced::{
+        alignment::Horizontal, futures::executor::block_on, window::Id, Alignment, Length,
+        Subscription,
+    },
+    surface, task, theme,
+    widget::{
+        self,
+        menu::{self, ItemHeight, ItemWidth},
+        nav_bar, responsive_menu_bar,
+    },
+    Application, ApplicationExt, Element,
 };
-use cosmic::{task, theme};
 use editor::AppEditor;
 use futures_util::SinkExt;
 use ron::ser::to_string_pretty;
-use std::collections::HashMap;
-use std::fs::read_dir;
-use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
-use std::process::ExitStatus;
-use std::str::FromStr;
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::io::{AsyncBufReadExt, BufReader};
-use tokio::sync::oneshot;
+use std::{
+    collections::HashMap,
+    fs::read_dir,
+    io::{Read, Write},
+    path::{Path, PathBuf},
+    process::ExitStatus,
+    str::FromStr,
+    sync::{Arc, LazyLock},
+    time::Duration,
+};
+use tokio::{
+    io::{AsyncBufReadExt, BufReader},
+    sync::oneshot,
+};
+
+static MENU_ID: LazyLock<cosmic::widget::Id> =
+    LazyLock::new(|| cosmic::widget::Id::new("responsive-menu"));
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -54,7 +67,6 @@ pub enum Message {
     ImportThemeFilePicker,
     LaunchUrl(String),
     LoadThemes,
-    NavBar(widget::segmented_button::Entity),
     OpenFileResult(Vec<String>),
     OpenIconPicker(String),
     OpenRepositoryUrl,
@@ -64,6 +76,7 @@ pub enum Message {
     ResetSettings,
     SaveLauncher(Arc<WebAppLauncher>),
     SetIcon(Option<Icon>),
+    Surface(surface::Action),
     DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(AppConfig),
@@ -115,7 +128,7 @@ impl Application for QuickWebApps {
         &mut self.core
     }
 
-    fn init(core: Core, _flags: Self::Flags) -> (Self, cosmic::Task<cosmic::Action<Message>>) {
+    fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Self::Message>) {
         let window_id = if let Some(id) = core.main_window_id() {
             id
         } else {
@@ -150,7 +163,7 @@ impl Application for QuickWebApps {
             task::message(Message::UpdateTheme(Box::new(Theme::Light))),
         ];
 
-        (windows, task::batch(tasks))
+        (windows, Task::batch(tasks))
     }
 
     fn subscription(&self) -> Subscription<Message> {
@@ -391,14 +404,6 @@ impl Application for QuickWebApps {
                     Theme::Custom(theme) => self.config.app_theme == theme.0,
                 })
             }
-            Message::NavBar(id) => {
-                let data = self.nav.data::<Page>(id);
-
-                if let Some(page) = data {
-                    self.page = page.clone();
-                    self.nav.activate(id);
-                }
-            }
             Message::OpenFileResult(file_paths) => tasks.push(task::future(async {
                 for path in file_paths {
                     let Ok(buf) = PathBuf::from_str(&path);
@@ -480,6 +485,11 @@ impl Application for QuickWebApps {
                 app_editor.update_icon(icon);
                 self.dialogs = None;
             }
+            Message::Surface(a) => {
+                return cosmic::task::message(cosmic::Action::Cosmic(
+                    cosmic::app::Action::Surface(a),
+                ));
+            }
             Message::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {
                     self.core.window.show_context = !self.core.window.show_context;
@@ -527,45 +537,54 @@ impl Application for QuickWebApps {
     }
 
     fn header_start(&self) -> Vec<Element<Self::Message>> {
-        let menu_bar = menu::bar(vec![menu::Tree::with_children(
-            menu::root(fl!("help")),
-            menu::items(
+        vec![responsive_menu_bar()
+            .item_height(ItemHeight::Dynamic(40))
+            .item_width(ItemWidth::Uniform(240))
+            .spacing(4.0)
+            .into_element(
+                &self.core,
                 &self.key_binds,
-                vec![
-                    menu::Item::Button(fl!("settings"), None, MenuAction::Settings),
-                    menu::Item::Button(fl!("about"), None, MenuAction::About),
-                ],
-            ),
-        )]);
-
-        vec![menu_bar.into()]
+                MENU_ID.clone(),
+                Message::Surface,
+                vec![(
+                    fl!("help"),
+                    vec![
+                        menu::Item::Button(fl!("settings"), None, MenuAction::Settings),
+                        menu::Item::Button(fl!("about"), None, MenuAction::About),
+                    ],
+                )],
+            )]
     }
 
-    fn nav_bar(&self) -> Option<Element<Action<Message>>> {
+    fn nav_bar(&self) -> Option<Element<cosmic::Action<Message>>> {
         if !self.core().nav_bar_active() {
             return None;
         }
 
         let nav_model = self.nav_model()?;
 
-        let mut nav = widget::nav_bar(nav_model, |id| cosmic::action::app(Message::NavBar(id)))
-            .on_close(|id| cosmic::action::app(Message::ConfirmDeletion(id)))
-            .into_container()
-            .width(Length::Shrink)
-            .height(Length::Shrink);
+        let mut nav = widget::nav_bar(nav_model, |id| {
+            cosmic::Action::Cosmic(cosmic::app::Action::NavBar(id))
+        })
+        .on_close(|id| cosmic::action::app(Message::ConfirmDeletion(id)))
+        .into_container()
+        .width(Length::Shrink)
+        .height(Length::Shrink);
 
         if !self.core().is_condensed() {
             nav = nav.max_width(280);
         }
 
-        Some(Element::from(nav))
+        Some(Element::from(
+            nav.width(Length::Shrink).height(Length::Shrink),
+        ))
     }
 
     fn nav_model(&self) -> Option<&nav_bar::Model> {
         Some(&self.nav)
     }
 
-    fn on_nav_select(&mut self, id: nav_bar::Id) -> Task<Action<Message>> {
+    fn on_nav_select(&mut self, id: nav_bar::Id) -> Task<Message> {
         self.nav.activate(id);
         if let Some(page) = self.nav.data::<Page>(id) {
             self.page = page.clone()
@@ -592,7 +611,7 @@ impl Application for QuickWebApps {
         })
     }
 
-    fn on_escape(&mut self) -> Task<Action<Message>> {
+    fn on_escape(&mut self) -> Task<Message> {
         self.dialogs = None;
         self.core.window.show_context = false;
 
@@ -726,7 +745,7 @@ impl QuickWebApps {
             .into()
     }
 
-    fn update_title(&mut self) -> Task<Action<Message>> {
+    fn update_title(&mut self) -> Task<Message> {
         self.set_header_title(fl!("app"));
         self.set_window_title(fl!("app"), self.window_id)
     }

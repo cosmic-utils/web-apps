@@ -39,10 +39,8 @@ impl Firefox {
     }
 
     pub fn codename(&mut self, codename: String) -> &mut Self {
-        self.codename = format!(
-            "--class dev.heppen.webapps.{} --name dev.heppen.webapps.{}",
-            codename, codename
-        );
+        self.codename =
+            format!("--class dev.heppen.webapps.{codename} --name dev.heppen.webapps.{codename}");
         self
     }
 
@@ -185,7 +183,7 @@ impl Falkon {
     }
 
     pub fn codename(&mut self, codename: String) -> &mut Self {
-        self.codename = format!("--wmclass dev.heppen.webapps.{}", codename);
+        self.codename = format!("--wmclass dev.heppen.webapps.{codename}");
         self
     }
 
@@ -267,15 +265,13 @@ impl Chromium {
     }
 
     pub fn codename(&mut self, codename: String) -> &mut Self {
-        self.codename = format!(
-            "--class=dev.heppen.webapps.{} --name=dev.heppen.webapps.{}",
-            codename, codename
-        );
+        self.codename =
+            format!("--class=dev.heppen.webapps.{codename} --name=dev.heppen.webapps.{codename}");
         self
     }
 
     pub fn url(&mut self, app_url: String) -> &mut Self {
-        self.url = format!("--app={}", app_url);
+        self.url = format!("--app={app_url}");
         self
     }
 

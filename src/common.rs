@@ -72,7 +72,7 @@ pub fn desktop_files_location(filename: &str) -> PathBuf {
             let _ = create_dir_all(&dir);
         }
 
-        return dir.join(format!("dev.heppen.webapps.{}.desktop", filename));
+        return dir.join(format!("dev.heppen.webapps.{filename}.desktop"));
     }
 
     PathBuf::new()
@@ -209,7 +209,7 @@ pub fn convert_raster_to_svg_format(img_slice: Bytes, icon_name: &str) -> String
             .set("y", 0)
             .set("width", width)
             .set("height", height)
-            .set("href", format!("data:image/png;base64,{}", encoded_img));
+            .set("href", format!("data:image/png;base64,{encoded_img}"));
 
         let document = Document::new()
             .set("width", width)
@@ -226,7 +226,7 @@ pub fn convert_raster_to_svg_format(img_slice: Bytes, icon_name: &str) -> String
 
 fn icon_save_path(icon_name: &str) -> String {
     qwa_icons_location()
-        .join(format!("{}.svg", icon_name))
+        .join(format!("{icon_name}.svg"))
         .to_str()
         .unwrap()
         .to_string()
