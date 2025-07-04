@@ -14,7 +14,7 @@
 
   <br><br><br>
 
-  <a href='https://flathub.org/apps/io.github.elevenhsoft.WebApps'>
+  <a href='https://flathub.org/apps/dev.heppen.webapps'>
     <img width='240' alt='Download on Flathub' src='https://flathub.org/api/badge?locale=en'/>
   </a>
 </div>
@@ -22,10 +22,12 @@
 # Support
 
 Hey! This app is fully distributed for **free** with **free license**.
-I'm doing it with **passion** in my **free time**. Trying to keep it stable and bug free as long as I can.
-However, would be nice if you could bring me some coffee so I can work longer on it :)
+I'm doing it with **passion** in my **free time**.
+Trying to keep it stable and bug free as long as I can.
+However, would be nice if you could bring me some coffee,
+so I can work longer on it :)
 
-# Thanks!
+# Thanks
 
 # Flatpak Usage
 
@@ -63,7 +65,8 @@ Make sure you are in `web-apps` directory. You should be already.
 
 ### Build prerequisites
 
-Before compilation please add needed dependencies to your system, or make sure they are installed.
+Before compilation please add needed dependencies to your system,
+or make sure they are installed.
 
 - pkg-config
 - libssl-dev
