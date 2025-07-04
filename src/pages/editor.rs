@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use cosmic::{
-    iced::{alignment::Vertical, futures::executor::block_on, Length},
     action::Action,
+    iced::{alignment::Vertical, futures::executor::block_on, Length},
     style, task,
     widget::{self},
     Element, Task,
@@ -148,7 +148,7 @@ pub enum Message {
 
 impl AppEditor {
     pub fn new() -> Self {
-        let browsers = installed_browsers();
+        let browsers: Vec<Browser> = installed_browsers().into_iter().map(|b| b.1).collect();
         let browser = if !browsers.is_empty() {
             Some(browsers[0].clone())
         } else {
@@ -183,7 +183,10 @@ impl AppEditor {
         let categories = Category::to_vec();
 
         let selected_icon = block_on(image_handle(webapp_launcher.icon.clone()));
-        let browsers = installed_browsers();
+        let browsers = installed_browsers()
+            .into_iter()
+            .map(|b| b.1)
+            .collect::<Vec<Browser>>();
         let browser_idx = browsers
             .iter()
             .position(|b| b.model == webapp_launcher.browser.model);

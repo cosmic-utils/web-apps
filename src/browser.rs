@@ -2,6 +2,7 @@ use crate::{common::fd_entries, LOCALES};
 use freedesktop_desktop_entry::{find_app_by_id, unicase, DesktopEntry, PathSource};
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashMap,
     fs::{create_dir_all, remove_file, File},
     io::Write,
     path::PathBuf,
@@ -494,8 +495,8 @@ impl Browser {
     }
 }
 
-pub fn installed_browsers() -> Vec<Browser> {
-    let mut apps: Vec<Browser> = Vec::new();
+pub fn installed_browsers() -> HashMap<String, Browser> {
+    let mut browsers: HashMap<String, Browser> = HashMap::new();
 
     for entry in fd_entries() {
         if let Some(comments) = entry.comment(&LOCALES) {
@@ -504,12 +505,13 @@ pub fn installed_browsers() -> Vec<Browser> {
             }
         }
 
-        let browser = Browser::from_path(&entry.path);
-
-        if browser.model.is_some() && !apps.contains(&browser) {
-            apps.push(browser);
+        if !entry.no_display() {
+            let browser = Browser::from_path(&entry.path);
+            if browser.model.is_some() {
+                browsers.insert(browser.name.clone(), browser);
+            }
         }
     }
 
-    apps
+    browsers
 }
