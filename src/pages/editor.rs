@@ -344,138 +344,140 @@ impl AppEditor {
     }
 
     pub fn view(&self) -> Element<Message> {
-        widget::container(
-            widget::column()
-                .spacing(24)
-                .push(
-                    widget::row()
-                        .spacing(12)
-                        .push(
-                            widget::container(self.icon_element(self.selected_icon.clone()))
-                                .width(96.)
-                                .height(96.)
-                                .align_y(Vertical::Center),
-                        )
-                        .push(
-                            widget::container(
-                                widget::column()
-                                    .spacing(12)
-                                    .push(widget::text::title1(&self.app_title))
-                                    .push(widget::text::title4(format!(
-                                        "{}: {}",
-                                        self.app_category.name(),
-                                        self.browsers[self.browser_idx.unwrap_or_default()].name
-                                    ))),
+        widget::scrollable(
+            widget::container(
+                widget::column()
+                    .spacing(24)
+                    .push(
+                        widget::row()
+                            .spacing(12)
+                            .push(
+                                widget::container(self.icon_element(self.selected_icon.clone()))
+                                    .width(96.)
+                                    .height(96.)
+                                    .align_y(Vertical::Center),
                             )
-                            .height(Length::Fixed(96.))
-                            .align_y(Vertical::Center),
-                        ),
-                )
-                .push(
-                    widget::settings::section()
-                        .add(
-                            widget::text_input::inline_input(fl!("title"), &self.app_title)
-                                .on_input(Message::Title),
-                        )
-                        .add(widget::settings::item_row(vec![
-                            widget::text_input::inline_input(fl!("url"), &self.app_url)
-                                .on_input(Message::Url)
-                                .into(),
-                            widget::button::standard(fl!("download-favicon"))
-                                .on_press_maybe(if url_valid(&self.app_url) {
-                                    Some(Message::SearchFavicon)
-                                } else {
-                                    None
-                                })
-                                .into(),
-                        ]))
-                        .add(widget::settings::item(
-                            fl!("select-category"),
-                            widget::dropdown(
-                                &self.categories,
-                                self.category_idx,
-                                Message::Category,
-                            ),
-                        ))
-                        .add(widget::settings::item(
-                            fl!("select-browser"),
-                            widget::dropdown(&self.browsers, self.browser_idx, Message::Browser),
-                        ))
-                        .add(
-                            widget::text_input::inline_input(
-                                fl!("non-standard-arguments"),
-                                &self.app_parameters,
-                            )
-                            .on_input(Message::Arguments),
-                        )
-                        .add_maybe(if let Some(browser) = &self.app_browser {
-                            match browser.model {
-                                Some(BrowserModel::Firefox)
-                                | Some(BrowserModel::Zen)
-                                | Some(BrowserModel::Librewolf)
-                                | Some(BrowserModel::Waterfox) => widget::settings::item(
-                                    fl!("navbar"),
-                                    widget::toggler(self.app_navbar).on_toggle(Message::Navbar),
+                            .push(
+                                widget::container(
+                                    widget::column()
+                                        .spacing(12)
+                                        .push(widget::text::title1(&self.app_title))
+                                        .push(widget::text::title4(format!(
+                                            "{}: {}",
+                                            self.app_category.name(),
+                                            self.browsers[self.browser_idx.unwrap_or_default()].name
+                                        ))),
                                 )
-                                .into(),
-                                _ => None,
-                            }
-                        } else {
-                            None
-                        })
-                        .add(widget::settings::item(
-                            fl!("isolated-profile"),
-                            widget::toggler(self.app_isolated).on_toggle_maybe(
-                                if let Some(browser) = &self.app_browser {
-                                    match browser.model {
-                                        Some(BrowserModel::Firefox)
-                                        | Some(BrowserModel::Zen)
-                                        | Some(BrowserModel::Librewolf)
-                                        | Some(BrowserModel::Waterfox) => {
-                                            if self.app_navbar {
-                                                Message::IsolatedProfile.into()
-                                            } else {
-                                                None
+                                .height(Length::Fixed(96.))
+                                .align_y(Vertical::Center),
+                            ),
+                    )
+                    .push(
+                        widget::settings::section()
+                            .add(
+                                widget::text_input::inline_input(fl!("title"), &self.app_title)
+                                    .on_input(Message::Title),
+                            )
+                            .add(widget::settings::item_row(vec![
+                                widget::text_input::inline_input(fl!("url"), &self.app_url)
+                                    .on_input(Message::Url)
+                                    .into(),
+                                widget::button::standard(fl!("download-favicon"))
+                                    .on_press_maybe(if url_valid(&self.app_url) {
+                                        Some(Message::SearchFavicon)
+                                    } else {
+                                        None
+                                    })
+                                    .into(),
+                            ]))
+                            .add(widget::settings::item(
+                                fl!("select-category"),
+                                widget::dropdown(
+                                    &self.categories,
+                                    self.category_idx,
+                                    Message::Category,
+                                ),
+                            ))
+                            .add(widget::settings::item(
+                                fl!("select-browser"),
+                                widget::dropdown(&self.browsers, self.browser_idx, Message::Browser),
+                            ))
+                            .add(
+                                widget::text_input::inline_input(
+                                    fl!("non-standard-arguments"),
+                                    &self.app_parameters,
+                                )
+                                .on_input(Message::Arguments),
+                            )
+                            .add_maybe(if let Some(browser) = &self.app_browser {
+                                match browser.model {
+                                    Some(BrowserModel::Firefox)
+                                    | Some(BrowserModel::Zen)
+                                    | Some(BrowserModel::Librewolf)
+                                    | Some(BrowserModel::Waterfox) => widget::settings::item(
+                                        fl!("navbar"),
+                                        widget::toggler(self.app_navbar).on_toggle(Message::Navbar),
+                                    )
+                                    .into(),
+                                    _ => None,
+                                }
+                            } else {
+                                None
+                            })
+                            .add(widget::settings::item(
+                                fl!("isolated-profile"),
+                                widget::toggler(self.app_isolated).on_toggle_maybe(
+                                    if let Some(browser) = &self.app_browser {
+                                        match browser.model {
+                                            Some(BrowserModel::Firefox)
+                                            | Some(BrowserModel::Zen)
+                                            | Some(BrowserModel::Librewolf)
+                                            | Some(BrowserModel::Waterfox) => {
+                                                if self.app_navbar {
+                                                    Message::IsolatedProfile.into()
+                                                } else {
+                                                    None
+                                                }
                                             }
+                                            _ => Message::IsolatedProfile.into(),
                                         }
-                                        _ => Message::IsolatedProfile.into(),
-                                    }
+                                    } else {
+                                        None
+                                    },
+                                ),
+                            ))
+                            .add(widget::settings::item(
+                                fl!("private-mode"),
+                                widget::toggler(self.app_incognito).on_toggle(Message::Incognito),
+                            )),
+                    )
+                    .push(
+                        widget::row()
+                            .spacing(8)
+                            .push(widget::horizontal_space())
+                            //.push_maybe(if self.is_installed {
+                            //    Some(
+                            //        widget::button::standard(fl!("run-app"))
+                            //            .on_press(Message::LaunchApp),
+                            //    )
+                            //} else {
+                            //    None
+                            //})
+                            .push(widget::button::suggested(fl!("create")).on_press_maybe(
+                                if webapplauncher_is_valid(
+                                    &self.app_icon,
+                                    &self.app_title,
+                                    &self.app_url,
+                                ) {
+                                    Some(Message::Done)
                                 } else {
                                     None
                                 },
-                            ),
-                        ))
-                        .add(widget::settings::item(
-                            fl!("private-mode"),
-                            widget::toggler(self.app_incognito).on_toggle(Message::Incognito),
-                        )),
-                )
-                .push(
-                    widget::row()
-                        .spacing(8)
-                        .push(widget::horizontal_space())
-                        //.push_maybe(if self.is_installed {
-                        //    Some(
-                        //        widget::button::standard(fl!("run-app"))
-                        //            .on_press(Message::LaunchApp),
-                        //    )
-                        //} else {
-                        //    None
-                        //})
-                        .push(widget::button::suggested(fl!("create")).on_press_maybe(
-                            if webapplauncher_is_valid(
-                                &self.app_icon,
-                                &self.app_title,
-                                &self.app_url,
-                            ) {
-                                Some(Message::Done)
-                            } else {
-                                None
-                            },
-                        )),
-                ),
+                            )),
+                    ),
+            )
+            .max_width(1000)
         )
-        .max_width(1000)
         .into()
     }
 }
