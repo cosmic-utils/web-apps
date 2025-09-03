@@ -1,4 +1,5 @@
-name := 'quick-webapps'
+manager := 'quick-webapps-manager'
+webview := 'quick-webapps-webview'
 export APPID := 'dev.heppen.webapps'
 
 rootdir := ''
@@ -8,9 +9,13 @@ fp-prefix := '/app'
 base-dir := absolute_path(clean(rootdir / prefix))
 fp-base-dir := absolute_path(clean(rootdir / fp-prefix))
 
-bin-src := 'target' / 'release' / name
-bin-dst := base-dir / 'bin' / name
-fp-bin-dst := fp-base-dir / 'bin' / name
+bin-src := 'target' / 'release' / manager
+bin-dst := base-dir / 'bin' / manager
+fp-bin-dst := fp-base-dir / 'bin' / manager
+
+webview-src := 'target' / 'release' / webview
+webview-dst := base-dir / 'bin' / webview
+fp-webview-dst := fp-base-dir / 'bin' / webview
 
 desktop := APPID + '.desktop'
 desktop-src := 'res' / desktop
@@ -58,11 +63,12 @@ dev *args:
 
 # Run with debug logs
 run *args:
-    env RUST_LOG=cosmic_wam=info RUST_BACKTRACE=full cargo run --release {{args}}
+    env RUST_BACKTRACE=full cargo run {{args}}
 
 # Installs files
 install:
     install -Dm0755 {{bin-src}} {{bin-dst}}
+    install -Dm0755 {{webview-src}} {{webview-dst}}
     install -Dm0644 {{desktop-src}} {{desktop-dst}}
     install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
 
@@ -73,6 +79,7 @@ install:
 # Installs files for flatpak
 flatpak-install:
     install -Dm0755 {{bin-src}} {{fp-bin-dst}}
+    install -Dm0755 {{webview-src}} {{fp-webview-dst}}
     install -Dm0644 {{desktop-src}} {{fp-desktop-dst}}
     install -Dm0644 {{metainfo-src}} {{fp-metainfo-dst}}
 
@@ -84,6 +91,7 @@ flatpak-install:
 # Uninstalls installed files
 uninstall:
     rm {{bin-dst}}
+    rm {{webview-dst}}
     rm {{desktop-dst}}
     rm {{metainfo-dst}}
 

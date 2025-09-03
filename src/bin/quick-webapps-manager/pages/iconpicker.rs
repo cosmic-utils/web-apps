@@ -7,10 +7,11 @@ use cosmic::{
     widget::{self},
     Element, Task,
 };
+use webapps::fl;
 
 use crate::{
     common::{self, find_icons, get_icon_name_from_url, Icon},
-    fl, icon_pack_installed, pages,
+    pages,
 };
 
 #[derive(Debug, Clone)]
@@ -92,7 +93,7 @@ impl IconPicker {
         Task::none()
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self) -> Element<'_, Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
         let mut icons: Vec<Element<Message>> = Vec::new();
@@ -122,7 +123,7 @@ impl IconPicker {
                 .on_press(Message::OpenIconPickerDialog)
                 .into(),
         ];
-        if !icon_pack_installed() {
+        if !crate::icon_pack_installed() {
             elements.push(
                 widget::button::standard(fl!("download"))
                     .on_press(Message::DownloadIconsPack)

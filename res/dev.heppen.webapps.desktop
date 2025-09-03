@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Quick Web Apps
-Exec=quick-webapps
+Exec=quick-webapps-manager
 Terminal=false
 Type=Application
 StartupNotify=true

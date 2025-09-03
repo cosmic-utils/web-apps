@@ -1,30 +1,50 @@
-mod browser;
-mod common;
-mod config;
-mod favicon;
-mod launcher;
-mod localize;
-mod pages;
-mod themes;
-
-use common::icons_location;
-use cosmic::{app::Settings, iced_core::Size};
-use freedesktop_desktop_entry::get_languages_from_env;
+use clap::Parser;
+use cosmic::desktop::fde::get_languages_from_env;
 use i18n_embed::DesktopLanguageRequester;
-use lazy_static::lazy_static;
-use pages::QuickWebApps;
-use std::os::unix::fs::PermissionsExt;
-use tokio::{fs::File, io::AsyncWriteExt, process::Child};
+use std::os::unix::fs::PermissionsExt as _;
+use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
+use webapps::{Args, StateFlags};
 
-lazy_static! {
+pub(crate) mod browser;
+pub(crate) mod common;
+pub(crate) mod config;
+pub(crate) mod favicon;
+pub(crate) mod launcher;
+pub(crate) mod pages;
+pub(crate) mod themes;
+
+lazy_static::lazy_static! {
     pub static ref LOCALES: Vec<String> = get_languages_from_env();
 }
 
 pub const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 pub const CONFIG_VERSION: u64 = 1;
-pub const APP_ID: &str = "dev.heppen.webapps";
+pub const APP_ID: &str = "dev.heppen.QuickWebApps.Manager";
 pub const APP_ICON: &[u8] =
-    include_bytes!("../res/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
+    include_bytes!("../../../res/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
+
+fn main() -> cosmic::iced::Result {
+    init_logging();
+    init_localizer();
+
+    let args = Args::parse();
+
+    cosmic::app::run::<crate::pages::QuickWebApps>(
+        cosmic::app::Settings::default()
+            .antialiasing(true)
+            .client_decorations(true),
+        StateFlags { args },
+    )
+}
+
+fn init_localizer() {
+    let localizer = webapps::localize::localizer();
+    let requested_languages = DesktopLanguageRequester::requested_languages();
+
+    if let Err(why) = localizer.select(&requested_languages) {
+        tracing::error!(%why, "error while loading fluent localizations");
+    }
+}
 
 fn init_logging() {
     use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
@@ -43,35 +63,12 @@ fn init_logging() {
         .init();
 }
 
-fn main() -> cosmic::iced::Result {
-    init_logging();
-
-    init_localizer();
-
-    let mut settings = Settings::default();
-    settings = settings.size(Size {
-        width: 920.,
-        height: 800.,
-    });
-
-    cosmic::app::run::<QuickWebApps>(settings, ())
-}
-
-fn init_localizer() {
-    let localizer = localize::localizer();
-    let requested_languages = DesktopLanguageRequester::requested_languages();
-
-    if let Err(why) = localizer.select(&requested_languages) {
-        tracing::error!(%why, "error while loading fluent localizations");
-    }
-}
-
 pub fn icon_pack_installed() -> bool {
     let packs: Vec<&str> = vec!["Papirus", "Papirus-Dark", "Papirus-Light"];
     let mut directories = 0;
 
     for theme in packs.iter() {
-        let mut icons_dir = icons_location();
+        let mut icons_dir = common::icons_location();
         icons_dir.push(theme);
 
         if icons_dir.exists() {
@@ -83,7 +80,7 @@ pub fn icon_pack_installed() -> bool {
 }
 
 pub async fn add_icon_packs_install_script() -> String {
-    let install_script = include_bytes!("../scripts/icon-installer.sh");
+    let install_script = include_bytes!("../../../scripts/icon-installer.sh");
     let temp_file = "/tmp/io.github.elevenhsoft.WebApps.icon-installer.sh";
 
     // Create a temporary file
