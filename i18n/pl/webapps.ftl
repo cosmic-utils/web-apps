@@ -40,6 +40,7 @@ installed-header=Posiadasz { $number } zainstalowanych Web Appek:
 not-installed-header=Nie posiadasz żadnych Web Appek zainstalowanych. Prosimy nacisnąć przycisk u góry i stworzyć jakąś.
 
 # creator.rs
+category=Kategoria
 web=Sieć
 accessories=Akcesoria
 education=Edukacja

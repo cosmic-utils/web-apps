@@ -16,19 +16,14 @@ use cosmic::{
     app::{context_drawer, Core, Task},
     command::set_theme,
     cosmic_theme,
-    dbus_activation::Details,
-    iced::{
-        alignment::Horizontal, futures::executor::block_on, window::Id, Alignment, Length,
-        Subscription,
-    },
-    iced_winit::commands::activation::request_token,
+    iced::{alignment::Horizontal, Alignment, Length, Subscription},
     surface, task, theme,
     widget::{
         self,
         menu::{self, ItemHeight, ItemWidth},
         nav_bar, responsive_menu_bar,
     },
-    Application, ApplicationExt as _, Element,
+    Application, Element,
 };
 use editor::AppEditor;
 use futures_util::SinkExt;
@@ -49,14 +44,13 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{fl, ManagerTasks, StateFlags, WebviewArgs, APP_ICON, APP_ID, REPOSITORY};
+use webapps::{fl, WebviewArgs, APP_ICON, APP_ID, REPOSITORY};
 
 static MENU_ID: LazyLock<cosmic::widget::Id> =
     LazyLock::new(|| cosmic::widget::Id::new("responsive-menu"));
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    ActivationToken(Option<String>, WebviewArgs),
     ChangeUserTheme(usize),
     CloseDialog,
     Editor(editor::Message),
@@ -78,6 +72,7 @@ pub enum Message {
     OpenRepositoryUrl,
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
+    PushIcon(Icon),
     ReloadNavbarItems,
     ResetSettings,
     SaveLauncher(Arc<WebAppLauncher>),
@@ -106,7 +101,6 @@ pub enum Dialogs {
 
 pub struct QuickWebApps {
     core: Core,
-    window_id: Id,
     context_page: ContextPage,
     nav: nav_bar::Model,
     key_binds: HashMap<menu::KeyBind, MenuAction>,
@@ -122,7 +116,7 @@ pub struct QuickWebApps {
 
 impl Application for QuickWebApps {
     type Executor = cosmic::executor::Default;
-    type Flags = StateFlags;
+    type Flags = ();
     type Message = Message;
 
     const APP_ID: &'static str = APP_ID;
@@ -136,19 +130,13 @@ impl Application for QuickWebApps {
     }
 
     fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Self::Message>) {
-        let window_id = if let Some(id) = core.main_window_id() {
-            id
-        } else {
-            Id::unique()
-        };
         let config = AppConfig::config();
         let add_page = Page::Editor(AppEditor::new());
         let nav = nav_bar::Model::default();
 
         let themes_list = Vec::new();
 
-        let mut windows = QuickWebApps {
-            window_id,
+        let windows = QuickWebApps {
             core,
             context_page: ContextPage::About,
             nav,
@@ -164,7 +152,6 @@ impl Application for QuickWebApps {
         };
 
         let tasks = vec![
-            windows.update_title(),
             task::message(Message::ReloadNavbarItems),
             task::message(Message::LoadThemes),
             task::message(Message::UpdateTheme(Box::new(Theme::Light))),
@@ -226,39 +213,10 @@ impl Application for QuickWebApps {
         Subscription::batch(subscriptions)
     }
 
-    fn dbus_activation(&mut self, msg: cosmic::dbus_activation::Message) -> Task<Message> {
-        match msg.msg {
-            Details::ActivateAction { action, .. } => match ManagerTasks::from_str(&action) {
-                Ok(task) => match task {
-                    ManagerTasks::Launch(args) => {
-                        let Some(browser) = Browser::from_appid(&args.app_id) else {
-                            return Task::none();
-                        };
-
-                        let args = browser.args.build();
-
-                        debug!("Launching browser: {}", browser.app_id);
-
-                        return Task::done(cosmic::Action::App(Message::StartWebview(args)));
-                    }
-                },
-
-                _ => {}
-            },
-            _ => {}
-        }
-        Task::none()
-    }
-
     fn update(&mut self, message: Message) -> cosmic::Task<cosmic::Action<Message>> {
         let mut tasks: Vec<cosmic::Task<cosmic::Action<Message>>> = Vec::new();
 
         match message {
-            Message::ActivationToken(token, args) => {
-                return Task::perform(launch(token, args), |()| {
-                    cosmic::Action::App(Message::Close)
-                });
-            }
             Message::ChangeUserTheme(idx) => {
                 self.theme_idx = Some(idx);
                 let selected = self.themes_list[idx].clone();
@@ -341,11 +299,15 @@ impl Application for QuickWebApps {
                 };
             }
             Message::IconsResult(result) => {
-                if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
+                if let Some(Dialogs::IconPicker(_icon_picker)) = &mut self.dialogs {
                     for path in result {
-                        if let Some(icon) = block_on(image_handle(path)) {
-                            icon_picker.push_icon(icon);
-                        }
+                        tasks.push(Task::perform(image_handle(path), |icon| {
+                            if let Some(icon) = icon {
+                                cosmic::Action::App(Message::PushIcon(icon))
+                            } else {
+                                cosmic::Action::None
+                            }
+                        }))
                     }
                 };
             }
@@ -383,9 +345,11 @@ impl Application for QuickWebApps {
                 })
             }
             Message::Launch(args) => {
-                return request_token(Some(String::from(Self::APP_ID)), Some(self.window_id)).map(
-                    move |token| cosmic::Action::App(Message::ActivationToken(token, args.clone())),
-                );
+                if let Some(browser) = Browser::from_appid(&args.app_id) {
+                    let args = browser.args.clone().build();
+
+                    return Task::done(cosmic::Action::App(Message::StartWebview(args)));
+                }
             }
             Message::LaunchUrl(url) => match open::that_detached(&url) {
                 Ok(()) => {}
@@ -471,6 +435,11 @@ impl Application for QuickWebApps {
                 }
 
                 tasks.push(task::message(Message::LoadThemes));
+            }
+            Message::PushIcon(icon) => {
+                if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
+                    icon_picker.push_icon(icon);
+                }
             }
             Message::ReloadNavbarItems => {
                 self.nav.clear();
@@ -678,7 +647,6 @@ impl Application for QuickWebApps {
         if let Some(dialog) = &self.dialogs {
             let element = match dialog {
                 Dialogs::IconPicker(icon_picker) => widget::dialog()
-                    .title(fl!("icon-selector"))
                     .primary_action(
                         widget::button::standard(fl!("close")).on_press(Message::CloseDialog),
                     )
@@ -713,20 +681,6 @@ impl Application for QuickWebApps {
 
         None
     }
-}
-
-async fn launch(token: Option<String>, args: WebviewArgs) {
-    let mut envs = Vec::new();
-    if let Some(token) = token {
-        envs.push(("XDG_ACTIVATION_TOKEN".to_string(), token.clone()));
-        envs.push(("DESKTOP_STARTUP_ID".to_string(), token));
-    }
-
-    let exec = args.get_exec(false);
-
-    debug!("Launching {}", &exec);
-
-    cosmic::desktop::spawn_desktop_exec(exec, envs, Some(&args.app_id), false).await;
 }
 
 impl QuickWebApps {
@@ -802,11 +756,6 @@ impl QuickWebApps {
             .align_x(Alignment::Center)
             .spacing(space_xxs)
             .into()
-    }
-
-    fn update_title(&mut self) -> Task<Message> {
-        self.set_header_title(fl!("app"));
-        self.set_window_title(fl!("app"), self.window_id)
     }
 }
 

@@ -43,6 +43,7 @@ installed-header=You have { $number ->
 not-installed-header=You don't have any web app installed. Please, press create button and create one.
 
 # creator.rs
+category=Category
 web=Web
 accessories=Accessories
 education=Education

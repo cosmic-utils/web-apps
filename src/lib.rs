@@ -1,7 +1,7 @@
-use clap::{Parser, Subcommand};
-use cosmic::{app::CosmicFlags, desktop::fde::get_languages_from_env};
+use clap::Parser;
+use cosmic::desktop::fde::get_languages_from_env;
 use serde::{Deserialize, Serialize};
-use std::{fmt::Display, path::PathBuf, str::FromStr};
+use std::{ffi::OsStr, fmt::Display, path::PathBuf, str::FromStr, vec::IntoIter};
 
 pub mod localize;
 
@@ -33,59 +33,66 @@ pub struct WebviewArgs {
     pub window_decorations: Option<bool>,
 }
 
+pub struct WebViewArg(pub String);
+
+impl Display for WebViewArg {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl AsRef<OsStr> for WebViewArg {
+    fn as_ref(&self) -> &OsStr {
+        self.0.as_ref()
+    }
+}
+
 impl IntoIterator for WebviewArgs {
-    type Item = String;
-    type IntoIter = std::vec::IntoIter<String>;
+    type Item = WebViewArg;
+    type IntoIter = IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
-        vec![
-            format!("--window-title {}", self.window_title),
-            format!("--url {}", self.url),
-            if let Some(profile) = self.profile {
-                format!("--profile {}", profile.display())
-            } else {
-                "".to_string()
-            },
-            if let Some(window_size) = self.window_size {
-                format!("--window-size {}", window_size)
-            } else {
-                "".to_string()
-            },
-            if let Some(window_decorations) = self.window_decorations {
-                format!("--window-decorations {}", window_decorations)
-            } else {
-                "".to_string()
-            },
-            self.app_id,
-        ]
-        .into_iter()
+        let mut args: Vec<WebViewArg> = Vec::new();
+
+        args.push(WebViewArg("--window-title".to_string()));
+        args.push(WebViewArg(self.window_title));
+        args.push(WebViewArg("--url".to_string()));
+        args.push(WebViewArg(self.url));
+        if self.profile.is_some() {
+            args.push(WebViewArg("--profile".to_string()));
+            args.push(WebViewArg(
+                self.profile
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .into_owned(),
+            ));
+        }
+        if self.window_size.is_some() {
+            args.push(WebViewArg("--window-size".to_string()));
+            args.push(WebViewArg(self.window_size.unwrap_or_default().to_string()));
+        }
+        if self.window_decorations.is_some() {
+            args.push(WebViewArg("--window-decorations".to_string()));
+            args.push(WebViewArg(
+                self.window_decorations.unwrap_or_default().to_string(),
+            ));
+        }
+
+        args.push(WebViewArg(self.app_id));
+
+        args.into_iter()
     }
 }
 
 impl Display for WebviewArgs {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "--window-title {} --url {}{}{}{} {}",
-            self.window_title,
-            self.url,
-            if let Some(profile) = &self.profile {
-                format!(" --profile {}", profile.display())
-            } else {
-                "".to_string()
-            },
-            if let Some(window_size) = &self.window_size {
-                format!(" --window-size {}", window_size)
-            } else {
-                "".to_string()
-            },
-            if let Some(window_decorations) = &self.window_decorations {
-                format!(" --window-decorations {}", window_decorations)
-            } else {
-                "".to_string()
-            },
-            self.app_id
-        )
+        let exec: String = self
+            .clone()
+            .into_iter()
+            .map(|arg| arg.to_string())
+            .collect::<Vec<String>>()
+            .join(" ");
+        write!(f, "{}", exec)
     }
 }
 
@@ -99,22 +106,7 @@ impl WebviewArgs {
             exec.push_str("quick-webapps-webview");
         }
 
-        exec.push_str(&format!(" --window-title \"{}\"", self.window_title));
-        exec.push_str(&format!(" --url \"{}\"", self.url));
-
-        if let Some(profile) = &self.profile {
-            exec.push_str(&format!(" --profile \"{}\"", profile.display()));
-        }
-
-        if let Some(window_size) = &self.window_size {
-            exec.push_str(&format!(" --window-size \"{}\"", window_size));
-        }
-
-        if let Some(window_decorations) = &self.window_decorations {
-            exec.push_str(&format!(" --window-decorations {}", window_decorations));
-        }
-
-        exec.push_str(&format!(" {}", self.app_id));
+        exec.push_str(&format!(" {}", self));
 
         exec
     }
@@ -238,47 +230,6 @@ impl FromStr for WindowSize {
                 .map_err(|_| WindowSizeError::ParsingError)?;
             Ok(WindowSize(width, height))
         }
-    }
-}
-
-pub struct StateFlags {
-    pub args: Args,
-}
-
-#[derive(Parser, Debug, Serialize, Deserialize, Clone)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub struct Args {
-    #[clap(subcommand)]
-    pub subcommand: Option<ManagerTasks>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Subcommand)]
-pub enum ManagerTasks {
-    #[clap(about = "Launch webapp by it's args")]
-    Launch(WebviewArgs),
-}
-
-impl Display for ManagerTasks {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", serde_json::ser::to_string(self).unwrap())
-    }
-}
-
-impl FromStr for ManagerTasks {
-    type Err = serde_json::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        serde_json::de::from_str(s)
-    }
-}
-
-impl CosmicFlags for StateFlags {
-    type Args = Vec<String>;
-    type SubCommand = ManagerTasks;
-
-    fn action(&self) -> Option<&ManagerTasks> {
-        self.args.subcommand.as_ref()
     }
 }
 

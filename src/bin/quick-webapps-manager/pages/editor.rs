@@ -145,7 +145,6 @@ pub enum Message {
 impl AppEditor {
     pub fn new() -> Self {
         let categories = Category::iter().map(|c| c.name()).collect::<Vec<String>>();
-        let window_size = WindowSize::default();
 
         AppEditor {
             app_browser: Browser::new(WEBVIEW_APP_ID, WEBVIEW_APP_ID, "", false),
@@ -156,7 +155,7 @@ impl AppEditor {
             app_persistent: false,
             app_window_width: String::from(DEFAULT_WINDOW_WIDTH.to_string()),
             app_window_height: String::from(DEFAULT_WINDOW_HEIGHT.to_string()),
-            app_window_size: window_size,
+            app_window_size: WindowSize::default(),
             app_window_decorations: true,
             selected_icon: None,
             categories,
@@ -309,7 +308,7 @@ impl AppEditor {
             widget::button::custom(widget::icon::from_name("folder-pictures-symbolic"))
                 .width(Length::Fixed(92.0))
                 .height(Length::Fixed(92.0))
-                .class(style::Button::Icon)
+                .class(style::Button::Suggested)
                 .on_press(Message::OpenIconPicker(self.app_url.clone()))
         };
 
@@ -321,43 +320,57 @@ impl AppEditor {
             widget::column()
                 .spacing(24)
                 .push(
-                    widget::row()
-                        .spacing(12)
-                        .push(
-                            widget::container(self.icon_element(self.selected_icon.clone()))
-                                .width(96.)
-                                .height(96.)
-                                .align_y(Vertical::Center),
-                        )
-                        .push(
-                            widget::container(
-                                widget::column()
-                                    .spacing(12)
-                                    .push(widget::text::title1(&self.app_title))
-                                    .push(widget::text::title4(self.app_category.name())),
+                    widget::container(
+                        widget::row()
+                            .spacing(12)
+                            .push(
+                                widget::container(self.icon_element(self.selected_icon.clone()))
+                                    .width(96.)
+                                    .height(96.)
+                                    .align_y(Vertical::Center),
                             )
-                            .height(Length::Fixed(96.))
-                            .align_y(Vertical::Center),
-                        ),
+                            .push(
+                                widget::container(
+                                    widget::column()
+                                        .spacing(12)
+                                        .push(widget::text::title3(format!(
+                                            "{}: {}",
+                                            fl!("title"),
+                                            if self.app_title.is_empty() {
+                                                &fl!("new-webapp-title")
+                                            } else {
+                                                &self.app_title
+                                            }
+                                        )))
+                                        .push(widget::text::title4(format!(
+                                            "{}: {}",
+                                            fl!("category"),
+                                            self.app_category.name()
+                                        ))),
+                                )
+                                .height(Length::Fixed(96.))
+                                .align_y(Vertical::Center),
+                            ),
+                    )
+                    .padding(12)
+                    .width(Length::Fill)
+                    .class(style::Container::Card),
                 )
+                .push(widget::text_input(fl!("title"), &self.app_title).on_input(Message::Title))
+                .push(widget::settings::item_row(vec![
+                    widget::text_input(fl!("url"), &self.app_url)
+                        .on_input(Message::Url)
+                        .into(),
+                    widget::button::standard(fl!("download-favicon"))
+                        .on_press_maybe(if url_valid(&self.app_url) {
+                            Some(Message::SearchFavicon)
+                        } else {
+                            None
+                        })
+                        .into(),
+                ]))
                 .push(
                     widget::settings::section()
-                        .add(
-                            widget::text_input::inline_input(fl!("title"), &self.app_title)
-                                .on_input(Message::Title),
-                        )
-                        .add(widget::settings::item_row(vec![
-                            widget::text_input::inline_input(fl!("url"), &self.app_url)
-                                .on_input(Message::Url)
-                                .into(),
-                            widget::button::standard(fl!("download-favicon"))
-                                .on_press_maybe(if url_valid(&self.app_url) {
-                                    Some(Message::SearchFavicon)
-                                } else {
-                                    None
-                                })
-                                .into(),
-                        ]))
                         .add(widget::settings::item(
                             fl!("select-category"),
                             widget::dropdown(
@@ -376,12 +389,18 @@ impl AppEditor {
                             widget::row()
                                 .spacing(8)
                                 .push(
-                                    widget::text_input("1280", &self.app_window_width)
-                                        .on_input(Message::WindowWidth),
+                                    widget::text_input(
+                                        format!("{}", DEFAULT_WINDOW_WIDTH),
+                                        &self.app_window_width,
+                                    )
+                                    .on_input(Message::WindowWidth),
                                 )
                                 .push(
-                                    widget::text_input("720", &self.app_window_height)
-                                        .on_input(Message::WindowHeight),
+                                    widget::text_input(
+                                        format!("{}", DEFAULT_WINDOW_HEIGHT),
+                                        &self.app_window_height,
+                                    )
+                                    .on_input(Message::WindowHeight),
                                 ),
                         ))
                         .add(widget::settings::item(
@@ -415,6 +434,7 @@ impl AppEditor {
                         )),
                 ),
         )
+        .padding(cosmic::iced::Padding::new(0.).left(30.0).right(30.0))
         .max_width(1000)
         .into()
     }

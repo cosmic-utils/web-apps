@@ -1,8 +1,6 @@
-use clap::Parser;
 use i18n_embed::DesktopLanguageRequester;
 use std::os::unix::fs::PermissionsExt as _;
 use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
-use webapps::{Args, StateFlags};
 
 pub(crate) mod browser;
 pub(crate) mod common;
@@ -16,13 +14,11 @@ fn main() -> cosmic::iced::Result {
     init_logging();
     init_localizer();
 
-    let args = Args::parse();
-
     cosmic::app::run::<crate::pages::QuickWebApps>(
         cosmic::app::Settings::default()
             .antialiasing(true)
             .client_decorations(true),
-        StateFlags { args },
+        (),
     )
 }
 

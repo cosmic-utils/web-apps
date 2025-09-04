@@ -1,6 +1,7 @@
-use crate::launcher::installed_webapps;
 use serde::{Deserialize, Serialize};
 use webapps::{WebviewArgsBuilder, WindowSize, WEBVIEW_APP_ID};
+
+use crate::launcher::installed_webapps;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Browser {
