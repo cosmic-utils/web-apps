@@ -23,9 +23,7 @@ Hey! This app is fully distributed for **free** with **free license**.
 I'm doing it with **passion** in my **free time**.
 Trying to keep it stable and bug free as long as I can.
 However, would be nice if you could bring me some coffee,
-so I can work longer on it :)
-
-# Thanks
+so I can work longer on it :) Thanks! :)
 
 # Installation
 
@@ -47,43 +45,25 @@ Make sure you are in `web-apps` directory. You should be already.
 
 ### Building
 
-**NOTE:** Before installation you should build binary file.
+Building is simple. Make sure you have configured `flathub` remote as `--user`.
 
-### Build prerequisites
+`flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo`
 
-Before compilation please add needed dependencies to your system,
-or make sure they are installed.
+Install `flatpak-builder`.
 
-- pkg-config
-- libssl-dev
-- libxkbcommon-dev
-- libwebkit2gtk-4.1-dev
+`flatpak install -y flathub org.flatpak.Builder`
 
-for Pop OS you can install them via this command:
+and start the process:
 
-`sudo apt install pkg-config libssl-dev libxkbcommon-dev libwebkit2gtk-4.1-dev`
+`flatpak run --command=flathub-build org.flatpak.Builder --install dev.heppen.webapps.json`
 
-You need also rust compiler, so we recommend you tu use [rustup.rs](https://rustup.rs/).
-Run this command to install full toolchain:
+### Launching
 
-`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-
-and restart your shell.
-
-**Run** this command and after it, you will be able to install
-app.
-
-`just`
-
-### Installation
-
-`sudo just install`
-
-That's all. You can run `Quick Web Apps` from you app launcher.
+`flatpak run dev.heppen.webapps`
 
 ### Uninstall
 
-`sudo just uninstall`
+`flatpak uninstall dev.heppen.webapps`
 
 # License
 

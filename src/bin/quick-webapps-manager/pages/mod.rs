@@ -291,6 +291,7 @@ impl Application for QuickWebApps {
             }
             Message::Close => {
                 debug!("should close now...");
+                return Task::none();
             }
             Message::IconPicker(msg) => {
                 if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {

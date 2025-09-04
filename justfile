@@ -3,35 +3,26 @@ webview := 'quick-webapps-webview'
 export APPID := 'dev.heppen.webapps'
 
 rootdir := ''
-prefix := '/usr'
-fp-prefix := '/app'
+prefix := '/app'
 
 base-dir := absolute_path(clean(rootdir / prefix))
-fp-base-dir := absolute_path(clean(rootdir / fp-prefix))
 
 bin-src := 'target' / 'release' / manager
 bin-dst := base-dir / 'bin' / manager
-fp-bin-dst := fp-base-dir / 'bin' / manager
 
 webview-src := 'target' / 'release' / webview
 webview-dst := base-dir / 'bin' / webview
-fp-webview-dst := fp-base-dir / 'bin' / webview
 
 desktop := APPID + '.desktop'
 desktop-src := 'res' / desktop
 desktop-dst := base-dir / 'share' / 'applications' / desktop
-fp-desktop-dst := fp-base-dir / 'share' / 'applications' / desktop
 
 metainfo := APPID + '.metainfo.xml'
 metainfo-src := 'res' / metainfo
 metainfo-dst := base-dir / 'share' / 'metainfo' / metainfo
-fp-metainfo-dst := fp-base-dir / 'share' / 'metainfo' / metainfo
 
 icons-src := 'res' / 'icons' / 'hicolor'
 icons-dst := base-dir / 'share' / 'icons' / 'hicolor'
-fp-icons-dst := fp-base-dir / 'share' / 'icons' / 'hicolor'
-
-import "packaging.just"
 
 # Default recipe which runs `just build-release`
 default: build-release
@@ -75,26 +66,6 @@ install:
     for size in `ls {{icons-src}}`; do \
         install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
     done
-
-# Installs files for flatpak
-flatpak-install:
-    install -Dm0755 {{bin-src}} {{fp-bin-dst}}
-    install -Dm0755 {{webview-src}} {{fp-webview-dst}}
-    install -Dm0644 {{desktop-src}} {{fp-desktop-dst}}
-    install -Dm0644 {{metainfo-src}} {{fp-metainfo-dst}}
-
-    for size in `ls {{icons-src}}`; do \
-        install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{fp-icons-dst}}/$size/apps/{{APPID}}.png"; \
-    done
-
-
-# Uninstalls installed files
-uninstall:
-    rm {{bin-dst}}
-    rm {{webview-dst}}
-    rm {{desktop-dst}}
-    rm {{metainfo-dst}}
-
 
 # Vendor dependencies locally
 vendor:
