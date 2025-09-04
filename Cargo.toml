@@ -3,27 +3,33 @@ name = "webapps"
 version = "1.0.2"
 edition = "2021"
 description = "Web applications at your fingertips"
-authors = ["hepp3n", "cosmic-utils"]
+authors = ["hepp3n"]
 license = "GPL-3.0-only"
 repository = "https://github.com/cosmic-utils/web-apps"
+default-run = "quick-webapps-manager"
 
 [[bin]]
-path = "src/main.rs"
-name = "quick-webapps"
+name = "quick-webapps-manager"
+path = "src/bin/quick-webapps-manager/main.rs"
+
+[[bin]]
+name = "quick-webapps-webview"
+path = "src/bin/webview.rs"
 
 [build-dependencies]
 vergen = { version = "8", features = ["git", "gitcl"] }
 
 [dependencies]
 anyhow = "1"
-ashpd = { version = "0.11", features = ["wayland"] }
+ashpd = { version = "0.12", features = ["wayland"] }
 base64 = "0.22"
 bytes = "1"
+clap = { version = "4", features = ["derive"] }
 dirs = "6"
-freedesktop-desktop-entry = { git = "https://github.com/pop-os/freedesktop-desktop-entry" }
 futures-util = "0.3"
-i18n-embed-fl = "0.9"
-i18n-embed = { version = "0.15", features = [
+gtk = "0.18.2"
+i18n-embed-fl = "0.10"
+i18n-embed = { version = "0.16", features = [
   "fluent-system",
   "desktop-requester",
 ] }
@@ -33,13 +39,14 @@ once_cell = "1.2"
 open = "5.3"
 rand = "0.9"
 reqwest = { version = "0.12", features = ["json"] }
-ron = "0.10"
+ron = "0.11"
 rust-embed = "8.7"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 strum = "0.27"
 strum_macros = "0.27"
 svg = "0.18"
+tao = "0.34"
 tokio = { version = "1.4", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = [
@@ -51,26 +58,20 @@ url = "2.5"
 urlencoding = "2.1"
 usvg = "0.45"
 walkdir = "2.5"
+wry = { git = "https://github.com/tauri-apps/wry.git" }
 
 [dependencies.libcosmic]
 git = "https://github.com/pop-os/libcosmic.git"
 features = [
-  # Accessibility support
-  "a11y",
-  # Uses cosmic-settings-daemon to watch for config file changes
-  "dbus-config",
-  # Support creating additional application windows.
-  "multi-window",
-  # On app startup, focuses an existing instance if the app is already open
-  "single-instance",
-  # Uses tokio as the executor for the runtime
-  "tokio",
-  # Windowing support for X11, Windows, Mac, & Redox
-  "winit",
-  # Add Wayland support to winit
-  "wayland",
-  # GPU-accelerated rendering
-  "wgpu",
+    "a11y",
+    "dbus-config",
+    "winit",
+    "multi-window",
+    "wayland",
+    "tokio",
+    "single-instance",
+    "desktop-systemd-scope",
+    "xdg-portal",
 ]
 
 # Packaging for Deb #

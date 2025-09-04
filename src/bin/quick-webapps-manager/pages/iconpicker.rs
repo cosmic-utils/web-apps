@@ -1,16 +1,16 @@
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
     action::Action,
-    cosmic_theme,
     iced::Length,
     task, theme,
     widget::{self},
     Element, Task,
 };
+use webapps::fl;
 
 use crate::{
     common::{self, find_icons, get_icon_name_from_url, Icon},
-    fl, icon_pack_installed, pages,
+    pages,
 };
 
 #[derive(Debug, Clone)]
@@ -92,9 +92,7 @@ impl IconPicker {
         Task::none()
     }
 
-    pub fn view(&self) -> Element<Message> {
-        let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
-
+    pub fn view(&self) -> Element<'_, Message> {
         let mut icons: Vec<Element<Message>> = Vec::new();
 
         for ico in self.icons.iter() {
@@ -113,31 +111,34 @@ impl IconPicker {
             icons.push(btn.into());
         }
 
-        let mut elements: Vec<Element<Message>> = vec![
-            widget::text_input::inline_input(fl!("icon-name-to-find"), &self.icon_searching)
-                .on_input(Message::CustomIconsSearch)
-                .on_submit(|_| Message::IconSearch)
-                .into(),
-            widget::button::standard(fl!("open"))
-                .on_press(Message::OpenIconPickerDialog)
-                .into(),
-        ];
-        if !icon_pack_installed() {
-            elements.push(
-                widget::button::standard(fl!("download"))
-                    .on_press(Message::DownloadIconsPack)
-                    .into(),
+        let icons_input = widget::text_input(fl!("icon-name-to-find"), &self.icon_searching)
+            .on_input(Message::CustomIconsSearch)
+            .on_submit(|_| Message::IconSearch);
+        let button = widget::button::standard(fl!("open")).on_press(Message::OpenIconPickerDialog);
+
+        widget::column()
+            .spacing(30)
+            .push(
+                widget::container(
+                    widget::row()
+                        .spacing(8)
+                        .push(icons_input)
+                        .push(button)
+                        .push_maybe(if !crate::icon_pack_installed() {
+                            Some(
+                                widget::button::standard(fl!("download"))
+                                    .on_press(Message::DownloadIconsPack),
+                            )
+                        } else {
+                            None
+                        }),
+                )
+                .padding(8),
             )
-        }
-        widget::settings::section()
-            .add(widget::settings::item_row(elements))
-            .add_maybe(if !icons.is_empty() {
+            .push_maybe(if !icons.is_empty() {
                 Some(
-                    widget::container(
-                        widget::scrollable(widget::settings::flex_item_row(icons))
-                            .spacing(space_xxs),
-                    )
-                    .max_height(600.0),
+                    widget::container(widget::scrollable(widget::flex_row(icons)))
+                        .height(Length::FillPortion(1)),
                 )
             } else {
                 None

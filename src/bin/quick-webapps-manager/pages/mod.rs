@@ -2,33 +2,28 @@ pub mod editor;
 mod iconpicker;
 
 use crate::{
-    add_icon_packs_install_script,
+    browser::Browser,
     common::{
         database_path, find_icon, image_handle, move_icon, qwa_icons_location, themes_path, Icon,
     },
     config::AppConfig,
-    execute_script, fl,
     launcher::{installed_webapps, WebAppLauncher},
     pages::iconpicker::IconPicker,
     themes::Theme,
-    APP_ICON, APP_ID, REPOSITORY,
 };
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
     app::{context_drawer, Core, Task},
     command::set_theme,
     cosmic_theme,
-    iced::{
-        alignment::Horizontal, futures::executor::block_on, window::Id, Alignment, Length,
-        Subscription,
-    },
+    iced::{alignment::Horizontal, Alignment, Length, Subscription},
     surface, task, theme,
     widget::{
         self,
         menu::{self, ItemHeight, ItemWidth},
         nav_bar, responsive_menu_bar,
     },
-    Application, ApplicationExt, Element,
+    Application, Element,
 };
 use editor::AppEditor;
 use futures_util::SinkExt;
@@ -45,8 +40,11 @@ use std::{
 };
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
+    process::Command,
     sync::oneshot,
 };
+use tracing::debug;
+use webapps::{fl, WebviewArgs, APP_ICON, APP_ID, REPOSITORY};
 
 static MENU_ID: LazyLock<cosmic::widget::Id> =
     LazyLock::new(|| cosmic::widget::Id::new("responsive-menu"));
@@ -62,9 +60,11 @@ pub enum Message {
     DownloaderStarted,
     DownloaderStream(String),
     DownloaderStreamFinished,
+    Close,
     IconPicker(iconpicker::Message),
     IconsResult(Vec<String>),
     ImportThemeFilePicker,
+    Launch(WebviewArgs),
     LaunchUrl(String),
     LoadThemes,
     OpenFileResult(Vec<String>),
@@ -72,11 +72,13 @@ pub enum Message {
     OpenRepositoryUrl,
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
+    PushIcon(Icon),
     ReloadNavbarItems,
     ResetSettings,
     SaveLauncher(Arc<WebAppLauncher>),
     SetIcon(Option<Icon>),
     Surface(surface::Action),
+    StartWebview(WebviewArgs),
     DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(AppConfig),
@@ -99,7 +101,6 @@ pub enum Dialogs {
 
 pub struct QuickWebApps {
     core: Core,
-    window_id: Id,
     context_page: ContextPage,
     nav: nav_bar::Model,
     key_binds: HashMap<menu::KeyBind, MenuAction>,
@@ -129,19 +130,13 @@ impl Application for QuickWebApps {
     }
 
     fn init(core: Core, _flags: Self::Flags) -> (Self, Task<Self::Message>) {
-        let window_id = if let Some(id) = core.main_window_id() {
-            id
-        } else {
-            Id::unique()
-        };
         let config = AppConfig::config();
         let add_page = Page::Editor(AppEditor::new());
         let nav = nav_bar::Model::default();
 
         let themes_list = Vec::new();
 
-        let mut windows = QuickWebApps {
-            window_id,
+        let windows = QuickWebApps {
             core,
             context_page: ContextPage::About,
             nav,
@@ -157,7 +152,6 @@ impl Application for QuickWebApps {
         };
 
         let tasks = vec![
-            windows.update_title(),
             task::message(Message::ReloadNavbarItems),
             task::message(Message::LoadThemes),
             task::message(Message::UpdateTheme(Box::new(Theme::Light))),
@@ -179,8 +173,8 @@ impl Application for QuickWebApps {
             subscriptions.push(Subscription::run_with_id(
                 self.downloader_id,
                 cosmic::iced::stream::channel(4, move |mut channel| async move {
-                    let script = add_icon_packs_install_script().await;
-                    let mut child = execute_script(script).await;
+                    let script = crate::add_icon_packs_install_script().await;
+                    let mut child = crate::execute_script(script).await;
                     let stdout = child
                         .stdout
                         .take()
@@ -249,28 +243,17 @@ impl Application for QuickWebApps {
                 if let Some(page) = data {
                     let Page::Editor(app_editor) = page;
 
-                    if let Some(browser) = &app_editor.app_browser {
-                        if let Some(entry) = &browser.entry {
-                            let launcher = WebAppLauncher {
-                                appid: entry.appid.clone(),
-                                codename: app_editor.app_codename.clone(),
-                                browser: browser.clone(),
-                                name: app_editor.app_title.clone(),
-                                icon: app_editor.app_icon.clone(),
-                                category: app_editor.app_category.clone(),
-                                url: app_editor.app_url.clone(),
-                                custom_parameters: app_editor.app_parameters.clone(),
-                                isolate_profile: app_editor.app_isolated,
-                                navbar: app_editor.app_navbar,
-                                is_incognito: app_editor.app_incognito,
-                            };
+                    let launcher = WebAppLauncher {
+                        browser: app_editor.app_browser.clone(),
+                        name: app_editor.app_title.clone(),
+                        icon: app_editor.app_icon.clone(),
+                        category: app_editor.app_category.clone(),
+                    };
 
-                            return task::future(async move {
-                                launcher.delete().await.unwrap();
-                                cosmic::action::app(Message::DeletionDone(id))
-                            });
-                        };
-                    }
+                    return task::future(async move {
+                        launcher.delete().await.unwrap();
+                        cosmic::action::app(Message::DeletionDone(id))
+                    });
                 }
             }
             Message::DeletionDone(id) => {
@@ -306,17 +289,24 @@ impl Application for QuickWebApps {
                     cosmic::action::app(Message::DownloaderDone)
                 });
             }
+            Message::Close => {
+                debug!("should close now...");
+            }
             Message::IconPicker(msg) => {
                 if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
                     tasks.push(icon_picker.update(msg));
                 };
             }
             Message::IconsResult(result) => {
-                if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
+                if let Some(Dialogs::IconPicker(_icon_picker)) = &mut self.dialogs {
                     for path in result {
-                        if let Some(icon) = block_on(image_handle(path)) {
-                            icon_picker.push_icon(icon);
-                        }
+                        tasks.push(Task::perform(image_handle(path), |icon| {
+                            if let Some(icon) = icon {
+                                cosmic::Action::App(Message::PushIcon(icon))
+                            } else {
+                                cosmic::Action::None
+                            }
+                        }))
                     }
                 };
             }
@@ -352,6 +342,13 @@ impl Application for QuickWebApps {
                         cosmic::action::none()
                     }
                 })
+            }
+            Message::Launch(args) => {
+                if let Some(browser) = Browser::from_appid(&args.app_id) {
+                    let args = browser.args.clone().build();
+
+                    return Task::done(cosmic::Action::App(Message::StartWebview(args)));
+                }
             }
             Message::LaunchUrl(url) => match open::that_detached(&url) {
                 Ok(()) => {}
@@ -438,6 +435,11 @@ impl Application for QuickWebApps {
 
                 tasks.push(task::message(Message::LoadThemes));
             }
+            Message::PushIcon(icon) => {
+                if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
+                    icon_picker.push_icon(icon);
+                }
+            }
             Message::ReloadNavbarItems => {
                 self.nav.clear();
 
@@ -467,7 +469,7 @@ impl Application for QuickWebApps {
                 return cosmic::command::set_theme(cosmic::Theme::light());
             }
             Message::SaveLauncher(launcher) => {
-                let location = database_path(&format!("{}.ron", launcher.codename));
+                let location = database_path(&format!("{}.ron", launcher.browser.app_id));
                 let content = to_string_pretty(&*launcher, ron::ser::PrettyConfig::default());
 
                 if let Ok(content) = content {
@@ -489,6 +491,19 @@ impl Application for QuickWebApps {
                 return cosmic::task::message(cosmic::Action::Cosmic(
                     cosmic::app::Action::Surface(a),
                 ));
+            }
+            Message::StartWebview(args) => {
+                tracing::info!("Launching Webview with args: {}", args.to_string());
+
+                return Task::perform(
+                    async move {
+                        Command::new("quick-webapps-webview")
+                            .args(args)
+                            .spawn()
+                            .expect("Failed to spawn webview");
+                    },
+                    |_| cosmic::Action::App(Message::Close),
+                );
             }
             Message::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {
@@ -536,7 +551,7 @@ impl Application for QuickWebApps {
         Task::batch(tasks)
     }
 
-    fn header_start(&self) -> Vec<Element<Self::Message>> {
+    fn header_start(&self) -> Vec<Element<'_, Message>> {
         vec![responsive_menu_bar()
             .item_height(ItemHeight::Dynamic(40))
             .item_width(ItemWidth::Uniform(240))
@@ -556,7 +571,7 @@ impl Application for QuickWebApps {
             )]
     }
 
-    fn nav_bar(&self) -> Option<Element<cosmic::Action<Message>>> {
+    fn nav_bar(&self) -> Option<Element<'_, cosmic::Action<Message>>> {
         if !self.core().nav_bar_active() {
             return None;
         }
@@ -592,7 +607,7 @@ impl Application for QuickWebApps {
         Task::none()
     }
 
-    fn context_drawer(&self) -> Option<context_drawer::ContextDrawer<Message>> {
+    fn context_drawer(&self) -> Option<context_drawer::ContextDrawer<'_, Message>> {
         if !self.core.window.show_context {
             return None;
         }
@@ -618,7 +633,7 @@ impl Application for QuickWebApps {
         Task::none()
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         let Page::Editor(content) = &self.page;
 
         widget::container(content.view().map(Message::Editor))
@@ -629,11 +644,10 @@ impl Application for QuickWebApps {
             .into()
     }
 
-    fn dialog(&self) -> Option<Element<Message>> {
+    fn dialog(&self) -> Option<Element<'_, Message>> {
         if let Some(dialog) = &self.dialogs {
             let element = match dialog {
                 Dialogs::IconPicker(icon_picker) => widget::dialog()
-                    .title(fl!("icon-selector"))
                     .primary_action(
                         widget::button::standard(fl!("close")).on_press(Message::CloseDialog),
                     )
@@ -671,7 +685,7 @@ impl Application for QuickWebApps {
 }
 
 impl QuickWebApps {
-    pub fn about(&self) -> Element<Message> {
+    fn about(&self) -> Element<'_, Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
         let hash = env!("VERGEN_GIT_SHA");
@@ -716,7 +730,7 @@ impl QuickWebApps {
             .into()
     }
 
-    fn settings(&self) -> Element<Message> {
+    fn settings(&self) -> Element<'_, Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
         widget::column()
@@ -743,11 +757,6 @@ impl QuickWebApps {
             .align_x(Alignment::Center)
             .spacing(space_xxs)
             .into()
-    }
-
-    fn update_title(&mut self) -> Task<Message> {
-        self.set_header_title(fl!("app"));
-        self.set_window_title(fl!("app"), self.window_id)
     }
 }
 

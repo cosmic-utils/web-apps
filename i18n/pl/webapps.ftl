@@ -40,6 +40,7 @@ installed-header=Posiadasz { $number } zainstalowanych Web Appek:
 not-installed-header=Nie posiadasz żadnych Web Appek zainstalowanych. Prosimy nacisnąć przycisk u góry i stworzyć jakąś.
 
 # creator.rs
+category=Kategoria
 web=Sieć
 accessories=Akcesoria
 education=Edukacja
@@ -59,8 +60,11 @@ download-favicon=Pobierz ikone
 non-standard-arguments=Niestandardowe argumenty
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Pasek nawigacyjny
-isolated-profile=Izolowany profil
-private-mode=Tryb prywatny
+persistent-profile=Profil Permanentny
+private-mode=Tryb Prywatny
+window-size=Rozmiar Okna
+decorations=Obramowanie Okna
+simulate-mobile=Spróbuj zasymulować urządzenie mobilne
 
 # iconpicker.rs
 icon-name-to-find=Nazwa ikony do znalezienia

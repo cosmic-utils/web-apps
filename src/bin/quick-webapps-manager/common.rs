@@ -9,7 +9,6 @@ use std::{
 use base64::prelude::*;
 use bytes::Bytes;
 use cosmic::{iced_core, widget};
-use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter};
 use image::ImageReader;
 use image::{load_from_memory, GenericImageView};
 use svg::node::element::Image;
@@ -17,7 +16,7 @@ use svg::Document;
 use url::Url;
 use walkdir::WalkDir;
 
-use crate::{favicon, LOCALES};
+use crate::favicon;
 
 const ICON_SIZE: u32 = 42;
 
@@ -72,7 +71,7 @@ pub fn desktop_files_location(filename: &str) -> PathBuf {
             let _ = create_dir_all(&dir);
         }
 
-        return dir.join(format!("dev.heppen.webapps.{filename}.desktop"));
+        return dir.join(format!("{filename}.desktop"));
     }
 
     PathBuf::new()
@@ -92,34 +91,6 @@ pub fn system_icons() -> PathBuf {
 
 pub fn qwa_icons_location() -> PathBuf {
     icons_location().join("QuickWebApps")
-}
-
-pub fn is_sandboxed() -> bool {
-    PathBuf::from("/.flatpak-info").exists()
-}
-
-pub fn fd_entries() -> Vec<DesktopEntry> {
-    let mut paths = Vec::new();
-
-    // this is workaround for flatpak sandbox
-    if is_sandboxed() {
-        if let Some(home) = dirs::home_dir() {
-            paths.push(home.join(".local/share/flatpak/exports/share/applications"));
-        }
-        paths.push("/var/lib/flatpak/exports/share/applications".into());
-        paths.push("/run/host/usr/share/applications".into());
-        paths.push("/run/host/usr/local/share/applications".into());
-    };
-
-    default_paths().for_each(|path| {
-        if !paths.contains(&path) {
-            paths.push(path)
-        }
-    });
-
-    Iter::new(paths.into_iter())
-        .entries(Some(&LOCALES))
-        .collect::<Vec<DesktopEntry>>()
 }
 
 pub fn get_icon_name_from_url(url: &str) -> String {

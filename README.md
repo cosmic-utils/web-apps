@@ -12,7 +12,7 @@
   <img alt="Quick Web Apps Dark window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-dark.png" width="256">
   <img alt="Quick Web Apps Rose Pine window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-rose-pine.png" width="256">
 
-  <br><br><br>
+<br><br><br>
 
   <a href='https://flathub.org/apps/dev.heppen.webapps'>
     <img width='240' alt='Download on Flathub' src='https://flathub.org/api/badge?locale=en'/>
@@ -71,10 +71,11 @@ or make sure they are installed.
 - pkg-config
 - libssl-dev
 - libxkbcommon-dev
+- libwebkit2gtk-4.1-dev
 
 for Pop OS you can install them via this command:
 
-`sudo apt install pkg-config libssl-dev libxkbcommon-dev`
+`sudo apt install pkg-config libssl-dev libxkbcommon-dev libwebkit2gtk-4.1-dev`
 
 You need also rust compiler, so we recommend you tu use [rustup.rs](https://rustup.rs/).
 Run this command to install full toolchain:
