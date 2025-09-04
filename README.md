@@ -4,7 +4,7 @@
   <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/res/icons/hicolor/256x256/apps/dev.heppen.webapps.png" width="192" />
   <h1>Quick Web Apps</h1>
 
-  <p>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window of your browser of choice.</p>
+  <p>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window. With some customization options.</p>
 
   <br>
 
@@ -28,18 +28,6 @@ However, would be nice if you could bring me some coffee,
 so I can work longer on it :)
 
 # Thanks
-
-# Flatpak Usage
-
-If you installed this app via flatpak, make sure your browser of choice have access to Quick Web Apps profiles directory. The default location for custom profiles is `~/.var/app/dev.heppen.webapps/data/quick-webapps/profiles`, so your browser of choice must have `read-write` permission to this directory. Some browser have full access to your `home` location, but otherwise, you need to set it manually.
-
-For Mozilla Firefox, you can do this by running this command:
-
-`flatpak override --filesystem=~/.var/app/dev.heppen.webapps/data/quick-webapps/profiles org.mozilla.firefox`
-
-or if you have `user-wide` installation, add `--user` flag to command, like so:
-
-`flatpak override --user --filesystem=~/.var/app/dev.heppen.webapps/data/quick-webapps/profiles org.mozilla.firefox`
 
 # Installation
 

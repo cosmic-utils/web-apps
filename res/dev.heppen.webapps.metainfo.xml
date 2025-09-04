@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <component type="desktop-application">
   <id>dev.heppen.webapps</id>
   <developer id="dev.heppen">
@@ -16,29 +16,16 @@
   <metadata_license>MIT</metadata_license>
   <project_license>GPL-3.0-only</project_license>
   <description>
-    <p>Quick Web Apps written with love and libcosmic.
-            Turn Any URL into a Web App, running in a separate window of any browser installed on your system, selected according to your preference.
-            Integrates with your desktop environment (icon pinnable to the dock).
-    </p>
-    <!--fr translation-->
-    <p xml:lang="fr">Applications Web Rapides écrites avec amour et libcosmic.
-        Transformez n'importe quelle URL en Application Web, exécutée dans une fenêtre distincte de n'importe quel navigateur installé sur votre système, sélectionné selon vos préférences.
-        S'intègre à votre environnement de bureau (icône épinglable sur le dock).
-    </p>
+    <p>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window. With some customization options.</p>
     <ul>
       <li>Fast and easy to use</li>
       <li>Works out of the box</li>
       <li>In-app icon pack installer</li>
-      <li>Supports most mainstream browsers</li>
-      <!--fr translation-->
-      <li xml:lang="fr">Rapide et facile à utiliser</li>
-      <li xml:lang="fr">Fonctionne immédiatement</li>
-      <li xml:lang="fr">Installateur de pack d'icônes intégré</li>
-      <li xml:lang="fr">Compatible avec la plupart des navigateurs principaux</li>
+      <li>Supports WebKitGTK web engine</li>
     </ul>
   </description>
   <launchable type="desktop-id">dev.heppen.webapps.desktop</launchable>
-  <content_rating type="oars-1.1"/>
+  <content_rating type="oars-1.1" />
   <categories>
     <category>Utility</category>
   </categories>
@@ -52,15 +39,7 @@
   <screenshots>
     <screenshot type="default">
       <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-light.png</image>
-      <caption>Light Theme</caption>
-    </screenshot>
-    <screenshot>
-      <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-dark.png</image>
-      <caption>Dark Theme</caption>
-    </screenshot>
-    <screenshot>
-      <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-rose-pine.png</image>
-      <caption>Rose Pine Theme and more additional themes</caption>
+      <caption>Opened app</caption>
     </screenshot>
   </screenshots>
   <branding>
@@ -76,23 +55,11 @@
     <control>pointing</control>
   </supports>
   <releases>
-    <release version="1.0.2" date="2025-03-06">
+    <release version="2.0.0" date="2025-09-04">
       <description>
-        <p>Some improvements</p>
-        <p>Updated dependencies</p>
-      </description>
-    </release>
-    <release version="1.0.1" date="2025-02-14">
-      <description>
-        <p>Separate default theme for cosmic light and dark</p>
-        <p>Fixed flatpak permissions for icons directory</p>
-        <p>Updated dependencies</p>
-      </description>
-    </release>
-    <release version="1.0.0" date="2025-02-03">
-      <description>
-        <p>Breaking changes, require creating web apps from scratch, also not compatible with previous releases...</p>
-        <p>Many improvements and new interface</p>
+        <p>New version with refreshed interface and many improvements.</p>
+        <p>Supports WebKitGTK web engine</p>
+        <p>Removed support for third party browsers</p>
       </description>
     </release>
   </releases>
