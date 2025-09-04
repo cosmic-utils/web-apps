@@ -248,7 +248,6 @@ impl Application for QuickWebApps {
                         name: app_editor.app_title.clone(),
                         icon: app_editor.app_icon.clone(),
                         category: app_editor.app_category.clone(),
-                        isolated_profile: app_editor.app_persistent,
                     };
 
                     return task::future(async move {
@@ -494,6 +493,8 @@ impl Application for QuickWebApps {
                 ));
             }
             Message::StartWebview(args) => {
+                tracing::info!("Launching Webview with args: {}", args.to_string());
+
                 return Task::perform(
                     async move {
                         Command::new("quick-webapps-webview")
@@ -502,7 +503,7 @@ impl Application for QuickWebApps {
                             .expect("Failed to spawn webview");
                     },
                     |_| cosmic::Action::App(Message::Close),
-                )
+                );
             }
             Message::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {

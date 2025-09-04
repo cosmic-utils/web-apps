@@ -66,7 +66,8 @@ navbar=Nav Bar
 persistent-profile=Persistent Profile
 private-mode=Private Mode
 window-size=Window Size
-decorations=Window decorations
+decorations=Window Decorations
+simulate-mobile=Try to simulate mobile device
 
 # iconpicker.rs
 icon-name-to-find=Icon name to find

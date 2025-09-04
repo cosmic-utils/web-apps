@@ -43,6 +43,14 @@ impl Browser {
         self.args.window_decorations(window_decorations);
     }
 
+    pub fn set_private_mode(&mut self, private_mode: bool) {
+        self.args.set_incognito(private_mode);
+    }
+
+    pub fn set_simulate_mobile(&mut self, simulate_mobile: bool) {
+        self.args.try_simulate_mobile(simulate_mobile);
+    }
+
     pub(crate) fn from_appid(id: &str) -> Option<Self> {
         if let Some(launcher) = installed_webapps()
             .iter()

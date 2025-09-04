@@ -121,6 +121,8 @@ pub struct AppEditor {
     pub app_window_height: String,
     pub app_window_size: WindowSize,
     pub app_window_decorations: bool,
+    pub app_private_mode: bool,
+    pub app_simulate_mobile: bool,
     pub selected_icon: Option<Icon>,
     pub categories: Vec<String>,
     pub category_idx: Option<usize>,
@@ -140,6 +142,8 @@ pub enum Message {
     WindowWidth(String),
     WindowHeight(String),
     WindowDecorations(bool),
+    AppIncognito(bool),
+    AppSimulateMobile(bool),
 }
 
 impl AppEditor {
@@ -157,6 +161,8 @@ impl AppEditor {
             app_window_height: String::from(DEFAULT_WINDOW_HEIGHT.to_string()),
             app_window_size: WindowSize::default(),
             app_window_decorations: true,
+            app_private_mode: false,
+            app_simulate_mobile: false,
             selected_icon: None,
             categories,
             category_idx: Some(0),
@@ -177,8 +183,11 @@ impl AppEditor {
         );
 
         let args = webapp_launcher.browser.args.clone().build();
+        let persistent = webapp_launcher.browser.with_profile;
         let window_size = args.window_size.unwrap_or_default();
         let window_decorations = args.window_decorations.unwrap_or_default();
+        let app_private_mode = args.private_mode.unwrap_or_default();
+        let app_simulate_mobile = args.try_simulate_mobile.unwrap_or_default();
 
         Self {
             app_browser: webapp_launcher.browser.clone(),
@@ -186,11 +195,13 @@ impl AppEditor {
             app_url: webapp_launcher.browser.url,
             app_icon: webapp_launcher.icon,
             app_category: category,
-            app_persistent: webapp_launcher.isolated_profile,
+            app_persistent: persistent,
             app_window_width: String::from(window_size.0.to_string()),
             app_window_height: String::from(window_size.1.to_string()),
             app_window_size: window_size.clone(),
             app_window_decorations: window_decorations.clone(),
+            app_private_mode,
+            app_simulate_mobile,
             selected_icon,
             categories,
             category_idx,
@@ -200,6 +211,12 @@ impl AppEditor {
 
     pub fn update(&mut self, message: Message) -> Task<Action<pages::Message>> {
         match message {
+            Message::AppIncognito(flag) => {
+                self.app_private_mode = flag;
+            }
+            Message::AppSimulateMobile(flag) => {
+                self.app_simulate_mobile = flag;
+            }
             Message::Category(idx) => {
                 self.app_category = Category::from_index(idx as u8);
                 self.category_idx = Some(idx);
@@ -213,6 +230,9 @@ impl AppEditor {
                 self.app_browser.set_window_size(&self.app_window_size);
                 self.app_browser
                     .set_window_decorations(self.app_window_decorations);
+                self.app_browser.set_private_mode(self.app_private_mode);
+                self.app_browser
+                    .set_simulate_mobile(self.app_simulate_mobile);
 
                 let icon_final_path = block_on(move_icon(&self.app_icon, &self.app_browser.app_id));
 
@@ -222,7 +242,6 @@ impl AppEditor {
                         name: self.app_title.clone(),
                         icon: icon_final_path,
                         category: self.app_category.clone(),
-                        isolated_profile: self.app_persistent,
                     });
 
                     let arc_launcher = Arc::clone(&launcher);
@@ -407,6 +426,15 @@ impl AppEditor {
                             fl!("decorations"),
                             widget::toggler(self.app_window_decorations)
                                 .on_toggle(Message::WindowDecorations),
+                        ))
+                        .add(widget::settings::item(
+                            fl!("private-mode"),
+                            widget::toggler(self.app_private_mode).on_toggle(Message::AppIncognito),
+                        ))
+                        .add(widget::settings::item(
+                            fl!("simulate-mobile"),
+                            widget::toggler(self.app_simulate_mobile)
+                                .on_toggle(Message::AppSimulateMobile),
                         )),
                 )
                 .push(

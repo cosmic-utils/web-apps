@@ -15,6 +15,7 @@ pub const APP_ID: &str = "dev.heppen.QuickWebApps.Manager";
 pub const APP_ICON: &[u8] =
     include_bytes!("../res/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
 pub const WEBVIEW_APP_ID: &str = "dev.heppen.QuickWebApp";
+pub const MOBILE_UA: &str = "Mozilla/5.0 (Android 16; Mobile; rv:68.0) Gecko/68.0 Firefox/142.0";
 
 #[derive(Parser, Debug, Serialize, Deserialize, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -31,6 +32,10 @@ pub struct WebviewArgs {
     pub window_size: Option<WindowSize>,
     #[clap(short, long)]
     pub window_decorations: Option<bool>,
+    #[clap(short, long)]
+    pub private_mode: Option<bool>,
+    #[clap(short, long)]
+    pub try_simulate_mobile: Option<bool>,
 }
 
 pub struct WebViewArg(pub String);
@@ -58,6 +63,7 @@ impl IntoIterator for WebviewArgs {
         args.push(WebViewArg(self.window_title));
         args.push(WebViewArg("--url".to_string()));
         args.push(WebViewArg(self.url));
+
         if self.profile.is_some() {
             args.push(WebViewArg("--profile".to_string()));
             args.push(WebViewArg(
@@ -67,14 +73,30 @@ impl IntoIterator for WebviewArgs {
                     .into_owned(),
             ));
         }
+
         if self.window_size.is_some() {
             args.push(WebViewArg("--window-size".to_string()));
             args.push(WebViewArg(self.window_size.unwrap_or_default().to_string()));
         }
+
         if self.window_decorations.is_some() {
             args.push(WebViewArg("--window-decorations".to_string()));
             args.push(WebViewArg(
                 self.window_decorations.unwrap_or_default().to_string(),
+            ));
+        }
+
+        if self.private_mode.is_some() {
+            args.push(WebViewArg("--private-mode".to_string()));
+            args.push(WebViewArg(
+                self.private_mode.unwrap_or_default().to_string(),
+            ));
+        }
+
+        if self.try_simulate_mobile.is_some() {
+            args.push(WebViewArg("--try-simulate-mobile".to_string()));
+            args.push(WebViewArg(
+                self.try_simulate_mobile.unwrap_or_default().to_string(),
             ));
         }
 
@@ -120,6 +142,8 @@ pub struct WebviewArgsBuilder {
     profile: Option<PathBuf>,
     window_size: Option<WindowSize>,
     window_decorations: Option<bool>,
+    private_mode: Option<bool>,
+    try_simulate_mobile: Option<bool>,
 }
 
 impl WebviewArgsBuilder {
@@ -131,6 +155,8 @@ impl WebviewArgsBuilder {
             profile: None,
             window_size: None,
             window_decorations: None,
+            private_mode: None,
+            try_simulate_mobile: None,
         }
     }
 
@@ -146,6 +172,14 @@ impl WebviewArgsBuilder {
         self.window_decorations = Some(window_decorations);
     }
 
+    pub fn set_incognito(&mut self, private_mode: bool) {
+        self.private_mode = Some(private_mode);
+    }
+
+    pub fn try_simulate_mobile(&mut self, try_simulate_mobile: bool) {
+        self.try_simulate_mobile = Some(try_simulate_mobile);
+    }
+
     pub fn build(self) -> WebviewArgs {
         WebviewArgs {
             app_id: self.app_id,
@@ -154,6 +188,8 @@ impl WebviewArgsBuilder {
             profile: self.profile,
             window_size: self.window_size,
             window_decorations: self.window_decorations,
+            private_mode: self.private_mode,
+            try_simulate_mobile: self.try_simulate_mobile,
         }
     }
 }

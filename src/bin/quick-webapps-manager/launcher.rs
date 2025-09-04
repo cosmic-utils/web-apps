@@ -55,7 +55,6 @@ pub struct WebAppLauncher {
     pub name: String,
     pub icon: String,
     pub category: Category,
-    pub isolated_profile: bool,
 }
 
 impl WebAppLauncher {

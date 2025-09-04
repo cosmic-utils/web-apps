@@ -5,7 +5,7 @@ use tao::{
     platform::unix::EventLoopBuilderExtUnix,
     window::{WindowAttributes, WindowBuilder},
 };
-use webapps::WebviewArgs;
+use webapps::{WebviewArgs, MOBILE_UA};
 use wry::{
     dpi::{LogicalSize, Size},
     WebContext, WebViewBuilder,
@@ -39,12 +39,19 @@ fn main() -> wry::Result<()> {
 
     let mut context = WebContext::new(args.profile);
 
-    let builder = WebViewBuilder::new_with_web_context(&mut context)
+    let mut builder = WebViewBuilder::new_with_web_context(&mut context)
         .with_url(args.url)
+        .with_incognito(args.private_mode.unwrap_or(false))
         .with_new_window_req_handler(|url, features| {
             println!("new window req: {url} {features:?}");
             wry::NewWindowResponse::Allow
         });
+
+    if let Some(simulate) = args.try_simulate_mobile {
+        if simulate {
+            builder = builder.with_user_agent(MOBILE_UA);
+        }
+    };
 
     let _webview = {
         use tao::platform::unix::WindowExtUnix;
