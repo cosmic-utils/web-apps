@@ -8,9 +8,7 @@
 
   <br>
 
-  <img alt="Quick Web Apps Light window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-light.png" width="256">
-  <img alt="Quick Web Apps Dark window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-dark.png" width="256">
-  <img alt="Quick Web Apps Rose Pine window" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-rose-pine.png" width="256">
+  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/heads/master/res/screenshots/window.png" width="256">
 
 <br><br><br>
 
