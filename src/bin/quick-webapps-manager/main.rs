@@ -1,5 +1,4 @@
 use clap::Parser;
-use cosmic::desktop::fde::get_languages_from_env;
 use i18n_embed::DesktopLanguageRequester;
 use std::os::unix::fs::PermissionsExt as _;
 use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
@@ -12,16 +11,6 @@ pub(crate) mod favicon;
 pub(crate) mod launcher;
 pub(crate) mod pages;
 pub(crate) mod themes;
-
-lazy_static::lazy_static! {
-    pub static ref LOCALES: Vec<String> = get_languages_from_env();
-}
-
-pub const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
-pub const CONFIG_VERSION: u64 = 1;
-pub const APP_ID: &str = "dev.heppen.QuickWebApps.Manager";
-pub const APP_ICON: &[u8] =
-    include_bytes!("../../../res/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
 
 fn main() -> cosmic::iced::Result {
     init_logging();

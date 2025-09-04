@@ -5,5 +5,6 @@ Terminal=false
 Type=Application
 StartupNotify=true
 Icon=dev.heppen.webapps
+StartupWMClass=dev.heppen.QuickWebApps.Manager
 Categories=X-COSMIC;Utility;
 Keywords=App;Software;Manager;

@@ -10,10 +10,11 @@ use std::{
     io::Read,
 };
 use tokio::{
-    fs::{remove_dir_all, remove_file, File},
+    fs::{remove_file, File},
     io::AsyncWriteExt,
 };
 use tracing::debug;
+use webapps::is_flatpak;
 
 pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
     if !common::url_valid(url) || name.is_empty() || icon.is_empty() || url.is_empty() {
@@ -66,39 +67,19 @@ impl WebAppLauncher {
             let _ = std::fs::remove_file(&entry_location);
         }
 
-        let exec = match &self.browser.webview_args.profile {
-            Some(profile) => {
-                format!(
-                    "quick-webapps-webview --window-title \"{}\" --url \"{}\" --profile \"{}\" {}",
-                    self.browser.webview_args.window_title,
-                    self.browser.webview_args.url,
-                    profile.display().to_string(),
-                    self.browser.webview_args.app_id
-                )
-            }
-            None => {
-                format!(
-                    "quick-webapps-webview --window-title \"{}\" --url \"{}\" {}",
-                    self.browser.webview_args.window_title,
-                    self.browser.webview_args.url,
-                    self.browser.webview_args.app_id
-                )
-            }
-        };
+        let args = self.browser.args.clone().build();
 
         let mut desktop_entry = String::from("[Desktop Entry]\n");
         desktop_entry.push_str(&format!("Name={}\n", self.name));
         desktop_entry.push_str("Comment=Quick Web App\n");
-        desktop_entry.push_str(&format!("Exec={}\n", exec));
+        desktop_entry.push_str(&format!("Exec={}\n", args.get_exec(is_flatpak())));
         desktop_entry.push_str(&format!("Icon={}\n", self.icon));
-        desktop_entry.push_str(&format!(
-            "StartupWMClass={}\n",
-            self.browser.webview_args.app_id
-        ));
+        desktop_entry.push_str(&format!("StartupWMClass={}\n", self.browser.app_id));
         desktop_entry.push_str("Terminal=false\n");
         desktop_entry.push_str("Type=Application\n");
         desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
         desktop_entry.push_str("MimeType=text/html;text/xml;application/xhtml_xml;\n");
+        desktop_entry.push_str(&format!("X-QuickWebApp-Args={}\n", args));
 
         if let Ok(mut f) = File::create(entry_location).await {
             f.write_all(desktop_entry.as_bytes()).await?;
@@ -109,10 +90,8 @@ impl WebAppLauncher {
 
     pub async fn delete(&self) -> Result<()> {
         remove_file(desktop_files_location(&self.browser.app_id)).await?;
-        if let Some(path) = &self.browser.webview_args.profile {
-            remove_dir_all(path).await?;
-        }
         remove_file(database_path(&format!("{}.ron", self.browser.app_id))).await?;
+        self.browser.delete();
 
         Ok(())
     }

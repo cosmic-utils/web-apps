@@ -10,14 +10,13 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-use webapps::fl;
+use webapps::{fl, WindowSize, DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH, WEBVIEW_APP_ID};
 
 use crate::{
     browser::Browser,
     common::{self, image_handle, move_icon, url_valid, Icon, IconType},
     launcher::{webapplauncher_is_valid, WebAppLauncher},
     pages::{self},
-    APP_ID,
 };
 
 #[repr(u8)]
@@ -117,7 +116,11 @@ pub struct AppEditor {
     pub app_url: String,
     pub app_icon: String,
     pub app_category: Category,
-    pub app_isolated: bool,
+    pub app_persistent: bool,
+    pub app_window_width: String,
+    pub app_window_height: String,
+    pub app_window_size: WindowSize,
+    pub app_window_decorations: bool,
     pub selected_icon: Option<Icon>,
     pub categories: Vec<String>,
     pub category_idx: Option<usize>,
@@ -128,25 +131,33 @@ pub struct AppEditor {
 pub enum Message {
     Category(usize),
     Done,
-    IsolatedProfile(bool),
+    PersistentProfile(bool),
     LaunchApp,
     OpenIconPicker(String),
     SearchFavicon,
     Title(String),
     Url(String),
+    WindowWidth(String),
+    WindowHeight(String),
+    WindowDecorations(bool),
 }
 
 impl AppEditor {
     pub fn new() -> Self {
         let categories = Category::iter().map(|c| c.name()).collect::<Vec<String>>();
+        let window_size = WindowSize::default();
 
         AppEditor {
-            app_browser: Browser::new(APP_ID, APP_ID, "", false),
+            app_browser: Browser::new(WEBVIEW_APP_ID, WEBVIEW_APP_ID, "", false),
             app_title: String::new(),
             app_url: String::new(),
             app_icon: String::new(),
             app_category: Category::default(),
-            app_isolated: false,
+            app_persistent: false,
+            app_window_width: String::from(DEFAULT_WINDOW_WIDTH.to_string()),
+            app_window_height: String::from(DEFAULT_WINDOW_HEIGHT.to_string()),
+            app_window_size: window_size,
+            app_window_decorations: true,
             selected_icon: None,
             categories,
             category_idx: Some(0),
@@ -163,16 +174,24 @@ impl AppEditor {
         let is_installed = webapplauncher_is_valid(
             &webapp_launcher.icon,
             &webapp_launcher.name,
-            &webapp_launcher.browser.webview_args.url,
+            &webapp_launcher.browser.url,
         );
+
+        let args = webapp_launcher.browser.args.clone().build();
+        let window_size = args.window_size.unwrap_or_default();
+        let window_decorations = args.window_decorations.unwrap_or_default();
 
         Self {
             app_browser: webapp_launcher.browser.clone(),
             app_title: webapp_launcher.name,
-            app_url: webapp_launcher.browser.webview_args.url,
+            app_url: webapp_launcher.browser.url,
             app_icon: webapp_launcher.icon,
             app_category: category,
-            app_isolated: webapp_launcher.isolated_profile,
+            app_persistent: webapp_launcher.isolated_profile,
+            app_window_width: String::from(window_size.0.to_string()),
+            app_window_height: String::from(window_size.1.to_string()),
+            app_window_size: window_size.clone(),
+            app_window_decorations: window_decorations.clone(),
             selected_icon,
             categories,
             category_idx,
@@ -187,16 +206,14 @@ impl AppEditor {
                 self.category_idx = Some(idx);
             }
             Message::Done => {
-                self.app_browser = Browser::new(
-                    &self.app_title,
-                    &format!(
-                        "dev.heppen.QuickWebApp.{}{}",
-                        &self.app_title.replace(' ', ""),
-                        rng().random_range(1000..10000)
-                    ),
-                    &self.app_url,
-                    self.app_isolated,
-                );
+                let app_id = self.app_title.replace(' ', "");
+                let app_id = app_id + &rng().random_range(1000..10000).to_string();
+
+                self.app_browser =
+                    Browser::new(&app_id, &self.app_title, &self.app_url, self.app_persistent);
+                self.app_browser.set_window_size(&self.app_window_size);
+                self.app_browser
+                    .set_window_decorations(self.app_window_decorations);
 
                 let icon_final_path = block_on(move_icon(&self.app_icon, &self.app_browser.app_id));
 
@@ -206,7 +223,7 @@ impl AppEditor {
                         name: self.app_title.clone(),
                         icon: icon_final_path,
                         category: self.app_category.clone(),
-                        isolated_profile: self.app_isolated,
+                        isolated_profile: self.app_persistent,
                     });
 
                     let arc_launcher = Arc::clone(&launcher);
@@ -220,11 +237,11 @@ impl AppEditor {
                     });
                 }
             }
-            Message::IsolatedProfile(flag) => {
-                self.app_isolated = flag;
+            Message::PersistentProfile(flag) => {
+                self.app_persistent = flag;
             }
             Message::LaunchApp => {
-                let args = self.app_browser.webview_args.clone();
+                let args = self.app_browser.args.clone().build();
                 return task::future(async { pages::Message::Launch(args) });
             }
             Message::OpenIconPicker(app_url) => {
@@ -250,6 +267,17 @@ impl AppEditor {
             }
             Message::Url(url) => {
                 self.app_url = url;
+            }
+            Message::WindowDecorations(decorations) => {
+                self.app_window_decorations = decorations;
+            }
+            Message::WindowWidth(width) => {
+                self.app_window_width = width;
+                self.app_window_size.0 = self.app_window_width.parse().unwrap_or_default();
+            }
+            Message::WindowHeight(height) => {
+                self.app_window_height = height;
+                self.app_window_size.1 = self.app_window_height.parse().unwrap_or_default();
             }
         }
         Task::none()
@@ -339,8 +367,27 @@ impl AppEditor {
                             ),
                         ))
                         .add(widget::settings::item(
-                            fl!("isolated-profile"),
-                            widget::toggler(self.app_isolated).on_toggle(Message::IsolatedProfile),
+                            fl!("persistent-profile"),
+                            widget::toggler(self.app_persistent)
+                                .on_toggle(Message::PersistentProfile),
+                        ))
+                        .add(widget::settings::item(
+                            fl!("window-size"),
+                            widget::row()
+                                .spacing(8)
+                                .push(
+                                    widget::text_input("1280", &self.app_window_width)
+                                        .on_input(Message::WindowWidth),
+                                )
+                                .push(
+                                    widget::text_input("720", &self.app_window_height)
+                                        .on_input(Message::WindowHeight),
+                                ),
+                        ))
+                        .add(widget::settings::item(
+                            fl!("decorations"),
+                            widget::toggler(self.app_window_decorations)
+                                .on_toggle(Message::WindowDecorations),
                         )),
                 )
                 .push(

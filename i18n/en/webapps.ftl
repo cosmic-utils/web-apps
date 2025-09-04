@@ -62,8 +62,10 @@ download-favicon=Download favicon
 non-standard-arguments=Non-standard arguments
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Nav Bar
-isolated-profile=Isolated Profile
+persistent-profile=Persistent Profile
 private-mode=Private Mode
+window-size=Window Size
+decorations=Window decorations
 
 # iconpicker.rs
 icon-name-to-find=Icon name to find

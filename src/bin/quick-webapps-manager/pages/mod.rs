@@ -10,7 +10,6 @@ use crate::{
     launcher::{installed_webapps, WebAppLauncher},
     pages::iconpicker::IconPicker,
     themes::Theme,
-    APP_ICON, APP_ID, REPOSITORY,
 };
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
@@ -50,7 +49,7 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{fl, ManagerTasks, StateFlags, WebviewArgs};
+use webapps::{fl, ManagerTasks, StateFlags, WebviewArgs, APP_ICON, APP_ID, REPOSITORY};
 
 static MENU_ID: LazyLock<cosmic::widget::Id> =
     LazyLock::new(|| cosmic::widget::Id::new("responsive-menu"));
@@ -84,7 +83,7 @@ pub enum Message {
     SaveLauncher(Arc<WebAppLauncher>),
     SetIcon(Option<Icon>),
     Surface(surface::Action),
-    StartWebview(Vec<String>),
+    StartWebview(WebviewArgs),
     DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(AppConfig),
@@ -236,17 +235,9 @@ impl Application for QuickWebApps {
                             return Task::none();
                         };
 
+                        let args = browser.args.build();
+
                         debug!("Launching browser: {}", browser.app_id);
-                        let args = vec![
-                            format!("--window-title {}", browser.webview_args.window_title),
-                            format!("--url {}", browser.webview_args.url),
-                            if let Some(profile) = browser.webview_args.profile {
-                                format!("--profile {}", profile.display())
-                            } else {
-                                "".to_string()
-                            },
-                            browser.webview_args.app_id,
-                        ];
 
                         return Task::done(cosmic::Action::App(Message::StartWebview(args)));
                     }
@@ -299,7 +290,7 @@ impl Application for QuickWebApps {
                         name: app_editor.app_title.clone(),
                         icon: app_editor.app_icon.clone(),
                         category: app_editor.app_category.clone(),
-                        isolated_profile: app_editor.app_isolated,
+                        isolated_profile: app_editor.app_persistent,
                     };
 
                     return task::future(async move {
@@ -731,23 +722,7 @@ async fn launch(token: Option<String>, args: WebviewArgs) {
         envs.push(("DESKTOP_STARTUP_ID".to_string(), token));
     }
 
-    let exec = match &args.profile {
-        Some(profile) => {
-            format!(
-                "quick-webapps-webview --window-title \"{}\" --url \"{}\" --profile \"{}\" {}",
-                args.window_title,
-                args.url,
-                profile.display().to_string(),
-                args.app_id
-            )
-        }
-        None => {
-            format!(
-                "quick-webapps-webview --window-title \"{}\" --url \"{}\" {}",
-                args.window_title, args.url, args.app_id
-            )
-        }
-    };
+    let exec = args.get_exec(false);
 
     debug!("Launching {}", &exec);
 

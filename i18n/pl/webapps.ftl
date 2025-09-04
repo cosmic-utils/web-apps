@@ -59,8 +59,10 @@ download-favicon=Pobierz ikone
 non-standard-arguments=Niestandardowe argumenty
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Pasek nawigacyjny
-isolated-profile=Izolowany profil
+persistent-profile=Profil permanentny
 private-mode=Tryb prywatny
+window-size=Rozmiar okna
+decorations=Obramowanie okna
 
 # iconpicker.rs
 icon-name-to-find=Nazwa ikony do znalezienia
