@@ -35,16 +35,6 @@ cd into folder
 
 `cd web-apps`
 
-## Just use, [just](https://github.com/casey/just)
-
-For Pop OS make sure you have [just](https://github.com/casey/just) installed.
-
-`sudo apt install just`
-
-Make sure you are in `web-apps` directory. You should be already.
-
-### Building
-
 Building is simple. Make sure you have configured `flathub` remote as `--user`.
 
 `flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo`

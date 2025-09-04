@@ -3,9 +3,6 @@ mod iconpicker;
 
 use crate::{
     browser::Browser,
-    common::{
-        database_path, find_icon, image_handle, move_icon, qwa_icons_location, themes_path, Icon,
-    },
     config::AppConfig,
     launcher::{installed_webapps, WebAppLauncher},
     pages::iconpicker::IconPicker,
@@ -44,7 +41,7 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{fl, WebviewArgs, APP_ICON, APP_ID, REPOSITORY};
+use webapps::{fl, APP_ICON, APP_ID, REPOSITORY};
 
 static MENU_ID: LazyLock<cosmic::widget::Id> =
     LazyLock::new(|| cosmic::widget::Id::new("responsive-menu"));
@@ -64,7 +61,7 @@ pub enum Message {
     IconPicker(iconpicker::Message),
     IconsResult(Vec<String>),
     ImportThemeFilePicker,
-    Launch(WebviewArgs),
+    Launch(webapps::WebviewArgs),
     LaunchUrl(String),
     LoadThemes,
     OpenFileResult(Vec<String>),
@@ -72,13 +69,13 @@ pub enum Message {
     OpenRepositoryUrl,
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
-    PushIcon(Icon),
+    PushIcon(webapps::Icon),
     ReloadNavbarItems,
     ResetSettings,
     SaveLauncher(Arc<WebAppLauncher>),
-    SetIcon(Option<Icon>),
+    SetIcon(Option<webapps::Icon>),
     Surface(surface::Action),
-    StartWebview(WebviewArgs),
+    StartWebview(webapps::WebviewArgs),
     DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(AppConfig),
@@ -301,7 +298,7 @@ impl Application for QuickWebApps {
             Message::IconsResult(result) => {
                 if let Some(Dialogs::IconPicker(_icon_picker)) = &mut self.dialogs {
                     for path in result {
-                        tasks.push(Task::perform(image_handle(path), |icon| {
+                        tasks.push(Task::perform(webapps::image_handle(path), |icon| {
                             if let Some(icon) = icon {
                                 cosmic::Action::App(Message::PushIcon(icon))
                             } else {
@@ -365,7 +362,7 @@ impl Application for QuickWebApps {
                     self.themes_list.push(Theme::Dark);
                 }
 
-                let folder = themes_path("");
+                let folder = webapps::themes_path("");
                 let dir = read_dir(folder);
 
                 if let Ok(files) = dir {
@@ -408,12 +405,12 @@ impl Application for QuickWebApps {
                     let icon_name = buf.file_stem();
 
                     if let Some(file_stem) = icon_name {
-                        move_icon(&path, file_stem.to_str().unwrap()).await;
+                        webapps::move_icon(&path, file_stem.to_str().unwrap()).await;
                     };
                 }
 
                 cosmic::action::app(Message::IconsResult(
-                    find_icon(qwa_icons_location(), String::new()).await,
+                    webapps::find_icon(webapps::icons_location(), String::new()).await,
                 ))
             })),
             Message::OpenIconPicker(app_url) => {

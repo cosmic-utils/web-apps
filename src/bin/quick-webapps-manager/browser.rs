@@ -1,21 +1,19 @@
-use serde::{Deserialize, Serialize};
-use webapps::{WebviewArgsBuilder, WindowSize, WEBVIEW_APP_ID};
-
 use crate::launcher::installed_webapps;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Browser {
     pub app_id: String,
     pub url: String,
     pub with_profile: bool,
-    pub args: WebviewArgsBuilder,
+    pub args: webapps::WebviewArgsBuilder,
 }
 
 impl Browser {
     pub fn new(app_id: &str, window_title: &str, url: &str, with_profile: bool) -> Self {
-        let app_id = format!("{}.{}", WEBVIEW_APP_ID, app_id);
+        let app_id = format!("{}.{}", webapps::WEBVIEW_APP_ID, app_id);
 
-        let mut args = WebviewArgsBuilder::new(
+        let mut args = webapps::WebviewArgsBuilder::new(
             app_id.to_string(),
             window_title.to_string(),
             url.to_string(),
@@ -35,7 +33,7 @@ impl Browser {
         }
     }
 
-    pub fn set_window_size(&mut self, window_size: &WindowSize) {
+    pub fn set_window_size(&mut self, window_size: &webapps::WindowSize) {
         self.args.window_size(window_size.clone());
     }
 

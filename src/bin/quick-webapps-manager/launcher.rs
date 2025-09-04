@@ -1,8 +1,4 @@
-use crate::{
-    browser::Browser,
-    common::{self, database_path, desktop_files_location},
-    pages::editor::Category,
-};
+use crate::{browser::Browser, pages::editor::Category};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -17,7 +13,7 @@ use tracing::debug;
 use webapps::is_flatpak;
 
 pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
-    if !common::url_valid(url) || name.is_empty() || icon.is_empty() || url.is_empty() {
+    if !webapps::url_valid(url) || name.is_empty() || icon.is_empty() || url.is_empty() {
         return false;
     }
 
@@ -27,7 +23,7 @@ pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &str) -> bool {
 pub fn installed_webapps() -> Vec<WebAppLauncher> {
     let mut webapps = Vec::new();
 
-    if let Ok(entries) = fs::read_dir(database_path("")) {
+    if let Ok(entries) = fs::read_dir(webapps::database_path("")) {
         for entry in entries {
             match entry {
                 Ok(entry) => {
@@ -61,7 +57,7 @@ impl WebAppLauncher {
     pub async fn create(&self) -> Result<()> {
         debug!("create {:?}", self);
 
-        let entry_location = desktop_files_location(&self.browser.app_id);
+        let entry_location = webapps::desktop_files_location(&self.browser.app_id);
         if entry_location.exists() {
             let _ = std::fs::remove_file(&entry_location);
         }
@@ -88,8 +84,12 @@ impl WebAppLauncher {
     }
 
     pub async fn delete(&self) -> Result<()> {
-        remove_file(desktop_files_location(&self.browser.app_id)).await?;
-        remove_file(database_path(&format!("{}.ron", self.browser.app_id))).await?;
+        remove_file(webapps::desktop_files_location(&self.browser.app_id)).await?;
+        remove_file(webapps::database_path(&format!(
+            "{}.ron",
+            self.browser.app_id
+        )))
+        .await?;
         self.browser.delete();
 
         Ok(())

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
-use webapps::{fl, WindowSize, DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH, WEBVIEW_APP_ID};
+use webapps::{fl, WEBVIEW_APP_ID};
 
 use crate::{
     browser::Browser,
@@ -119,7 +119,7 @@ pub struct AppEditor {
     pub app_persistent: bool,
     pub app_window_width: String,
     pub app_window_height: String,
-    pub app_window_size: WindowSize,
+    pub app_window_size: webapps::WindowSize,
     pub app_window_decorations: bool,
     pub app_private_mode: bool,
     pub app_simulate_mobile: bool,
@@ -157,9 +157,9 @@ impl AppEditor {
             app_icon: String::new(),
             app_category: Category::default(),
             app_persistent: false,
-            app_window_width: String::from(DEFAULT_WINDOW_WIDTH.to_string()),
-            app_window_height: String::from(DEFAULT_WINDOW_HEIGHT.to_string()),
-            app_window_size: WindowSize::default(),
+            app_window_width: String::from(webapps::DEFAULT_WINDOW_WIDTH.to_string()),
+            app_window_height: String::from(webapps::DEFAULT_WINDOW_HEIGHT.to_string()),
+            app_window_size: webapps::WindowSize::default(),
             app_window_decorations: true,
             app_private_mode: false,
             app_simulate_mobile: false,
@@ -409,14 +409,14 @@ impl AppEditor {
                                 .spacing(8)
                                 .push(
                                     widget::text_input(
-                                        format!("{}", DEFAULT_WINDOW_WIDTH),
+                                        format!("{}", webapps::DEFAULT_WINDOW_WIDTH),
                                         &self.app_window_width,
                                     )
                                     .on_input(Message::WindowWidth),
                                 )
                                 .push(
                                     widget::text_input(
-                                        format!("{}", DEFAULT_WINDOW_HEIGHT),
+                                        format!("{}", webapps::DEFAULT_WINDOW_HEIGHT),
                                         &self.app_window_height,
                                     )
                                     .on_input(Message::WindowHeight),

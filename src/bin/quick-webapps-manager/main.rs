@@ -3,9 +3,7 @@ use std::os::unix::fs::PermissionsExt as _;
 use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
 
 pub(crate) mod browser;
-pub(crate) mod common;
 pub(crate) mod config;
-pub(crate) mod favicon;
 pub(crate) mod launcher;
 pub(crate) mod pages;
 pub(crate) mod themes;
