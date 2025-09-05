@@ -6,15 +6,13 @@
   "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
   "base": "com.system76.Cosmic.BaseApp",
   "base-version": "stable",
-  "command": "quick-webapps-manager",
+  "command": "dev.heppen.webapps",
   "finish-args": [
     "--share=ipc",
     "--socket=fallback-x11",
     "--socket=wayland",
     "--device=dri",
     "--share=network",
-    "--filesystem=xdg-data/applications:create",
-    "--filesystem=xdg-data/icons:create",
     "--filesystem=xdg-config/cosmic",
     "--talk-name=com.system76.CosmicSettingsDaemon"
   ],

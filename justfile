@@ -1,27 +1,26 @@
-manager := 'quick-webapps-manager'
-webview := 'quick-webapps-webview'
 export APPID := 'dev.heppen.webapps'
+webview := APPID + '.webview'
 
 rootdir := ''
 prefix := '/app'
 
 base-dir := absolute_path(clean(rootdir / prefix))
 
-bin-src := 'target' / 'release' / manager
-bin-dst := base-dir / 'bin' / manager
+bin-src := 'target' / 'release' / 'dev-heppen-webapps'
+bin-dst := base-dir / 'bin' / APPID
 
-webview-src := 'target' / 'release' / webview
+webview-src := 'target' / 'release' / 'dev-heppen-webapps-webview'
 webview-dst := base-dir / 'bin' / webview
 
 desktop := APPID + '.desktop'
-desktop-src := 'res' / desktop
+desktop-src := 'resources' / desktop
 desktop-dst := base-dir / 'share' / 'applications' / desktop
 
 metainfo := APPID + '.metainfo.xml'
-metainfo-src := 'res' / metainfo
+metainfo-src := 'resources' / metainfo
 metainfo-dst := base-dir / 'share' / 'metainfo' / metainfo
 
-icons-src := 'res' / 'icons' / 'hicolor'
+icons-src := 'resources' / 'icons' / 'hicolor'
 icons-dst := base-dir / 'share' / 'icons' / 'hicolor'
 
 # Default recipe which runs `just build-release`

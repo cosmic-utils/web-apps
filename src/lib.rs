@@ -1,40 +1,34 @@
 use clap::Parser;
-use cosmic::desktop::fde::get_languages_from_env;
+use cosmic::{iced_core, iced_winit::graphics::image::image_rs::ImageReader, widget};
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
     fmt::Display,
-    fs::{self, copy, create_dir_all, File},
+    fs::{self, create_dir_all},
     io::{Cursor, Read},
+    os::unix::fs::PermissionsExt as _,
     path::PathBuf,
     str::FromStr,
-    vec::IntoIter,
 };
+use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
 
-use base64::prelude::*;
-use bytes::Bytes;
-use cosmic::{iced_core, widget};
-use image::ImageReader;
-use image::{load_from_memory, GenericImageView};
-use svg::node::element::Image;
-use svg::Document;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 use url::Url;
 use walkdir::WalkDir;
 
-pub mod favicon;
+pub mod browser;
+pub mod launcher;
 pub mod localize;
 
-lazy_static::lazy_static! {
-    pub static ref LOCALES: Vec<String> = get_languages_from_env();
-}
-
+pub const DEFAULT_WINDOW_WIDTH: WindowWidth = 800.0;
+pub const DEFAULT_WINDOW_HEIGHT: WindowHeight = 600.0;
 pub const ICON_SIZE: u32 = 42;
 pub const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 pub const CONFIG_VERSION: u64 = 1;
-pub const APP_ID: &str = "dev.heppen.QuickWebApps.Manager";
+pub const APP_ID: &str = "dev.heppen.webapps";
 pub const APP_ICON: &[u8] =
-    include_bytes!("../res/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
-pub const WEBVIEW_APP_ID: &str = "dev.heppen.QuickWebApp";
+    include_bytes!("../resources/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
 pub const MOBILE_UA: &str = "Mozilla/5.0 (Android 16; Mobile; rv:68.0) Gecko/68.0 Firefox/142.0";
 
 pub fn url_valid(url: &str) -> bool {
@@ -52,67 +46,95 @@ pub fn is_svg(path: &str) -> bool {
     false
 }
 
-pub fn themes_path(theme_file: &str) -> PathBuf {
+pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
     if let Some(xdg_data) = dirs::data_dir() {
-        let path = xdg_data.join("quick-webapps/themes");
+        let path = xdg_data.join(APP_ID).join("themes");
 
         if !path.exists() {
             create_dir_all(&path).unwrap();
         }
 
-        return path.join(theme_file);
+        return Some(path.join(theme_file));
     }
 
-    PathBuf::new()
+    None
 }
 
-pub fn database_path(entry: &str) -> PathBuf {
+pub fn database_path(entry: &str) -> Option<PathBuf> {
     if let Some(xdg_data) = dirs::data_dir() {
-        let path = xdg_data.join("quick-webapps/database");
+        let path = xdg_data.join(APP_ID).join("database");
 
         if !path.exists() {
             create_dir_all(&path).unwrap();
         }
 
-        return path.join(entry);
+        return Some(path.join(entry));
     }
 
-    PathBuf::new()
+    None
 }
 
-pub fn desktop_files_location(filename: &str) -> PathBuf {
+pub fn profiles_path(app_id: &str) -> Option<PathBuf> {
     if let Some(xdg_data) = dirs::data_dir() {
-        let dir = xdg_data.join("applications");
-
-        if !dir.exists() {
-            let _ = create_dir_all(&dir);
-        }
-
-        return dir.join(format!("{filename}.desktop"));
+        return Some(xdg_data.join(APP_ID).join("profiles").join(app_id));
     }
 
-    PathBuf::new()
+    None
 }
 
-pub fn icons_location() -> PathBuf {
-    if let Some(home_dir) = dirs::home_dir() {
-        return home_dir.join(".local/share/icons");
+pub fn icons_location() -> Option<PathBuf> {
+    if let Some(xdg_data) = dirs::data_dir() {
+        return Some(xdg_data.join(APP_ID).join("icons"));
     }
-
-    PathBuf::new()
+    None
 }
 
-pub fn get_icon_name_from_url(url: &str) -> String {
-    match Url::parse(url) {
-        Ok(url) => match url.host_str() {
-            Some(host) => {
-                let parts: Vec<&str> = host.split('.').collect();
-                parts[parts.len() - 2].to_string()
-            }
-            None => String::new(),
-        },
-        Err(_) => String::new(),
+pub fn icon_pack_installed() -> bool {
+    let packs: Vec<&str> = vec!["Papirus", "Papirus-Dark", "Papirus-Light"];
+    let mut directories = 0;
+
+    let mut icons_dir = match icons_location() {
+        Some(dir) => dir,
+        None => PathBuf::from(env!("HOME"))
+            .join(".local")
+            .join("share")
+            .join("icons"),
+    };
+
+    for theme in packs.iter() {
+        icons_dir.push(theme);
+
+        if icons_dir.exists() {
+            directories += 1;
+        };
     }
+
+    directories > 0
+}
+
+pub async fn add_icon_packs_install_script() -> String {
+    let install_script = include_bytes!("../resources/scripts/icon-installer.sh");
+    let temp_file = format!("/tmp/{}.sh", APP_ID);
+
+    // Create a temporary file
+    let mut file = File::create(&temp_file).await.unwrap();
+
+    file.write_all(install_script).await.unwrap();
+
+    // Make the script executable
+    let mut perms = file.metadata().await.unwrap().permissions();
+    perms.set_mode(0o755);
+    file.set_permissions(perms).await.unwrap();
+
+    temp_file.to_string()
+}
+
+pub async fn execute_script(script: String) -> Child {
+    tokio::process::Command::new(script)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .expect("cant execute script")
 }
 
 pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
@@ -155,127 +177,15 @@ pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
     icons
 }
 
-pub async fn find_icons(icon_name: String, url: String) -> Vec<String> {
-    let mut result: Vec<String> = Vec::new();
-
-    if url_valid(&url) {
-        if let Ok(data) = crate::favicon::download_favicon(&url).await {
-            result.extend(data)
-        }
-    };
-
-    result.extend(find_icon(icons_location(), icon_name.clone()).await);
-
-    result
-}
-
-pub fn convert_raster_to_svg_format(img_slice: Bytes, icon_name: &str) -> String {
-    let save_path = icon_save_path(icon_name);
-
-    if let Ok(data) = load_from_memory(&img_slice) {
-        let (width, height) = data.dimensions();
-        let mut image_buffer = Vec::new();
-        let mut image_cursor = Cursor::new(&mut image_buffer);
-
-        data.write_to(&mut image_cursor, image::ImageFormat::Png)
-            .unwrap();
-
-        let encoded_img = BASE64_STANDARD.encode(image_buffer);
-
-        // Create an SVG document and embed the image
-        let image_element = Image::new()
-            .set("x", 0)
-            .set("y", 0)
-            .set("width", width)
-            .set("height", height)
-            .set("href", format!("data:image/png;base64,{encoded_img}"));
-
-        let document = Document::new()
-            .set("width", width)
-            .set("height", height)
-            .add(image_element);
-
-        // Save the SVG document
-
-        let _ = svg::save(&save_path, &document).is_ok();
+pub async fn find_icons(icon_name: String) -> Vec<String> {
+    if let Some(path) = icons_location() {
+        find_icon(path, icon_name).await
+    } else {
+        Vec::new()
     }
-
-    save_path
-}
-
-fn icon_save_path(icon_name: &str) -> String {
-    icons_location()
-        .join(format!("{icon_name}.svg"))
-        .to_str()
-        .unwrap()
-        .to_string()
-}
-
-pub async fn move_icon(path: &str, output_name: &str) -> String {
-    create_dir_all(icons_location()).expect("cant create folder for your icons");
-
-    let icon_name = output_name.replace(' ', "");
-
-    let Ok(p) = PathBuf::from_str(&icon_save_path(&icon_name));
-
-    if p.exists() {
-        std::fs::remove_file(p).unwrap();
-    }
-
-    if url_valid(path) {
-        let response = reqwest::get(path).await.expect("sending request");
-
-        if response.status().is_success() {
-            let content: Bytes = response.bytes().await.expect("getting image bytes");
-
-            return convert_raster_to_svg_format(content, &icon_name);
-        }
-
-        return String::new();
-    };
-
-    if !is_svg(path) {
-        if let Ok(mut file) = File::open(path) {
-            let mut buffer = Vec::new();
-            file.read_to_end(&mut buffer).unwrap();
-            let content = Bytes::from(buffer);
-
-            return convert_raster_to_svg_format(content, &icon_name);
-        }
-    };
-
-    let save_path = icon_save_path(&icon_name);
-    let _ = copy(path, &save_path);
-
-    save_path
 }
 
 pub async fn image_handle(path: String) -> Option<Icon> {
-    if url_valid(&path) {
-        if let Ok(response) = reqwest::Client::new().get(&path).send().await {
-            if let Ok(bytes) = response.bytes().await {
-                let options = usvg::Options::default();
-                if let Ok(parsed) = usvg::Tree::from_data(&bytes, &options) {
-                    let size = parsed.size();
-                    if size.width() >= 96.0 && size.height() >= 96.0 {
-                        let handle = widget::svg::Handle::from_memory(bytes.to_vec());
-                        return Some(Icon::new(IconType::Svg(handle), path, true));
-                    }
-                }
-                if let Ok(image_reader) =
-                    ImageReader::new(Cursor::new(&bytes)).with_guessed_format()
-                {
-                    if let Ok(image) = image_reader.decode() {
-                        if image.width() >= ICON_SIZE && image.height() >= ICON_SIZE {
-                            let handle = iced_core::image::Handle::from_bytes(bytes);
-                            return Some(Icon::new(IconType::Raster(handle), path, true));
-                        }
-                    };
-                }
-            }
-        }
-    };
-
     let Ok(result_path) = PathBuf::from_str(&path);
 
     if result_path.is_file() {
@@ -305,6 +215,100 @@ pub async fn image_handle(path: String) -> Option<Icon> {
     None
 }
 
+#[repr(u8)]
+#[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq, Deserialize, Serialize)]
+pub enum Category {
+    #[default]
+    None = 0,
+    Audio = 1,
+    AudioVideo = 2,
+    Video = 3,
+    Development = 4,
+    Education = 5,
+    Game = 6,
+    Graphics = 7,
+    Network = 8,
+    Office = 9,
+    Science = 10,
+    Settings = 11,
+    System = 12,
+    Utility = 13,
+}
+
+impl AsRef<str> for Category {
+    fn as_ref(&self) -> &str {
+        match self {
+            Category::None => "None",
+            Category::Audio => "Audio",
+            Category::AudioVideo => "AudioVideo",
+            Category::Video => "Video",
+            Category::Development => "Development",
+            Category::Education => "Education",
+            Category::Game => "Game",
+            Category::Graphics => "Graphics",
+            Category::Network => "Network",
+            Category::Office => "Office",
+            Category::Science => "Science",
+            Category::Settings => "Settings",
+            Category::System => "System",
+            Category::Utility => "Utility",
+        }
+    }
+}
+
+impl From<String> for Category {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "None" => Category::None,
+            "Audio" => Category::Audio,
+            "AudioVideo" => Category::AudioVideo,
+            "Video" => Category::Video,
+            "Development" => Category::Development,
+            "Education" => Category::Education,
+            "Game" => Category::Education,
+            "Graphics" => Category::Graphics,
+            "Network" => Category::Network,
+            "Office" => Category::Office,
+            "Science" => Category::Science,
+            "Settings" => Category::Settings,
+            "System" => Category::System,
+            "Utility" => Category::Utility,
+            _ => Self::default(),
+        }
+    }
+}
+
+impl Category {
+    pub fn name(&self) -> String {
+        match self {
+            Category::None => String::from("None"),
+            Category::Audio => String::from("Audio"),
+            Category::AudioVideo => String::from("Audio & Video"),
+            Category::Video => String::from("Video"),
+            Category::Development => String::from("Development"),
+            Category::Education => String::from("Education"),
+            Category::Game => String::from("Game"),
+            Category::Graphics => String::from("Graphics"),
+            Category::Network => String::from("Network"),
+            Category::Office => String::from("Office"),
+            Category::Science => String::from("Science"),
+            Category::Settings => String::from("Settings"),
+            Category::System => String::from("System"),
+            Category::Utility => String::from("Utility"),
+        }
+    }
+
+    pub fn from_index(index: u8) -> Self {
+        Self::iter()
+            .find(|i| i.to_owned() as u8 == index)
+            .unwrap_or_default()
+    }
+
+    pub fn to_vec() -> Vec<String> {
+        Self::iter().map(|c| c.name()).collect()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum IconType {
     Raster(widget::image::Handle),
@@ -328,226 +332,17 @@ impl Icon {
     }
 }
 
-#[derive(Parser, Debug, Serialize, Deserialize, Clone)]
-#[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
-pub struct WebviewArgs {
-    pub app_id: String,
-    #[clap(short, long)]
-    pub window_title: String,
-    #[clap(short, long)]
-    pub url: String,
-    #[clap(short, long)]
-    pub profile: Option<PathBuf>,
-    #[clap(short, long)]
-    pub window_size: Option<WindowSize>,
-    #[clap(short, long)]
-    pub window_decorations: Option<bool>,
-    #[clap(short, long)]
-    pub private_mode: Option<bool>,
-    #[clap(short, long)]
-    pub try_simulate_mobile: Option<bool>,
-}
-
-pub struct WebViewArg(pub String);
-
-impl Display for WebViewArg {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl AsRef<OsStr> for WebViewArg {
-    fn as_ref(&self) -> &OsStr {
-        self.0.as_ref()
-    }
-}
-
-impl IntoIterator for WebviewArgs {
-    type Item = WebViewArg;
-    type IntoIter = IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        let mut args: Vec<WebViewArg> = Vec::new();
-
-        args.push(WebViewArg("--window-title".to_string()));
-        args.push(WebViewArg(self.window_title));
-        args.push(WebViewArg("--url".to_string()));
-        args.push(WebViewArg(self.url));
-
-        if self.profile.is_some() {
-            args.push(WebViewArg("--profile".to_string()));
-            args.push(WebViewArg(
-                self.profile
-                    .unwrap_or_default()
-                    .to_string_lossy()
-                    .into_owned(),
-            ));
-        }
-
-        if self.window_size.is_some() {
-            args.push(WebViewArg("--window-size".to_string()));
-            args.push(WebViewArg(self.window_size.unwrap_or_default().to_string()));
-        }
-
-        if self.window_decorations.is_some() {
-            args.push(WebViewArg("--window-decorations".to_string()));
-            args.push(WebViewArg(
-                self.window_decorations.unwrap_or_default().to_string(),
-            ));
-        }
-
-        if self.private_mode.is_some() {
-            args.push(WebViewArg("--private-mode".to_string()));
-            args.push(WebViewArg(
-                self.private_mode.unwrap_or_default().to_string(),
-            ));
-        }
-
-        if self.try_simulate_mobile.is_some() {
-            args.push(WebViewArg("--try-simulate-mobile".to_string()));
-            args.push(WebViewArg(
-                self.try_simulate_mobile.unwrap_or_default().to_string(),
-            ));
-        }
-
-        args.push(WebViewArg(self.app_id));
-
-        args.into_iter()
-    }
-}
-
-impl Display for WebviewArgs {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let exec: String = self
-            .clone()
-            .into_iter()
-            .map(|arg| arg.to_string())
-            .collect::<Vec<String>>()
-            .join(" ");
-        write!(f, "{}", exec)
-    }
-}
-
-impl WebviewArgs {
-    pub fn get_exec(&self, from_flatpak: bool) -> String {
-        let mut exec = String::new();
-
-        if from_flatpak {
-            exec.push_str("flatpak run --command=quick-webapps-webview dev.heppen.webapps");
-        } else {
-            exec.push_str("quick-webapps-webview");
-        }
-
-        exec.push_str(&format!(" {}", self));
-
-        exec
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WebviewArgsBuilder {
-    app_id: String,
-    window_title: String,
-    url: String,
-    profile: Option<PathBuf>,
-    window_size: Option<WindowSize>,
-    window_decorations: Option<bool>,
-    private_mode: Option<bool>,
-    try_simulate_mobile: Option<bool>,
-}
-
-impl WebviewArgsBuilder {
-    pub fn new(app_id: String, window_title: String, url: String) -> Self {
-        Self {
-            app_id,
-            window_title,
-            url,
-            profile: None,
-            window_size: None,
-            window_decorations: None,
-            private_mode: None,
-            try_simulate_mobile: None,
-        }
-    }
-
-    pub fn profile(&mut self, profile: &PathBuf) {
-        self.profile = Some(profile.clone());
-    }
-
-    pub fn window_size(&mut self, window_size: WindowSize) {
-        self.window_size = Some(window_size);
-    }
-
-    pub fn window_decorations(&mut self, window_decorations: bool) {
-        self.window_decorations = Some(window_decorations);
-    }
-
-    pub fn set_incognito(&mut self, private_mode: bool) {
-        self.private_mode = Some(private_mode);
-    }
-
-    pub fn try_simulate_mobile(&mut self, try_simulate_mobile: bool) {
-        self.try_simulate_mobile = Some(try_simulate_mobile);
-    }
-
-    pub fn build(self) -> WebviewArgs {
-        WebviewArgs {
-            app_id: self.app_id,
-            window_title: self.window_title,
-            url: self.url,
-            profile: self.profile,
-            window_size: self.window_size,
-            window_decorations: self.window_decorations,
-            private_mode: self.private_mode,
-            try_simulate_mobile: self.try_simulate_mobile,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum WindowSizeError {
-    ParsingError,
-    BadArgument,
-}
-
-impl Display for WindowSizeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            WindowSizeError::ParsingError => write!(f, "Failed to parse window size"),
-            WindowSizeError::BadArgument => write!(f, "Invalid window size argument"),
-        }
-    }
-}
-
-impl std::error::Error for WindowSizeError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            WindowSizeError::ParsingError => None,
-            WindowSizeError::BadArgument => None,
-        }
-    }
-
-    fn description(&self) -> &str {
-        match self {
-            WindowSizeError::ParsingError => "Failed to parse window size",
-            WindowSizeError::BadArgument => "Invalid window size argument",
-        }
-    }
-
-    fn cause(&self) -> Option<&dyn std::error::Error> {
-        self.source()
-    }
-}
-
 pub type WindowWidth = f64;
 pub type WindowHeight = f64;
 
-pub const DEFAULT_WINDOW_WIDTH: WindowWidth = 800.0;
-pub const DEFAULT_WINDOW_HEIGHT: WindowHeight = 600.0;
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WindowSize(pub WindowWidth, pub WindowHeight);
+
+impl Display for WindowSize {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}x{}", self.0, self.1)
+    }
+}
 
 impl Default for WindowSize {
     fn default() -> Self {
@@ -555,32 +350,24 @@ impl Default for WindowSize {
     }
 }
 
-impl Display for WindowSize {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{},{}", self.0, self.1)
+#[derive(Parser, Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
+pub struct WebviewArgs {
+    pub id: String,
+}
+
+impl AsRef<str> for WebviewArgs {
+    fn as_ref(&self) -> &str {
+        &self.id
     }
 }
 
-impl FromStr for WindowSize {
-    type Err = WindowSizeError;
+impl IntoIterator for WebviewArgs {
+    type Item = String;
+    type IntoIter = std::vec::IntoIter<String>;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.split(',').collect();
-        if parts.len() != 2 {
-            Err(WindowSizeError::BadArgument)
-        } else {
-            let width = parts[0]
-                .parse()
-                .map_err(|_| WindowSizeError::ParsingError)?;
-            let height = parts[1]
-                .parse()
-                .map_err(|_| WindowSizeError::ParsingError)?;
-            Ok(WindowSize(width, height))
-        }
+    fn into_iter(self) -> Self::IntoIter {
+        vec!["--id".into(), self.id].into_iter()
     }
-}
-
-pub fn is_flatpak() -> bool {
-    let Ok(path) = PathBuf::from_str("/.flatpak-info");
-    path.exists()
 }
