@@ -8,6 +8,7 @@
 
 /build
 /build-dir
+/builddir
 /.flatpak-builder
 /flatpak_build
 /repo
