@@ -1,14 +1,14 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <div align="center">
   <br>
-  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/res/icons/hicolor/256x256/apps/dev.heppen.webapps.png" width="192" />
+  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/resources/icons/hicolor/256x256/apps/dev.heppen.webapps.png" width="192" />
   <h1>Quick Web Apps</h1>
 
   <p>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window. With some customization options.</p>
 
   <br>
 
-  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/heads/master/res/screenshots/window.png" width="512">
+  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/heads/master/resources/screenshots/window.png" width="512">
 
 <br><br><br>
 
