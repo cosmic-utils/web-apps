@@ -64,7 +64,7 @@ impl IconPicker {
             Message::IconSearch => {
                 self.icons.clear();
 
-                let name = self.icon_searching.clone();
+                let name = self.icon_searching.clone().to_lowercase();
 
                 return task::future(async {
                     pages::Message::IconsResult(webapps::find_icons(name).await)

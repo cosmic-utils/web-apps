@@ -125,27 +125,8 @@ impl AppEditor {
                 self.category_idx = Some(idx);
             }
             Message::Done => {
-                if let Some(browser) = &self.app_browser {
-                    if webapps::launcher::webapplauncher_is_valid(
-                        &self.app_icon,
-                        &self.app_title,
-                        &browser.url,
-                    ) {
-                        let launcher = webapps::launcher::WebAppLauncher {
-                            browser: browser.clone(),
-                            name: self.app_title.clone(),
-                            icon: self.app_icon.clone(),
-                            category: self.app_category.clone(),
-                        };
-
-                        return task::future(async move {
-                            if launcher.create().await.is_ok() {
-                                crate::pages::Message::SaveLauncher(launcher)
-                            } else {
-                                crate::pages::Message::None
-                            }
-                        });
-                    }
+                let browser = if let Some(browser) = &self.app_browser {
+                    browser.clone()
                 } else {
                     let app_id = self.app_title.replace(' ', "");
                     let app_id = app_id + &rng().random_range(1000..10000).to_string();
@@ -157,6 +138,31 @@ impl AppEditor {
                     browser.window_decorations = Some(self.app_window_decorations.clone());
                     browser.private_mode = Some(self.app_private_mode);
                     browser.try_simulate_mobile = Some(self.app_simulate_mobile);
+                    browser
+                };
+
+                if webapps::launcher::webapplauncher_is_valid(
+                    &self.app_icon,
+                    &self.app_title,
+                    &browser.url,
+                    &self.app_category,
+                ) {
+                    let launcher = webapps::launcher::WebAppLauncher {
+                        browser: browser.clone(),
+                        name: self.app_title.clone(),
+                        icon: self.app_icon.clone(),
+                        category: self.app_category.clone(),
+                    };
+
+                    return task::future(async move {
+                        if launcher.create().await.is_ok() {
+                            crate::pages::Message::SaveLauncher(launcher)
+                        } else {
+                            crate::pages::Message::None
+                        }
+                    });
+                } else {
+                    return Task::none();
                 }
             }
             Message::PersistentProfile(flag) => {
@@ -335,6 +341,7 @@ impl AppEditor {
                                 &self.app_icon,
                                 &self.app_title,
                                 &Some(self.app_url.clone()),
+                                &self.app_category,
                             ) {
                                 Some(Message::Done)
                             } else {

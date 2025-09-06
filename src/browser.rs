@@ -49,7 +49,7 @@ impl Browser {
     }
 
     pub fn get_exec(&self) -> String {
-        format!("{}.webview id={}", crate::APP_ID, self.app_id.as_ref())
+        format!("{}.webview {}", crate::APP_ID, self.app_id.as_ref())
     }
 
     pub fn delete(&self) {

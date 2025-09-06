@@ -11,9 +11,19 @@ use tokio::fs::remove_file;
 
 use crate::APP_ID;
 
-pub fn webapplauncher_is_valid(icon: &str, name: &str, url: &Option<String>) -> bool {
+pub fn webapplauncher_is_valid(
+    icon: &str,
+    name: &str,
+    url: &Option<String>,
+    category: &crate::Category,
+) -> bool {
     if let Some(url) = url {
-        if crate::url_valid(url) || !name.is_empty() || !icon.is_empty() || !url.is_empty() {
+        if crate::url_valid(url)
+            && !name.is_empty()
+            && !icon.is_empty()
+            && !url.is_empty()
+            && category != &crate::Category::None
+        {
             return true;
         }
     }
@@ -55,13 +65,13 @@ pub struct WebAppLauncher {
 
 impl WebAppLauncher {
     pub async fn create(&self) -> std::io::Result<()> {
-        let mut desktop_entry = String::from("[Desktop Entry]\n");
+        let mut desktop_entry = String::new();
 
-        desktop_entry.push_str(&format!(
-            "Comment={}\n",
-            self.browser.url.clone().unwrap_or_default()
-        ));
+        desktop_entry.push_str("[Desktop Entry]\n");
+        desktop_entry.push_str("Version=1.0\n");
         desktop_entry.push_str("Type=Application\n");
+        desktop_entry.push_str(&format!("Name={}\n", self.name));
+        desktop_entry.push_str(&format!("Comment=Quick WebApp\n",));
         desktop_entry.push_str(&format!("Exec={}\n", self.browser.get_exec()));
         desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
 
@@ -84,10 +94,12 @@ impl WebAppLauncher {
 
         let token = response.token();
 
+        println!("{}", desktop_entry);
+
         proxy
             .install(
                 &token,
-                &format!("dev.heppen.webapps.{}.desktop", self.name),
+                &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
                 &desktop_entry,
             )
             .await
