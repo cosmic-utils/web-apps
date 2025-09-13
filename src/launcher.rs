@@ -114,7 +114,7 @@ impl WebAppLauncher {
             .expect("Failed to create DynamicLauncherProxy");
 
         proxy
-            .uninstall(&format!("dev.heppen.webapps.{}.desktop", self.name))
+            .uninstall(&format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id))
             .await
             .expect("Failed to uninstall");
 
