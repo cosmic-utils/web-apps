@@ -327,7 +327,7 @@ impl Application for QuickWebApps {
                             .collect::<Vec<String>>();
 
                         if !files.is_empty() {
-                            let _ = cosmic::action::app(Message::OpenThemeResult(
+                            return cosmic::action::app(Message::OpenThemeResult(
                                 urlencoding::decode(&files[0])
                                     .unwrap_or_default()
                                     .to_string(),
