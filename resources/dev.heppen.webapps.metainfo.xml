@@ -34,7 +34,7 @@
   </provides>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/1.0.0/res/screenshots/window-light.png</image>
+      <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/2.0.0/resources/screenshots/window.png</image>
       <caption>Opened app</caption>
     </screenshot>
   </screenshots>
@@ -51,7 +51,7 @@
     <control>pointing</control>
   </supports>
   <releases>
-    <release version="2.0.0" date="2025-09-04">
+    <release version="2.0.0" date="2025-09-24">
       <description>
         <p>New version with refreshed interface and many improvements.</p>
         <p>Supports WebKitGTK web engine</p>

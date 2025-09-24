@@ -2008,14 +2008,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/deranged/deranged-0.5.3.crate",
-        "sha256": "d630bccd429a5bb5a64b5e94f693bfc48c9f8566418fda4c494cc94f911f87cc",
-        "dest": "cargo/vendor/deranged-0.5.3"
+        "url": "https://static.crates.io/crates/deranged/deranged-0.5.4.crate",
+        "sha256": "a41953f86f8a05768a6cda24def994fd2f424b04ec5c719cf89989779f199071",
+        "dest": "cargo/vendor/deranged-0.5.4"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"d630bccd429a5bb5a64b5e94f693bfc48c9f8566418fda4c494cc94f911f87cc\", \"files\": {}}",
-        "dest": "cargo/vendor/deranged-0.5.3",
+        "contents": "{\"package\": \"a41953f86f8a05768a6cda24def994fd2f424b04ec5c719cf89989779f199071\", \"files\": {}}",
+        "dest": "cargo/vendor/deranged-0.5.4",
         "dest-filename": ".cargo-checksum.json"
     },
     {
