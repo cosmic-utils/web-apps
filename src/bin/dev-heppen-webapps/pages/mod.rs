@@ -26,8 +26,9 @@ use std::{
     collections::HashMap,
     fs::read_dir,
     io::{Read, Write},
-    path::Path,
+    path::{Path, PathBuf},
     process::ExitStatus,
+    str::FromStr as _,
     sync::{Arc, LazyLock},
     time::Duration,
 };
@@ -341,7 +342,7 @@ impl Application for QuickWebApps {
             Message::Launch(args) => {
                 return Task::perform(
                     async move {
-                        Command::new("quick-webapps-webview")
+                        Command::new("dev.heppen.webapps.webview")
                             .args(args)
                             .spawn()
                             .expect("Failed to spawn webview");
@@ -403,7 +404,24 @@ impl Application for QuickWebApps {
                 })
             }
             Message::OpenFileResult(file_paths) => {
-                // TODO: Implement file opening logic
+                let mut moved: Vec<String> = Vec::new();
+
+                for path in file_paths {
+                    let Ok(buf) = PathBuf::from_str(&path);
+                    let icon_name = buf.file_stem();
+
+                    if let Some(file_stem) = icon_name {
+                        if let Some(final_path) = webapps::move_icon(
+                            &path,
+                            file_stem.to_str().unwrap(),
+                            buf.extension().unwrap_or_default().to_str().unwrap(),
+                        ) {
+                            moved.push(final_path.display().to_string());
+                        }
+                    };
+                }
+
+                return task::message(Message::IconsResult(moved));
             }
             Message::OpenIconPicker => {
                 self.dialogs = Some(Dialogs::IconPicker(IconPicker::default()));

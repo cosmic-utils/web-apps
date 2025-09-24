@@ -73,6 +73,7 @@ impl WebAppLauncher {
         desktop_entry.push_str(&format!("Name={}\n", self.name));
         desktop_entry.push_str(&format!("Comment=Quick WebApp\n",));
         desktop_entry.push_str(&format!("Exec={}\n", self.browser.get_exec()));
+        desktop_entry.push_str(&format!("StartupWMClass={}\n", self.browser.app_id.id));
         desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
 
         let proxy = DynamicLauncherProxy::new()
