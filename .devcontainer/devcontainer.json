@@ -1,0 +1,19 @@
+{
+	"name": "QuickWebApps",
+	"build": {
+		"dockerfile": "Containerfile",
+		"context": ".."
+	},
+	"runArgs": [
+		"--device=/dev/dri:/dev/dri",
+		"--security-opt",
+		"seccomp=unconfined"
+	],
+	"mounts": [
+		"source=${localEnv:XDG_RUNTIME_DIR}/${localEnv:WAYLAND_DISPLAY},target=/tmp/${localEnv:WAYLAND_DISPLAY},type=bind"
+	],
+	"containerEnv": {
+		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
+		"XDG_RUNTIME_DIR": "/tmp"
+	}
+}

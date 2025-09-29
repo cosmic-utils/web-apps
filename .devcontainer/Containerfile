@@ -1,0 +1,11 @@
+FROM mcr.microsoft.com/devcontainers/rust:dev-trixie 
+
+RUN DEBIAN_FRONTEND=noninteractive apt update && apt install -y \   
+    pkg-config \
+    libssl-dev \
+    libxkbcommon-dev \   
+    libwebkit2gtk-4.1-dev \
+    just
+
+RUN git clone https://github.com/pop-os/cosmic-icons.git /tmp/Cosmic
+RUN cd /tmp/Cosmic && just install
