@@ -51,6 +51,11 @@
     <control>pointing</control>
   </supports>
   <releases>
+    <release version="2.0.1" date="2025-10-07">
+      <description>
+        <p>Update libcosmic</p>
+      </description>
+    </release>
     <release version="2.0.0" date="2025-09-24">
       <description>
         <p>New version with refreshed interface and many improvements.</p>
