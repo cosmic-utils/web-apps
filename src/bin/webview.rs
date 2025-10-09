@@ -1,3 +1,5 @@
+use std::env;
+
 use clap::Parser;
 use gtk4::ApplicationWindow;
 use gtk4::glib::GString;
@@ -12,12 +14,19 @@ use webkit6::{Settings, UserContentManager, WebContext, WebView};
 fn main() {
     let args = webapps::WebviewArgs::parse();
 
+    unsafe {
+        // workaround for webkitgtk sandboxing issues
+        env::set_var("WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS", "1");
+    }
+
     gtk4::init().expect("Failed to initialize GTK");
 
     gtk4::glib::set_program_name(args.id.clone().into());
     gtk4::glib::set_application_name(&args.id);
 
-    let app = gtk4::Application::builder().build();
+    let app = gtk4::Application::builder()
+        .application_id(args.id.clone())
+        .build();
 
     app.connect_activate(move |app| {
         if let Some(ref browser) = Browser::from_appid(&args.id) {
@@ -58,7 +67,6 @@ fn main() {
 
             let context = context_builder.build();
 
-            //
             // Create WebView with custom settings
             let settings = Settings::new();
             settings.set_enable_javascript(true);
