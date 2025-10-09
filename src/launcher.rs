@@ -1,6 +1,6 @@
 use ashpd::desktop::{
-    dynamic_launcher::{DynamicLauncherProxy, PrepareInstallOptions},
     Icon,
+    dynamic_launcher::{DynamicLauncherProxy, PrepareInstallOptions},
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -71,7 +71,7 @@ impl WebAppLauncher {
         desktop_entry.push_str("Version=1.0\n");
         desktop_entry.push_str("Type=Application\n");
         desktop_entry.push_str(&format!("Name={}\n", self.name));
-        desktop_entry.push_str(&format!("Comment=Quick WebApp\n",));
+        desktop_entry.push_str("Comment=Quick WebApp\n");
         desktop_entry.push_str(&format!("Exec={}\n", self.browser.get_exec()));
         desktop_entry.push_str(&format!("StartupWMClass={}\n", self.browser.app_id.id));
         desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
@@ -83,7 +83,7 @@ impl WebAppLauncher {
         let mut f = std::fs::File::open(&self.icon).expect("no file found");
         let metadata = std::fs::metadata(&self.icon).expect("unable to read metadata");
         let mut buffer = vec![0; metadata.len() as usize];
-        f.read(&mut buffer).expect("buffer overflow");
+        f.read_exact(&mut buffer).expect("buffer overflow");
 
         let icon = Icon::Bytes(buffer);
         let response = proxy
@@ -99,7 +99,7 @@ impl WebAppLauncher {
 
         proxy
             .install(
-                &token,
+                token,
                 &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
                 &desktop_entry,
             )

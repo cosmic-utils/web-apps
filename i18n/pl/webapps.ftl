@@ -65,6 +65,7 @@ private-mode=Tryb Prywatny
 window-size=Rozmiar Okna
 decorations=Obramowanie Okna
 simulate-mobile=Spróbuj zasymulować urządzenie mobilne
+with-devtools=Włączone narzędzia programistyczne
 
 # iconpicker.rs
 icon-name-to-find=Nazwa ikony do znalezienia

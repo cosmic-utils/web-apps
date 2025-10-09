@@ -68,6 +68,7 @@ private-mode=Private Mode
 window-size=Window Size
 decorations=Window Decorations
 simulate-mobile=Try to simulate mobile device
+with-devtools=Enabled Development tools
 
 # iconpicker.rs
 icon-name-to-find=Icon name to find

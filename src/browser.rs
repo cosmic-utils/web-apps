@@ -9,8 +9,8 @@ pub struct Browser {
     pub profile: Option<PathBuf>,
     pub window_size: Option<crate::WindowSize>,
     pub window_decorations: Option<bool>,
-    pub private_mode: Option<bool>,
     pub try_simulate_mobile: Option<bool>,
+    pub with_devtools: Option<bool>,
 }
 
 impl Browser {
@@ -24,13 +24,13 @@ impl Browser {
             profile: None,
             window_size: None,
             window_decorations: None,
-            private_mode: None,
             try_simulate_mobile: None,
+            with_devtools: None,
         };
 
         if with_profile {
             let xdg_data = dirs::data_dir().unwrap_or_default();
-            let path = xdg_data.join(crate::APP_ID).join("profiles").join(&app_id);
+            let path = xdg_data.join(crate::APP_ID).join("profiles").join(app_id);
             browser.profile = Some(path);
         };
 
