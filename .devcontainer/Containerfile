@@ -14,6 +14,6 @@ RUN cd /tmp && wget https://nodejs.org/dist/v22.20.0/node-v22.20.0-linux-x64.tar
 RUN tar xvf /tmp/node-v22.20.0-linux-x64.tar.xz
 RUN cp -rv node-v22.20.0-linux-x64/* /usr/local/
 
-RUN cd /tmp && wget https://github.com/neovim/neovim/releases/download/v0.11.4/nvim-linux-x86_64.tar.gz
-RUN tar xvf /tmp/nvim-linux-x86_64.tar.gz
-RUN cp -rv nvim-linux-x86_64/* /usr/local/
+# RUN cd /tmp && wget https://github.com/neovim/neovim/releases/download/v0.11.4/nvim-linux-x86_64.tar.gz
+# RUN tar xvf /tmp/nvim-linux-x86_64.tar.gz
+# RUN cp -rv nvim-linux-x86_64/* /usr/local/

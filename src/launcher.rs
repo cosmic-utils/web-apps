@@ -110,14 +110,22 @@ impl WebAppLauncher {
     }
 
     pub async fn delete(&self) -> std::io::Result<()> {
-        let proxy = DynamicLauncherProxy::new()
-            .await
-            .expect("Failed to create DynamicLauncherProxy");
+        let desktop_file = format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id);
 
-        proxy
-            .uninstall(&format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id))
-            .await
-            .expect("Failed to uninstall");
+        if let Some(data_dir) = dirs::data_dir() {
+            let path = data_dir.join("applications").join(&desktop_file);
+
+            if path.exists() {
+                let proxy = DynamicLauncherProxy::new()
+                    .await
+                    .expect("Failed to create DynamicLauncherProxy");
+
+                proxy
+                    .uninstall(&desktop_file)
+                    .await
+                    .expect("Failed to uninstall");
+            }
+        }
 
         if let Some(path) = crate::database_path(&format!("{}.ron", self.browser.app_id.as_ref())) {
             remove_file(path).await?;

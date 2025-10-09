@@ -17,6 +17,8 @@ fn main() {
     unsafe {
         // workaround for webkitgtk sandboxing issues
         env::set_var("WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS", "1");
+        // env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+        // env::set_var("GDK_BACKEND", "x11");
     }
 
     gtk4::init().expect("Failed to initialize GTK");
@@ -51,22 +53,6 @@ fn main() {
 
             window.set_decorated(window_decorations);
 
-            let context_builder = WebContext::builder();
-            // if let Some(data_directory) = browser.profile.as_ref() {
-            //     let data_manager = WebsiteDataManager::builder()
-            //         .base_data_directory(data_directory.to_string_lossy())
-            //         .build();
-            //     if let Some(cookie_manager) = data_manager.cookie_manager() {
-            //         cookie_manager.set_persistent_storage(
-            //             &data_directory.join("cookies").to_string_lossy(),
-            //             CookiePersistentStorage::Text,
-            //         );
-            //     }
-            //     context_builder = context_builder.website_data_manager(&data_manager);
-            // }
-
-            let context = context_builder.build();
-
             // Create WebView with custom settings
             let settings = Settings::new();
             settings.set_enable_javascript(true);
@@ -75,12 +61,27 @@ fn main() {
                 settings.set_user_agent(Some(webapps::MOBILE_UA));
             }
 
+            settings.set_user_agent(Some(
+                "Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0",
+            ));
+
+            settings.set_enable_webrtc(true);
+            settings.set_enable_media_stream(true);
+            settings.set_enable_mediasource(true);
+            settings.set_enable_media(true);
+            settings.set_enable_media_capabilities(true);
+            settings.set_enable_mock_capture_devices(true);
+            settings.set_enable_encrypted_media(true);
+            settings.set_media_playback_requires_user_gesture(false);
+            settings.set_media_playback_allows_inline(true);
+            settings.set_media_content_types_requiring_hardware_support(None);
+
             if let Some(flag) = browser.with_devtools {
                 settings.set_enable_developer_extras(flag);
             }
 
-            settings.set_enable_webgl(true);
-            settings.set_enable_webaudio(true);
+            settings.set_hardware_acceleration_policy(webkit6::HardwareAccelerationPolicy::Always);
+            settings.set_enable_2d_canvas_acceleration(true);
 
             // Enable clipboard
             settings.set_javascript_can_access_clipboard(true);
@@ -93,6 +94,9 @@ fn main() {
             if browser.with_devtools.unwrap_or(false) {
                 settings.set_enable_developer_extras(true);
             };
+
+            let context = WebContext::builder().build();
+            context.set_automation_allowed(true);
 
             let builder = WebView::builder()
                 .user_content_manager(&UserContentManager::new())
@@ -163,8 +167,9 @@ fn main() {
                     .is_ok()
             });
 
-            builder.connect_web_process_terminated(move |_, reason| {
+            builder.connect_web_process_terminated(move |w, reason| {
                 eprintln!("Web process terminated: {:?}", reason);
+                w.reload();
             });
 
             // Add to window

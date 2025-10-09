@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Browser {
@@ -31,6 +31,11 @@ impl Browser {
         if with_profile {
             let xdg_data = dirs::data_dir().unwrap_or_default();
             let path = xdg_data.join(crate::APP_ID).join("profiles").join(app_id);
+
+            fs::create_dir_all(&path).unwrap_or_else(|e| {
+                eprintln!("Failed to create profile directory: {}", e);
+            });
+
             browser.profile = Some(path);
         };
 

@@ -150,6 +150,8 @@ impl AppEditor {
                     };
 
                     return task::future(async move {
+                        launcher.delete().await.ok();
+
                         if launcher.create().await.is_ok() {
                             crate::pages::Message::SaveLauncher(launcher)
                         } else {

@@ -2,7 +2,7 @@ export APPID := 'dev.heppen.webapps'
 webview := APPID + '.webview'
 
 rootdir := ''
-prefix := '/app'
+prefix := ''
 
 base-dir := absolute_path(clean(rootdir / prefix))
 

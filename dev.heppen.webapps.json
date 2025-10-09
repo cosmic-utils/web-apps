@@ -31,7 +31,7 @@
       "build-commands": [
         "cargo --offline fetch --manifest-path Cargo.toml --verbose",
         "cargo --offline build --release --verbose",
-        "just install"
+        "just --set prefix /app install"
       ],
       "sources": [
         {
