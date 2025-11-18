@@ -55,6 +55,18 @@ and start the process:
 
 `flatpak uninstall dev.heppen.webapps`
 
+# Usage
+
+Created Web Apps are using WebKitGTK rendering engine.
+You can create new Web App by filling the form in the editor window. 
+To be able to create Web App you need to provide:
+- valid URL (starting with http:// or https://).
+- name of the application.
+- icon (press the icon button to choose one from your system).
+- the category of the web app
+
+For creating launcher, the application uses [DynamicLauncher Portal](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.DynamicLauncher.html). Make sure you have this portal supported on your system.
+
 # License
 
 Code is distributed with [GPL-3.0 license](https://github.com/cosmic-utils/web-apps/blob/master/LICENSE)
