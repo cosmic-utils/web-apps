@@ -52,13 +52,8 @@ pub fn run_main(main_args: &MainArgs, cmd_line: &CommandLine, sandbox_info: *mut
         return;
     };
 
-    let cache_path = if browser_config.private_mode.unwrap_or(false) {
-        CefString::from("")
-    } else {
-        let path = root_cache_path.join("cache");
-        CefString::from(path.display().to_string().as_str())
-    };
-
+    let path = root_cache_path.join("cache");
+    let cache_path = CefString::from(path.display().to_string().as_str());
     let root_cache_path = CefString::from(root_cache_path.display().to_string().as_str());
 
     let mut settings = Settings {

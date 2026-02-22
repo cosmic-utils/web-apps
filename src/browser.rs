@@ -10,7 +10,6 @@ pub struct Browser {
     pub url: Option<String>,
     pub profile: Option<PathBuf>,
     pub window_size: Option<crate::WindowSize>,
-    pub private_mode: Option<bool>,
     pub try_simulate_mobile: Option<bool>,
 }
 
@@ -25,7 +24,6 @@ impl Browser {
             url: None,
             profile: None,
             window_size: None,
-            private_mode: None,
             try_simulate_mobile: None,
         };
 

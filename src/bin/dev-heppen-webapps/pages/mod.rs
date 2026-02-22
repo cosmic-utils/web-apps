@@ -4,13 +4,14 @@ mod iconpicker;
 use crate::{config::AppConfig, pages::iconpicker::IconPicker, themes::Theme};
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
-    app::{context_drawer, Core, Task},
+    Application, Element,
+    app::{Core, Task, context_drawer},
     command::set_theme,
     cosmic_theme,
     iced::{
-        alignment::Horizontal,
-        futures::{future, SinkExt as _},
         Alignment, Length, Subscription,
+        alignment::Horizontal,
+        futures::{SinkExt as _, future},
     },
     surface, task, theme,
     widget::{
@@ -18,7 +19,6 @@ use cosmic::{
         menu::{self, ItemHeight, ItemWidth},
         nav_bar, responsive_menu_bar,
     },
-    Application, Element,
 };
 use editor::AppEditor;
 use ron::ser::to_string_pretty;
@@ -38,7 +38,7 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{fl, APP_ICON, APP_ID, REPOSITORY};
+use webapps::{APP_ICON, APP_ID, REPOSITORY, fl};
 
 static MENU_ID: LazyLock<cosmic::widget::Id> =
     LazyLock::new(|| cosmic::widget::Id::new("responsive-menu"));
@@ -320,10 +320,10 @@ impl Application for QuickWebApps {
                         .response();
 
                     if let Ok(result) = result {
-                        let files = result
+                        let files: Vec<String> = result
                             .uris()
                             .iter()
-                            .map(|file| file.path().to_string())
+                            .map(|file| file.as_str().to_string())
                             .collect::<Vec<String>>();
 
                         if !files.is_empty() {
@@ -337,15 +337,22 @@ impl Application for QuickWebApps {
                     } else {
                         cosmic::action::none()
                     }
-                })
+                });
             }
             Message::Launch(args) => {
+                let Some(cef_path) = webapps::cef_path() else {
+                    return cosmic::Task::none();
+                };
+
+                unsafe {
+                    std::env::set_var("LD_LIBRARY_PATH", cef_path.display().to_string());
+                }
+
                 return Task::perform(
                     async move {
-                        Command::new("dev.heppen.webapps.webview")
+                        let _ = Command::new(format!("{}.webview", APP_ID))
                             .args(args)
-                            .spawn()
-                            .expect("Failed to spawn webview");
+                            .spawn();
                     },
                     |_| cosmic::Action::App(Message::Close),
                 );
@@ -554,23 +561,25 @@ impl Application for QuickWebApps {
     }
 
     fn header_start(&self) -> Vec<Element<'_, Message>> {
-        vec![responsive_menu_bar()
-            .item_height(ItemHeight::Dynamic(40))
-            .item_width(ItemWidth::Uniform(240))
-            .spacing(4.0)
-            .into_element(
-                &self.core,
-                &self.key_binds,
-                MENU_ID.clone(),
-                Message::Surface,
-                vec![(
-                    fl!("help"),
-                    vec![
-                        menu::Item::Button(fl!("settings"), None, MenuAction::Settings),
-                        menu::Item::Button(fl!("about"), None, MenuAction::About),
-                    ],
-                )],
-            )]
+        vec![
+            responsive_menu_bar()
+                .item_height(ItemHeight::Dynamic(40))
+                .item_width(ItemWidth::Uniform(240))
+                .spacing(4.0)
+                .into_element(
+                    &self.core,
+                    &self.key_binds,
+                    MENU_ID.clone(),
+                    Message::Surface,
+                    vec![(
+                        fl!("help"),
+                        vec![
+                            menu::Item::Button(fl!("settings"), None, MenuAction::Settings),
+                            menu::Item::Button(fl!("about"), None, MenuAction::About),
+                        ],
+                    )],
+                ),
+        ]
     }
 
     fn nav_bar(&self) -> Option<Element<'_, cosmic::Action<Message>>> {

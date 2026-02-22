@@ -1,6 +1,8 @@
 use ashpd::desktop::{
     Icon,
-    dynamic_launcher::{DynamicLauncherProxy, PrepareInstallOptions},
+    dynamic_launcher::{
+        DynamicLauncherProxy, InstallOptions, PrepareInstallOptions, UninstallOptions,
+    },
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -106,6 +108,7 @@ impl WebAppLauncher {
                 &token,
                 &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
                 &desktop_entry,
+                InstallOptions::default(),
             )
             .await
             .expect("Failed to install");
@@ -119,7 +122,10 @@ impl WebAppLauncher {
             .expect("Failed to create DynamicLauncherProxy");
 
         proxy
-            .uninstall(&format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id))
+            .uninstall(
+                &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id,),
+                UninstallOptions::default(),
+            )
             .await
             .expect("Failed to uninstall");
 

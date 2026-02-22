@@ -52,7 +52,7 @@ impl IconPicker {
                         let files = result
                             .uris()
                             .iter()
-                            .map(|file| file.path().to_string())
+                            .map(|file| file.as_str().to_string())
                             .collect::<Vec<String>>();
 
                         pages::Message::OpenFileResult(files)

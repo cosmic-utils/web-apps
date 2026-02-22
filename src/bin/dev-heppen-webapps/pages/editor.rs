@@ -5,7 +5,7 @@ use cosmic::{
     style, task,
     widget::{self},
 };
-use rand::{Rng, rng};
+use rand::{RngExt as _, rng};
 use strum::IntoEnumIterator as _;
 use webapps::fl;
 
@@ -76,7 +76,6 @@ impl AppEditor {
 
         if let Some(launcher) = entry {
             let window_size = launcher.browser.window_size.clone().unwrap_or_default();
-            let isolated = launcher.browser.private_mode.unwrap_or_default();
             let simulate_mobile = launcher.browser.try_simulate_mobile.unwrap_or_default();
 
             let mut editor = AppEditor::default();
@@ -89,7 +88,6 @@ impl AppEditor {
             editor.app_window_width = window_size.0.to_string();
             editor.app_window_height = window_size.1.to_string();
             editor.app_window_size = window_size.clone();
-            editor.app_isolated = isolated;
             editor.app_simulate_mobile = simulate_mobile;
             editor.category_idx = editor
                 .categories
@@ -126,7 +124,6 @@ impl AppEditor {
                     browser.window_title = Some(self.app_title.clone());
                     browser.url = Some(self.app_url.clone());
                     browser.window_size = Some(self.app_window_size.clone());
-                    browser.private_mode = Some(self.app_isolated);
                     browser.try_simulate_mobile = Some(self.app_simulate_mobile);
                     browser
                 };
