@@ -1,19 +1,14 @@
 export APPID := 'dev.heppen.webapps'
 BINARY_PREFIX := 'dev-heppen-webapps'
 
-prefix := '/app'
-destdir := ''
-base-dir := destdir + prefix
+prefix := '/usr/local'
+base-dir := prefix
 
-release := "true"
-features := ""
-
-cargo-flags := (if release == "true" { "--release " } else { "" }) + (if features == "" { "" } else { "--features " + features })
-profile := if release == "true" { "release" } else { "debug" }
-target-dir := 'target' / profile
+target-dir := 'target' / 'release'
 
 CEF_PATH := invocation_directory() / 'cef'
 CEF_ROOT := CEF_PATH
+
 webview := APPID + '.webview'
 helper := APPID + '.webview-helper'
 
@@ -39,16 +34,16 @@ icons-dst := base-dir / 'share/icons/hicolor'
 default: build
 
 # Builds the project
-build flags='':
-    cargo build {{cargo-flags}} {{flags}}
+build:
+    cargo build --release 
 
 # Checks the project
 check:
-    cargo check {{cargo-flags}}
+    cargo check
 
 # Runs tests
 test:
-    cargo test {{cargo-flags}}
+    cargo test
 
 # Runs the application
 run: build
@@ -80,12 +75,14 @@ install:
 
 # Uninstalls files
 uninstall:
-    rm -f {{bin-dst}}
-    rm -f {{webview-bin-dst}}
-    rm -f {{desktop-dst}}
-    rm -f {{metainfo-dst}}
-    rm -f {{icons-dst}}/*/apps/{{APPID}}.png
-    rm -rf {{base-dir}}/lib/{{APPID}}
+    rm -v {{bin-dst}}
+    rm -v {{webview-bin-dst}}
+    rm -v {{desktop-dst}}
+    rm -v {{metainfo-dst}}
+
+    rm -v {{icons-dst}}/*/apps/{{APPID}}.png
+
+    rm -rv {{base-dir}}/lib/{{APPID}}
 
 # Vendor dependencies locally
 vendor:
