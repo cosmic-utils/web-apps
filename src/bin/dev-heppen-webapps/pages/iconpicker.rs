@@ -1,10 +1,10 @@
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
+    Element, Task,
     action::Action,
     iced::Length,
     task, theme,
     widget::{self},
-    Element, Task,
 };
 use webapps::fl;
 
@@ -59,7 +59,7 @@ impl IconPicker {
                     } else {
                         pages::Message::None
                     }
-                })
+                });
             }
             Message::IconSearch => {
                 self.icons.clear();

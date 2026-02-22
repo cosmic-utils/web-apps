@@ -1,11 +1,11 @@
 use cosmic::{
+    Element, Task,
     action::Action,
-    iced::{alignment::Vertical, Length},
+    iced::{Length, alignment::Vertical},
     style, task,
     widget::{self},
-    Element, Task,
 };
-use rand::{rng, Rng};
+use rand::{Rng, rng};
 use strum::IntoEnumIterator as _;
 use webapps::fl;
 
@@ -18,12 +18,10 @@ pub struct AppEditor {
     pub app_url: String,
     pub app_icon: String,
     pub app_category: webapps::Category,
-    pub app_persistent: bool,
     pub app_window_width: String,
     pub app_window_height: String,
     pub app_window_size: webapps::WindowSize,
-    pub app_window_decorations: bool,
-    pub app_private_mode: bool,
+    pub app_isolated: bool,
     pub app_simulate_mobile: bool,
     pub selected_icon: Option<webapps::Icon>,
     pub categories: Vec<String>,
@@ -43,12 +41,10 @@ impl Default for AppEditor {
             app_url: String::new(),
             app_icon: String::new(),
             app_category: webapps::Category::default(),
-            app_persistent: false,
             app_window_width: String::from(webapps::DEFAULT_WINDOW_WIDTH.to_string()),
             app_window_height: String::from(webapps::DEFAULT_WINDOW_HEIGHT.to_string()),
             app_window_size: webapps::WindowSize::default(),
-            app_window_decorations: true,
-            app_private_mode: false,
+            app_isolated: true,
             app_simulate_mobile: false,
             selected_icon: None,
             categories,
@@ -62,15 +58,13 @@ impl Default for AppEditor {
 pub enum Message {
     Category(usize),
     Done,
-    PersistentProfile(bool),
     LaunchApp,
     OpenIconPicker,
     Title(String),
     Url(String),
     WindowWidth(String),
     WindowHeight(String),
-    WindowDecorations(bool),
-    AppIncognito(bool),
+    AppIsolated(bool),
     AppSimulateMobile(bool),
 }
 
@@ -82,8 +76,7 @@ impl AppEditor {
 
         if let Some(launcher) = entry {
             let window_size = launcher.browser.window_size.clone().unwrap_or_default();
-            let window_decorations = launcher.browser.window_decorations.unwrap_or_default();
-            let incognito = launcher.browser.private_mode.unwrap_or_default();
+            let isolated = launcher.browser.private_mode.unwrap_or_default();
             let simulate_mobile = launcher.browser.try_simulate_mobile.unwrap_or_default();
 
             let mut editor = AppEditor::default();
@@ -93,12 +86,10 @@ impl AppEditor {
             editor.app_url = launcher.browser.url.clone().unwrap_or_default();
             editor.app_icon = launcher.icon.clone();
             editor.app_category = launcher.category.clone();
-            editor.app_persistent = launcher.browser.profile.is_some();
             editor.app_window_width = window_size.0.to_string();
             editor.app_window_height = window_size.1.to_string();
             editor.app_window_size = window_size.clone();
-            editor.app_window_decorations = window_decorations;
-            editor.app_private_mode = incognito;
+            editor.app_isolated = isolated;
             editor.app_simulate_mobile = simulate_mobile;
             editor.category_idx = editor
                 .categories
@@ -114,8 +105,8 @@ impl AppEditor {
 
     pub fn update(&mut self, message: Message) -> Task<Action<crate::pages::Message>> {
         match message {
-            Message::AppIncognito(flag) => {
-                self.app_private_mode = flag;
+            Message::AppIsolated(flag) => {
+                self.app_isolated = flag;
             }
             Message::AppSimulateMobile(flag) => {
                 self.app_simulate_mobile = flag;
@@ -131,12 +122,11 @@ impl AppEditor {
                     let app_id = self.app_title.replace(' ', "");
                     let app_id = app_id + &rng().random_range(1000..10000).to_string();
 
-                    let mut browser = webapps::browser::Browser::new(&app_id, self.app_persistent);
+                    let mut browser = webapps::browser::Browser::new(&app_id);
                     browser.window_title = Some(self.app_title.clone());
                     browser.url = Some(self.app_url.clone());
                     browser.window_size = Some(self.app_window_size.clone());
-                    browser.window_decorations = Some(self.app_window_decorations.clone());
-                    browser.private_mode = Some(self.app_private_mode);
+                    browser.private_mode = Some(self.app_isolated);
                     browser.try_simulate_mobile = Some(self.app_simulate_mobile);
                     browser
                 };
@@ -165,9 +155,6 @@ impl AppEditor {
                     return Task::none();
                 }
             }
-            Message::PersistentProfile(flag) => {
-                self.app_persistent = flag;
-            }
             Message::LaunchApp => {
                 if let Some(browser) = &self.app_browser {
                     let arg_id = browser.app_id.clone();
@@ -176,16 +163,13 @@ impl AppEditor {
                 }
             }
             Message::OpenIconPicker => {
-                return task::future(async { pages::Message::OpenIconPicker })
+                return task::future(async { pages::Message::OpenIconPicker });
             }
             Message::Title(title) => {
                 self.app_title = title;
             }
             Message::Url(url) => {
                 self.app_url = url;
-            }
-            Message::WindowDecorations(decorations) => {
-                self.app_window_decorations = decorations;
             }
             Message::WindowWidth(width) => {
                 self.app_window_width = width;
@@ -254,9 +238,9 @@ impl AppEditor {
                                             "{}: {}",
                                             fl!("title"),
                                             if self.app_title.is_empty() {
-                                                &fl!("new-webapp-title")
+                                                fl!("new-webapp-title")
                                             } else {
-                                                &self.app_title
+                                                self.app_title.clone()
                                             }
                                         )))
                                         .push(widget::text::title4(format!(
@@ -286,11 +270,6 @@ impl AppEditor {
                             ),
                         ))
                         .add(widget::settings::item(
-                            fl!("persistent-profile"),
-                            widget::toggler(self.app_persistent)
-                                .on_toggle(Message::PersistentProfile),
-                        ))
-                        .add(widget::settings::item(
                             fl!("window-size"),
                             widget::row()
                                 .spacing(8)
@@ -310,13 +289,8 @@ impl AppEditor {
                                 ),
                         ))
                         .add(widget::settings::item(
-                            fl!("decorations"),
-                            widget::toggler(self.app_window_decorations)
-                                .on_toggle(Message::WindowDecorations),
-                        ))
-                        .add(widget::settings::item(
-                            fl!("private-mode"),
-                            widget::toggler(self.app_private_mode).on_toggle(Message::AppIncognito),
+                            fl!("isolated-profile"),
+                            widget::toggler(self.app_isolated).on_toggle(Message::AppIsolated),
                         ))
                         .add(widget::settings::item(
                             fl!("simulate-mobile"),

@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+use crate::cef_path;
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Browser {
     pub app_id: crate::WebviewArgs,
@@ -8,31 +10,28 @@ pub struct Browser {
     pub url: Option<String>,
     pub profile: Option<PathBuf>,
     pub window_size: Option<crate::WindowSize>,
-    pub window_decorations: Option<bool>,
     pub private_mode: Option<bool>,
     pub try_simulate_mobile: Option<bool>,
 }
 
 impl Browser {
-    pub fn new(app_id: &str, with_profile: bool) -> Self {
+    pub fn new(app_id: &str) -> Self {
         let mut browser = Self {
             app_id: crate::WebviewArgs {
                 id: app_id.to_string(),
+                url: None,
             },
             window_title: None,
             url: None,
             profile: None,
             window_size: None,
-            window_decorations: None,
             private_mode: None,
             try_simulate_mobile: None,
         };
 
-        if with_profile {
-            let xdg_data = dirs::data_dir().unwrap_or_default();
-            let path = xdg_data.join(crate::APP_ID).join("profiles").join(&app_id);
-            browser.profile = Some(path);
-        };
+        let xdg_data = dirs::data_dir().unwrap_or_default();
+        let path = xdg_data.join(crate::APP_ID).join("profiles").join(&app_id);
+        browser.profile = Some(path);
 
         browser
     }
@@ -48,8 +47,17 @@ impl Browser {
         None
     }
 
-    pub fn get_exec(&self) -> String {
-        format!("{}.webview {}", crate::APP_ID, self.app_id.as_ref())
+    pub fn get_exec(&self) -> Option<String> {
+        let Some(cef_path) = cef_path() else {
+            return None;
+        };
+
+        Some(format!(
+            "env LD_LIBRARY_PATH={} {}.webview {}",
+            cef_path.display(),
+            crate::APP_ID,
+            self.app_id.as_ref()
+        ))
     }
 
     pub fn delete(&self) {

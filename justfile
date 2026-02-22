@@ -1,70 +1,91 @@
 export APPID := 'dev.heppen.webapps'
-webview := APPID + '.webview'
+BINARY_PREFIX := 'dev-heppen-webapps'
 
-rootdir := ''
 prefix := '/app'
+destdir := ''
+base-dir := destdir + prefix
 
-base-dir := absolute_path(clean(rootdir / prefix))
+release := "true"
+features := ""
 
-bin-src := 'target' / 'release' / 'dev-heppen-webapps'
+cargo-flags := (if release == "true" { "--release " } else { "" }) + (if features == "" { "" } else { "--features " + features })
+profile := if release == "true" { "release" } else { "debug" }
+target-dir := 'target' / profile
+
+CEF_PATH := invocation_directory() / 'cef'
+CEF_ROOT := CEF_PATH
+webview := APPID + '.webview'
+helper := APPID + '.webview-helper'
+
+bin-src := target-dir / BINARY_PREFIX
+webview-src := target-dir / (BINARY_PREFIX + '-webview')
+helper-src := target-dir / (BINARY_PREFIX + '-webview-helper')
+
 bin-dst := base-dir / 'bin' / APPID
+webview-lib-dst := base-dir / 'lib' / APPID / webview
+helper-lib-dst := base-dir / 'lib' / APPID / helper
+webview-bin-dst := base-dir / 'bin' / webview
 
-webview-src := 'target' / 'release' / 'dev-heppen-webapps-webview'
-webview-dst := base-dir / 'bin' / webview
+desktop-src := 'resources' / (APPID + '.desktop')
+desktop-dst := base-dir / 'share/applications' / (APPID + '.desktop')
 
-desktop := APPID + '.desktop'
-desktop-src := 'resources' / desktop
-desktop-dst := base-dir / 'share' / 'applications' / desktop
+metainfo-src := 'resources' / (APPID + '.metainfo.xml')
+metainfo-dst := base-dir / 'share/metainfo' / (APPID + '.metainfo.xml')
 
-metainfo := APPID + '.metainfo.xml'
-metainfo-src := 'resources' / metainfo
-metainfo-dst := base-dir / 'share' / 'metainfo' / metainfo
+icons-src := 'resources/icons/hicolor'
+icons-dst := base-dir / 'share/icons/hicolor'
 
-icons-src := 'resources' / 'icons' / 'hicolor'
-icons-dst := base-dir / 'share' / 'icons' / 'hicolor'
+# Default task
+default: build
 
-# Default recipe which runs `just build-release`
-default: build-release
+# Builds the project
+build flags='':
+    cargo build {{cargo-flags}} {{flags}}
 
-# Runs `cargo clean`
-clean:
-    cargo clean
+# Checks the project
+check:
+    cargo check {{cargo-flags}}
 
-# Compiles with debug profile
-build-debug *args:
-    cargo build {{args}}
+# Runs tests
+test:
+    cargo test {{cargo-flags}}
 
-# Compiles with release profile
-build-release *args: (build-debug '--release' args)
-
-# Compiles release profile with vendored dependencies
-build-vendored *args: vendor-extract (build-release '--frozen --offline' args)
-
-# Runs a clippy check
-check *args:
-    cargo clippy --all-features {{args}} -- -W clippy::pedantic
-
-# Runs a clippy check with JSON message format
-check-json: (check '--message-format=json')
-
-dev *args:
-    cargo fmt
-    just run {{args}}
-
-# Run with debug logs
-run *args:
-    env RUST_BACKTRACE=full cargo run {{args}}
+# Runs the application
+run: build
+    {{bin-src}}
 
 # Installs files
 install:
     install -Dm0755 {{bin-src}} {{bin-dst}}
-    install -Dm0755 {{webview-src}} {{webview-dst}}
+    install -Dm0755 {{webview-src}} {{webview-lib-dst}}
+    install -Dm0755 {{helper-src}} {{helper-lib-dst}}
     install -Dm0644 {{desktop-src}} {{desktop-dst}}
+
     install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
 
     for size in `ls {{icons-src}}`; do \
         install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
     done
+
+    mkdir -p {{base-dir}}/lib/{{APPID}}
+    if [ -d {{CEF_ROOT}} ]; then \
+        cp -r {{CEF_ROOT}}/* {{base-dir}}/lib/{{APPID}}/; \
+    fi
+
+    # Also copy from target where the build process downloads it
+    find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/lib/{{APPID}}/
+    
+    # Create a symlink in bin to the webview in lib
+    ln -sf ../lib/{{APPID}}/{{webview}} {{webview-bin-dst}}
+
+# Uninstalls files
+uninstall:
+    rm -f {{bin-dst}}
+    rm -f {{webview-bin-dst}}
+    rm -f {{desktop-dst}}
+    rm -f {{metainfo-dst}}
+    rm -f {{icons-dst}}/*/apps/{{APPID}}.png
+    rm -rf {{base-dir}}/lib/{{APPID}}
 
 # Vendor dependencies locally
 vendor:

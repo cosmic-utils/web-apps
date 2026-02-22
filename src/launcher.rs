@@ -1,6 +1,6 @@
 use ashpd::desktop::{
-    dynamic_launcher::{DynamicLauncherProxy, PrepareInstallOptions},
     Icon,
+    dynamic_launcher::{DynamicLauncherProxy, PrepareInstallOptions},
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -67,12 +67,16 @@ impl WebAppLauncher {
     pub async fn create(&self) -> std::io::Result<()> {
         let mut desktop_entry = String::new();
 
+        let Some(exe) = self.browser.get_exec() else {
+            return Ok(());
+        };
+
         desktop_entry.push_str("[Desktop Entry]\n");
         desktop_entry.push_str("Version=1.0\n");
         desktop_entry.push_str("Type=Application\n");
         desktop_entry.push_str(&format!("Name={}\n", self.name));
         desktop_entry.push_str(&format!("Comment=Quick WebApp\n",));
-        desktop_entry.push_str(&format!("Exec={}\n", self.browser.get_exec()));
+        desktop_entry.push_str(&format!("Exec={}\n", exe));
         desktop_entry.push_str(&format!("StartupWMClass={}\n", self.browser.app_id.id));
         desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
 
@@ -122,8 +126,6 @@ impl WebAppLauncher {
         if let Some(path) = crate::database_path(&format!("{}.ron", self.browser.app_id.as_ref())) {
             remove_file(path).await?;
         }
-
-        self.browser.delete();
 
         Ok(())
     }

@@ -61,6 +61,7 @@ non-standard-arguments=Niestandardowe argumenty
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Pasek nawigacyjny
 persistent-profile=Profil Permanentny
+isolated-profile=Profil izolowany
 private-mode=Tryb Prywatny
 window-size=Rozmiar Okna
 decorations=Obramowanie Okna

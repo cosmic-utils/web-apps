@@ -25,6 +25,7 @@ main-window={ $app }
 view=View
 create=Done
 new-app=Create new
+quick-web-app=Quick Run
 edit=Edit
 close=Close
 create-new-webapp=Create new Web App
@@ -64,6 +65,7 @@ non-standard-arguments=Non-standard arguments
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Nav Bar
 persistent-profile=Persistent Profile
+isolated-profile=Isolated Profile
 private-mode=Private Mode
 window-size=Window Size
 decorations=Window Decorations

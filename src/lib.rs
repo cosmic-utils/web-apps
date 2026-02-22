@@ -29,10 +29,14 @@ pub const CONFIG_VERSION: u64 = 1;
 pub const APP_ID: &str = "dev.heppen.webapps";
 pub const APP_ICON: &[u8] =
     include_bytes!("../resources/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
-pub const MOBILE_UA: &str = "Mozilla/5.0 (Android 16; Mobile; rv:68.0) Gecko/68.0 Firefox/142.0";
+pub const MOBILE_UA: &str = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.7632.76 Mobile Safari/537.36";
+pub const DESKTOP_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36";
 
 pub fn url_valid(url: &str) -> bool {
-    Url::parse(url).is_ok()
+    if Url::parse(url).is_ok() {
+        return true;
+    }
+    false
 }
 
 pub fn is_svg(path: &str) -> bool {
@@ -374,9 +378,11 @@ impl Default for WindowSize {
 
 #[derive(Parser, Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[command(author, version, about, long_about = None)]
-#[command(propagate_version = true)]
+#[command(propagate_version = true, ignore_errors = true)]
 pub struct WebviewArgs {
     pub id: String,
+    #[arg(long)]
+    pub url: Option<String>,
 }
 
 impl AsRef<str> for WebviewArgs {
@@ -390,6 +396,92 @@ impl IntoIterator for WebviewArgs {
     type IntoIter = std::vec::IntoIter<String>;
 
     fn into_iter(self) -> Self::IntoIter {
-        vec![self.id].into_iter()
+        let mut args = vec![self.id.clone()];
+        if let Some(url) = &self.url {
+            args.push(format!("--url={}", url));
+        }
+        args.into_iter()
     }
+}
+
+pub fn webview_bin() -> String {
+    let app_id_name = format!("{}.webview", APP_ID);
+    let cargo_name = "dev-heppen-webapps-webview";
+
+    if let Ok(mut path) = std::env::current_exe() {
+        path.set_file_name(&app_id_name);
+        if path.exists() {
+            return path.to_str().unwrap().to_string();
+        }
+        path.set_file_name(cargo_name);
+        if path.exists() {
+            return path.to_str().unwrap().to_string();
+        }
+    }
+    app_id_name
+}
+
+pub fn helper_bin() -> String {
+    let app_id_name = format!("{}.webview-helper", APP_ID);
+    let cargo_name = "dev-heppen-webapps-webview-helper";
+
+    if let Ok(mut path) = std::env::current_exe() {
+        path.set_file_name(&app_id_name);
+        if path.exists() {
+            return path.to_str().unwrap().to_string();
+        }
+        path.set_file_name(cargo_name);
+        if path.exists() {
+            return path.to_str().unwrap().to_string();
+        }
+    }
+    app_id_name
+}
+
+pub fn cef_path() -> Option<PathBuf> {
+    if let Ok(path) = std::env::current_exe() {
+        if let Some(parent) = path
+            .parent()
+            .and_then(|p| p.parent())
+            .and_then(|p| p.parent())
+        {
+            let cef_dir = parent.join("cef");
+            if cef_dir.exists() {
+                return Some(cef_dir);
+            }
+        }
+    }
+
+    let is_sandbox = PathBuf::from("/.flatpak-info").exists();
+    let prefix = if is_sandbox { "/app" } else { "/usr/local" };
+    let installed_cef = PathBuf::from(prefix).join("lib").join(APP_ID);
+    // fallback for installed
+    if installed_cef.exists() {
+        return Some(installed_cef);
+    }
+
+    None
+}
+
+pub fn cef_resources_path() -> Option<PathBuf> {
+    if let Ok(path) = std::env::current_exe() {
+        if let Some(parent) = path
+            .parent()
+            .and_then(|p| p.parent())
+            .and_then(|p| p.parent())
+        {
+            let res_dir = parent.join("resources_webview");
+            if res_dir.exists() {
+                return Some(res_dir);
+            }
+        }
+    }
+
+    // fallback for installed
+    let installed_res = PathBuf::from("/usr/lib").join(APP_ID);
+    if installed_res.exists() {
+        return Some(installed_res);
+    }
+
+    None
 }
