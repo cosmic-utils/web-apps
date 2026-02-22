@@ -22,7 +22,11 @@ path = "src/bin/webview/helper.rs"
 
 [dependencies]
 # dynamic launcher portal
-ashpd = { version = "0.13.2", features = ["wayland"] }
+ashpd = { version = "0.13.2", features = [
+    "wayland",
+    "file_chooser",
+    "dynamic_launcher",
+] }
 # for webview
 cef = { version = "145", features = ["linux-x11", "build-util"] }
 x11-dl = "2.21.0"

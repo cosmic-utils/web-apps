@@ -330,6 +330,7 @@ dependencies = [
  "futures-util",
  "getrandom 0.4.1",
  "serde",
+ "serde_repr",
  "tokio",
  "wayland-backend",
  "wayland-client",
