@@ -6,9 +6,6 @@ base-dir := prefix
 
 target-dir := 'target' / 'release'
 
-CEF_PATH := invocation_directory() / 'cef'
-CEF_ROOT := CEF_PATH
-
 webview := APPID + '.webview'
 helper := APPID + '.webview-helper'
 
@@ -63,9 +60,6 @@ install:
     done
 
     mkdir -p {{base-dir}}/lib/{{APPID}}
-    if [ -d {{CEF_ROOT}} ]; then \
-        cp -r {{CEF_ROOT}}/* {{base-dir}}/lib/{{APPID}}/; \
-    fi
 
     # Also copy from target where the build process downloads it
     find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/lib/{{APPID}}/
