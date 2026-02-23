@@ -7,7 +7,7 @@ use cosmic::{
 };
 use rand::{RngExt as _, rng};
 use strum::IntoEnumIterator as _;
-use webapps::fl;
+use webapps::{Category, fl};
 
 use crate::pages;
 
@@ -39,7 +39,7 @@ impl Default for AppEditor {
             app_browser: None,
             app_title: String::new(),
             app_url: String::new(),
-            app_icon: String::new(),
+            app_icon: String::from("dev.heppen.webapps"),
             app_category: webapps::Category::default(),
             app_window_width: String::from(webapps::DEFAULT_WINDOW_WIDTH.to_string()),
             app_window_height: String::from(webapps::DEFAULT_WINDOW_HEIGHT.to_string()),
@@ -48,7 +48,7 @@ impl Default for AppEditor {
             app_simulate_mobile: false,
             selected_icon: None,
             categories,
-            category_idx: Some(0),
+            category_idx: webapps::Category::iter().position(|c| c == Category::Utility),
             is_installed: false,
         }
     }
@@ -128,12 +128,7 @@ impl AppEditor {
                     browser
                 };
 
-                if webapps::launcher::webapplauncher_is_valid(
-                    &self.app_icon,
-                    &self.app_title,
-                    &browser.url,
-                    &self.app_category,
-                ) {
+                if webapps::launcher::webapplauncher_is_valid(&self.app_title, &browser.url) {
                     let launcher = webapps::launcher::WebAppLauncher {
                         browser: browser.clone(),
                         name: self.app_title.clone(),
@@ -203,10 +198,8 @@ impl AppEditor {
                     .on_press(Message::OpenIconPicker),
             }
         } else {
-            widget::button::custom(widget::icon::from_name("folder-pictures-symbolic"))
-                .width(Length::Fixed(92.0))
-                .height(Length::Fixed(92.0))
-                .class(style::Button::Suggested)
+            widget::button::custom(widget::icon::from_name("dev.heppen.webapps").size(256))
+                .class(style::Button::Icon)
                 .on_press(Message::OpenIconPicker)
         };
 
@@ -309,10 +302,8 @@ impl AppEditor {
                         })
                         .push(widget::button::suggested(fl!("create")).on_press_maybe(
                             if webapps::launcher::webapplauncher_is_valid(
-                                &self.app_icon,
                                 &self.app_title,
                                 &Some(self.app_url.clone()),
-                                &self.app_category,
                             ) {
                                 Some(Message::Done)
                             } else {

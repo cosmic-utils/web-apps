@@ -48,9 +48,7 @@ pub fn run_main(main_args: &MainArgs, cmd_line: &CommandLine, sandbox_info: *mut
     };
 
     let mobile_ua = browser_config.try_simulate_mobile.unwrap_or(false);
-    let Some(root_cache_path) = browser_config.profile else {
-        return;
-    };
+    let root_cache_path = browser_config.profile;
 
     let path = root_cache_path.join("cache");
     let cache_path = CefString::from(path.display().to_string().as_str());

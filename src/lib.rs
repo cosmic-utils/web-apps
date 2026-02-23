@@ -244,27 +244,25 @@ pub async fn image_handle(path: String) -> Option<Icon> {
 #[repr(u8)]
 #[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Category {
+    Audio = 0,
+    AudioVideo = 1,
+    Video = 2,
+    Development = 3,
+    Education = 4,
+    Game = 5,
+    Graphics = 6,
+    Network = 7,
+    Office = 8,
+    Science = 9,
+    Settings = 10,
+    System = 11,
     #[default]
-    None = 0,
-    Audio = 1,
-    AudioVideo = 2,
-    Video = 3,
-    Development = 4,
-    Education = 5,
-    Game = 6,
-    Graphics = 7,
-    Network = 8,
-    Office = 9,
-    Science = 10,
-    Settings = 11,
-    System = 12,
-    Utility = 13,
+    Utility = 12,
 }
 
 impl AsRef<str> for Category {
     fn as_ref(&self) -> &str {
         match self {
-            Category::None => "None",
             Category::Audio => "Audio",
             Category::AudioVideo => "AudioVideo",
             Category::Video => "Video",
@@ -285,7 +283,6 @@ impl AsRef<str> for Category {
 impl From<String> for Category {
     fn from(value: String) -> Self {
         match value.as_str() {
-            "None" => Category::None,
             "Audio" => Category::Audio,
             "AudioVideo" => Category::AudioVideo,
             "Video" => Category::Video,
@@ -307,7 +304,6 @@ impl From<String> for Category {
 impl Category {
     pub fn name(&self) -> String {
         match self {
-            Category::None => String::from("None"),
             Category::Audio => String::from("Audio"),
             Category::AudioVideo => String::from("Audio & Video"),
             Category::Video => String::from("Video"),
