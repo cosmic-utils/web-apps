@@ -3,4 +3,5 @@ FROM mcr.microsoft.com/devcontainers/rust:dev-trixie
 RUN DEBIAN_FRONTEND=noninteractive apt update && apt install -y \
     pkg-config \
     libssl-dev \
-    libxkbcommon-dev
+    libxkbcommon-dev \
+    just

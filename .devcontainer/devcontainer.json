@@ -1,6 +1,6 @@
 {
-  "name": "QuickWebApps",
-  "build": {
-    "dockerfile": "Containerfile",
-  },
+    "name": "QuickWebApps",
+    "build": {
+        "dockerfile": "Containerfile"
+    }
 }
