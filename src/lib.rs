@@ -689,7 +689,6 @@ pub fn generate_icon(first_letter: &str, icon_name: &str) -> Option<PathBuf> {
         .set("x", "50%")
         .set("y", "70%")
         .set("text-anchor", "middle")
-        .set("font-family", "sans-serif")
         .set("font-size", 150)
         .set("fill", "black")
         .set("font-weight", "bold");
