@@ -19,6 +19,8 @@ imported-themes=Zaimportowane motywy
 run-app=Uruchom aplikacje
 reset-settings=Przywróć ustawienia
 reset=Przywróc
+generate-icon=Generuj ikonę
+reset-icon=Zresetuj ikonę
 
 # header
 main-window={ $app }

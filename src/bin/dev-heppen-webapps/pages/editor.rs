@@ -2,11 +2,13 @@ use cosmic::{
     Element, Task,
     action::Action,
     iced::{Length, alignment::Vertical},
+    iced_core::svg,
     style, task,
     widget::{self},
 };
 use rand::{RngExt as _, rng};
 use strum::IntoEnumIterator as _;
+use tokio::io::AsyncReadExt;
 use webapps::{Category, fl};
 
 use crate::pages;
@@ -39,7 +41,7 @@ impl Default for AppEditor {
             app_browser: None,
             app_title: String::new(),
             app_url: String::new(),
-            app_icon: String::from("dev.heppen.webapps"),
+            app_icon: String::new(),
             app_category: webapps::Category::default(),
             app_window_width: String::from(webapps::DEFAULT_WINDOW_WIDTH.to_string()),
             app_window_height: String::from(webapps::DEFAULT_WINDOW_HEIGHT.to_string()),
@@ -66,6 +68,8 @@ pub enum Message {
     WindowHeight(String),
     AppIsolated(bool),
     AppSimulateMobile(bool),
+    GenerateIcon,
+    ResetIcon,
 }
 
 impl AppEditor {
@@ -137,14 +141,47 @@ impl AppEditor {
                     };
 
                     return task::future(async move {
-                        if launcher.create().await.is_ok() {
-                            crate::pages::Message::SaveLauncher(launcher)
-                        } else {
-                            crate::pages::Message::None
+                        if let Ok(success) = launcher.create().await {
+                            if success {
+                                return crate::pages::Message::SaveLauncher(launcher);
+                            }
                         }
+                        crate::pages::Message::None
                     });
                 } else {
                     return Task::none();
+                }
+            }
+            Message::GenerateIcon => {
+                if self.app_title.len() > 1 {
+                    let path =
+                        webapps::generate_icon(&self.app_title.split_at(1).0, &self.app_title);
+
+                    if path.exists() {
+                        let cloned_path = path.clone();
+
+                        return task::future(async move {
+                            let mut buff = Vec::new();
+
+                            let mut file = tokio::fs::File::open(&cloned_path)
+                                .await
+                                .expect("temp icon not found");
+
+                            let _ = file
+                                .read_to_end(&mut buff)
+                                .await
+                                .expect("reading icon data");
+
+                            let handle = svg::Handle::from_memory(buff);
+                            let icon = webapps::Icon::new(
+                                webapps::IconType::Svg(handle),
+                                cloned_path.display().to_string().clone(),
+                            );
+
+                            Some(icon)
+                        })
+                        .map(|ico| Action::App(pages::Message::SetIcon(ico)));
+                    };
                 }
             }
             Message::LaunchApp => {
@@ -156,6 +193,10 @@ impl AppEditor {
             }
             Message::OpenIconPicker => {
                 return task::future(async { pages::Message::OpenIconPicker });
+            }
+            Message::ResetIcon => {
+                self.app_icon.clear();
+                self.selected_icon = None;
             }
             Message::Title(title) => {
                 self.app_title = title;
@@ -247,7 +288,30 @@ impl AppEditor {
                     .width(Length::Fill)
                     .class(style::Container::Card),
                 )
-                .push(widget::text_input(fl!("title"), &self.app_title).on_input(Message::Title))
+                .push(
+                    widget::row()
+                        .spacing(8)
+                        .push(
+                            widget::text_input(fl!("title"), &self.app_title)
+                                .on_input(Message::Title),
+                        )
+                        .push(
+                            widget::button::standard(fl!("generate-icon")).on_press_maybe(
+                                if self.app_title.len() > 1 {
+                                    Some(Message::GenerateIcon)
+                                } else {
+                                    None
+                                },
+                            ),
+                        )
+                        .push(widget::button::standard(fl!("reset-icon")).on_press_maybe(
+                            if self.selected_icon.is_some() {
+                                Some(Message::ResetIcon)
+                            } else {
+                                None
+                            },
+                        )),
+                )
                 .push(widget::text_input(fl!("url"), &self.app_url).on_input(Message::Url))
                 .push(
                     widget::settings::section()

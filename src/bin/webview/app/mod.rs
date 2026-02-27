@@ -2,7 +2,7 @@
 
 use cef::*;
 use clap::Parser as _;
-use webapps::{MOBILE_UA, WebviewArgs};
+use webapps::{DESKTOP_UA, MOBILE_UA, WebviewArgs};
 
 pub mod simple_app;
 pub mod simple_handler;
@@ -54,7 +54,7 @@ pub fn run_main(main_args: &MainArgs, cmd_line: &CommandLine, sandbox_info: *mut
     let cache_path = CefString::from(path.display().to_string().as_str());
     let root_cache_path = CefString::from(root_cache_path.display().to_string().as_str());
 
-    let mut settings = Settings {
+    let settings = Settings {
         no_sandbox: 1,
         browser_subprocess_path: CefString::from(helper_path.as_str()),
         root_cache_path,
@@ -62,15 +62,10 @@ pub fn run_main(main_args: &MainArgs, cmd_line: &CommandLine, sandbox_info: *mut
         user_agent: if mobile_ua {
             CefString::from(MOBILE_UA)
         } else {
-            Default::default()
+            CefString::from(DESKTOP_UA)
         },
         ..Default::default()
     };
-
-    if let Some(res_path) = webapps::cef_resources_path() {
-        settings.resources_dir_path = CefString::from(res_path.to_str().unwrap());
-        settings.locales_dir_path = CefString::from(res_path.join("locales").to_str().unwrap());
-    }
 
     assert_eq!(
         initialize(

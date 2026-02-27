@@ -19,6 +19,8 @@ imported-themes=Imported themes
 run-app=Run app
 reset-settings=Reset settings
 reset=Reset
+generate-icon=Generate Icon
+reset-icon=Reset icon
 
 # header
 main-window={ $app }

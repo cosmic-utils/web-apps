@@ -1,5 +1,6 @@
 use clap::Parser;
 use cosmic::{iced_core, iced_winit::graphics::image::image_rs::ImageReader, widget};
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
@@ -10,6 +11,7 @@ use std::{
     path::PathBuf,
     str::FromStr,
 };
+use svg::node::element::{Circle, Text};
 use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
 
 use strum::IntoEnumIterator;
@@ -88,7 +90,16 @@ pub fn profiles_path(app_id: &str) -> Option<PathBuf> {
 
 pub fn icons_location() -> Option<PathBuf> {
     if let Some(xdg_data) = dirs::data_dir() {
-        return Some(xdg_data.join(APP_ID).join("icons"));
+        let final_path = xdg_data.join(APP_ID).join("icons");
+
+        if !final_path.exists() {
+            if let Err(e) = create_dir_all(&final_path) {
+                eprintln!("Failed to create icons directory: {}", e);
+                return None;
+            }
+        };
+
+        return Some(final_path);
     }
     None
 }
@@ -218,7 +229,7 @@ pub async fn image_handle(path: String) -> Option<Icon> {
         if is_svg(&path) {
             let handle = widget::svg::Handle::from_path(&result_path);
 
-            return Some(Icon::new(IconType::Svg(handle), path, false));
+            return Some(Icon::new(IconType::Svg(handle), path));
         } else {
             let mut data: Vec<_> = Vec::new();
 
@@ -231,7 +242,7 @@ pub async fn image_handle(path: String) -> Option<Icon> {
                     if image.width() >= ICON_SIZE && image.height() >= ICON_SIZE {
                         let handle = iced_core::image::Handle::from_bytes(data);
 
-                        return Some(Icon::new(IconType::Raster(handle), path, false));
+                        return Some(Icon::new(IconType::Raster(handle), path));
                     }
                 };
             }
@@ -341,17 +352,361 @@ pub enum IconType {
 pub struct Icon {
     pub icon: IconType,
     pub path: String,
-    pub is_favicon: bool,
 }
 
 impl Icon {
-    pub fn new(icon: IconType, path: String, is_favicon: bool) -> Self {
-        Self {
-            icon,
-            path,
-            is_favicon,
-        }
+    pub fn new(icon: IconType, path: String) -> Self {
+        Self { icon, path }
     }
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, EnumIter, Hash)]
+pub enum SvgColor {
+    AliceBlue,
+    AntiqueWhite,
+    Aqua,
+    Aquamarine,
+    Azure,
+    Beige,
+    Bisque,
+    Black,
+    BlanchedAlmond,
+    Blue,
+    BlueViolet,
+    Brown,
+    BurlyWood,
+    CadetBlue,
+    Chartreuse,
+    Chocolate,
+    Coral,
+    CornflowerBlue,
+    Cornsilk,
+    Crimson,
+    Cyan,
+    DarkBlue,
+    DarkCyan,
+    DarkGoldenRod,
+    DarkGray,
+    DarkGreen,
+    DarkKhaki,
+    DarkMagenta,
+    DarkOliveGreen,
+    DarkOrange,
+    DarkOrchid,
+    DarkRed,
+    DarkSalmon,
+    DarkSeaGreen,
+    DarkSlateBlue,
+    DarkSlateGray,
+    DarkTurquoise,
+    DarkViolet,
+    DeepPink,
+    DeepSkyBlue,
+    DimGray,
+    DodgerBlue,
+    FireBrick,
+    FloralWhite,
+    ForestGreen,
+    Fuchsia,
+    Gainsboro,
+    GhostWhite,
+    #[default]
+    Gold,
+    GoldenRod,
+    Gray,
+    Green,
+    GreenYellow,
+    HoneyDew,
+    HotPink,
+    IndianRed,
+    Indigo,
+    Ivory,
+    Khaki,
+    Lavender,
+    LavenderBlush,
+    LawnGreen,
+    LemonChiffon,
+    LightBlue,
+    LightCoral,
+    LightCyan,
+    LightGoldenRodYellow,
+    LightGray,
+    LightGreen,
+    LightPink,
+    LightSalmon,
+    LightSeaGreen,
+    LightSkyBlue,
+    LightSlateGray,
+    LightSteelBlue,
+    LightYellow,
+    Lime,
+    LimeGreen,
+    Linen,
+    Magenta,
+    Maroon,
+    MediumAquaMarine,
+    MediumBlue,
+    MediumOrchid,
+    MediumPurple,
+    MediumSeaGreen,
+    MediumSlateBlue,
+    MediumSpringGreen,
+    MediumTurquoise,
+    MediumVioletRed,
+    MidnightBlue,
+    MintCream,
+    MistyRose,
+    Moccasin,
+    NavajoWhite,
+    Navy,
+    OldLace,
+    Olive,
+    OliveDrab,
+    Orange,
+    OrangeRed,
+    Orchid,
+    PaleGoldenRod,
+    PaleGreen,
+    PaleTurquoise,
+    PaleVioletRed,
+    PapayaWhip,
+    PeachPuff,
+    Peru,
+    Pink,
+    Plum,
+    PowderBlue,
+    Purple,
+    RebeccaPurple,
+    Red,
+    RosyBrown,
+    RoyalBlue,
+    SaddleBrown,
+    Salmon,
+    SandyBrown,
+    SeaGreen,
+    SeaShell,
+    Sienna,
+    Silver,
+    SkyBlue,
+    SlateBlue,
+    SlateGray,
+    Snow,
+    SpringGreen,
+    SteelBlue,
+    Tan,
+    Teal,
+    Thistle,
+    Tomato,
+    Turquoise,
+    Violet,
+    Wheat,
+    White,
+    WhiteSmoke,
+    Yellow,
+    YellowGreen,
+}
+
+impl std::fmt::Display for SvgColor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            Self::AliceBlue => "aliceblue",
+            Self::AntiqueWhite => "antiquewhite",
+            Self::Aqua => "aqua",
+            Self::Aquamarine => "aquamarine",
+            Self::Azure => "azure",
+            Self::Beige => "beige",
+            Self::Bisque => "bisque",
+            Self::Black => "black",
+            Self::BlanchedAlmond => "blanchedalmond",
+            Self::Blue => "blue",
+            Self::BlueViolet => "blueviolet",
+            Self::Brown => "brown",
+            Self::BurlyWood => "burlywood",
+            Self::CadetBlue => "cadetblue",
+            Self::Chartreuse => "chartreuse",
+            Self::Chocolate => "chocolate",
+            Self::Coral => "coral",
+            Self::CornflowerBlue => "cornflowerblue",
+            Self::Cornsilk => "cornsilk",
+            Self::Crimson => "crimson",
+            Self::Cyan => "cyan",
+            Self::DarkBlue => "darkblue",
+            Self::DarkCyan => "darkcyan",
+            Self::DarkGoldenRod => "darkgoldenrod",
+            Self::DarkGray => "darkgray",
+            Self::DarkGreen => "darkgreen",
+            Self::DarkKhaki => "darkkhaki",
+            Self::DarkMagenta => "darkmagenta",
+            Self::DarkOliveGreen => "darkolivegreen",
+            Self::DarkOrange => "darkorange",
+            Self::DarkOrchid => "darkorchid",
+            Self::DarkRed => "darkred",
+            Self::DarkSalmon => "darksalmon",
+            Self::DarkSeaGreen => "darkseagreen",
+            Self::DarkSlateBlue => "darkslateblue",
+            Self::DarkSlateGray => "darkslategray",
+            Self::DarkTurquoise => "darkturquoise",
+            Self::DarkViolet => "darkviolet",
+            Self::DeepPink => "deeppink",
+            Self::DeepSkyBlue => "deepskyblue",
+            Self::DimGray => "dimgray",
+            Self::DodgerBlue => "dodgerblue",
+            Self::FireBrick => "firebrick",
+            Self::FloralWhite => "floralwhite",
+            Self::ForestGreen => "forestgreen",
+            Self::Fuchsia => "fuchsia",
+            Self::Gainsboro => "gainsboro",
+            Self::GhostWhite => "ghostwhite",
+            Self::Gold => "gold",
+            Self::GoldenRod => "goldenrod",
+            Self::Gray => "gray",
+            Self::Green => "green",
+            Self::GreenYellow => "greenyellow",
+            Self::HoneyDew => "honeydew",
+            Self::HotPink => "hotpink",
+            Self::IndianRed => "indianred",
+            Self::Indigo => "indigo",
+            Self::Ivory => "ivory",
+            Self::Khaki => "khaki",
+            Self::Lavender => "lavender",
+            Self::LavenderBlush => "lavenderblush",
+            Self::LawnGreen => "lawngreen",
+            Self::LemonChiffon => "lemonchiffon",
+            Self::LightBlue => "lightblue",
+            Self::LightCoral => "lightcoral",
+            Self::LightCyan => "lightcyan",
+            Self::LightGoldenRodYellow => "lightgoldenrodyellow",
+            Self::LightGray => "lightgray",
+            Self::LightGreen => "lightgreen",
+            Self::LightPink => "lightpink",
+            Self::LightSalmon => "lightsalmon",
+            Self::LightSeaGreen => "lightseagreen",
+            Self::LightSkyBlue => "lightskyblue",
+            Self::LightSlateGray => "lightslategray",
+            Self::LightSteelBlue => "lightsteelblue",
+            Self::LightYellow => "lightyellow",
+            Self::Lime => "lime",
+            Self::LimeGreen => "limegreen",
+            Self::Linen => "linen",
+            Self::Magenta => "magenta",
+            Self::Maroon => "maroon",
+            Self::MediumAquaMarine => "mediumaquamarine",
+            Self::MediumBlue => "mediumblue",
+            Self::MediumOrchid => "mediumorchid",
+            Self::MediumPurple => "mediumpurple",
+            Self::MediumSeaGreen => "mediumseagreen",
+            Self::MediumSlateBlue => "mediumslateblue",
+            Self::MediumSpringGreen => "mediumspringgreen",
+            Self::MediumTurquoise => "mediumturquoise",
+            Self::MediumVioletRed => "mediumvioletred",
+            Self::MidnightBlue => "midnightblue",
+            Self::MintCream => "mintcream",
+            Self::MistyRose => "mistyrose",
+            Self::Moccasin => "moccasin",
+            Self::NavajoWhite => "navajowhite",
+            Self::Navy => "navy",
+            Self::OldLace => "oldlace",
+            Self::Olive => "olive",
+            Self::OliveDrab => "olivedrab",
+            Self::Orange => "orange",
+            Self::OrangeRed => "orangered",
+            Self::Orchid => "orchid",
+            Self::PaleGoldenRod => "palegoldenrod",
+            Self::PaleGreen => "palegreen",
+            Self::PaleTurquoise => "paleturquoise",
+            Self::PaleVioletRed => "palevioletred",
+            Self::PapayaWhip => "papayawhip",
+            Self::PeachPuff => "peachpuff",
+            Self::Peru => "peru",
+            Self::Pink => "pink",
+            Self::Plum => "plum",
+            Self::PowderBlue => "powderblue",
+            Self::Purple => "purple",
+            Self::RebeccaPurple => "rebeccapurple",
+            Self::Red => "red",
+            Self::RosyBrown => "rosybrown",
+            Self::RoyalBlue => "royalblue",
+            Self::SaddleBrown => "saddlebrown",
+            Self::Salmon => "salmon",
+            Self::SandyBrown => "sandybrown",
+            Self::SeaGreen => "seagreen",
+            Self::SeaShell => "seashell",
+            Self::Sienna => "sienna",
+            Self::Silver => "silver",
+            Self::SkyBlue => "skyblue",
+            Self::SlateBlue => "slateblue",
+            Self::SlateGray => "slategray",
+            Self::Snow => "snow",
+            Self::SpringGreen => "springgreen",
+            Self::SteelBlue => "steelblue",
+            Self::Tan => "tan",
+            Self::Teal => "teal",
+            Self::Thistle => "thistle",
+            Self::Tomato => "tomato",
+            Self::Turquoise => "turquoise",
+            Self::Violet => "violet",
+            Self::Wheat => "wheat",
+            Self::White => "white",
+            Self::WhiteSmoke => "whitesmoke",
+            Self::Yellow => "yellow",
+            Self::YellowGreen => "yellowgreen",
+        };
+        write!(f, "{}", name)
+    }
+}
+
+impl SvgColor {
+    pub fn from_index(index: u8) -> Self {
+        Self::iter()
+            .find(|i| i.to_owned() as u8 == index)
+            .unwrap_or_default()
+    }
+}
+
+fn generate_random_color() -> String {
+    // Generate random RGB values
+    let mut rng = rand::rng();
+    let colors_array = SvgColor::iter();
+    let random_index = rng.random_range(0..colors_array.len());
+
+    SvgColor::from_index(random_index.try_into().expect("conversion")).to_string()
+}
+
+pub fn generate_icon(first_letter: &str, icon_name: &str) -> PathBuf {
+    let Some(path) = icons_location() else {
+        return PathBuf::from("/tmp");
+    };
+
+    let temp_path = path.join(&format!("{}.svg", icon_name));
+
+    let background = Circle::new()
+        .set("cx", 128)
+        .set("cy", 128)
+        .set("r", 100)
+        .set("fill", generate_random_color());
+
+    let text = Text::new(first_letter)
+        .set("x", "50%")
+        .set("y", "70%")
+        .set("text-anchor", "middle")
+        .set("font-family", "sans-serif")
+        .set("font-size", 150)
+        .set("fill", "black")
+        .set("font-weight", "bold");
+
+    // Create the document
+    let document = svg::Document::new()
+        .set("viewBox", "0 0 256 256")
+        .set("width", 256)
+        .set("height", 256)
+        .add(background)
+        .add(text);
+
+    // Save the file
+    svg::save(&temp_path, &document).expect("Unable to save file");
+    println!("Generated {}", temp_path.display());
+
+    temp_path
 }
 
 pub type WindowWidth = f64;
@@ -454,29 +809,6 @@ pub fn cef_path() -> Option<PathBuf> {
     // fallback for installed
     if installed_cef.exists() {
         return Some(installed_cef);
-    }
-
-    None
-}
-
-pub fn cef_resources_path() -> Option<PathBuf> {
-    if let Ok(path) = std::env::current_exe() {
-        if let Some(parent) = path
-            .parent()
-            .and_then(|p| p.parent())
-            .and_then(|p| p.parent())
-        {
-            let res_dir = parent.join("resources_webview");
-            if res_dir.exists() {
-                return Some(res_dir);
-            }
-        }
-    }
-
-    // fallback for installed
-    let installed_res = PathBuf::from("/usr/lib").join(APP_ID);
-    if installed_res.exists() {
-        return Some(installed_res);
     }
 
     None
