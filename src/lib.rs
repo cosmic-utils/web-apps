@@ -672,9 +672,9 @@ fn generate_random_color() -> String {
     SvgColor::from_index(random_index.try_into().expect("conversion")).to_string()
 }
 
-pub fn generate_icon(first_letter: &str, icon_name: &str) -> PathBuf {
+pub fn generate_icon(first_letter: &str, icon_name: &str) -> Option<PathBuf> {
     let Some(path) = icons_location() else {
-        return PathBuf::from("/tmp");
+        return None;
     };
 
     let temp_path = path.join(&format!("{}.svg", icon_name));
@@ -706,7 +706,7 @@ pub fn generate_icon(first_letter: &str, icon_name: &str) -> PathBuf {
     svg::save(&temp_path, &document).expect("Unable to save file");
     println!("Generated {}", temp_path.display());
 
-    temp_path
+    Some(temp_path)
 }
 
 pub type WindowWidth = f64;

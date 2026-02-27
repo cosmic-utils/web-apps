@@ -157,30 +157,32 @@ impl AppEditor {
                     let path =
                         webapps::generate_icon(&self.app_title.split_at(1).0, &self.app_title);
 
-                    if path.exists() {
-                        let cloned_path = path.clone();
+                    if let Some(path) = path {
+                        if path.exists() {
+                            let cloned_path = path.clone();
 
-                        return task::future(async move {
-                            let mut buff = Vec::new();
+                            return task::future(async move {
+                                let mut buff = Vec::new();
 
-                            let mut file = tokio::fs::File::open(&cloned_path)
-                                .await
-                                .expect("temp icon not found");
+                                let mut file = tokio::fs::File::open(&cloned_path)
+                                    .await
+                                    .expect("temp icon not found");
 
-                            let _ = file
-                                .read_to_end(&mut buff)
-                                .await
-                                .expect("reading icon data");
+                                let _ = file
+                                    .read_to_end(&mut buff)
+                                    .await
+                                    .expect("reading icon data");
 
-                            let handle = svg::Handle::from_memory(buff);
-                            let icon = webapps::Icon::new(
-                                webapps::IconType::Svg(handle),
-                                cloned_path.display().to_string().clone(),
-                            );
+                                let handle = svg::Handle::from_memory(buff);
+                                let icon = webapps::Icon::new(
+                                    webapps::IconType::Svg(handle),
+                                    cloned_path.display().to_string().clone(),
+                                );
 
-                            Some(icon)
-                        })
-                        .map(|ico| Action::App(pages::Message::SetIcon(ico)));
+                                Some(icon)
+                            })
+                            .map(|ico| Action::App(pages::Message::SetIcon(ico)));
+                        }
                     };
                 }
             }
