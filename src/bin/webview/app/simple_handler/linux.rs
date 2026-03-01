@@ -2,11 +2,7 @@ use cef::*;
 
 fn window_from_browser(browser: Option<&mut Browser>) -> Option<WindowHandle> {
     let window = browser?.host()?.window_handle();
-    if window == 0 {
-        None
-    } else {
-        Some(window)
-    }
+    if window == 0 { None } else { Some(window) }
 }
 
 pub fn platform_title_change(browser: Option<&mut Browser>, _title: Option<&CefString>) {
@@ -23,7 +19,7 @@ pub fn platform_title_change(browser: Option<&mut Browser>, _title: Option<&CefS
 
     #[cfg(feature = "linux-x11")]
     unsafe {
-        use std::ffi::{c_char, CString};
+        use std::ffi::{CString, c_char};
         use x11_dl::xlib::*;
 
         // Load the Xlib library dynamically.
