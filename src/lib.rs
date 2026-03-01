@@ -82,7 +82,16 @@ pub fn database_path(entry: &str) -> Option<PathBuf> {
 
 pub fn profiles_path(app_id: &str) -> Option<PathBuf> {
     if let Some(xdg_data) = dirs::data_dir() {
-        return Some(xdg_data.join(APP_ID).join("profiles").join(app_id));
+        let final_path = xdg_data.join(APP_ID).join("profiles").join(app_id);
+
+        if !final_path.exists() {
+            if let Err(e) = create_dir_all(&final_path) {
+                eprintln!("Failed to create profile directory: {}", e);
+                return None;
+            }
+        }
+
+        return Some(final_path);
     }
 
     None
