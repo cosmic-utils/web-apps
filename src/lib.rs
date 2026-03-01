@@ -220,7 +220,6 @@ pub async fn image_handle(path: String) -> Option<Icon> {
             let mut data: Vec<_> = Vec::new();
 
             if let Ok(mut file) = tokio::fs::File::open(&result_path).await {
-                println!("jest file: {:?}", file);
                 let _ = file.read_to_end(&mut data).await;
             }
 
