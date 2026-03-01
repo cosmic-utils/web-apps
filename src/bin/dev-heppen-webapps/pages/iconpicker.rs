@@ -37,10 +37,10 @@ impl IconPicker {
             Message::OpenIconPickerDialog => {
                 return task::future(async move {
                     let result = SelectedFiles::open_file()
-                        .title("Open multiple images")
+                        .title("Open icon")
                         .accept_label("Open")
                         .modal(true)
-                        .multiple(true)
+                        .multiple(false)
                         .filter(FileFilter::new("PNG Image").glob("*.png"))
                         .filter(FileFilter::new("SVG Images").glob("*.svg"))
                         .send()
@@ -52,7 +52,16 @@ impl IconPicker {
                         let files = result
                             .uris()
                             .iter()
-                            .map(|file| file.as_str().to_string())
+                            .map(|file| {
+                                let mut file_path = file.as_str();
+
+                                if file_path.starts_with("file://") {
+                                    file_path =
+                                        file_path.strip_prefix("file://").expect("removing prefix");
+                                }
+
+                                file_path.to_string()
+                            })
                             .collect::<Vec<String>>();
 
                         pages::Message::OpenFileResult(files)

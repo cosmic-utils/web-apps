@@ -410,7 +410,14 @@ impl Application for QuickWebApps {
                 })
             }
             Message::OpenFileResult(file_paths) => {
-                return task::message(Message::IconsResult(file_paths));
+                for icon_path in file_paths {
+                    tasks.push(Task::perform(
+                        webapps::image_handle(icon_path.to_string()),
+                        |icon| cosmic::Action::App(Message::SetIcon(icon)),
+                    ))
+                }
+
+                self.dialogs = None;
             }
             Message::OpenIconPicker => {
                 self.dialogs = Some(Dialogs::IconPicker(IconPicker::default()));

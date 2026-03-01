@@ -3,16 +3,15 @@ use cosmic::{iced_core, iced_winit::graphics::image::image_rs::ImageReader, widg
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::{
-    ffi::OsStr,
-    fmt::Display,
-    fs::{self, create_dir_all},
-    io::{Cursor, Read},
-    os::unix::fs::PermissionsExt as _,
-    path::PathBuf,
-    str::FromStr,
+    ffi::OsStr, fmt::Display, fs::create_dir_all, io::Cursor, os::unix::fs::PermissionsExt as _,
+    path::PathBuf, str::FromStr,
 };
 use svg::node::element::{Circle, Text};
-use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
+use tokio::{
+    fs::File,
+    io::{AsyncReadExt as _, AsyncWriteExt as _},
+    process::Child,
+};
 
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -220,8 +219,9 @@ pub async fn image_handle(path: String) -> Option<Icon> {
         } else {
             let mut data: Vec<_> = Vec::new();
 
-            if let Ok(mut file) = fs::File::open(&result_path) {
-                let _ = file.read_to_end(&mut data);
+            if let Ok(mut file) = tokio::fs::File::open(&result_path).await {
+                println!("jest file: {:?}", file);
+                let _ = file.read_to_end(&mut data).await;
             }
 
             if let Ok(image_reader) = ImageReader::new(Cursor::new(&data)).with_guessed_format() {
