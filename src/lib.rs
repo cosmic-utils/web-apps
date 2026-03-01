@@ -22,8 +22,8 @@ pub mod browser;
 pub mod launcher;
 pub mod localize;
 
-pub const DEFAULT_WINDOW_WIDTH: WindowWidth = 800.0;
-pub const DEFAULT_WINDOW_HEIGHT: WindowHeight = 600.0;
+pub const DEFAULT_WINDOW_WIDTH: WindowWidth = 800;
+pub const DEFAULT_WINDOW_HEIGHT: WindowHeight = 600;
 pub const ICON_SIZE: u32 = 42;
 pub const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 pub const CONFIG_VERSION: u64 = 1;
@@ -694,8 +694,8 @@ pub fn generate_icon(first_letter: &str, icon_name: &str) -> Option<PathBuf> {
     Some(temp_path)
 }
 
-pub type WindowWidth = f64;
-pub type WindowHeight = f64;
+pub type WindowWidth = u32;
+pub type WindowHeight = u32;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WindowSize(pub WindowWidth, pub WindowHeight);
@@ -717,8 +717,6 @@ impl Default for WindowSize {
 #[command(propagate_version = true, ignore_errors = true)]
 pub struct WebviewArgs {
     pub id: String,
-    #[arg(long)]
-    pub url: Option<String>,
 }
 
 impl AsRef<str> for WebviewArgs {
@@ -732,11 +730,7 @@ impl IntoIterator for WebviewArgs {
     type IntoIter = std::vec::IntoIter<String>;
 
     fn into_iter(self) -> Self::IntoIter {
-        let mut args = vec![self.id.clone()];
-        if let Some(url) = &self.url {
-            args.push(format!("--url={}", url));
-        }
-        args.into_iter()
+        vec![self.id.clone()].into_iter()
     }
 }
 

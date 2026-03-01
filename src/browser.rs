@@ -21,7 +21,6 @@ impl Browser {
         Self {
             app_id: crate::WebviewArgs {
                 id: app_id.to_string(),
-                url: None,
             },
             window_title: None,
             url: None,
