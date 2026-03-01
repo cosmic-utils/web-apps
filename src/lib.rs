@@ -113,28 +113,6 @@ pub fn icons_location() -> Option<PathBuf> {
     None
 }
 
-pub fn move_icon(path: &str, icon_name: &str, extension: &str) -> Option<PathBuf> {
-    if let Some(icons_dir) = icons_location() {
-        if !icons_dir.exists() {
-            if let Err(e) = create_dir_all(&icons_dir) {
-                eprintln!("Failed to create icons directory: {}", e);
-                return None;
-            }
-        }
-
-        let dest_path = icons_dir.join(format!("{}.{}", icon_name, extension));
-
-        if let Err(e) = fs::copy(path, &dest_path) {
-            eprintln!("Failed to copy icon: {}", e);
-            return None;
-        }
-
-        return Some(dest_path);
-    }
-
-    None
-}
-
 pub fn icon_pack_installed() -> bool {
     let packs: Vec<&str> = vec!["Papirus", "Papirus-Dark", "Papirus-Light"];
     let mut directories = 0;

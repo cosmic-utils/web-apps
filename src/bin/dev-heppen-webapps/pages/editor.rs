@@ -231,19 +231,16 @@ impl AppEditor {
                 webapps::IconType::Raster(data) => widget::button::custom(widget::image(data))
                     .width(Length::Fixed(92.0))
                     .height(Length::Fixed(92.0))
-                    .class(style::Button::Icon)
-                    .on_press(Message::OpenIconPicker),
+                    .class(style::Button::Icon),
 
                 webapps::IconType::Svg(data) => widget::button::custom(widget::svg(data))
                     .width(Length::Fixed(92.0))
                     .height(Length::Fixed(92.0))
-                    .class(style::Button::Icon)
-                    .on_press(Message::OpenIconPicker),
+                    .class(style::Button::Icon),
             }
         } else {
             widget::button::custom(widget::icon::from_name("dev.heppen.webapps").size(256))
                 .class(style::Button::Icon)
-                .on_press(Message::OpenIconPicker)
         };
 
         widget::container(ico).into()
@@ -305,6 +302,10 @@ impl AppEditor {
                                     None
                                 },
                             ),
+                        )
+                        .push(
+                            widget::button::standard(fl!("icon-selector"))
+                                .on_press_maybe(Some(Message::OpenIconPicker)),
                         )
                         .push(widget::button::standard(fl!("reset-icon")).on_press_maybe(
                             if self.selected_icon.is_some() {
