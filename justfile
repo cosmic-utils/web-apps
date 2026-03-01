@@ -1,70 +1,82 @@
 export APPID := 'dev.heppen.webapps'
+BINARY_PREFIX := 'dev-heppen-webapps'
+
+prefix := '/usr/local'
+base-dir := prefix
+
+target-dir := 'target' / 'release'
+
 webview := APPID + '.webview'
+helper := APPID + '.webview-helper'
 
-rootdir := ''
-prefix := '/app'
+bin-src := target-dir / BINARY_PREFIX
+webview-src := target-dir / (BINARY_PREFIX + '-webview')
+helper-src := target-dir / (BINARY_PREFIX + '-webview-helper')
 
-base-dir := absolute_path(clean(rootdir / prefix))
-
-bin-src := 'target' / 'release' / 'dev-heppen-webapps'
 bin-dst := base-dir / 'bin' / APPID
+webview-lib-dst := base-dir / 'lib' / APPID / webview
+helper-lib-dst := base-dir / 'lib' / APPID / helper
+webview-bin-dst := base-dir / 'bin' / webview
 
-webview-src := 'target' / 'release' / 'dev-heppen-webapps-webview'
-webview-dst := base-dir / 'bin' / webview
+desktop-src := 'resources' / (APPID + '.desktop')
+desktop-dst := base-dir / 'share/applications' / (APPID + '.desktop')
 
-desktop := APPID + '.desktop'
-desktop-src := 'resources' / desktop
-desktop-dst := base-dir / 'share' / 'applications' / desktop
+metainfo-src := 'resources' / (APPID + '.metainfo.xml')
+metainfo-dst := base-dir / 'share/metainfo' / (APPID + '.metainfo.xml')
 
-metainfo := APPID + '.metainfo.xml'
-metainfo-src := 'resources' / metainfo
-metainfo-dst := base-dir / 'share' / 'metainfo' / metainfo
+icons-src := 'resources/icons/hicolor'
+icons-dst := base-dir / 'share/icons/hicolor'
 
-icons-src := 'resources' / 'icons' / 'hicolor'
-icons-dst := base-dir / 'share' / 'icons' / 'hicolor'
+# Default task
+default: build
 
-# Default recipe which runs `just build-release`
-default: build-release
+# Builds the project
+build:
+    cargo build --release 
 
-# Runs `cargo clean`
-clean:
-    cargo clean
+# Checks the project
+check:
+    cargo check
 
-# Compiles with debug profile
-build-debug *args:
-    cargo build {{args}}
+# Runs tests
+test:
+    cargo test
 
-# Compiles with release profile
-build-release *args: (build-debug '--release' args)
-
-# Compiles release profile with vendored dependencies
-build-vendored *args: vendor-extract (build-release '--frozen --offline' args)
-
-# Runs a clippy check
-check *args:
-    cargo clippy --all-features {{args}} -- -W clippy::pedantic
-
-# Runs a clippy check with JSON message format
-check-json: (check '--message-format=json')
-
-dev *args:
-    cargo fmt
-    just run {{args}}
-
-# Run with debug logs
-run *args:
-    env RUST_BACKTRACE=full cargo run {{args}}
+# Runs the application
+run: build
+    {{bin-src}}
 
 # Installs files
 install:
     install -Dm0755 {{bin-src}} {{bin-dst}}
-    install -Dm0755 {{webview-src}} {{webview-dst}}
+    install -Dm0755 {{webview-src}} {{webview-lib-dst}}
+    install -Dm0755 {{helper-src}} {{helper-lib-dst}}
     install -Dm0644 {{desktop-src}} {{desktop-dst}}
+
     install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
 
     for size in `ls {{icons-src}}`; do \
         install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
     done
+
+    mkdir -p {{base-dir}}/lib/{{APPID}}
+
+    # Also copy from target where the build process downloads it
+    find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/lib/{{APPID}}/
+    
+    # Create a symlink in bin to the webview in lib
+    ln -sf ../lib/{{APPID}}/{{webview}} {{webview-bin-dst}}
+
+# Uninstalls files
+uninstall:
+    rm -v {{bin-dst}}
+    rm -v {{webview-bin-dst}}
+    rm -v {{desktop-dst}}
+    rm -v {{metainfo-dst}}
+
+    rm -v {{icons-dst}}/*/apps/{{APPID}}.png
+
+    rm -rv {{base-dir}}/lib/{{APPID}}
 
 # Vendor dependencies locally
 vendor:

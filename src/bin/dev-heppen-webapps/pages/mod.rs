@@ -4,13 +4,14 @@ mod iconpicker;
 use crate::{config::AppConfig, pages::iconpicker::IconPicker, themes::Theme};
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
-    app::{context_drawer, Core, Task},
+    Application, Element,
+    app::{Core, Task, context_drawer},
     command::set_theme,
     cosmic_theme,
     iced::{
-        alignment::Horizontal,
-        futures::{future, SinkExt as _},
         Alignment, Length, Subscription,
+        alignment::Horizontal,
+        futures::{SinkExt as _, future},
     },
     surface, task, theme,
     widget::{
@@ -18,7 +19,6 @@ use cosmic::{
         menu::{self, ItemHeight, ItemWidth},
         nav_bar, responsive_menu_bar,
     },
-    Application, Element,
 };
 use editor::AppEditor;
 use ron::ser::to_string_pretty;
@@ -26,9 +26,9 @@ use std::{
     collections::HashMap,
     fs::read_dir,
     io::{Read, Write},
-    path::{Path, PathBuf},
+    path::Path,
     process::ExitStatus,
-    str::FromStr as _,
+    str::FromStr,
     sync::{Arc, LazyLock},
     time::Duration,
 };
@@ -38,7 +38,7 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{fl, APP_ICON, APP_ID, REPOSITORY};
+use webapps::{APP_ICON, APP_ID, REPOSITORY, fl};
 
 static MENU_ID: LazyLock<cosmic::widget::Id> =
     LazyLock::new(|| cosmic::widget::Id::new("responsive-menu"));
@@ -320,10 +320,10 @@ impl Application for QuickWebApps {
                         .response();
 
                     if let Ok(result) = result {
-                        let files = result
+                        let files: Vec<String> = result
                             .uris()
                             .iter()
-                            .map(|file| file.path().to_string())
+                            .map(|file| file.as_str().to_string())
                             .collect::<Vec<String>>();
 
                         if !files.is_empty() {
@@ -337,15 +337,22 @@ impl Application for QuickWebApps {
                     } else {
                         cosmic::action::none()
                     }
-                })
+                });
             }
             Message::Launch(args) => {
+                let Some(cef_path) = webapps::cef_path() else {
+                    return cosmic::Task::none();
+                };
+
+                unsafe {
+                    std::env::set_var("LD_LIBRARY_PATH", cef_path.display().to_string());
+                }
+
                 return Task::perform(
                     async move {
-                        Command::new("dev.heppen.webapps.webview")
+                        let _ = Command::new(format!("{}.webview", APP_ID))
                             .args(args)
-                            .spawn()
-                            .expect("Failed to spawn webview");
+                            .spawn();
                     },
                     |_| cosmic::Action::App(Message::Close),
                 );
@@ -404,24 +411,14 @@ impl Application for QuickWebApps {
                 })
             }
             Message::OpenFileResult(file_paths) => {
-                let mut moved: Vec<String> = Vec::new();
-
-                for path in file_paths {
-                    let Ok(buf) = PathBuf::from_str(&path);
-                    let icon_name = buf.file_stem();
-
-                    if let Some(file_stem) = icon_name {
-                        if let Some(final_path) = webapps::move_icon(
-                            &path,
-                            file_stem.to_str().unwrap(),
-                            buf.extension().unwrap_or_default().to_str().unwrap(),
-                        ) {
-                            moved.push(final_path.display().to_string());
-                        }
-                    };
+                for icon_path in file_paths {
+                    tasks.push(Task::perform(
+                        webapps::image_handle(icon_path.to_string()),
+                        |icon| cosmic::Action::App(Message::SetIcon(icon)),
+                    ))
                 }
 
-                return task::message(Message::IconsResult(moved));
+                self.dialogs = None;
             }
             Message::OpenIconPicker => {
                 self.dialogs = Some(Dialogs::IconPicker(IconPicker::default()));
@@ -465,7 +462,7 @@ impl Application for QuickWebApps {
                     .for_each(|app| {
                         self.nav
                             .insert()
-                            .icon(widget::icon::from_name(app.icon.clone()))
+                            .icon(navbar_item_icon(&app.icon))
                             .text(app.name.clone())
                             .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
                             .closable();
@@ -554,23 +551,25 @@ impl Application for QuickWebApps {
     }
 
     fn header_start(&self) -> Vec<Element<'_, Message>> {
-        vec![responsive_menu_bar()
-            .item_height(ItemHeight::Dynamic(40))
-            .item_width(ItemWidth::Uniform(240))
-            .spacing(4.0)
-            .into_element(
-                &self.core,
-                &self.key_binds,
-                MENU_ID.clone(),
-                Message::Surface,
-                vec![(
-                    fl!("help"),
-                    vec![
-                        menu::Item::Button(fl!("settings"), None, MenuAction::Settings),
-                        menu::Item::Button(fl!("about"), None, MenuAction::About),
-                    ],
-                )],
-            )]
+        vec![
+            responsive_menu_bar()
+                .item_height(ItemHeight::Dynamic(40))
+                .item_width(ItemWidth::Uniform(240))
+                .spacing(4.0)
+                .into_element(
+                    &self.core,
+                    &self.key_binds,
+                    MENU_ID.clone(),
+                    Message::Surface,
+                    vec![(
+                        fl!("help"),
+                        vec![
+                            menu::Item::Button(fl!("settings"), None, MenuAction::Settings),
+                            menu::Item::Button(fl!("about"), None, MenuAction::About),
+                        ],
+                    )],
+                ),
+        ]
     }
 
     fn nav_bar(&self) -> Option<Element<'_, cosmic::Action<Message>>> {
@@ -746,6 +745,16 @@ impl QuickWebApps {
             .align_x(Alignment::Center)
             .spacing(space_xxs)
             .into()
+    }
+}
+
+fn navbar_item_icon(icon: &str) -> widget::icon::Icon {
+    if icon.starts_with("/") {
+        let path = std::path::PathBuf::from_str(icon).expect("incorrect icon path");
+
+        widget::icon::from_path(path).icon()
+    } else {
+        widget::icon::from_name(icon).icon()
     }
 }
 

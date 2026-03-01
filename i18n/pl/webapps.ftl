@@ -19,6 +19,8 @@ imported-themes=Zaimportowane motywy
 run-app=Uruchom aplikacje
 reset-settings=Przywróć ustawienia
 reset=Przywróc
+generate-icon=Generuj ikonę
+reset-icon=Zresetuj ikonę
 
 # header
 main-window={ $app }
@@ -61,6 +63,7 @@ non-standard-arguments=Niestandardowe argumenty
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Pasek nawigacyjny
 persistent-profile=Profil Permanentny
+isolated-profile=Profil izolowany
 private-mode=Tryb Prywatny
 window-size=Rozmiar Okna
 decorations=Obramowanie Okna

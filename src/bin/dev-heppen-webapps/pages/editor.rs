@@ -1,13 +1,15 @@
+use std::{path::PathBuf, str::FromStr};
+
 use cosmic::{
+    Element, Task,
     action::Action,
-    iced::{alignment::Vertical, Length},
+    iced::{Length, alignment::Vertical},
     style, task,
     widget::{self},
-    Element, Task,
 };
-use rand::{rng, Rng};
+use rand::{RngExt as _, rng};
 use strum::IntoEnumIterator as _;
-use webapps::fl;
+use webapps::{Category, fl};
 
 use crate::pages;
 
@@ -18,12 +20,10 @@ pub struct AppEditor {
     pub app_url: String,
     pub app_icon: String,
     pub app_category: webapps::Category,
-    pub app_persistent: bool,
     pub app_window_width: String,
     pub app_window_height: String,
     pub app_window_size: webapps::WindowSize,
-    pub app_window_decorations: bool,
-    pub app_private_mode: bool,
+    pub app_isolated: bool,
     pub app_simulate_mobile: bool,
     pub selected_icon: Option<webapps::Icon>,
     pub categories: Vec<String>,
@@ -43,16 +43,14 @@ impl Default for AppEditor {
             app_url: String::new(),
             app_icon: String::new(),
             app_category: webapps::Category::default(),
-            app_persistent: false,
             app_window_width: String::from(webapps::DEFAULT_WINDOW_WIDTH.to_string()),
             app_window_height: String::from(webapps::DEFAULT_WINDOW_HEIGHT.to_string()),
             app_window_size: webapps::WindowSize::default(),
-            app_window_decorations: true,
-            app_private_mode: false,
+            app_isolated: true,
             app_simulate_mobile: false,
             selected_icon: None,
             categories,
-            category_idx: Some(0),
+            category_idx: webapps::Category::iter().position(|c| c == Category::Utility),
             is_installed: false,
         }
     }
@@ -62,16 +60,16 @@ impl Default for AppEditor {
 pub enum Message {
     Category(usize),
     Done,
-    PersistentProfile(bool),
     LaunchApp,
     OpenIconPicker,
     Title(String),
     Url(String),
     WindowWidth(String),
     WindowHeight(String),
-    WindowDecorations(bool),
-    AppIncognito(bool),
+    AppIsolated(bool),
     AppSimulateMobile(bool),
+    GenerateIcon,
+    ResetIcon,
 }
 
 impl AppEditor {
@@ -82,8 +80,6 @@ impl AppEditor {
 
         if let Some(launcher) = entry {
             let window_size = launcher.browser.window_size.clone().unwrap_or_default();
-            let window_decorations = launcher.browser.window_decorations.unwrap_or_default();
-            let incognito = launcher.browser.private_mode.unwrap_or_default();
             let simulate_mobile = launcher.browser.try_simulate_mobile.unwrap_or_default();
 
             let mut editor = AppEditor::default();
@@ -91,20 +87,22 @@ impl AppEditor {
             editor.app_browser = Some(launcher.browser.clone());
             editor.app_title = launcher.name.clone();
             editor.app_url = launcher.browser.url.clone().unwrap_or_default();
-            editor.app_icon = launcher.icon.clone();
             editor.app_category = launcher.category.clone();
-            editor.app_persistent = launcher.browser.profile.is_some();
             editor.app_window_width = window_size.0.to_string();
             editor.app_window_height = window_size.1.to_string();
             editor.app_window_size = window_size.clone();
-            editor.app_window_decorations = window_decorations;
-            editor.app_private_mode = incognito;
             editor.app_simulate_mobile = simulate_mobile;
             editor.category_idx = editor
                 .categories
                 .iter()
                 .position(|c| c == &launcher.category.name());
             editor.is_installed = true;
+
+            let path_icon =
+                PathBuf::from_str(&launcher.icon).expect("path invalid for launcher icon");
+
+            let webapp_icon = webapps::webapp_icon(path_icon);
+            editor.update_icon(webapp_icon.into());
 
             editor
         } else {
@@ -114,8 +112,8 @@ impl AppEditor {
 
     pub fn update(&mut self, message: Message) -> Task<Action<crate::pages::Message>> {
         match message {
-            Message::AppIncognito(flag) => {
-                self.app_private_mode = flag;
+            Message::AppIsolated(flag) => {
+                self.app_isolated = flag;
             }
             Message::AppSimulateMobile(flag) => {
                 self.app_simulate_mobile = flag;
@@ -131,22 +129,15 @@ impl AppEditor {
                     let app_id = self.app_title.replace(' ', "");
                     let app_id = app_id + &rng().random_range(1000..10000).to_string();
 
-                    let mut browser = webapps::browser::Browser::new(&app_id, self.app_persistent);
+                    let mut browser = webapps::browser::Browser::new(&app_id);
                     browser.window_title = Some(self.app_title.clone());
                     browser.url = Some(self.app_url.clone());
                     browser.window_size = Some(self.app_window_size.clone());
-                    browser.window_decorations = Some(self.app_window_decorations.clone());
-                    browser.private_mode = Some(self.app_private_mode);
                     browser.try_simulate_mobile = Some(self.app_simulate_mobile);
                     browser
                 };
 
-                if webapps::launcher::webapplauncher_is_valid(
-                    &self.app_icon,
-                    &self.app_title,
-                    &browser.url,
-                    &self.app_category,
-                ) {
+                if webapps::launcher::webapplauncher_is_valid(&self.app_title, &browser.url) {
                     let launcher = webapps::launcher::WebAppLauncher {
                         browser: browser.clone(),
                         name: self.app_title.clone(),
@@ -155,18 +146,32 @@ impl AppEditor {
                     };
 
                     return task::future(async move {
-                        if launcher.create().await.is_ok() {
-                            crate::pages::Message::SaveLauncher(launcher)
-                        } else {
-                            crate::pages::Message::None
+                        if let Ok(success) = launcher.create().await {
+                            if success {
+                                return crate::pages::Message::SaveLauncher(launcher);
+                            }
                         }
+                        crate::pages::Message::None
                     });
                 } else {
                     return Task::none();
                 }
             }
-            Message::PersistentProfile(flag) => {
-                self.app_persistent = flag;
+            Message::GenerateIcon => {
+                if self.app_title.len() > 1 {
+                    let path =
+                        webapps::generate_icon(&self.app_title.split_at(1).0, &self.app_title);
+
+                    if let Some(path) = path {
+                        if path.exists() {
+                            let ico = webapps::webapp_icon(path);
+
+                            return task::future(async {
+                                Action::App(pages::Message::SetIcon(ico.into()))
+                            });
+                        }
+                    }
+                }
             }
             Message::LaunchApp => {
                 if let Some(browser) = &self.app_browser {
@@ -176,16 +181,17 @@ impl AppEditor {
                 }
             }
             Message::OpenIconPicker => {
-                return task::future(async { pages::Message::OpenIconPicker })
+                return task::future(async { pages::Message::OpenIconPicker });
+            }
+            Message::ResetIcon => {
+                self.app_icon.clear();
+                self.selected_icon = None;
             }
             Message::Title(title) => {
                 self.app_title = title;
             }
             Message::Url(url) => {
                 self.app_url = url;
-            }
-            Message::WindowDecorations(decorations) => {
-                self.app_window_decorations = decorations;
             }
             Message::WindowWidth(width) => {
                 self.app_window_width = width;
@@ -212,21 +218,16 @@ impl AppEditor {
                 webapps::IconType::Raster(data) => widget::button::custom(widget::image(data))
                     .width(Length::Fixed(92.0))
                     .height(Length::Fixed(92.0))
-                    .class(style::Button::Icon)
-                    .on_press(Message::OpenIconPicker),
+                    .class(style::Button::Icon),
 
                 webapps::IconType::Svg(data) => widget::button::custom(widget::svg(data))
                     .width(Length::Fixed(92.0))
                     .height(Length::Fixed(92.0))
-                    .class(style::Button::Icon)
-                    .on_press(Message::OpenIconPicker),
+                    .class(style::Button::Icon),
             }
         } else {
-            widget::button::custom(widget::icon::from_name("folder-pictures-symbolic"))
-                .width(Length::Fixed(92.0))
-                .height(Length::Fixed(92.0))
-                .class(style::Button::Suggested)
-                .on_press(Message::OpenIconPicker)
+            widget::button::custom(widget::icon::from_name("dev.heppen.webapps").size(256))
+                .class(style::Button::Icon)
         };
 
         widget::container(ico).into()
@@ -254,9 +255,9 @@ impl AppEditor {
                                             "{}: {}",
                                             fl!("title"),
                                             if self.app_title.is_empty() {
-                                                &fl!("new-webapp-title")
+                                                fl!("new-webapp-title")
                                             } else {
-                                                &self.app_title
+                                                self.app_title.clone()
                                             }
                                         )))
                                         .push(widget::text::title4(format!(
@@ -273,7 +274,34 @@ impl AppEditor {
                     .width(Length::Fill)
                     .class(style::Container::Card),
                 )
-                .push(widget::text_input(fl!("title"), &self.app_title).on_input(Message::Title))
+                .push(
+                    widget::row()
+                        .spacing(8)
+                        .push(
+                            widget::text_input(fl!("title"), &self.app_title)
+                                .on_input(Message::Title),
+                        )
+                        .push(
+                            widget::button::standard(fl!("generate-icon")).on_press_maybe(
+                                if self.app_title.len() > 1 {
+                                    Some(Message::GenerateIcon)
+                                } else {
+                                    None
+                                },
+                            ),
+                        )
+                        .push(
+                            widget::button::standard(fl!("icon-selector"))
+                                .on_press_maybe(Some(Message::OpenIconPicker)),
+                        )
+                        .push(widget::button::standard(fl!("reset-icon")).on_press_maybe(
+                            if self.selected_icon.is_some() {
+                                Some(Message::ResetIcon)
+                            } else {
+                                None
+                            },
+                        )),
+                )
                 .push(widget::text_input(fl!("url"), &self.app_url).on_input(Message::Url))
                 .push(
                     widget::settings::section()
@@ -284,11 +312,6 @@ impl AppEditor {
                                 self.category_idx,
                                 Message::Category,
                             ),
-                        ))
-                        .add(widget::settings::item(
-                            fl!("persistent-profile"),
-                            widget::toggler(self.app_persistent)
-                                .on_toggle(Message::PersistentProfile),
                         ))
                         .add(widget::settings::item(
                             fl!("window-size"),
@@ -310,13 +333,8 @@ impl AppEditor {
                                 ),
                         ))
                         .add(widget::settings::item(
-                            fl!("decorations"),
-                            widget::toggler(self.app_window_decorations)
-                                .on_toggle(Message::WindowDecorations),
-                        ))
-                        .add(widget::settings::item(
-                            fl!("private-mode"),
-                            widget::toggler(self.app_private_mode).on_toggle(Message::AppIncognito),
+                            fl!("isolated-profile"),
+                            widget::toggler(self.app_isolated).on_toggle(Message::AppIsolated),
                         ))
                         .add(widget::settings::item(
                             fl!("simulate-mobile"),
@@ -338,10 +356,8 @@ impl AppEditor {
                         })
                         .push(widget::button::suggested(fl!("create")).on_press_maybe(
                             if webapps::launcher::webapplauncher_is_valid(
-                                &self.app_icon,
                                 &self.app_title,
                                 &Some(self.app_url.clone()),
-                                &self.app_category,
                             ) {
                                 Some(Message::Done)
                             } else {
