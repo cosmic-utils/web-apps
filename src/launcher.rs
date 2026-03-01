@@ -84,7 +84,6 @@ impl WebAppLauncher {
 
             if let Ok(_size) = file.read_to_end(&mut buff).await {
                 let icon = Icon::Bytes(buff);
-                println!("{:?}", icon);
 
                 let prepare_opts = PrepareInstallOptions::default().set_editable_icon(true);
 

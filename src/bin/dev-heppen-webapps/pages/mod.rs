@@ -28,6 +28,7 @@ use std::{
     io::{Read, Write},
     path::Path,
     process::ExitStatus,
+    str::FromStr,
     sync::{Arc, LazyLock},
     time::Duration,
 };
@@ -461,7 +462,7 @@ impl Application for QuickWebApps {
                     .for_each(|app| {
                         self.nav
                             .insert()
-                            .icon(widget::icon::from_name(app.icon.clone()))
+                            .icon(navbar_item_icon(&app.icon))
                             .text(app.name.clone())
                             .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
                             .closable();
@@ -744,6 +745,16 @@ impl QuickWebApps {
             .align_x(Alignment::Center)
             .spacing(space_xxs)
             .into()
+    }
+}
+
+fn navbar_item_icon(icon: &str) -> widget::icon::Icon {
+    if icon.starts_with("/") {
+        let path = std::path::PathBuf::from_str(icon).expect("incorrect icon path");
+
+        widget::icon::from_path(path).icon()
+    } else {
+        widget::icon::from_name(icon).icon()
     }
 }
 
