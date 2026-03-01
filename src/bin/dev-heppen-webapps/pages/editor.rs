@@ -1,14 +1,14 @@
+use std::{path::PathBuf, str::FromStr};
+
 use cosmic::{
     Element, Task,
     action::Action,
     iced::{Length, alignment::Vertical},
-    iced_core::svg,
     style, task,
     widget::{self},
 };
 use rand::{RngExt as _, rng};
 use strum::IntoEnumIterator as _;
-use tokio::io::AsyncReadExt;
 use webapps::{Category, fl};
 
 use crate::pages;
@@ -87,7 +87,6 @@ impl AppEditor {
             editor.app_browser = Some(launcher.browser.clone());
             editor.app_title = launcher.name.clone();
             editor.app_url = launcher.browser.url.clone().unwrap_or_default();
-            editor.app_icon = launcher.icon.clone();
             editor.app_category = launcher.category.clone();
             editor.app_window_width = window_size.0.to_string();
             editor.app_window_height = window_size.1.to_string();
@@ -98,6 +97,12 @@ impl AppEditor {
                 .iter()
                 .position(|c| c == &launcher.category.name());
             editor.is_installed = true;
+
+            let path_icon =
+                PathBuf::from_str(&launcher.icon).expect("path invalid for launcher icon");
+
+            let webapp_icon = webapps::webapp_icon(path_icon);
+            editor.update_icon(webapp_icon.into());
 
             editor
         } else {
@@ -159,31 +164,13 @@ impl AppEditor {
 
                     if let Some(path) = path {
                         if path.exists() {
-                            let cloned_path = path.clone();
+                            let ico = webapps::webapp_icon(path);
 
-                            return task::future(async move {
-                                let mut buff = Vec::new();
-
-                                let mut file = tokio::fs::File::open(&cloned_path)
-                                    .await
-                                    .expect("temp icon not found");
-
-                                let _ = file
-                                    .read_to_end(&mut buff)
-                                    .await
-                                    .expect("reading icon data");
-
-                                let handle = svg::Handle::from_memory(buff);
-                                let icon = webapps::Icon::new(
-                                    webapps::IconType::Svg(handle),
-                                    cloned_path.display().to_string().clone(),
-                                );
-
-                                Some(icon)
-                            })
-                            .map(|ico| Action::App(pages::Message::SetIcon(ico)));
+                            return task::future(async {
+                                Action::App(pages::Message::SetIcon(ico.into()))
+                            });
                         }
-                    };
+                    }
                 }
             }
             Message::LaunchApp => {

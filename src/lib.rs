@@ -3,8 +3,13 @@ use cosmic::{iced_core, iced_winit::graphics::image::image_rs::ImageReader, widg
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::{
-    ffi::OsStr, fmt::Display, fs::create_dir_all, io::Cursor, os::unix::fs::PermissionsExt as _,
-    path::PathBuf, str::FromStr,
+    ffi::OsStr,
+    fmt::Display,
+    fs::create_dir_all,
+    io::{Cursor, Read as _},
+    os::unix::fs::PermissionsExt as _,
+    path::PathBuf,
+    str::FromStr,
 };
 use svg::node::element::{Circle, Text};
 use tokio::{
@@ -110,6 +115,27 @@ pub fn icons_location() -> Option<PathBuf> {
         return Some(final_path);
     }
     None
+}
+
+pub fn webapp_icon(path: PathBuf) -> Icon {
+    let mut buff = Vec::new();
+
+    let mut file = std::fs::File::open(&path).expect("temp icon not found");
+
+    let _ = file.read_to_end(&mut buff).expect("reading icon data");
+
+    match is_svg(&path.display().to_string()) {
+        true => {
+            let handle = iced_core::svg::Handle::from_memory(buff);
+
+            Icon::new(IconType::Svg(handle), path.display().to_string().clone())
+        }
+        false => {
+            let handle = iced_core::image::Handle::from_bytes(buff);
+
+            Icon::new(IconType::Raster(handle), path.display().to_string().clone())
+        }
+    }
 }
 
 pub fn icon_pack_installed() -> bool {
