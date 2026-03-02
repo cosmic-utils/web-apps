@@ -1,45 +1,71 @@
 {
-  "app-id": "dev.heppen.webapps",
-  "runtime": "org.gnome.Platform",
-  "runtime-version": "49",
-  "sdk": "org.gnome.Sdk",
-  "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
-  "base": "com.system76.Cosmic.BaseApp",
-  "base-version": "stable",
-  "command": "dev.heppen.webapps",
-  "finish-args": [
-    "--share=ipc",
-    "--socket=fallback-x11",
-    "--socket=wayland",
-    "--device=dri",
-    "--share=network",
-    "--filesystem=xdg-config/cosmic",
-    "--talk-name=com.system76.CosmicSettingsDaemon"
-  ],
-  "build-options": {
-    "append-path": "/usr/lib/sdk/rust-stable/bin"
-  },
-  "modules": [
-    {
-      "name": "quick-webapps",
-      "buildsystem": "simple",
-      "build-options": {
+    "app-id": "dev.heppen.webapps",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "49",
+    "sdk": "org.gnome.Sdk",
+    "sdk-extensions": [
+        "org.freedesktop.Sdk.Extension.rust-stable"
+    ],
+    "base": "com.system76.Cosmic.BaseApp",
+    "base-version": "stable",
+    "command": "dev.heppen.webapps",
+    "finish-args": [
+        "--share=ipc",
+        "--socket=fallback-x11",
+        "--socket=wayland",
+        "--device=dri",
+        "--share=network",
+        "--filesystem=xdg-config/cosmic",
+        "--talk-name=com.system76.CosmicSettingsDaemon"
+    ],
+    "build-options": {
+        "append-path": "/usr/lib/sdk/rust-stable/bin",
         "env": {
-          "CARGO_HOME": "/run/build/quick-webapps/cargo"
+            "CEF_ROOT": "/run/build/quick-webapps/cef-bin"
         }
-      },
-      "build-commands": [
-        "cargo --offline fetch --manifest-path Cargo.toml --verbose",
-        "cargo --offline build --release --verbose",
-        "just prefix=/app install"
-      ],
-      "sources": [
+    },
+    "modules": [
         {
-          "type": "dir",
-          "path": "."
-        },
-        "cargo-sources.json"
-      ]
-    }
-  ]
+            "name": "quick-webapps",
+            "buildsystem": "simple",
+            "build-options": {
+                "env": {
+                    "CARGO_HOME": "/run/build/quick-webapps/cargo",
+                    "CEF_ROOT": "/run/build/quick-webapps/cef-bin"
+                }
+            },
+            "build-commands": [
+                "cargo --offline fetch --manifest-path Cargo.toml --verbose",
+                "cargo --offline build --release --verbose",
+                "just prefix=/app install"
+            ],
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": "."
+                },
+                "cargo-sources.json",
+                {
+                    "type": "archive",
+                    "url": "https://cef-builds.spotifycdn.com/cef_binary_145.0.27+g4ddda2e+chromium-145.0.7632.117_linux64_minimal.tar.bz2",
+                    "sha256": "06f05bdb1a04ab99e9ca99cf896fd571ac7ee65cbfdec553d04bd06be80dbf9b",
+                    "dest": "cef-bin",
+                    "strip-components": 1,
+                    "only-arches": [
+                        "x86_64"
+                    ]
+                },
+                {
+                    "type": "archive",
+                    "url": "https://cef-builds.spotifycdn.com/cef_binary_145.0.27+g4ddda2e+chromium-145.0.7632.117_linuxarm64_minimal.tar.bz2",
+                    "sha256": "22410ccbf61bc58d5714db1b5f199328420a48b741ff4c0e6c60ee369af5039b",
+                    "dest": "cef-bin",
+                    "strip-components": 1,
+                    "only-arches": [
+                        "aarch64"
+                    ]
+                }
+            ]
+        }
+    ]
 }
