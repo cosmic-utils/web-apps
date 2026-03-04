@@ -59,13 +59,13 @@ install:
         install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
     done
 
-    if [ ! -d "{{base-dir}}/share/cef" ]; then \
-        mkdir -p {{base-dir}}/share/cef \
-        find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/share/cef/
-    fi
-
     # Create a symlink in bin to the webview in lib
     ln -sf ../share/cef/{{webview}} {{webview-bin-dst}}
+
+# install cef lib
+install-lib:
+        mkdir -p {{base-dir}}/share/cef
+        find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/share/cef/
 
 # Uninstalls files
 uninstall:
@@ -75,8 +75,6 @@ uninstall:
     rm -v {{metainfo-dst}}
 
     rm -v {{icons-dst}}/*/apps/{{APPID}}.png
-
-    rm -rv {{base-dir}}/lib/{{APPID}}
 
 # Vendor dependencies locally
 vendor:

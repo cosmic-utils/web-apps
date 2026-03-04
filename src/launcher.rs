@@ -5,7 +5,7 @@ use ashpd::desktop::{
     },
 };
 use serde::{Deserialize, Serialize};
-use std::{io::Read as _, path::PathBuf};
+use std::{io::Read as _, os::unix::fs::MetadataExt, path::PathBuf};
 use tokio::{fs::remove_file, io::AsyncReadExt};
 
 use crate::APP_ID;
@@ -80,38 +80,38 @@ impl WebAppLauncher {
             .expect("Failed to create DynamicLauncherProxy");
 
         if let Ok(mut file) = tokio::fs::File::open(&self.icon).await {
-            let mut buff = Vec::new();
+            let metadata = file.metadata().await?;
+            let size = metadata.size();
+            let mut buffer = Vec::with_capacity(size.try_into()?);
 
-            if let Ok(_size) = file.read_to_end(&mut buff).await {
-                let icon = Icon::Bytes(buff);
+            let _ = file.read_exact(&mut buffer);
 
-                let prepare_opts = PrepareInstallOptions::default().set_editable_icon(true);
+            let icon = Icon::Bytes(buffer);
 
-                let response = proxy
-                    .prepare_install(None, &self.name, icon, prepare_opts)
-                    .await
-                    .expect("Failed to prepare install")
-                    .response()
-                    .expect("Failed to get response");
+            let prepare_opts = PrepareInstallOptions::default().set_editable_icon(true);
 
-                let token = response.token();
+            let response = proxy
+                .prepare_install(None, &self.name, icon, prepare_opts)
+                .await
+                .expect("Failed to prepare install")
+                .response()
+                .expect("Failed to get response");
 
-                tracing::info!("{}", desktop_entry);
+            let token = response.token();
 
-                proxy
-                    .install(
-                        &token,
-                        &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
-                        &desktop_entry,
-                        InstallOptions::default(),
-                    )
-                    .await
-                    .expect("installing");
+            tracing::info!("{}", desktop_entry);
 
-                return Ok(true);
-            }
+            proxy
+                .install(
+                    &token,
+                    &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
+                    &desktop_entry,
+                    InstallOptions::default(),
+                )
+                .await
+                .expect("installing");
 
-            return Ok(false);
+            return Ok(true);
         }
 
         return Ok(false);
