@@ -14,8 +14,8 @@ webview-src := target-dir / (BINARY_PREFIX + '-webview')
 helper-src := target-dir / (BINARY_PREFIX + '-webview-helper')
 
 bin-dst := base-dir / 'bin' / APPID
-webview-lib-dst := base-dir / 'lib' / APPID / webview
-helper-lib-dst := base-dir / 'lib' / APPID / helper
+webview-lib-dst := base-dir / 'share' / 'cef' / webview
+helper-lib-dst := base-dir / 'share' / 'cef' / helper
 webview-bin-dst := base-dir / 'bin' / webview
 
 desktop-src := 'resources' / (APPID + '.desktop')
@@ -59,13 +59,13 @@ install:
         install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
     done
 
-    mkdir -p {{base-dir}}/lib/{{APPID}}
+    mkdir -p {{base-dir}}/share/cef
 
     # Also copy from target where the build process downloads it
-    find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/lib/{{APPID}}/
+    find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/share/cef/
     
     # Create a symlink in bin to the webview in lib
-    ln -sf ../lib/{{APPID}}/{{webview}} {{webview-bin-dst}}
+    ln -sf ../share/cef/{{webview}} {{webview-bin-dst}}
 
 # Uninstalls files
 uninstall:
