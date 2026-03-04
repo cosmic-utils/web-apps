@@ -166,6 +166,8 @@ impl AppEditor {
                         if path.exists() {
                             let ico = webapps::webapp_icon(path);
 
+                            self.update_icon(Some(ico.clone()));
+
                             return task::future(async {
                                 Action::App(pages::Message::SetIcon(ico.into()))
                             });
