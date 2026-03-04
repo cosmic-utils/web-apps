@@ -810,8 +810,8 @@ pub fn cef_path() -> Option<PathBuf> {
 
     let is_sandbox = PathBuf::from("/.flatpak-info").exists();
     let prefix = if is_sandbox { "/app" } else { "/usr/local" };
-    let installed_cef = PathBuf::from(prefix).join("lib").join(APP_ID);
-    // fallback for installed
+    let installed_cef = PathBuf::from(prefix).join("share").join("cef");
+
     if installed_cef.exists() {
         return Some(installed_cef);
     }
