@@ -21,17 +21,57 @@
     "build-options": {
         "append-path": "/usr/lib/sdk/rust-stable/bin",
         "env": {
-            "CEF_ROOT": "/run/build/quick-webapps/cef-bin"
+            "CEF_ROOT": "/app/share/cef",
+            "CEF_PATH": "/app/share/cef"
         }
     },
     "modules": [
+        {
+            "name": "cef-rs",
+            "buildsystem": "simple",
+            "build-options": {
+                "env": {
+                    "CARGO_HOME": "/run/build/cef-rs/cargo"
+                }
+            },
+            "build-commands": [
+                "mkdir -p /app/share",
+                "cargo --offline run -p export-cef-dir -- --archive cef_binary_*.tar.bz2 --force /app/share/cef"
+            ],
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "https://github.com/tauri-apps/cef-rs",
+                    "tag": "export-cef-dir-v145.5.0+145.0.27"
+                },
+                "cef-rs-cargo-sources.json",
+                {
+                    "type": "file",
+                    "url": "https://cef-builds.spotifycdn.com/cef_binary_145.0.27%2Bg4ddda2e%2Bchromium-145.0.7632.117_linux64_minimal.tar.bz2",
+                    "only-arches": [
+                        "x86_64"
+                    ],
+                    "dest-filename": "cef_binary_145.0.27+g4ddda2e+chromium-145.0.7632.117_linux64_minimal.tar.bz2",
+                    "sha256": "06f05bdb1a04ab99e9ca99cf896fd571ac7ee65cbfdec553d04bd06be80dbf9b"
+                },
+                {
+                    "type": "file",
+                    "url": "https://cef-builds.spotifycdn.com/cef_binary_145.0.27%2Bg4ddda2e%2Bchromium-145.0.7632.117_linuxarm64_minimal.tar.bz2",
+                    "only-arches": [
+                        "aarch64"
+                    ],
+                    "dest-filename": "cef_binary_145.0.27+g4ddda2e+chromium-145.0.7632.117_linuxarm64_minimal.tar.bz2",
+                    "sha256": "22410ccbf61bc58d5714db1b5f199328420a48b741ff4c0e6c60ee369af5039b"
+                }
+            ]
+        },
         {
             "name": "quick-webapps",
             "buildsystem": "simple",
             "build-options": {
                 "env": {
                     "CARGO_HOME": "/run/build/quick-webapps/cargo",
-                    "CEF_ROOT": "/run/build/quick-webapps/cef-bin"
+                    "CEF_PATH": "/app/share/cef"
                 }
             },
             "build-commands": [
@@ -44,27 +84,7 @@
                     "type": "dir",
                     "path": "."
                 },
-                "cargo-sources.json",
-                {
-                    "type": "archive",
-                    "url": "https://cef-builds.spotifycdn.com/cef_binary_145.0.27+g4ddda2e+chromium-145.0.7632.117_linux64_minimal.tar.bz2",
-                    "sha256": "06f05bdb1a04ab99e9ca99cf896fd571ac7ee65cbfdec553d04bd06be80dbf9b",
-                    "dest": "cef-bin",
-                    "strip-components": 1,
-                    "only-arches": [
-                        "x86_64"
-                    ]
-                },
-                {
-                    "type": "archive",
-                    "url": "https://cef-builds.spotifycdn.com/cef_binary_145.0.27+g4ddda2e+chromium-145.0.7632.117_linuxarm64_minimal.tar.bz2",
-                    "sha256": "22410ccbf61bc58d5714db1b5f199328420a48b741ff4c0e6c60ee369af5039b",
-                    "dest": "cef-bin",
-                    "strip-components": 1,
-                    "only-arches": [
-                        "aarch64"
-                    ]
-                }
+                "cargo-sources.json"
             ]
         }
     ]
