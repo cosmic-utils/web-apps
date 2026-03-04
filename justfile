@@ -59,11 +59,11 @@ install:
         install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
     done
 
-    mkdir -p {{base-dir}}/share/cef
+    if [ ! -d "{{base-dir}}/share/cef" ]; then \
+        mkdir -p {{base-dir}}/share/cef \
+        find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/share/cef/
+    fi
 
-    # Also copy from target where the build process downloads it
-    find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/share/cef/
-    
     # Create a symlink in bin to the webview in lib
     ln -sf ../share/cef/{{webview}} {{webview-bin-dst}}
 
