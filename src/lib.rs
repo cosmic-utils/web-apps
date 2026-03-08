@@ -11,7 +11,6 @@ use std::{
     path::PathBuf,
     str::FromStr,
 };
-use svg::node::element::{Circle, Text};
 use tokio::{
     fs::File,
     io::{AsyncReadExt as _, AsyncWriteExt as _},
@@ -22,6 +21,8 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use url::Url;
 use walkdir::WalkDir;
+
+use crate::launcher::WebappIcon;
 
 pub mod browser;
 pub mod launcher;
@@ -117,7 +118,7 @@ pub fn icons_location() -> Option<PathBuf> {
     None
 }
 
-pub fn webapp_icon(path: PathBuf) -> Icon {
+pub fn handle_icon(path: PathBuf) -> Icon {
     let mut buff = Vec::new();
 
     let mut file = std::fs::File::open(&path).expect("temp icon not found");
@@ -369,6 +370,21 @@ pub struct Icon {
 impl Icon {
     pub fn new(icon: IconType, path: String) -> Self {
         Self { icon, path }
+    }
+
+    pub fn to_launcher_icon(&self) -> Option<WebappIcon> {
+        let mut buffer = Vec::new();
+
+        if let Ok(mut file) = std::fs::File::open(&self.path) {
+            file.read_to_end(&mut buffer).expect("reading icon");
+
+            return Some(WebappIcon {
+                path: self.path.clone().into(),
+                buffer: buffer,
+            });
+        }
+
+        None
     }
 }
 
@@ -684,40 +700,63 @@ fn generate_random_color() -> String {
     SvgColor::from_index(random_index.try_into().expect("conversion")).to_string()
 }
 
-pub fn generate_icon(first_letter: &str, icon_name: &str) -> Option<PathBuf> {
-    let Some(path) = icons_location() else {
-        return None;
-    };
+pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
+    let color = generate_random_color();
 
-    let temp_path = path.join(&format!("{}.svg", icon_name));
+    let file_name = format!("{}_{}.svg", first_letter, &color);
 
-    let background = Circle::new()
-        .set("cx", 128)
-        .set("cy", 128)
-        .set("r", 100)
-        .set("fill", generate_random_color());
+    let svg_document = format!(
+        r#"<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
 
-    let text = Text::new(first_letter)
-        .set("x", "50%")
-        .set("y", "70%")
-        .set("text-anchor", "middle")
-        .set("font-size", 150)
-        .set("fill", "black")
-        .set("font-weight", "bold");
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 135.46666 135.46667"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <g
+     id="layer1">
+    <circle
+       style="fill:{}"
+       id="path1"
+       cx="67.73333"
+       cy="-67.73333"
+       r="64.96875"
+       transform="scale(1,-1)" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:88.1944px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+       x="39.599369"
+       y="99.350899"
+       id="text1"><tspan
+         id="tspan1"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:88.1944px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+         x="39.599369"
+         y="99.350899">{}</tspan></text>
+  </g>
+</svg>"#,
+        color, first_letter
+    );
 
-    // Create the document
-    let document = svg::Document::new()
-        .set("viewBox", "0 0 256 256")
-        .set("width", 256)
-        .set("height", 256)
-        .add(background)
-        .add(text);
+    if let Some(loc) = icons_location() {
+        let path = loc.join(file_name);
 
-    // Save the file
-    svg::save(&temp_path, &document).expect("Unable to save file");
-    println!("Generated {}", temp_path.display());
+        tracing::info!("icon wrote to {:?}", path);
 
-    Some(temp_path)
+        std::fs::write(&path, &svg_document).expect("writing icon");
+
+        return Some(WebappIcon {
+            path,
+            buffer: svg_document.as_bytes().to_vec(),
+        });
+    }
+
+    None
 }
 
 pub type WindowWidth = u32;

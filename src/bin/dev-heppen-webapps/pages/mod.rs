@@ -237,17 +237,19 @@ impl Application for QuickWebApps {
                     let Page::Editor(app_editor) = page;
 
                     if let Some(browser) = &app_editor.app_browser {
-                        let launcher = webapps::launcher::WebAppLauncher {
-                            browser: browser.clone(),
-                            name: app_editor.app_title.clone(),
-                            icon: app_editor.app_icon.clone(),
-                            category: app_editor.app_category.clone(),
-                        };
+                        if let Some(icon) = &app_editor.app_icon {
+                            let launcher = webapps::launcher::WebAppLauncher {
+                                browser: browser.clone(),
+                                name: app_editor.app_title.clone(),
+                                icon: icon.clone(),
+                                category: app_editor.app_category.clone(),
+                            };
 
-                        return task::future(async move {
-                            launcher.delete().await.unwrap();
-                            cosmic::action::app(Message::DeletionDone(id))
-                        });
+                            return task::future(async move {
+                                launcher.delete().await.unwrap();
+                                cosmic::action::app(Message::DeletionDone(id))
+                            });
+                        }
                     }
                 }
             }
@@ -462,7 +464,9 @@ impl Application for QuickWebApps {
                     .for_each(|app| {
                         self.nav
                             .insert()
-                            .icon(navbar_item_icon(&app.icon))
+                            .icon(navbar_item_icon(
+                                &app.icon.path.as_path().to_str().expect("path conversion"),
+                            ))
                             .text(app.name.clone())
                             .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
                             .closable();
@@ -496,8 +500,12 @@ impl Application for QuickWebApps {
             }
             Message::SetIcon(icon) => {
                 let Page::Editor(app_editor) = &mut self.page;
-                app_editor.update_icon(icon);
-                self.dialogs = None;
+
+                if let Some(ico) = icon {
+                    println!("setting icon: {:?}", ico);
+                    app_editor.update_icon(ico.to_launcher_icon());
+                    self.dialogs = None;
+                }
             }
             Message::Surface(a) => {
                 return cosmic::task::message(cosmic::Action::Cosmic(

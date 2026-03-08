@@ -5,10 +5,10 @@ use ashpd::desktop::{
     },
 };
 use serde::{Deserialize, Serialize};
-use std::{io::Read as _, os::unix::fs::MetadataExt, path::PathBuf};
-use tokio::{fs::remove_file, io::AsyncReadExt};
+use std::{io::Read as _, path::PathBuf};
+use tokio::fs::remove_file;
 
-use crate::APP_ID;
+use crate::{APP_ID, handle_icon};
 
 pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
     if let Some(url) = url {
@@ -45,10 +45,26 @@ pub fn installed_webapps() -> Vec<WebAppLauncher> {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WebappIcon {
+    pub path: PathBuf,
+    pub buffer: Vec<u8>,
+}
+
+impl WebappIcon {
+    pub fn to_icon(&self) -> crate::Icon {
+        handle_icon(self.path.clone())
+    }
+}
+
+pub fn webapp_icon_valid(icon: &WebappIcon) -> bool {
+    icon.path.exists() && !icon.buffer.is_empty()
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WebAppLauncher {
     pub browser: crate::browser::Browser,
     pub name: String,
-    pub icon: String,
+    pub icon: WebappIcon,
     pub category: crate::Category,
 }
 
@@ -60,9 +76,8 @@ impl WebAppLauncher {
             return Ok(false);
         };
 
-        let icon_path = PathBuf::from(&self.icon);
-
-        if !icon_path.exists() {
+        if !webapp_icon_valid(&self.icon) {
+            tracing::warn!("icon invalid!");
             return Ok(false);
         };
 
@@ -79,42 +94,32 @@ impl WebAppLauncher {
             .await
             .expect("Failed to create DynamicLauncherProxy");
 
-        if let Ok(mut file) = tokio::fs::File::open(&self.icon).await {
-            let metadata = file.metadata().await?;
-            let size = metadata.size();
-            let mut buffer = Vec::with_capacity(size.try_into()?);
+        let icon = Icon::Bytes(self.icon.buffer.clone());
 
-            let _ = file.read_exact(&mut buffer);
+        let prepare_opts = PrepareInstallOptions::default().set_editable_icon(true);
 
-            let icon = Icon::Bytes(buffer);
+        let response = proxy
+            .prepare_install(None, &self.name, icon, prepare_opts)
+            .await
+            .expect("Failed to prepare install")
+            .response()
+            .expect("Failed to get response");
 
-            let prepare_opts = PrepareInstallOptions::default().set_editable_icon(true);
+        let token = response.token();
 
-            let response = proxy
-                .prepare_install(None, &self.name, icon, prepare_opts)
-                .await
-                .expect("Failed to prepare install")
-                .response()
-                .expect("Failed to get response");
+        tracing::info!("{}", desktop_entry);
 
-            let token = response.token();
+        proxy
+            .install(
+                &token,
+                &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
+                &desktop_entry,
+                InstallOptions::default(),
+            )
+            .await
+            .expect("installing");
 
-            tracing::info!("{}", desktop_entry);
-
-            proxy
-                .install(
-                    &token,
-                    &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
-                    &desktop_entry,
-                    InstallOptions::default(),
-                )
-                .await
-                .expect("installing");
-
-            return Ok(true);
-        }
-
-        return Ok(false);
+        return Ok(true);
     }
 
     pub async fn delete(&self) -> std::io::Result<()> {

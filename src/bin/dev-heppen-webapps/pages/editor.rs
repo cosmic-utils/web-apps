@@ -1,5 +1,3 @@
-use std::{path::PathBuf, str::FromStr};
-
 use cosmic::{
     Element, Task,
     action::Action,
@@ -9,7 +7,10 @@ use cosmic::{
 };
 use rand::{RngExt as _, rng};
 use strum::IntoEnumIterator as _;
-use webapps::{Category, fl};
+use webapps::{
+    Category, fl, generate_icon, handle_icon,
+    launcher::{WebappIcon, webapp_icon_valid},
+};
 
 use crate::pages;
 
@@ -18,7 +19,7 @@ pub struct AppEditor {
     pub app_browser: Option<webapps::browser::Browser>,
     pub app_title: String,
     pub app_url: String,
-    pub app_icon: String,
+    pub app_icon: Option<WebappIcon>,
     pub app_category: webapps::Category,
     pub app_window_width: String,
     pub app_window_height: String,
@@ -41,7 +42,7 @@ impl Default for AppEditor {
             app_browser: None,
             app_title: String::new(),
             app_url: String::new(),
-            app_icon: String::new(),
+            app_icon: None,
             app_category: webapps::Category::default(),
             app_window_width: String::from(webapps::DEFAULT_WINDOW_WIDTH.to_string()),
             app_window_height: String::from(webapps::DEFAULT_WINDOW_HEIGHT.to_string()),
@@ -98,11 +99,7 @@ impl AppEditor {
                 .position(|c| c == &launcher.category.name());
             editor.is_installed = true;
 
-            let path_icon =
-                PathBuf::from_str(&launcher.icon).expect("path invalid for launcher icon");
-
-            let webapp_icon = webapps::webapp_icon(path_icon);
-            editor.update_icon(webapp_icon.into());
+            editor.update_icon(launcher.icon.into());
 
             editor
         } else {
@@ -138,40 +135,41 @@ impl AppEditor {
                 };
 
                 if webapps::launcher::webapplauncher_is_valid(&self.app_title, &browser.url) {
-                    let launcher = webapps::launcher::WebAppLauncher {
-                        browser: browser.clone(),
-                        name: self.app_title.clone(),
-                        icon: self.app_icon.clone(),
-                        category: self.app_category.clone(),
-                    };
+                    if let Some(icon) = &self.app_icon {
+                        let launcher = webapps::launcher::WebAppLauncher {
+                            browser: browser.clone(),
+                            name: self.app_title.clone(),
+                            icon: icon.clone(),
+                            category: self.app_category.clone(),
+                        };
 
-                    return task::future(async move {
-                        if let Ok(success) = launcher.create().await {
-                            if success {
-                                return crate::pages::Message::SaveLauncher(launcher);
+                        return task::future(async move {
+                            if let Ok(success) = launcher.create().await {
+                                if success {
+                                    return crate::pages::Message::SaveLauncher(launcher);
+                                }
                             }
-                        }
-                        crate::pages::Message::None
-                    });
+                            crate::pages::Message::None
+                        });
+                    }
                 } else {
                     return Task::none();
                 }
             }
             Message::GenerateIcon => {
                 if self.app_title.len() > 1 {
-                    let path =
-                        webapps::generate_icon(&self.app_title.split_at(1).0, &self.app_title);
+                    let icon = generate_icon(&self.app_title.split_at(1).0);
 
-                    if let Some(path) = path {
-                        if path.exists() {
-                            let ico = webapps::webapp_icon(path);
+                    self.update_icon(icon.clone());
 
-                            self.update_icon(Some(ico.clone()));
+                    if let Some(icon) = icon {
+                        if webapp_icon_valid(&icon) {
+                            let ico = webapps::handle_icon(icon.path);
 
                             return task::future(async {
                                 Action::App(pages::Message::SetIcon(ico.into()))
                             });
-                        }
+                        };
                     }
                 }
             }
@@ -186,7 +184,7 @@ impl AppEditor {
                 return task::future(async { pages::Message::OpenIconPicker });
             }
             Message::ResetIcon => {
-                self.app_icon.clear();
+                self.app_icon = None;
                 self.selected_icon = None;
             }
             Message::Title(title) => {
@@ -207,10 +205,10 @@ impl AppEditor {
         Task::none()
     }
 
-    pub fn update_icon(&mut self, icon: Option<webapps::Icon>) {
+    pub fn update_icon(&mut self, icon: Option<WebappIcon>) {
         if let Some(icon) = icon {
-            self.app_icon = icon.path.clone();
-            self.selected_icon = Some(icon);
+            self.selected_icon = Some(handle_icon(icon.path.clone()));
+            self.app_icon = Some(icon);
         }
     }
 

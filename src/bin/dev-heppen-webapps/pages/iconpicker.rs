@@ -54,6 +54,7 @@ impl IconPicker {
                             .iter()
                             .map(|file| {
                                 let mut file_path = file.as_str();
+                                println!("file path: {}", file_path);
 
                                 if file_path.starts_with("file://") {
                                     file_path =
@@ -79,7 +80,9 @@ impl IconPicker {
                     pages::Message::IconsResult(webapps::find_icons(name).await)
                 });
             }
-            Message::SetIcon(icon) => return task::future(async { pages::Message::SetIcon(icon) }),
+            Message::SetIcon(icon) => {
+                return task::message(pages::Message::SetIcon(icon));
+            }
         }
 
         Task::none()
