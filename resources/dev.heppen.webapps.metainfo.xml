@@ -16,13 +16,13 @@
   <summary>Web applications at your fingertips</summary>
   <summary xml:lang="cs">Webové aplikace na dosah ruky</summary>
   <summary xml:lang="fr">Applications web à portée de main</summary>
-  <summary xml:lang="uk">Застосунки у вас під рукою</summary>
+  <summary xml:lang="uk">Створюйте застосунки з сайтів і керуйте ними</summary>
   <metadata_license>MIT</metadata_license>
   <project_license>GPL-3.0-only</project_license>
   <description>
     <p>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window. With some customization options.</p>
     <p xml:lang="cs">Manažer webových aplikací pro prostředí COSMIC™ napsaný s láskou a libcosmic. Umožňuje jednoduše vytvořit webové aplikace z daných url, které pracují v odděleném okně. Nechybí ani možnosti přizpůsobení.</p>
-    <p xml:lang="uk">Менеджер застосунків для середовища COSMIC™, створений з любов’ю і libcosmic. Створюйте застосунки з URL вебсторінок, які працюють в окремому вікні. З можливості налаштування.</p>
+    <p xml:lang="uk">Менеджер застосунків для середовища COSMIC™, створений з любов’ю і libcosmic. Створюйте застосунки з URL вебсторінок, які працюють в окремому вікні. З можливостями налаштування.</p>
     <ul>
       <li>Fast and easy to use</li>
       <li xml:lang="cs">Rychlé a snadné použití</li>
