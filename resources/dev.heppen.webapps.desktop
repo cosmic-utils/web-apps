@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Quick Web Apps
 Name[cs]=Rychlé webové aplikace
-Name[uk]=Швидкі сайтозастосунки
+Name[uk]=Швидкі застосунки
 Exec=dev.heppen.webapps
 Type=Application
 StartupNotify=true
