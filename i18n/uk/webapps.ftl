@@ -1,4 +1,4 @@
-app=Швидкі сайтозастосунки
+app=Швидкі застосунки
 loading=Завантаження...
 open=Відкрити
 number={ $number }
@@ -44,7 +44,7 @@ installed-header=У вас встановлено { $number ->
         [few] застосунки
         *[other] { $number} застосунків
     }:
-not-installed-header=Сайтозастосунки не встановлені. Натисніть кнопку Створити, щоб створити новий.
+not-installed-header=Застосунки не встановлено. Натисніть кнопку Створити, щоб створити новий.
 
 # creator.rs
 category=Категорія
@@ -60,10 +60,10 @@ sound-and-video=Звук і відео
 
 browser=Переглядач
 
-new-webapp-title=Новий Швидкий сайтозастосунок
+new-webapp-title=Новий застосунок
 title=Назва
 url=URL
-download-favicon=Завантажити іконку сайту
+download-favicon=Завантажити іконку
 non-standard-arguments=Нестандартні аргументи
 # keep navbar, isolated profile nad private mode small count of characters
 navbar=Навігаційна стрічка
