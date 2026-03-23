@@ -25,7 +25,7 @@ reset-icon=Скинути іконку
 # header
 main-window={ $app }
 view=Вигляд
-create=Готово
+create=Створити
 new-app=Створити новий
 quick-web-app=Швидкий запуск
 edit=Редагувати
