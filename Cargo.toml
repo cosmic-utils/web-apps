@@ -28,7 +28,7 @@ ashpd = { version = "0.13", features = [
     "dynamic_launcher",
 ] }
 # for webview
-cef = { version = "145", features = ["linux-x11", "build-util"] }
+cef = { version = "148.0.0", features = ["linux-x11", "build-util"] }
 x11-dl = "2.21.0"
 
 anyhow = "1"

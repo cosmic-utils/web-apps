@@ -5,7 +5,7 @@ fn window_from_browser(browser: Option<&mut Browser>) -> Option<WindowHandle> {
     if window == 0 { None } else { Some(window) }
 }
 
-pub fn platform_title_change(browser: Option<&mut Browser>, _title: Option<&CefString>) {
+pub fn platform_title_change(browser: Option<&mut Browser>, title: Option<&CefString>) {
     // Retrieve the X11 display shared with Chromium.
     let display = get_xdisplay();
     if display.is_null() {
@@ -52,7 +52,7 @@ pub fn platform_title_change(browser: Option<&mut Browser>, _title: Option<&CefS
         }
 
         // Set the window title.
-        let Ok(title) = CString::new(_title.map(CefString::to_string).unwrap_or_default()) else {
+        let Ok(title) = CString::new(title.map(CefString::to_string).unwrap_or_default()) else {
             return;
         };
         let title = title.as_c_str();

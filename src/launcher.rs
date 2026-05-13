@@ -1,7 +1,9 @@
 use anyhow::anyhow;
 use ashpd::desktop::{
     Icon,
-    dynamic_launcher::{DynamicLauncherProxy, InstallOptions, LauncherType, PrepareInstallOptions},
+    dynamic_launcher::{
+        DynamicLauncherProxy, InstallOptions, LauncherType, PrepareInstallOptions, UninstallOptions,
+    },
 };
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -65,9 +67,27 @@ pub async fn create(
     proxy
         .install(
             &token,
-            &format!("{}.{}.desktop", &crate::APP_ID, browser.app_id.id),
+            &format!("{}.desktop", browser.app_id.id),
             &desktop_entry,
             InstallOptions::default(),
+        )
+        .await
+        .expect("installing");
+
+    Ok((app_config.id.to_string(), app_config.to_owned()))
+}
+
+pub async fn uninstall(
+    app_config: crate::AppConfig,
+) -> anyhow::Result<(String, crate::AppConfig), anyhow::Error> {
+    let proxy = DynamicLauncherProxy::new()
+        .await
+        .expect("Failed to create DynamicLauncherProxy");
+
+    proxy
+        .uninstall(
+            &format!("{}.desktop", app_config.id),
+            UninstallOptions::default(),
         )
         .await
         .expect("installing");

@@ -37,6 +37,7 @@ pub struct AppModel {
 pub enum Message {
     App(AppConfigMessage),
     Created((String, AppConfig)),
+    Deleted((String, AppConfig)),
     ReloadNavbar,
     SetIcon(Option<launcher::DesktopIcon>),
     UpdateConfig(Config),
@@ -201,20 +202,15 @@ impl cosmic::Application for AppModel {
 
                     if let Some(page) = data {
                         let Page::Editor(app) = page;
+                        let app = app.clone();
 
-                        if let Some(handler) = Config::config_handler() {
-                            let mut apps = self.config.apps.clone();
-
-                            if app.is_installed {
-                                let id = app.id.clone();
-
-                                apps.remove_entry(&id);
-
-                                let _ = handler.set("apps", apps);
-                                tracing::info!("{} removed.", app.title);
-                                return Task::done(Action::App(Message::ReloadNavbar));
+                        return Task::future(async move {
+                            if let Ok((id, config)) = launcher::uninstall(app).await {
+                                return Action::App(Message::Deleted((id, config)));
                             }
-                        };
+
+                            Action::None
+                        });
                     };
                 }
                 AppConfigMessage::CreateLauncher => {
@@ -222,15 +218,13 @@ impl cosmic::Application for AppModel {
 
                     let app_id = app.title.replace(' ', "");
                     let app_id = format!(
-                        "{}.{}{}",
-                        webapps::APP_ID,
+                        "{}{}",
                         app_id,
                         &rand::rng().random_range(1000..10000).to_string()
                     );
 
                     if !app.is_installed {
                         app.id = app_id;
-                        app.is_installed = true;
                     }
 
                     let id = app.id.clone();
@@ -294,9 +288,13 @@ impl cosmic::Application for AppModel {
                     editor.window_height = height;
                 }
             },
-            Message::Created((id, cfg)) => {
+            Message::Created((id, mut cfg)) => {
                 if let Some(handler) = Config::config_handler() {
                     let mut apps = self.config.apps.clone();
+
+                    if !cfg.is_installed {
+                        cfg.is_installed = true;
+                    }
 
                     apps.insert(id, cfg.to_owned());
 
@@ -305,6 +303,19 @@ impl cosmic::Application for AppModel {
 
                     return Task::done(Action::App(Message::ReloadNavbar));
                 }
+            }
+            Message::Deleted((id, cfg)) => {
+                if let Some(handler) = Config::config_handler() {
+                    let mut apps = self.config.apps.clone();
+
+                    if cfg.is_installed {
+                        apps.remove_entry(&id);
+
+                        let _ = handler.set("apps", apps);
+                        tracing::info!("{} removed.", cfg.title);
+                        return Task::done(Action::App(Message::ReloadNavbar));
+                    }
+                };
             }
             Message::ReloadNavbar => {
                 self.nav.clear();
