@@ -1,48 +1,79 @@
-use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::collections::HashMap;
 
-use crate::cef_path;
+use crate::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH, WebviewArgs, WindowSize, cef_path};
+use cosmic::cosmic_config::{self, ConfigGet};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Browser {
     pub app_id: crate::WebviewArgs,
     pub window_title: Option<String>,
     pub url: Option<String>,
-    pub profile: PathBuf,
     pub window_size: Option<crate::WindowSize>,
+    pub persistent_profile: Option<bool>,
     pub try_simulate_mobile: Option<bool>,
 }
 
 impl Browser {
-    pub fn new(app_id: &str) -> Self {
-        let xdg_data = dirs::data_dir().unwrap_or_default();
-        let path = xdg_data.join(crate::APP_ID).join("profiles").join(&app_id);
-
-        Self {
+    pub fn new(app_id: String) -> Browser {
+        Browser {
             app_id: crate::WebviewArgs {
                 id: app_id.to_string(),
             },
             window_title: None,
             url: None,
-            profile: path,
             window_size: None,
+            persistent_profile: None,
             try_simulate_mobile: None,
         }
     }
 
-    pub fn from_appid(id: &str) -> Option<Self> {
-        if let Some(launcher) = crate::launcher::installed_webapps()
-            .iter()
-            .find(|launcher| launcher.browser.app_id.as_ref() == id)
-        {
-            return Some(launcher.browser.clone());
+    pub fn from_appid(app_id: &str) -> Option<Browser> {
+        let Ok(config) = cosmic_config::Config::new(crate::APP_ID, crate::CONFIG_VERSION) else {
+            return None;
         };
 
-        None
+        let Ok(apps) = config.get::<HashMap<String, crate::AppConfig>>("apps") else {
+            return None;
+        };
+
+        fn parse_window_width(w: String) -> u32 {
+            if let Ok(w) = w.parse::<u32>() {
+                w
+            } else {
+                DEFAULT_WINDOW_WIDTH
+            }
+        }
+
+        fn parse_window_height(h: String) -> u32 {
+            if let Ok(h) = h.parse::<u32>() {
+                h
+            } else {
+                DEFAULT_WINDOW_HEIGHT
+            }
+        }
+
+        match apps.get(app_id) {
+            Some(a) => Some(Browser {
+                app_id: WebviewArgs {
+                    id: a.id.to_string(),
+                },
+                window_title: Some(a.title.to_string()),
+                url: Some(a.url.to_string()),
+                window_size: Some(WindowSize(
+                    parse_window_width(a.window_width.to_string()),
+                    parse_window_height(a.window_height.to_string()),
+                )),
+                persistent_profile: Some(a.persistent_profile),
+                try_simulate_mobile: Some(a.simulate_mobile),
+            }),
+            None => None,
+        }
     }
 
     pub fn get_exec(&self) -> Option<String> {
         let Some(cef_path) = cef_path() else {
+            eprintln!("CEF cannot be found. Is it not installed?");
             return None;
         };
 
@@ -52,20 +83,5 @@ impl Browser {
             crate::APP_ID,
             self.app_id.as_ref()
         ))
-    }
-
-    pub fn delete(&self) {
-        let xdg_data = dirs::data_dir().unwrap_or_default();
-
-        let path = xdg_data
-            .join(crate::APP_ID)
-            .join("profiles")
-            .join(self.app_id.as_ref());
-
-        if path.exists() {
-            if let Err(e) = std::fs::remove_dir_all(&path) {
-                eprintln!("Failed to delete profile directory: {}", e);
-            }
-        }
     }
 }

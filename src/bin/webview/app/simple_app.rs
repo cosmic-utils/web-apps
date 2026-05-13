@@ -1,7 +1,7 @@
 use cef::{Rect, *};
 use clap::Parser as _;
 use std::cell::RefCell;
-use webapps::WebviewArgs;
+use webapps::{DEFAULT_WINDOW_HEIGHT, DEFAULT_WINDOW_WIDTH, WebviewArgs};
 
 use super::simple_handler::*;
 
@@ -14,8 +14,8 @@ wrap_window_delegate! {
     impl ViewDelegate {
         fn preferred_size(&self, _view: Option<&mut View>) -> Size {
             Size {
-                width: 800,
-                height: 600,
+                width: DEFAULT_WINDOW_WIDTH as i32,
+                height: DEFAULT_WINDOW_HEIGHT as i32,
             }
         }
     }
@@ -146,10 +146,12 @@ wrap_browser_process_handler! {
             let args = WebviewArgs::parse();
 
             let Some(browser_config) = crate::Browser::from_appid(&args.id) else {
+                eprintln!("Browser cannot be recreated.");
                 return;
             };
 
             let Some(url) = browser_config.url else {
+                eprintln!("URL cannot be found.");
                 return;
             };
 

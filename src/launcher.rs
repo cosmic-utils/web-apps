@@ -1,146 +1,76 @@
+use anyhow::anyhow;
 use ashpd::desktop::{
     Icon,
-    dynamic_launcher::{
-        DynamicLauncherProxy, InstallOptions, PrepareInstallOptions, UninstallOptions,
-    },
+    dynamic_launcher::{DynamicLauncherProxy, InstallOptions, LauncherType, PrepareInstallOptions},
 };
 use serde::{Deserialize, Serialize};
-use std::{io::Read as _, path::PathBuf};
-use tokio::fs::remove_file;
-
-use crate::{APP_ID, handle_icon};
-
-pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
-    if let Some(url) = url {
-        if crate::url_valid(url) && !name.is_empty() && !url.is_empty() {
-            return true;
-        }
-    }
-
-    false
-}
-
-pub fn installed_webapps() -> Vec<WebAppLauncher> {
-    let mut webapps = Vec::new();
-
-    if let Some(data_dir) = dirs::data_dir() {
-        if let Ok(entries) = std::fs::read_dir(data_dir.join(APP_ID).join("database")) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let file = std::fs::File::open(entry.path());
-                    let mut content = String::new();
-
-                    if let Ok(mut f) = file {
-                        f.read_to_string(&mut content).unwrap();
-                        if let Ok(launcher) = ron::from_str::<WebAppLauncher>(&content) {
-                            webapps.push(launcher);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    webapps
-}
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct WebappIcon {
+pub struct DesktopIcon {
     pub path: PathBuf,
     pub buffer: Vec<u8>,
 }
 
-impl WebappIcon {
+impl DesktopIcon {
     pub fn to_icon(&self) -> crate::Icon {
-        handle_icon(self.path.clone())
+        crate::handle_icon(self.path.clone())
     }
 }
 
-pub fn webapp_icon_valid(icon: &WebappIcon) -> bool {
-    icon.path.exists() && !icon.buffer.is_empty()
-}
+pub async fn create(
+    browser: crate::browser::Browser,
+    app_config: crate::AppConfig,
+) -> anyhow::Result<(String, crate::AppConfig), anyhow::Error> {
+    let mut desktop_entry = String::new();
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct WebAppLauncher {
-    pub browser: crate::browser::Browser,
-    pub name: String,
-    pub icon: WebappIcon,
-    pub category: crate::Category,
-}
+    let Some(exe) = browser.get_exec() else {
+        return Err(anyhow!("Failed to get browser executable."));
+    };
 
-impl WebAppLauncher {
-    pub async fn create(&self) -> anyhow::Result<bool> {
-        let mut desktop_entry = String::new();
+    let Some(ref icon) = app_config.icon else {
+        return Err(anyhow!("Failed! Icon is wrong."));
+    };
 
-        let Some(exe) = self.browser.get_exec() else {
-            return Ok(false);
-        };
+    desktop_entry.push_str("[Desktop Entry]\n");
+    desktop_entry.push_str("Version=1.0\n");
+    desktop_entry.push_str("Type=Application\n");
+    desktop_entry.push_str(&format!("Name={}\n", app_config.title));
+    desktop_entry.push_str(&format!("Comment=Quick WebApp\n",));
+    desktop_entry.push_str(&format!("Exec={}\n", exe));
+    desktop_entry.push_str(&format!("StartupWMClass={}\n", &browser.app_id.id));
+    desktop_entry.push_str(&format!("Categories={}\n", app_config.category.as_ref()));
 
-        if !webapp_icon_valid(&self.icon) {
-            tracing::warn!("icon invalid!");
-            return Ok(false);
-        };
+    let proxy = DynamicLauncherProxy::new()
+        .await
+        .expect("Failed to create DynamicLauncherProxy");
 
-        desktop_entry.push_str("[Desktop Entry]\n");
-        desktop_entry.push_str("Version=1.0\n");
-        desktop_entry.push_str("Type=Application\n");
-        desktop_entry.push_str(&format!("Name={}\n", self.name));
-        desktop_entry.push_str(&format!("Comment=Quick WebApp\n",));
-        desktop_entry.push_str(&format!("Exec={}\n", exe));
-        desktop_entry.push_str(&format!("StartupWMClass={}\n", self.browser.app_id.id));
-        desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
+    let icon = Icon::Bytes(icon.buffer.clone());
 
-        let proxy = DynamicLauncherProxy::new()
-            .await
-            .expect("Failed to create DynamicLauncherProxy");
+    let prepare_opts = PrepareInstallOptions::default()
+        .set_editable_icon(true)
+        .set_launcher_type(LauncherType::Application);
 
-        let icon = Icon::Bytes(self.icon.buffer.clone());
+    let response = proxy
+        .prepare_install(None, &app_config.title, icon, prepare_opts)
+        .await
+        .expect("Failed to prepare install")
+        .response()
+        .expect("Failed to get response");
 
-        let prepare_opts = PrepareInstallOptions::default().set_editable_icon(true);
+    let token = response.token();
 
-        let response = proxy
-            .prepare_install(None, &self.name, icon, prepare_opts)
-            .await
-            .expect("Failed to prepare install")
-            .response()
-            .expect("Failed to get response");
+    tracing::info!("{}", desktop_entry);
 
-        let token = response.token();
+    proxy
+        .install(
+            &token,
+            &format!("{}.{}.desktop", &crate::APP_ID, browser.app_id.id),
+            &desktop_entry,
+            InstallOptions::default(),
+        )
+        .await
+        .expect("installing");
 
-        tracing::info!("{}", desktop_entry);
-
-        proxy
-            .install(
-                &token,
-                &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
-                &desktop_entry,
-                InstallOptions::default(),
-            )
-            .await
-            .expect("installing");
-
-        return Ok(true);
-    }
-
-    pub async fn delete(&self) -> std::io::Result<()> {
-        let proxy = DynamicLauncherProxy::new()
-            .await
-            .expect("Failed to create DynamicLauncherProxy");
-
-        proxy
-            .uninstall(
-                &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id,),
-                UninstallOptions::default(),
-            )
-            .await
-            .expect("Failed to uninstall");
-
-        if let Some(path) = crate::database_path(&format!("{}.ron", self.browser.app_id.as_ref())) {
-            remove_file(path).await?;
-        }
-
-        self.browser.delete();
-
-        Ok(())
-    }
+    Ok((app_config.id.to_string(), app_config.to_owned()))
 }

@@ -1,28 +1,15 @@
+use std::{io::Read as _, path::PathBuf};
+
 use clap::Parser;
-use cosmic::{iced_core, iced_winit::graphics::image::image_rs::ImageReader, widget};
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
-use std::{
-    ffi::OsStr,
-    fmt::Display,
-    fs::create_dir_all,
-    io::{Cursor, Read as _},
-    os::unix::fs::PermissionsExt as _,
-    path::PathBuf,
-    str::FromStr,
-};
-use tokio::{
-    fs::File,
-    io::{AsyncReadExt as _, AsyncWriteExt as _},
-    process::Child,
-};
 
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+use tokio::fs::create_dir_all;
 use url::Url;
-use walkdir::WalkDir;
 
-use crate::launcher::WebappIcon;
+use crate::launcher::DesktopIcon;
 
 pub mod browser;
 pub mod launcher;
@@ -34,10 +21,42 @@ pub const ICON_SIZE: u32 = 42;
 pub const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 pub const CONFIG_VERSION: u64 = 1;
 pub const APP_ID: &str = "dev.heppen.webapps";
+pub const WEBVIEW_ID: &str = "dev.heppen.webapps.webview";
 pub const APP_ICON: &[u8] =
     include_bytes!("../resources/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
-pub const MOBILE_UA: &str = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.7632.76 Mobile Safari/537.36";
-pub const DESKTOP_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36";
+pub const MOBILE_UA: &str = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.138 Mobile Safari/537.36";
+pub const DESKTOP_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36";
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct AppConfig {
+    pub id: String,
+    pub title: String,
+    pub url: String,
+    pub icon: Option<Icon>,
+    pub window_width: String,
+    pub window_height: String,
+    pub persistent_profile: bool,
+    pub simulate_mobile: bool,
+    pub category: Category,
+    pub is_installed: bool,
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            title: String::new(),
+            url: String::new(),
+            icon: None,
+            window_width: format!("{}", DEFAULT_WINDOW_WIDTH),
+            window_height: format!("{}", DEFAULT_WINDOW_HEIGHT),
+            persistent_profile: true,
+            simulate_mobile: false,
+            category: Category::default(),
+            is_installed: false,
+        }
+    }
+}
 
 pub fn url_valid(url: &str) -> bool {
     if Url::parse(url).is_ok() {
@@ -46,227 +65,87 @@ pub fn url_valid(url: &str) -> bool {
     false
 }
 
-pub fn is_svg(path: &str) -> bool {
-    if !url_valid(path) {
-        let Ok(pb) = PathBuf::from_str(path);
+pub fn launcher_is_valid(app_id: &str, url: Option<&str>) -> bool {
+    let Some(url) = url else {
+        return false;
+    };
 
-        if pb.extension() == Some(OsStr::new("svg")) {
-            return true;
-        }
-    }
-    false
+    !app_id.is_empty() && url_valid(url)
 }
 
-pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
+pub fn browser_path() -> Option<PathBuf> {
     if let Some(xdg_data) = dirs::data_dir() {
-        let path = xdg_data.join(APP_ID).join("themes");
-
-        if !path.exists() {
-            create_dir_all(&path).unwrap();
-        }
-
-        return Some(path.join(theme_file));
-    }
-
-    None
-}
-
-pub fn database_path(entry: &str) -> Option<PathBuf> {
-    if let Some(xdg_data) = dirs::data_dir() {
-        let path = xdg_data.join(APP_ID).join("database");
-
-        if !path.exists() {
-            create_dir_all(&path).unwrap();
-        }
-
-        return Some(path.join(entry));
-    }
-
-    None
-}
-
-pub fn profiles_path(app_id: &str) -> Option<PathBuf> {
-    if let Some(xdg_data) = dirs::data_dir() {
-        let final_path = xdg_data.join(APP_ID).join("profiles").join(app_id);
+        let final_path = xdg_data.join(APP_ID).join("browser");
 
         if !final_path.exists() {
-            if let Err(e) = create_dir_all(&final_path) {
-                eprintln!("Failed to create profile directory: {}", e);
-                return None;
-            }
-        }
-
-        return Some(final_path);
-    }
-
-    None
-}
-
-pub fn icons_location() -> Option<PathBuf> {
-    if let Some(xdg_data) = dirs::data_dir() {
-        let final_path = xdg_data.join(APP_ID).join("icons");
-
-        if !final_path.exists() {
-            if let Err(e) = create_dir_all(&final_path) {
+            if let Err(e) = std::fs::create_dir_all(&final_path) {
                 eprintln!("Failed to create icons directory: {}", e);
                 return None;
             }
         };
-
         return Some(final_path);
     }
     None
 }
 
-pub fn handle_icon(path: PathBuf) -> Icon {
-    let mut buff = Vec::new();
+pub async fn icons_location() -> Option<PathBuf> {
+    if let Some(xdg_data) = dirs::data_dir() {
+        let final_path = xdg_data.join(APP_ID).join("icons");
 
-    let mut file = std::fs::File::open(&path).expect("temp icon not found");
-
-    let _ = file.read_to_end(&mut buff).expect("reading icon data");
-
-    match is_svg(&path.display().to_string()) {
-        true => {
-            let handle = iced_core::svg::Handle::from_memory(buff);
-
-            Icon::new(IconType::Svg(handle), path.display().to_string().clone())
-        }
-        false => {
-            let handle = iced_core::image::Handle::from_bytes(buff);
-
-            Icon::new(IconType::Raster(handle), path.display().to_string().clone())
-        }
-    }
-}
-
-pub fn icon_pack_installed() -> bool {
-    let packs: Vec<&str> = vec!["Papirus", "Papirus-Dark", "Papirus-Light"];
-    let mut directories = 0;
-
-    let mut icons_dir = match icons_location() {
-        Some(dir) => dir,
-        None => PathBuf::from(env!("HOME"))
-            .join(".local")
-            .join("share")
-            .join("icons"),
-    };
-
-    for theme in packs.iter() {
-        icons_dir.push(theme);
-
-        if icons_dir.exists() {
-            directories += 1;
+        if !final_path.exists() {
+            if let Err(e) = create_dir_all(&final_path).await {
+                eprintln!("Failed to create icons directory: {}", e);
+                return None;
+            }
         };
+        return Some(final_path);
     }
-
-    directories > 0
-}
-
-pub async fn add_icon_packs_install_script() -> String {
-    let install_script = include_bytes!("../resources/scripts/icon-installer.sh");
-    let temp_file = format!("/tmp/{}.sh", APP_ID);
-
-    // Create a temporary file
-    let mut file = File::create(&temp_file).await.unwrap();
-
-    file.write_all(install_script).await.unwrap();
-
-    // Make the script executable
-    let mut perms = file.metadata().await.unwrap().permissions();
-    perms.set_mode(0o755);
-    file.set_permissions(perms).await.unwrap();
-
-    temp_file.to_string()
-}
-
-pub async fn execute_script(script: String) -> Child {
-    tokio::process::Command::new(script)
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .spawn()
-        .expect("cant execute script")
-}
-
-pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
-    let mut icons: Vec<String> = Vec::new();
-
-    for entry in WalkDir::new(&path).into_iter().filter_map(|e| e.ok()) {
-        if let Some(filename) = entry.file_name().to_str() {
-            if filename.contains(&icon_name) {
-                if is_svg(filename) {
-                    if let Some(path) = entry.path().to_str() {
-                        if let Ok(buffer) = tokio::fs::read_to_string(&mut path.to_string()).await {
-                            let options = usvg::Options::default();
-                            if let Ok(parsed) = usvg::Tree::from_str(&buffer, &options) {
-                                let size = parsed.size();
-                                if size.width() >= ICON_SIZE as f32
-                                    && size.height() >= ICON_SIZE as f32
-                                    && !icons.contains(&path.to_string())
-                                {
-                                    icons.push(path.to_string())
-                                }
-                            }
-                        }
-                    }
-                } else if let Some(path) = entry.path().to_str() {
-                    if let Ok(image) = ImageReader::open(path) {
-                        if let Ok(img) = image.decode() {
-                            if img.width() >= ICON_SIZE
-                                && img.height() >= ICON_SIZE
-                                && !icons.contains(&path.to_string())
-                            {
-                                icons.push(path.to_string())
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    icons
-}
-
-pub async fn find_icons(icon_name: String) -> Vec<String> {
-    if let Some(path) = icons_location() {
-        find_icon(path, icon_name).await
-    } else {
-        Vec::new()
-    }
-}
-
-pub async fn image_handle(path: String) -> Option<Icon> {
-    let Ok(result_path) = PathBuf::from_str(&path);
-
-    if result_path.is_file() {
-        if is_svg(&path) {
-            let handle = widget::svg::Handle::from_path(&result_path);
-
-            return Some(Icon::new(IconType::Svg(handle), path));
-        } else {
-            let mut data: Vec<_> = Vec::new();
-
-            if let Ok(mut file) = tokio::fs::File::open(&result_path).await {
-                let _ = file.read_to_end(&mut data).await;
-            }
-
-            if let Ok(image_reader) = ImageReader::new(Cursor::new(&data)).with_guessed_format() {
-                if let Ok(image) = image_reader.decode() {
-                    if image.width() >= ICON_SIZE && image.height() >= ICON_SIZE {
-                        let handle = iced_core::image::Handle::from_bytes(data);
-
-                        return Some(Icon::new(IconType::Raster(handle), path));
-                    }
-                };
-            }
-        }
-    };
-
     None
 }
 
+#[derive(Debug, Clone, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum IconType {
+    Raster,
+    Vector,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct Icon {
+    pub icon: IconType,
+    pub buffer: Vec<u8>,
+    pub path: String,
+}
+
+impl Icon {
+    pub fn new(icon: IconType, buffer: Vec<u8>, path: String) -> Self {
+        Self { icon, buffer, path }
+    }
+
+    pub async fn to_launcher_icon(&self) -> Option<DesktopIcon> {
+        let mut buffer = Vec::new();
+
+        if let Ok(mut file) = std::fs::File::open(&self.path) {
+            let _ = file.read_to_end(&mut buffer).expect("reading icon");
+
+            return Some(DesktopIcon {
+                path: self.path.clone().into(),
+                buffer: buffer,
+            });
+        }
+
+        None
+    }
+}
+
+pub fn handle_icon(path: PathBuf) -> Icon {
+    let mut buff = Vec::new();
+    let mut file = std::fs::File::open(&path).expect("temp icon not found");
+    let _ = file.read_to_end(&mut buff).expect("reading icon data");
+    Icon::new(IconType::Vector, buff, path.display().to_string().clone())
+}
+
 #[repr(u8)]
-#[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, EnumIter, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Category {
     Audio = 0,
     AudioVideo = 1,
@@ -352,39 +231,6 @@ impl Category {
 
     pub fn to_vec() -> Vec<String> {
         Self::iter().map(|c| c.name()).collect()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum IconType {
-    Raster(widget::image::Handle),
-    Svg(widget::svg::Handle),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Icon {
-    pub icon: IconType,
-    pub path: String,
-}
-
-impl Icon {
-    pub fn new(icon: IconType, path: String) -> Self {
-        Self { icon, path }
-    }
-
-    pub fn to_launcher_icon(&self) -> Option<WebappIcon> {
-        let mut buffer = Vec::new();
-
-        if let Ok(mut file) = std::fs::File::open(&self.path) {
-            file.read_to_end(&mut buffer).expect("reading icon");
-
-            return Some(WebappIcon {
-                path: self.path.clone().into(),
-                buffer: buffer,
-            });
-        }
-
-        None
     }
 }
 
@@ -696,11 +542,10 @@ fn generate_random_color() -> String {
     let mut rng = rand::rng();
     let colors_array = SvgColor::iter();
     let random_index = rng.random_range(0..colors_array.len());
-
     SvgColor::from_index(random_index.try_into().expect("conversion")).to_string()
 }
 
-pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
+pub async fn generate_icon(first_letter: String) -> Option<DesktopIcon> {
     let color = generate_random_color();
 
     let file_name = format!("{}_{}.svg", first_letter, &color);
@@ -739,18 +584,16 @@ pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
          x="39.599369"
          y="99.350899">{}</tspan></text>
   </g>
-</svg>"#,
+</svg>
+"#,
         color, first_letter
     );
 
-    if let Some(loc) = icons_location() {
+    if let Some(loc) = icons_location().await {
         let path = loc.join(file_name);
-
-        tracing::info!("icon wrote to {:?}", path);
-
+        tracing::info!("Icon saved to {:?}", path);
         std::fs::write(&path, &svg_document).expect("writing icon");
-
-        return Some(WebappIcon {
+        return Some(DesktopIcon {
             path,
             buffer: svg_document.as_bytes().to_vec(),
         });
@@ -764,12 +607,6 @@ pub type WindowHeight = u32;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WindowSize(pub WindowWidth, pub WindowHeight);
-
-impl Display for WindowSize {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}x{}", self.0, self.1)
-    }
-}
 
 impl Default for WindowSize {
     fn default() -> Self {
@@ -813,6 +650,7 @@ pub fn webview_bin() -> String {
             return path.to_str().unwrap().to_string();
         }
     }
+
     app_id_name
 }
 
@@ -830,26 +668,16 @@ pub fn helper_bin() -> String {
             return path.to_str().unwrap().to_string();
         }
     }
+
     app_id_name
 }
 
 pub fn cef_path() -> Option<PathBuf> {
-    if let Ok(path) = std::env::current_exe() {
-        if let Some(parent) = path
-            .parent()
-            .and_then(|p| p.parent())
-            .and_then(|p| p.parent())
-        {
-            let cef_dir = parent.join("cef");
-            if cef_dir.exists() {
-                return Some(cef_dir);
-            }
-        }
-    }
+    let Some(xdg_data) = dirs::data_dir() else {
+        return None;
+    };
 
-    let is_sandbox = PathBuf::from("/.flatpak-info").exists();
-    let prefix = if is_sandbox { "/app" } else { "/usr/local" };
-    let installed_cef = PathBuf::from(prefix).join("share").join("cef");
+    let installed_cef = PathBuf::from(xdg_data).join("cef");
 
     if installed_cef.exists() {
         return Some(installed_cef);

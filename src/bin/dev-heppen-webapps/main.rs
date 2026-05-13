@@ -1,17 +1,15 @@
+use cosmic::iced::Size;
 use i18n_embed::DesktopLanguageRequester;
 
+pub(crate) mod app;
 pub(crate) mod config;
-pub(crate) mod pages;
-pub(crate) mod themes;
 
 fn main() -> cosmic::iced::Result {
     init_logging();
     init_localizer();
 
-    cosmic::app::run::<crate::pages::QuickWebApps>(
-        cosmic::app::Settings::default()
-            .antialiasing(true)
-            .client_decorations(true),
+    cosmic::app::run::<crate::app::AppModel>(
+        cosmic::app::Settings::default().size(Size::new(600., 600.)),
         (),
     )
 }

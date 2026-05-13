@@ -1,29 +1,21 @@
 export APPID := 'dev.heppen.webapps'
 BINARY_PREFIX := 'dev-heppen-webapps'
-
-prefix := '/usr/local'
+prefix := env('HOME', '/usr/local') / '.local'
 base-dir := prefix
-
 target-dir := 'target' / 'release'
-
 webview := APPID + '.webview'
 helper := APPID + '.webview-helper'
-
 bin-src := target-dir / BINARY_PREFIX
 webview-src := target-dir / (BINARY_PREFIX + '-webview')
 helper-src := target-dir / (BINARY_PREFIX + '-webview-helper')
-
 bin-dst := base-dir / 'bin' / APPID
 webview-lib-dst := base-dir / 'share' / 'cef' / webview
 helper-lib-dst := base-dir / 'share' / 'cef' / helper
 webview-bin-dst := base-dir / 'bin' / webview
-
 desktop-src := 'resources' / (APPID + '.desktop')
 desktop-dst := base-dir / 'share/applications' / (APPID + '.desktop')
-
 metainfo-src := 'resources' / (APPID + '.metainfo.xml')
 metainfo-dst := base-dir / 'share/metainfo' / (APPID + '.metainfo.xml')
-
 icons-src := 'resources/icons/hicolor'
 icons-dst := base-dir / 'share/icons/hicolor'
 
@@ -32,7 +24,7 @@ default: build
 
 # Builds the project
 build:
-    cargo build --release 
+    cargo build --release
 
 # Checks the project
 check:
@@ -44,37 +36,37 @@ test:
 
 # Runs the application
 run: build
-    {{bin-src}}
+    {{ bin-src }}
 
 # Installs files
-install:
-    install -Dm0755 {{bin-src}} {{bin-dst}}
-    install -Dm0755 {{webview-src}} {{webview-lib-dst}}
-    install -Dm0755 {{helper-src}} {{helper-lib-dst}}
-    install -Dm0644 {{desktop-src}} {{desktop-dst}}
+install: install-lib
+    install -Dm0755 {{ bin-src }} {{ bin-dst }}
+    install -Dm0755 {{ webview-src }} {{ webview-lib-dst }}
+    install -Dm0755 {{ helper-src }} {{ helper-lib-dst }}
+    install -Dm0644 {{ desktop-src }} {{ desktop-dst }}
 
-    install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
+    install -Dm0644 {{ metainfo-src }} {{ metainfo-dst }}
 
-    for size in `ls {{icons-src}}`; do \
-        install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
+    for size in `ls {{ icons-src }}`; do \
+        install -Dm0644 "{{ icons-src }}/$size/apps/{{ APPID }}.png" "{{ icons-dst }}/$size/apps/{{ APPID }}.png"; \
     done
 
     # Create a symlink in bin to the webview in lib
-    ln -sf ../share/cef/{{webview}} {{webview-bin-dst}}
+    ln -sf ../share/cef/{{ webview }} {{ webview-bin-dst }}
 
 # install cef lib
 install-lib:
-        mkdir -p {{base-dir}}/share/cef
-        find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/share/cef/
+    mkdir -p {{ base-dir }}/share/cef
+    find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{ base-dir }}/share/cef/
 
 # Uninstalls files
 uninstall:
-    rm -v {{bin-dst}}
-    rm -v {{webview-bin-dst}}
-    rm -v {{desktop-dst}}
-    rm -v {{metainfo-dst}}
+    rm -v {{ bin-dst }}
+    rm -v {{ webview-bin-dst }}
+    rm -v {{ desktop-dst }}
+    rm -v {{ metainfo-dst }}
 
-    rm -v {{icons-dst}}/*/apps/{{APPID}}.png
+    rm -v {{ icons-dst }}/*/apps/{{ APPID }}.png
 
 # Vendor dependencies locally
 vendor:
