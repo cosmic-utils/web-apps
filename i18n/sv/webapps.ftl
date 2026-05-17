@@ -19,11 +19,15 @@ imported-themes=Importerade teman
 run-app=Kör app
 reset-settings=Återställ inställningar
 reset=Återställ
+generate-icon=Generera ikon
+reset-icon=Återställ ikon
 
 # header
 main-window={ $app }
 view=Visa
 create=Skapa
+new-app=Skapa ny
+quick-web-app=Snabbkör
 edit=Editera
 close=Stäng
 create-new-webapp=Skapa ny Webb App
@@ -42,6 +46,7 @@ installed-header=Du har{ $number ->
 not-installed-header=Du har ingen webbapp installerad. Vänligen tryck på skapa knappen och skapa en.
 
 # creator.rs
+category=Kategori
 web=Webb
 accessories=Tillbehör
 education=Utbildning
@@ -62,8 +67,12 @@ download-favicon=Ladda ner favicon
 non-standard-arguments=Icke-standardiserade argument
 # behåll navigeringsfältet, isolerad profil och privat läge litet antal tecken
 navbar=Navigeringsfältet
+persistent-profile=Beständig profil
 isolated-profile=Isolerad profil
 private-mode=Privat läge
+window-size=Fönster storlek
+decorations=Fönsterdekorationer
+simulate-mobile=Försök att simulera en mobil enhet
 
 # iconpicker.rs
 icon-name-to-find=Ikonnamn att hitta
