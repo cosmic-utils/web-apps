@@ -15,11 +15,10 @@ use cosmic::{
     },
     surface, task, theme,
     widget::{
-        self,
         about::About,
-        icon,
+        self, RcElementWrapper, button, icon,
         menu::{self, ItemHeight, ItemWidth},
-        nav_bar, responsive_menu_bar,
+        nav_bar,
     },
 };
 use editor::AppEditor;
@@ -41,9 +40,6 @@ use tokio::{
 };
 use tracing::debug;
 use webapps::{APP_ID, fl};
-
-static MENU_ID: LazyLock<cosmic::widget::Id> =
-    LazyLock::new(|| cosmic::widget::Id::new("responsive-menu"));
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -580,25 +576,27 @@ impl Application for QuickWebApps {
     }
 
     fn header_start(&self) -> Vec<Element<'_, Message>> {
-        vec![
-            responsive_menu_bar()
-                .item_height(ItemHeight::Dynamic(40))
-                .item_width(ItemWidth::Uniform(240))
-                .spacing(4.0)
-                .into_element(
-                    &self.core,
-                    &self.key_binds,
-                    MENU_ID.clone(),
-                    Message::Surface,
-                    vec![(
-                        fl!("help"),
-                        vec![
-                            menu::Item::Button(fl!("settings"), None, MenuAction::Settings),
-                            menu::Item::Button(fl!("about"), None, MenuAction::About),
-                        ],
-                    )],
-                ),
-        ]
+        let menu_bar = menu::bar(vec![menu::Tree::with_children(
+            RcElementWrapper::new(
+                button::icon(icon::from_name("open-menu-symbolic"))
+                    .padding([4, 12])
+                    .class(theme::Button::MenuRoot)
+                    .into(),
+            ),
+            menu::items(
+                &self.key_binds,
+                vec![
+                    menu::Item::Button(fl!("menu-settings"), None, MenuAction::Settings),
+                    menu::Item::Divider,
+                    menu::Item::Button(fl!("menu-about"), None, MenuAction::About),
+                ],
+            ),
+        )])
+        .item_height(ItemHeight::Dynamic(40))
+        .item_width(ItemWidth::Uniform(320))
+        .spacing(4.0);
+
+        vec![menu_bar.into()]
     }
 
     fn nav_bar(&self) -> Option<Element<'_, cosmic::Action<Message>>> {
