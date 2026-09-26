@@ -16,6 +16,8 @@ use cosmic::{
     surface, task, theme,
     widget::{
         self,
+        about::About,
+        icon,
         menu::{self, ItemHeight, ItemWidth},
         nav_bar, responsive_menu_bar,
     },
@@ -38,7 +40,7 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{APP_ICON, APP_ID, REPOSITORY, fl};
+use webapps::{APP_ID, fl};
 
 static MENU_ID: LazyLock<cosmic::widget::Id> =
     LazyLock::new(|| cosmic::widget::Id::new("responsive-menu"));
@@ -63,7 +65,6 @@ pub enum Message {
     LoadThemes,
     OpenFileResult(Vec<String>),
     OpenIconPicker,
-    OpenRepositoryUrl,
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
     PushIcon(webapps::Icon),
@@ -95,6 +96,7 @@ pub enum Dialogs {
 pub struct QuickWebApps {
     core: Core,
     context_page: ContextPage,
+    about: About,
     nav: nav_bar::Model,
     key_binds: HashMap<menu::KeyBind, MenuAction>,
     config: AppConfig,
@@ -129,9 +131,31 @@ impl Application for QuickWebApps {
 
         let themes_list = Vec::new();
 
-        let windows = QuickWebApps {
+        let about = About::default()
+            .name(fl!("app"))
+            // TODO: Update icon with a svg
+            .icon(icon::from_name(Self::APP_ID))
+            .version(env!("CARGO_PKG_VERSION"))
+            .author("hepp3n")
+            .comments(fl!("comment"))
+            .license(env!("CARGO_PKG_LICENSE"))
+            .license_url("https://spdx.org/licenses/GPL-3.0-only")
+            .developers([("hepp3n", "piotr@heppen.dev")])
+            .links([
+                (
+                    fl!("repository"),
+                    "https://github.com/cosmic-utils/web-apps",
+                ),
+                (
+                    fl!("support"),
+                    "https://github.com/cosmic-utils/web-apps/issues",
+                ),
+            ]);
+
+        let app = QuickWebApps {
             core,
-            context_page: ContextPage::About,
+            context_page: ContextPage::default(),
+            about,
             nav,
             key_binds: HashMap::new(),
             config,
@@ -150,7 +174,7 @@ impl Application for QuickWebApps {
             task::message(Message::UpdateTheme(Box::new(Theme::Light))),
         ];
 
-        (windows, Task::batch(tasks))
+        (app, Task::batch(tasks))
     }
 
     fn subscription(&self) -> Subscription<Message> {
@@ -425,9 +449,6 @@ impl Application for QuickWebApps {
             Message::OpenIconPicker => {
                 self.dialogs = Some(Dialogs::IconPicker(IconPicker::default()));
             }
-            Message::OpenRepositoryUrl => {
-                _ = open::that_detached(REPOSITORY);
-            }
             Message::OpenThemeResult(theme) => {
                 if !theme.is_empty() {
                     let from_path = Path::new(&theme);
@@ -622,11 +643,11 @@ impl Application for QuickWebApps {
         }
 
         Some(match self.context_page {
-            ContextPage::About => context_drawer::context_drawer(
-                self.about(),
+            ContextPage::About => context_drawer::about(
+                &self.about,
+                |url| Message::LaunchUrl(url.to_string()),
                 Message::ToggleContextPage(ContextPage::About),
-            )
-            .title(fl!("about")),
+            ),
             ContextPage::Settings => context_drawer::context_drawer(
                 self.settings(),
                 Message::ToggleContextPage(ContextPage::Settings),
@@ -694,38 +715,6 @@ impl Application for QuickWebApps {
 }
 
 impl QuickWebApps {
-    fn about(&self) -> Element<'_, Message> {
-        let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
-
-        widget::column()
-            .push(widget::image(widget::image::Handle::from_bytes(APP_ICON)))
-            .push(widget::text::title3(fl!("app")))
-            .push(
-                widget::button::link(REPOSITORY)
-                    .on_press(Message::OpenRepositoryUrl)
-                    .padding(0),
-            )
-            .push(
-                widget::column()
-                    .push(widget::text::title3(fl!("support-me")))
-                    .push(widget::text::body(fl!("support-body")))
-                    .push(widget::button::link("github.com/sponsors/hepp3n").on_press(
-                        Message::LaunchUrl("https://github.com/sponsors/hepp3n".to_string()),
-                    ))
-                    .push(widget::button::link("paypal.me/elevenhsoft").on_press(
-                        Message::LaunchUrl("https://paypal.me/elevenhsoft".to_string()),
-                    ))
-                    .push(widget::button::link("ko-fi.com/elevenhsoft").on_press(
-                        Message::LaunchUrl("https://ko-fi.com/elevenhsoft".to_string()),
-                    ))
-                    .align_x(Alignment::Center)
-                    .spacing(space_xxs),
-            )
-            .align_x(Alignment::Center)
-            .spacing(space_xxs)
-            .into()
-    }
-
     fn settings(&self) -> Element<'_, Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 

@@ -22,6 +22,10 @@ reset=Reset
 generate-icon=Generate Icon
 reset-icon=Reset icon
 
+repository = Repository
+support = Support
+comment = Web app manager for the COSMIC desktop
+
 # header
 main-window={ $app }
 view=View
