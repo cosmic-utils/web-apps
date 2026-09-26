@@ -188,7 +188,10 @@ impl Application for QuickWebApps {
             subscriptions.push(Subscription::run_with_id(
                 self.downloader_id,
                 cosmic::iced::stream::channel(4, move |mut channel| async move {
-                    let script = webapps::add_icon_packs_install_script().await;
+                    let Some(script) = webapps::add_icon_packs_install_script().await else {
+                        return;
+                    };
+
                     let mut child = webapps::execute_script(script).await;
                     let stdout = child
                         .stdout

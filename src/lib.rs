@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
     fmt::Display,
-    fs::create_dir_all,
     io::{Cursor, Read as _},
     os::unix::fs::PermissionsExt as _,
     path::PathBuf,
@@ -72,6 +71,12 @@ impl Theme {
 #[version = 1]
 pub struct AppConfig {
     pub app_theme: String,
+    pub database: Vec<WebAppConfig>,
+}
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct WebAppConfig {
+    pub id: String,
 }
 
 impl AppConfig {
@@ -109,6 +114,24 @@ pub fn is_svg(path: &str) -> bool {
     false
 }
 
+/// Local cache path for storing icon installer script
+pub fn cache_path() -> Option<PathBuf> {
+    if let Some(cache) = dirs::cache_dir() {
+        return Some(cache.join(APP_ID));
+    }
+
+    None
+}
+
+/// Local state path for storing icons mostly
+pub fn state_path() -> Option<PathBuf> {
+    if let Some(state) = dirs::state_dir() {
+        return Some(state.join(APP_ID));
+    }
+
+    None
+}
+
 pub fn launcher_desktop_entry_path(appid: &str) -> Option<PathBuf> {
     let filename = format!("webapp-.{}.desktop", appid);
 
@@ -116,7 +139,7 @@ pub fn launcher_desktop_entry_path(appid: &str) -> Option<PathBuf> {
         xdg_data = xdg_data.join("applications");
 
         if !xdg_data.exists() {
-            let _ = create_dir_all(&xdg_data);
+            let _ = std::fs::create_dir_all(&xdg_data);
         }
 
         xdg_data = xdg_data.join(filename);
@@ -132,7 +155,7 @@ pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
         xdg_data = xdg_data.join(APP_ID).join("themes");
 
         if !xdg_data.exists() {
-            let _ = create_dir_all(&xdg_data);
+            let _ = std::fs::create_dir_all(&xdg_data);
         }
 
         xdg_data = xdg_data.join(theme_file);
@@ -148,7 +171,7 @@ pub fn database_path(entry: &str) -> Option<PathBuf> {
         let path = xdg_data.join(APP_ID).join("database");
 
         if !path.exists() {
-            create_dir_all(&path).unwrap();
+            std::fs::create_dir_all(&path).unwrap();
         }
 
         return Some(path.join(entry));
@@ -162,7 +185,7 @@ pub fn profiles_path(app_id: &str) -> Option<PathBuf> {
         let final_path = xdg_data.join(APP_ID).join("profiles").join(app_id);
 
         if !final_path.exists() {
-            if let Err(e) = create_dir_all(&final_path) {
+            if let Err(e) = std::fs::create_dir_all(&final_path) {
                 eprintln!("Failed to create profile directory: {}", e);
                 return None;
             }
@@ -175,17 +198,17 @@ pub fn profiles_path(app_id: &str) -> Option<PathBuf> {
 }
 
 pub fn icons_location() -> Option<PathBuf> {
-    if let Some(xdg_data) = dirs::data_dir() {
-        let final_path = xdg_data.join(APP_ID).join("icons");
+    if let Some(state) = state_path() {
+        let directory = state.join("icons");
 
-        if !final_path.exists() {
-            if let Err(e) = create_dir_all(&final_path) {
+        if !directory.exists() {
+            if let Err(e) = std::fs::create_dir_all(&directory) {
                 eprintln!("Failed to create icons directory: {}", e);
                 return None;
             }
         };
 
-        return Some(final_path);
+        return Some(directory);
     }
     None
 }
@@ -219,7 +242,7 @@ pub fn icon_pack_installed() -> bool {
         Some(dir) => dir,
         None => PathBuf::from(env!("HOME"))
             .join(".local")
-            .join("share")
+            .join("state")
             .join("icons"),
     };
 
@@ -234,21 +257,33 @@ pub fn icon_pack_installed() -> bool {
     directories > 0
 }
 
-pub async fn add_icon_packs_install_script() -> String {
+pub async fn add_icon_packs_install_script() -> Option<String> {
     let install_script = include_bytes!("../resources/scripts/icon-installer.sh");
-    let temp_file = format!("/tmp/{}.sh", APP_ID);
+
+    let Some(cache) = cache_path() else {
+        return None;
+    };
+
+    let script_file = cache.join(format!("{}-icon-installer.sh", APP_ID));
+
+    let _ = tokio::fs::create_dir_all(&cache).await;
 
     // Create a temporary file
-    let mut file = File::create(&temp_file).await.unwrap();
+    let mut file = File::create(&script_file)
+        .await
+        .expect("creating script file");
 
-    file.write_all(install_script).await.unwrap();
+    let _ = file.write_all(install_script).await;
 
     // Make the script executable
-    let mut perms = file.metadata().await.unwrap().permissions();
-    perms.set_mode(0o755);
-    file.set_permissions(perms).await.unwrap();
+    if let Ok(metadata) = file.metadata().await {
+        let mut perms = metadata.permissions();
+        perms.set_mode(0o755);
+        let _ = file.set_permissions(perms).await;
 
-    temp_file.to_string()
+        return Some(script_file.display().to_string());
+    }
+    None
 }
 
 pub async fn execute_script(script: String) -> Child {

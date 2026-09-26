@@ -27,7 +27,7 @@ build: format check test
 check:
     cargo check
 
-# Checks the project
+# Format the project
 format:
     cargo fmt --all
 
@@ -39,12 +39,12 @@ test:
 run: build
     {{BIN_SRC}}
 
-# Build + debug
-build-dev: format check test
+# Build the applications in debug mode
+build-debug: format check test
     cargo build
 
-# Run + debug
-run-dev: build-dev
+# Runs the applications in debug mode
+run-dev: build-debug
     cargo run
 
 # Installs files

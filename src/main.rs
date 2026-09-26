@@ -6,12 +6,7 @@ fn main() -> cosmic::iced::Result {
     init_logging();
     init_localizer();
 
-    cosmic::app::run::<crate::pages::QuickWebApps>(
-        cosmic::app::Settings::default()
-            .antialiasing(true)
-            .client_decorations(true),
-        (),
-    )
+    cosmic::app::run::<crate::pages::QuickWebApps>(cosmic::app::Settings::default(), ())
 }
 
 fn init_localizer() {
