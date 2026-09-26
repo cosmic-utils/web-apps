@@ -15,7 +15,8 @@
         "--socket=wayland",
         "--device=dri",
         "--share=network",
-        "--filesystem=xdg-config/cosmic",
+        "--filesystem=xdg-config/cosmic:ro",
+        "--talk-name=com.system76.CosmicSettingsDaemon",
         "--talk-name=com.system76.CosmicSettingsDaemon.*"
     ],
     "build-options": {
