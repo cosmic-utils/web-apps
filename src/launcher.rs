@@ -1,9 +1,3 @@
-use ashpd::desktop::{
-    Icon,
-    dynamic_launcher::{
-        DynamicLauncherProxy, InstallOptions, PrepareInstallOptions, UninstallOptions,
-    },
-};
 use serde::{Deserialize, Serialize};
 use std::{io::Read as _, path::PathBuf};
 use tokio::fs::remove_file;
@@ -90,52 +84,17 @@ impl WebAppLauncher {
         desktop_entry.push_str(&format!("StartupWMClass={}\n", self.browser.app_id.id));
         desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
 
-        let proxy = DynamicLauncherProxy::new()
-            .await
-            .expect("Failed to create DynamicLauncherProxy");
-
-        let icon = Icon::Bytes(self.icon.buffer.clone());
-
-        let prepare_opts = PrepareInstallOptions::default().set_editable_icon(true);
-
-        let response = proxy
-            .prepare_install(None, &self.name, icon, prepare_opts)
-            .await
-            .expect("Failed to prepare install")
-            .response()
-            .expect("Failed to get response");
-
-        let token = response.token();
-
         tracing::info!("{}", desktop_entry);
-
-        proxy
-            .install(
-                &token,
-                &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
-                &desktop_entry,
-                InstallOptions::default(),
-            )
-            .await
-            .expect("installing");
 
         return Ok(true);
     }
 
     pub async fn delete(&self) -> std::io::Result<()> {
-        let proxy = DynamicLauncherProxy::new()
-            .await
-            .expect("Failed to create DynamicLauncherProxy");
+        if let Some(path) = crate::launcher_desktop_entry_path(&self.browser.app_id.id) {
+            remove_file(path).await?;
+        }
 
-        proxy
-            .uninstall(
-                &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id,),
-                UninstallOptions::default(),
-            )
-            .await
-            .expect("Failed to uninstall");
-
-        if let Some(path) = crate::database_path(&format!("{}.ron", self.browser.app_id.as_ref())) {
+        if let Some(path) = crate::database_path(&format!("{}.ron", &self.browser.app_id.id)) {
             remove_file(path).await?;
         }
 

@@ -1,7 +1,6 @@
 pub mod editor;
 mod iconpicker;
 
-use crate::{config::AppConfig, pages::iconpicker::IconPicker, themes::Theme};
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
     Application, Element,
@@ -15,8 +14,9 @@ use cosmic::{
     },
     surface, task, theme,
     widget::{
+        self, RcElementWrapper,
         about::About,
-        self, RcElementWrapper, button, icon,
+        button, icon,
         menu::{self, ItemHeight, ItemWidth},
         nav_bar,
     },
@@ -30,7 +30,7 @@ use std::{
     path::Path,
     process::ExitStatus,
     str::FromStr,
-    sync::{Arc, LazyLock},
+    sync::Arc,
     time::Duration,
 };
 use tokio::{
@@ -39,7 +39,9 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{APP_ID, fl};
+use webapps::{APP_ID, AppConfig, Theme, fl};
+
+use crate::pages::iconpicker::IconPicker;
 
 #[derive(Debug, Clone)]
 pub enum Message {

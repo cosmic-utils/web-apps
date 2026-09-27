@@ -1,8 +1,6 @@
 use i18n_embed::DesktopLanguageRequester;
 
-pub(crate) mod config;
-pub(crate) mod pages;
-pub(crate) mod themes;
+pub mod pages;
 
 fn main() -> cosmic::iced::Result {
     init_logging();

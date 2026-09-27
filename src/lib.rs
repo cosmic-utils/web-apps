@@ -17,12 +17,13 @@ use tokio::{
     process::Child,
 };
 
+use crate::launcher::WebappIcon;
+use cosmic::cosmic_config::{self, CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry};
+use cosmic::cosmic_theme::{self, ThemeBuilder};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use url::Url;
 use walkdir::WalkDir;
-
-use crate::launcher::WebappIcon;
 
 pub mod browser;
 pub mod launcher;
@@ -38,6 +39,57 @@ pub const APP_ICON: &[u8] =
     include_bytes!("../resources/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
 pub const MOBILE_UA: &str = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.7632.76 Mobile Safari/537.36";
 pub const DESKTOP_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36";
+
+#[derive(Debug, Default, Clone)]
+pub enum Theme {
+    #[default]
+    Light,
+    Dark,
+    Custom((String, Box<cosmic_theme::Theme>)),
+}
+
+impl AsRef<str> for Theme {
+    fn as_ref(&self) -> &str {
+        match self {
+            Theme::Light => "COSMIC Light",
+            Theme::Dark => "COSMIC Dark",
+            Theme::Custom(theme) => &theme.0,
+        }
+    }
+}
+
+impl Theme {
+    pub fn build(name: String, value: String) -> Self {
+        if let Ok(palette) = ron::from_str::<ThemeBuilder>(&value) {
+            return Self::Custom((name, Box::new(palette.build())));
+        }
+
+        Self::Light
+    }
+}
+
+#[derive(Debug, Default, Clone, CosmicConfigEntry, Eq, PartialEq)]
+#[version = 1]
+pub struct AppConfig {
+    pub app_theme: String,
+}
+
+impl AppConfig {
+    pub fn config_handler() -> Option<cosmic_config::Config> {
+        cosmic_config::Config::new(APP_ID, CONFIG_VERSION).ok()
+    }
+    pub fn config() -> AppConfig {
+        match Self::config_handler() {
+            Some(config_handler) => {
+                AppConfig::get_entry(&config_handler).unwrap_or_else(|(errs, config)| {
+                    tracing::info!("errors loading config: {:?}", errs);
+                    config
+                })
+            }
+            None => AppConfig::default(),
+        }
+    }
+}
 
 pub fn url_valid(url: &str) -> bool {
     if Url::parse(url).is_ok() {
@@ -57,15 +109,35 @@ pub fn is_svg(path: &str) -> bool {
     false
 }
 
-pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
-    if let Some(xdg_data) = dirs::data_dir() {
-        let path = xdg_data.join(APP_ID).join("themes");
+pub fn launcher_desktop_entry_path(appid: &str) -> Option<PathBuf> {
+    let filename = format!("webapp-.{}.desktop", appid);
 
-        if !path.exists() {
-            create_dir_all(&path).unwrap();
+    if let Some(mut xdg_data) = dirs::data_dir() {
+        xdg_data = xdg_data.join("applications");
+
+        if !xdg_data.exists() {
+            let _ = create_dir_all(&xdg_data);
         }
 
-        return Some(path.join(theme_file));
+        xdg_data = xdg_data.join(filename);
+
+        return Some(xdg_data);
+    }
+
+    None
+}
+
+pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
+    if let Some(mut xdg_data) = dirs::data_dir() {
+        xdg_data = xdg_data.join(APP_ID).join("themes");
+
+        if !xdg_data.exists() {
+            let _ = create_dir_all(&xdg_data);
+        }
+
+        xdg_data = xdg_data.join(theme_file);
+
+        return Some(xdg_data);
     }
 
     None
