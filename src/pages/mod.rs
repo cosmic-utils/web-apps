@@ -22,20 +22,12 @@ use cosmic::{
     },
 };
 use editor::AppEditor;
-use ron::ser::to_string_pretty;
 use std::{
-    collections::HashMap,
-    fs::read_dir,
-    io::{Read, Write},
-    path::Path,
-    process::ExitStatus,
-    str::FromStr,
-    sync::Arc,
-    time::Duration,
+    collections::HashMap, fs::read_dir, io::Read, path::Path, process::ExitStatus, str::FromStr,
+    sync::Arc, time::Duration,
 };
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
-    process::Command,
     sync::oneshot,
 };
 use tracing::debug;
@@ -58,18 +50,17 @@ pub enum Message {
     IconPicker(iconpicker::Message),
     IconsResult(Vec<String>),
     ImportThemeFilePicker,
-    Launch(webapps::WebviewArgs),
     LaunchUrl(String),
     LoadThemes,
     OpenFileResult(Vec<String>),
     OpenIconPicker,
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
-    PushIcon(webapps::Icon),
+    PushIcon(String),
     ReloadNavbarItems,
     ResetSettings,
     SaveLauncher(webapps::launcher::WebAppLauncher),
-    SetIcon(Option<webapps::Icon>),
+    SetIcon(String),
     Surface(surface::Action),
     DownloaderStop,
     ToggleContextPage(ContextPage),
@@ -261,21 +252,21 @@ impl Application for QuickWebApps {
                 if let Some(page) = data {
                     let Page::Editor(app_editor) = page;
 
-                    if let Some(browser) = &app_editor.app_browser {
-                        if let Some(icon) = &app_editor.app_icon {
-                            let launcher = webapps::launcher::WebAppLauncher {
-                                browser: browser.clone(),
-                                name: app_editor.app_title.clone(),
-                                icon: icon.clone(),
-                                category: app_editor.app_category.clone(),
-                            };
+                    // if let Some(browser) = &app_editor.app_browser {
+                    //     if let Some(icon) = &app_editor.app_icon {
+                    //         // let launcher = webapps::launcher::WebAppLauncher {
+                    //         //     browser: browser.clone(),
+                    //         //     name: app_editor.app_title.clone(),
+                    //         //     icon: icon.clone(),
+                    //         //     category: app_editor.app_category.clone(),
+                    //         // };
 
-                            return task::future(async move {
-                                launcher.delete().await.unwrap();
-                                cosmic::action::app(Message::DeletionDone(id))
-                            });
-                        }
-                    }
+                    //         // return task::future(async move {
+                    //         //     launcher.delete().await.unwrap();
+                    //         //     cosmic::action::app(Message::DeletionDone(id))
+                    //         // });
+                    //     }
+                    // }
                 }
             }
             Message::DeletionDone(id) => {
@@ -323,13 +314,7 @@ impl Application for QuickWebApps {
             Message::IconsResult(result) => {
                 if let Some(Dialogs::IconPicker(_icon_picker)) = &mut self.dialogs {
                     for path in result {
-                        tasks.push(Task::perform(webapps::image_handle(path), |icon| {
-                            if let Some(icon) = icon {
-                                cosmic::Action::App(Message::PushIcon(icon))
-                            } else {
-                                cosmic::Action::None
-                            }
-                        }))
+                        tasks.push(Task::done(cosmic::Action::App(Message::PushIcon(path))))
                     }
                 };
             }
@@ -365,24 +350,6 @@ impl Application for QuickWebApps {
                         cosmic::action::none()
                     }
                 });
-            }
-            Message::Launch(args) => {
-                let Some(cef_path) = webapps::cef_path() else {
-                    return cosmic::Task::none();
-                };
-
-                unsafe {
-                    std::env::set_var("LD_LIBRARY_PATH", cef_path.display().to_string());
-                }
-
-                return Task::perform(
-                    async move {
-                        let _ = Command::new(format!("{}.webview", APP_ID))
-                            .args(args)
-                            .spawn();
-                    },
-                    |_| cosmic::Action::App(Message::Close),
-                );
             }
             Message::LaunchUrl(url) => match open::that_detached(&url) {
                 Ok(()) => {}
@@ -438,14 +405,13 @@ impl Application for QuickWebApps {
                 })
             }
             Message::OpenFileResult(file_paths) => {
-                for icon_path in file_paths {
-                    tasks.push(Task::perform(
-                        webapps::image_handle(icon_path.to_string()),
-                        |icon| cosmic::Action::App(Message::SetIcon(icon)),
-                    ))
-                }
+                if !file_paths.is_empty() {
+                    self.dialogs = None;
 
-                self.dialogs = None;
+                    return Task::done(cosmic::Action::App(Message::SetIcon(
+                        file_paths[0].clone(),
+                    )));
+                }
             }
             Message::OpenIconPicker => {
                 self.dialogs = Some(Dialogs::IconPicker(IconPicker::default()));
@@ -481,18 +447,18 @@ impl Application for QuickWebApps {
                     .data::<Page>(Page::Editor(AppEditor::default()))
                     .activate();
 
-                webapps::launcher::installed_webapps()
-                    .into_iter()
-                    .for_each(|app| {
-                        self.nav
-                            .insert()
-                            .icon(navbar_item_icon(
-                                &app.icon.path.as_path().to_str().expect("path conversion"),
-                            ))
-                            .text(app.name.clone())
-                            .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
-                            .closable();
-                    });
+                // webapps::launcher::installed_webapps()
+                //     .into_iter()
+                //     .for_each(|app| {
+                //         self.nav
+                //             .insert()
+                //             .icon(navbar_item_icon(
+                //                 &app.icon.path.as_path().to_str().expect("path conversion"),
+                //             ))
+                //             .text(app.name.clone())
+                //             .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
+                //             .closable();
+                //     });
 
                 self.page = Page::Editor(AppEditor::default());
             }
@@ -504,30 +470,24 @@ impl Application for QuickWebApps {
                 return cosmic::command::set_theme(cosmic::Theme::light());
             }
             Message::SaveLauncher(launcher) => {
-                if let Some(location) =
-                    webapps::database_path(&format!("{}.ron", launcher.browser.app_id.as_ref()))
-                {
-                    let content = to_string_pretty(&launcher, ron::ser::PrettyConfig::default());
+                // if let Some(location) =
+                //     webapps::database_path(&format!("{}.ron", launcher.browser.app_id.as_ref()))
+                // {
+                //     let content = to_string_pretty(&launcher, ron::ser::PrettyConfig::default());
 
-                    if let Ok(content) = content {
-                        let file = std::fs::File::create(location);
+                //     if let Ok(content) = content {
+                //         let file = std::fs::File::create(location);
 
-                        if let Ok(mut f) = file {
-                            let _ = f.write_all(content.as_bytes());
-                        }
-                    }
+                //         if let Ok(mut f) = file {
+                //             let _ = f.write_all(content.as_bytes());
+                //         }
+                //     }
 
-                    return task::message(Message::ReloadNavbarItems);
-                }
+                //     return task::message(Message::ReloadNavbarItems);
+                // }
             }
             Message::SetIcon(icon) => {
                 let Page::Editor(app_editor) = &mut self.page;
-
-                if let Some(ico) = icon {
-                    println!("setting icon: {:?}", ico);
-                    app_editor.update_icon(ico.to_launcher_icon());
-                    self.dialogs = None;
-                }
             }
             Message::Surface(a) => {
                 return cosmic::task::message(cosmic::Action::Cosmic(

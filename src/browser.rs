@@ -1,71 +1,94 @@
-use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
-use crate::cef_path;
+use serde::{Deserialize, Serialize};
+
+use crate::APP_ID;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Browser {
-    pub app_id: crate::WebviewArgs,
-    pub window_title: Option<String>,
-    pub url: Option<String>,
-    pub profile: PathBuf,
-    pub window_size: Option<crate::WindowSize>,
-    pub try_simulate_mobile: Option<bool>,
+pub enum Installation {
+    System,
+    Flatpak,
+    Snap,
 }
 
-impl Browser {
-    pub fn new(app_id: &str) -> Self {
-        let xdg_data = dirs::data_dir().unwrap_or_default();
-        let path = xdg_data.join(crate::APP_ID).join("profiles").join(&app_id);
+impl Installation {
+    pub fn profile_path(&self, id: &str) -> Option<PathBuf> {
+        match self {
+            Installation::System => {
+                if let Some(mut dir) = dirs::data_local_dir() {
+                    dir.push(APP_ID);
+                    dir.push(id);
 
-        Self {
-            app_id: crate::WebviewArgs {
-                id: app_id.to_string(),
-            },
-            window_title: None,
-            url: None,
-            profile: path,
-            window_size: None,
-            try_simulate_mobile: None,
+                    if !dir.exists() {
+                        let _ = fs::create_dir_all(&dir);
+                    }
+
+                    return Some(dir.into());
+                }
+            }
+            Installation::Flatpak => {
+                if let Some(mut dir) = dirs::home_dir() {
+                    dir.push(".var");
+                    dir.push("app");
+                    dir.push(id);
+                    dir.push("data");
+
+                    if !dir.exists() {
+                        let _ = fs::create_dir_all(&dir);
+                    }
+
+                    return Some(dir);
+                }
+            }
+            Installation::Snap => {
+                if let Some(mut dir) = dirs::home_dir() {
+                    dir.push("snap");
+                    dir.push(id);
+                    dir.push("common");
+
+                    if !dir.exists() {
+                        let _ = fs::create_dir_all(&dir);
+                    }
+
+                    return Some(dir);
+                }
+            }
         }
-    }
-
-    pub fn from_appid(id: &str) -> Option<Self> {
-        if let Some(launcher) = crate::launcher::installed_webapps()
-            .iter()
-            .find(|launcher| launcher.browser.app_id.as_ref() == id)
-        {
-            return Some(launcher.browser.clone());
-        };
 
         None
     }
+}
 
-    pub fn get_exec(&self) -> Option<String> {
-        let Some(cef_path) = cef_path() else {
-            return None;
-        };
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Browser {
+    pub id: String,
+    pub name: String,
+    pub executable_name: String,
+    pub executable_path: PathBuf,
+    pub install_type: Installation,
+}
 
-        Some(format!(
-            "env LD_LIBRARY_PATH={} {}.webview {}",
-            cef_path.display(),
-            crate::APP_ID,
-            self.app_id.as_ref()
-        ))
+impl Browser {
+    pub fn new(
+        id: &str,
+        name: &str,
+        executable_name: &str,
+        executable_path: &str,
+        install_type: Installation,
+    ) -> Self {
+        Self {
+            id: id.to_string(),
+            name: name.to_string(),
+            executable_name: executable_name.to_string(),
+            executable_path: PathBuf::from(executable_path),
+            install_type,
+        }
     }
 
-    pub fn delete(&self) {
-        let xdg_data = dirs::data_dir().unwrap_or_default();
-
-        let path = xdg_data
-            .join(crate::APP_ID)
-            .join("profiles")
-            .join(self.app_id.as_ref());
-
-        if path.exists() {
-            if let Err(e) = std::fs::remove_dir_all(&path) {
-                eprintln!("Failed to delete profile directory: {}", e);
-            }
-        }
+    pub fn installed_browsers() -> Vec<Self> {
+        crate::supported_browsers::supported_browsers()
+            .into_iter()
+            .filter(|b| b.executable_path.exists())
+            .collect()
     }
 }

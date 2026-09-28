@@ -1,3 +1,5 @@
+use std::fs;
+
 use cosmic::{
     Element, Task,
     action::Action,
@@ -5,18 +7,15 @@ use cosmic::{
     style, task,
     widget::{self},
 };
-use rand::{RngExt as _, rng};
 use strum::IntoEnumIterator as _;
-use webapps::{
-    Category, fl, generate_icon, handle_icon,
-    launcher::{WebappIcon, webapp_icon_valid},
-};
+use webapps::{Category, WebappIcon, fl};
 
 use crate::pages;
 
 #[derive(Debug, Clone)]
 pub struct AppEditor {
-    pub app_browser: Option<webapps::browser::Browser>,
+    pub app_browsers: Vec<webapps::browser::Browser>,
+    pub app_browser_selection: Option<usize>,
     pub app_title: String,
     pub app_url: String,
     pub app_icon: Option<WebappIcon>,
@@ -26,7 +25,7 @@ pub struct AppEditor {
     pub app_window_size: webapps::WindowSize,
     pub app_isolated: bool,
     pub app_simulate_mobile: bool,
-    pub selected_icon: Option<webapps::Icon>,
+    pub selected_icon: Option<String>,
     pub categories: Vec<String>,
     pub category_idx: Option<usize>,
     pub is_installed: bool,
@@ -39,7 +38,8 @@ impl Default for AppEditor {
             .collect::<Vec<String>>();
 
         AppEditor {
-            app_browser: None,
+            app_browsers: webapps::browser::Browser::installed_browsers(),
+            app_browser_selection: None,
             app_title: String::new(),
             app_url: String::new(),
             app_icon: None,
@@ -59,126 +59,82 @@ impl Default for AppEditor {
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    AppIsolated(bool),
+    Browser(usize),
     Category(usize),
     Done,
-    LaunchApp,
+    GenerateIcon,
     OpenIconPicker,
+    ResetIcon,
     Title(String),
     Url(String),
-    WindowWidth(String),
-    WindowHeight(String),
-    AppIsolated(bool),
-    AppSimulateMobile(bool),
-    GenerateIcon,
-    ResetIcon,
 }
 
 impl AppEditor {
-    pub fn from(webapp_launcher: webapps::launcher::WebAppLauncher) -> Self {
-        let entry = webapps::launcher::installed_webapps()
-            .into_iter()
-            .find(|webapp| webapp.browser.app_id == webapp_launcher.browser.app_id);
-
-        if let Some(launcher) = entry {
-            let window_size = launcher.browser.window_size.clone().unwrap_or_default();
-            let simulate_mobile = launcher.browser.try_simulate_mobile.unwrap_or_default();
-
-            let mut editor = AppEditor::default();
-
-            editor.app_browser = Some(launcher.browser.clone());
-            editor.app_title = launcher.name.clone();
-            editor.app_url = launcher.browser.url.clone().unwrap_or_default();
-            editor.app_category = launcher.category.clone();
-            editor.app_window_width = window_size.0.to_string();
-            editor.app_window_height = window_size.1.to_string();
-            editor.app_window_size = window_size.clone();
-            editor.app_simulate_mobile = simulate_mobile;
-            editor.category_idx = editor
-                .categories
-                .iter()
-                .position(|c| c == &launcher.category.name());
-            editor.is_installed = true;
-
-            editor.update_icon(launcher.icon.into());
-
-            editor
-        } else {
-            AppEditor::default()
-        }
-    }
-
     pub fn update(&mut self, message: Message) -> Task<Action<crate::pages::Message>> {
         match message {
             Message::AppIsolated(flag) => {
                 self.app_isolated = flag;
             }
-            Message::AppSimulateMobile(flag) => {
-                self.app_simulate_mobile = flag;
+            Message::Browser(idx) => {
+                self.app_browser_selection = Some(idx);
             }
             Message::Category(idx) => {
                 self.app_category = webapps::Category::from_index(idx as u8);
                 self.category_idx = Some(idx);
             }
             Message::Done => {
-                let browser = if let Some(browser) = &self.app_browser {
-                    browser.clone()
-                } else {
-                    let app_id = self.app_title.replace(' ', "");
-                    let app_id = app_id + &rng().random_range(1000..10000).to_string();
+                // let browser = if let Some(browser) = &self.app_browser {
+                //     browser.clone()
+                // } else {
+                //     let app_id = self.app_title.replace(' ', "");
+                //     let app_id = app_id + &rng().random_range(1000..10000).to_string();
 
-                    let mut browser = webapps::browser::Browser::new(&app_id);
-                    browser.window_title = Some(self.app_title.clone());
-                    browser.url = Some(self.app_url.clone());
-                    browser.window_size = Some(self.app_window_size.clone());
-                    browser.try_simulate_mobile = Some(self.app_simulate_mobile);
-                    browser
-                };
+                //     let mut browser = webapps::browser::Browser::new(&app_id);
+                //     browser.window_title = Some(self.app_title.clone());
+                //     browser.url = Some(self.app_url.clone());
+                //     browser.window_size = Some(self.app_window_size.clone());
+                //     browser.try_simulate_mobile = Some(self.app_simulate_mobile);
+                //     browser
+                // };
 
-                if webapps::launcher::webapplauncher_is_valid(&self.app_title, &browser.url) {
-                    if let Some(icon) = &self.app_icon {
-                        let launcher = webapps::launcher::WebAppLauncher {
-                            browser: browser.clone(),
-                            name: self.app_title.clone(),
-                            icon: icon.clone(),
-                            category: self.app_category.clone(),
-                        };
+                // if webapps::launcher::webapplauncher_is_valid(&self.app_title, &browser.url) {
+                //     if let Some(icon) = &self.app_icon {
+                //             browser: browser.clone(),
+                //             name: self.app_title.clone(),
+                //             icon: icon.clone(),
+                //             category: self.app_category.clone(),
+                //         };
 
-                        return task::future(async move {
-                            if let Ok(success) = launcher.create().await {
-                                if success {
-                                    return crate::pages::Message::SaveLauncher(launcher);
-                                }
-                            }
-                            crate::pages::Message::None
-                        });
-                    }
-                } else {
-                    return Task::none();
-                }
+                //         return task::future(async move {
+                //             if let Ok(success) = launcher.create().await {
+                //                 if success {
+                //                     return crate::pages::Message::SaveLauncher(launcher);
+                //                 }
+                //             }
+                //             crate::pages::Message::None
+                //         });
+                //     }
+                // } else {
+                //     return Task::none();
+                // }
             }
             Message::GenerateIcon => {
-                if self.app_title.len() > 1 {
-                    let icon = generate_icon(&self.app_title.split_at(1).0);
+                // if self.app_title.len() > 1 {
+                //     let icon = generate_icon(&self.app_title.split_at(1).0);
 
-                    self.update_icon(icon.clone());
+                //     self.update_icon(icon.clone());
 
-                    if let Some(icon) = icon {
-                        if webapp_icon_valid(&icon) {
-                            let ico = webapps::handle_icon(icon.path);
+                //     if let Some(icon) = icon {
+                //         if webapp_icon_valid(&icon) {
+                //             let ico = webapps::handle_icon(icon.path);
 
-                            return task::future(async {
-                                Action::App(pages::Message::SetIcon(ico.into()))
-                            });
-                        };
-                    }
-                }
-            }
-            Message::LaunchApp => {
-                if let Some(browser) = &self.app_browser {
-                    let arg_id = browser.app_id.clone();
-
-                    return task::future(async { crate::pages::Message::Launch(arg_id) });
-                }
+                //             return task::future(async {
+                //                 Action::App(pages::Message::SetIcon(ico.into()))
+                //             });
+                //         };
+                //     }
+                // }
             }
             Message::OpenIconPicker => {
                 return task::future(async { pages::Message::OpenIconPicker });
@@ -193,47 +149,17 @@ impl AppEditor {
             Message::Url(url) => {
                 self.app_url = url;
             }
-            Message::WindowWidth(width) => {
-                self.app_window_width = width;
-                self.app_window_size.0 = self.app_window_width.parse().unwrap_or_default();
-            }
-            Message::WindowHeight(height) => {
-                self.app_window_height = height;
-                self.app_window_size.1 = self.app_window_height.parse().unwrap_or_default();
-            }
         }
         Task::none()
     }
 
-    pub fn update_icon(&mut self, icon: Option<WebappIcon>) {
-        if let Some(icon) = icon {
-            self.selected_icon = Some(handle_icon(icon.path.clone()));
-            self.app_icon = Some(icon);
-        }
-    }
-
-    fn icon_element(&self, icon: Option<webapps::Icon>) -> Element<'_, Message> {
-        let ico = if let Some(ico) = icon {
-            match ico.icon {
-                webapps::IconType::Raster(data) => widget::button::custom(widget::image(data))
-                    .width(Length::Fixed(92.0))
-                    .height(Length::Fixed(92.0))
-                    .class(style::Button::Icon),
-
-                webapps::IconType::Svg(data) => widget::button::custom(widget::svg(data))
-                    .width(Length::Fixed(92.0))
-                    .height(Length::Fixed(92.0))
-                    .class(style::Button::Icon),
-            }
-        } else {
-            widget::button::custom(widget::icon::from_name("dev.heppen.webapps").size(256))
-                .class(style::Button::Icon)
-        };
-
-        widget::container(ico).into()
-    }
-
     pub fn view(&self) -> Element<'_, Message> {
+        let browsers: Vec<String> = self
+            .app_browsers
+            .iter()
+            .map(|b| b.name.to_string())
+            .collect();
+
         widget::container(
             widget::column()
                 .spacing(24)
@@ -242,7 +168,7 @@ impl AppEditor {
                         widget::row()
                             .spacing(12)
                             .push(
-                                widget::container(self.icon_element(self.selected_icon.clone()))
+                                widget::container(icon_iced_element(&self.selected_icon))
                                     .width(96.)
                                     .height(96.)
                                     .align_y(Vertical::Center),
@@ -314,60 +240,66 @@ impl AppEditor {
                             ),
                         ))
                         .add(widget::settings::item(
-                            fl!("window-size"),
-                            widget::row()
-                                .spacing(8)
-                                .push(
-                                    widget::text_input(
-                                        format!("{}", webapps::DEFAULT_WINDOW_WIDTH),
-                                        &self.app_window_width,
-                                    )
-                                    .on_input(Message::WindowWidth),
-                                )
-                                .push(
-                                    widget::text_input(
-                                        format!("{}", webapps::DEFAULT_WINDOW_HEIGHT),
-                                        &self.app_window_height,
-                                    )
-                                    .on_input(Message::WindowHeight),
-                                ),
+                            fl!("select-browser"),
+                            widget::dropdown(
+                                browsers,
+                                self.app_browser_selection,
+                                Message::Browser,
+                            ),
                         ))
                         .add(widget::settings::item(
                             fl!("isolated-profile"),
                             widget::toggler(self.app_isolated).on_toggle(Message::AppIsolated),
-                        ))
-                        .add(widget::settings::item(
-                            fl!("simulate-mobile"),
-                            widget::toggler(self.app_simulate_mobile)
-                                .on_toggle(Message::AppSimulateMobile),
                         )),
                 )
-                .push(
-                    widget::row()
-                        .spacing(8)
-                        .push(widget::horizontal_space())
-                        .push_maybe(if !self.is_installed {
-                            None
-                        } else {
-                            Some(
-                                widget::button::standard(fl!("run-app"))
-                                    .on_press(Message::LaunchApp),
-                            )
-                        })
-                        .push(widget::button::suggested(fl!("create")).on_press_maybe(
-                            if webapps::launcher::webapplauncher_is_valid(
-                                &self.app_title,
-                                &Some(self.app_url.clone()),
-                            ) {
-                                Some(Message::Done)
-                            } else {
-                                None
-                            },
-                        )),
-                ),
+                .push(widget::button::suggested(fl!("create")).on_press_maybe(
+                    if webapps::launcher::webapplauncher_is_valid(
+                        &self.app_title,
+                        &Some(self.app_url.clone()),
+                    ) {
+                        Some(Message::Done)
+                    } else {
+                        None
+                    },
+                )),
         )
         .padding(cosmic::iced::Padding::new(0.).left(30.0).right(30.0))
         .max_width(1000)
         .into()
+    }
+}
+
+pub fn icon_iced_element<'a>(source_path: &'a Option<String>) -> Element<'a, Message> {
+    let Some(source) = source_path else {
+        let data: &'static [u8] =
+            include_bytes!("../../resources/icons/hicolor/128x128/apps/dev.heppen.webapps.png");
+
+        let handle = cosmic::iced_core::image::Handle::from_bytes(data);
+
+        return Element::from(
+            widget::button::custom(widget::image(handle))
+                .width(Length::Fixed(92.0))
+                .height(Length::Fixed(92.0))
+                .class(style::Button::Icon),
+        );
+    };
+    if webapps::is_svg(&source) {
+        return Element::from(
+            widget::button::custom(widget::svg::Svg::from_path(source))
+                .width(Length::Fixed(92.0))
+                .height(Length::Fixed(92.0))
+                .class(style::Button::Icon),
+        );
+    } else {
+        let data = fs::read(&source).unwrap_or_default();
+
+        let handle = cosmic::iced_core::image::Handle::from_bytes(data);
+
+        return Element::from(
+            widget::button::custom(widget::image(handle))
+                .width(Length::Fixed(92.0))
+                .height(Length::Fixed(92.0))
+                .class(style::Button::Icon),
+        );
     }
 }

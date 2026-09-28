@@ -1,22 +1,12 @@
 use clap::Parser;
-use cosmic::{iced_core, iced_winit::graphics::image::image_rs::ImageReader, widget};
+use cosmic::iced_winit::graphics::image::image_rs::ImageReader;
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::{
-    ffi::OsStr,
-    fmt::Display,
-    io::{Cursor, Read as _},
-    os::unix::fs::PermissionsExt as _,
-    path::PathBuf,
-    str::FromStr,
+    ffi::OsStr, fmt::Display, os::unix::fs::PermissionsExt as _, path::PathBuf, str::FromStr,
 };
-use tokio::{
-    fs::File,
-    io::{AsyncReadExt as _, AsyncWriteExt as _},
-    process::Child,
-};
+use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
 
-use crate::launcher::WebappIcon;
 use cosmic::cosmic_config::{self, CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry};
 use cosmic::cosmic_theme::{self, ThemeBuilder};
 use strum::IntoEnumIterator;
@@ -27,6 +17,7 @@ use walkdir::WalkDir;
 pub mod browser;
 pub mod launcher;
 pub mod localize;
+pub mod supported_browsers;
 
 pub const DEFAULT_WINDOW_WIDTH: WindowWidth = 800;
 pub const DEFAULT_WINDOW_HEIGHT: WindowHeight = 600;
@@ -213,26 +204,26 @@ pub fn icons_location() -> Option<PathBuf> {
     None
 }
 
-pub fn handle_icon(path: PathBuf) -> Icon {
-    let mut buff = Vec::new();
+// pub fn handle_icon(path: PathBuf) -> Icon {
+//     let mut buff = Vec::new();
 
-    let mut file = std::fs::File::open(&path).expect("temp icon not found");
+//     let mut file = std::fs::File::open(&path).expect("temp icon not found");
 
-    let _ = file.read_to_end(&mut buff).expect("reading icon data");
+//     let _ = file.read_to_end(&mut buff).expect("reading icon data");
 
-    match is_svg(&path.display().to_string()) {
-        true => {
-            let handle = iced_core::svg::Handle::from_memory(buff);
+//     match is_svg(&path.display().to_string()) {
+//         true => {
+//             let handle = iced_core::svg::Handle::from_memory(buff);
 
-            Icon::new(IconType::Svg(handle), path.display().to_string().clone())
-        }
-        false => {
-            let handle = iced_core::image::Handle::from_bytes(buff);
+//             Icon::new(IconType::Svg(handle), path.display().to_string().clone())
+//         }
+//         false => {
+//             let handle = iced_core::image::Handle::from_bytes(buff);
 
-            Icon::new(IconType::Raster(handle), path.display().to_string().clone())
-        }
-    }
-}
+//             Icon::new(IconType::Raster(handle), path.display().to_string().clone())
+//         }
+//     }
+// }
 
 pub fn icon_pack_installed() -> bool {
     let packs: Vec<&str> = vec!["Papirus", "Papirus-Dark", "Papirus-Light"];
@@ -342,36 +333,6 @@ pub async fn find_icons(icon_name: String) -> Vec<String> {
     }
 }
 
-pub async fn image_handle(path: String) -> Option<Icon> {
-    let Ok(result_path) = PathBuf::from_str(&path);
-
-    if result_path.is_file() {
-        if is_svg(&path) {
-            let handle = widget::svg::Handle::from_path(&result_path);
-
-            return Some(Icon::new(IconType::Svg(handle), path));
-        } else {
-            let mut data: Vec<_> = Vec::new();
-
-            if let Ok(mut file) = tokio::fs::File::open(&result_path).await {
-                let _ = file.read_to_end(&mut data).await;
-            }
-
-            if let Ok(image_reader) = ImageReader::new(Cursor::new(&data)).with_guessed_format() {
-                if let Ok(image) = image_reader.decode() {
-                    if image.width() >= ICON_SIZE && image.height() >= ICON_SIZE {
-                        let handle = iced_core::image::Handle::from_bytes(data);
-
-                        return Some(Icon::new(IconType::Raster(handle), path));
-                    }
-                };
-            }
-        }
-    };
-
-    None
-}
-
 #[repr(u8)]
 #[derive(Debug, Default, Clone, EnumIter, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Category {
@@ -464,34 +425,37 @@ impl Category {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum IconType {
-    Raster(widget::image::Handle),
-    Svg(widget::svg::Handle),
+    Raster,
+    Svg,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Icon {
+pub struct WebappIcon {
     pub icon: IconType,
-    pub path: String,
+    pub source_path: Option<PathBuf>,
+    pub buffer: Vec<u8>,
 }
 
-impl Icon {
-    pub fn new(icon: IconType, path: String) -> Self {
-        Self { icon, path }
-    }
+impl WebappIcon {
+    pub async fn build_from_path(path: &str) -> Self {
+        let source_path = if path.is_empty() {
+            None
+        } else {
+            Some(PathBuf::from(&path))
+        };
 
-    pub fn to_launcher_icon(&self) -> Option<WebappIcon> {
-        let mut buffer = Vec::new();
+        let icon_t = match is_svg(&path) {
+            true => IconType::Svg,
+            false => IconType::Raster,
+        };
 
-        if let Ok(mut file) = std::fs::File::open(&self.path) {
-            file.read_to_end(&mut buffer).expect("reading icon");
+        let buffer = tokio::fs::read(path).await.unwrap_or_default();
 
-            return Some(WebappIcon {
-                path: self.path.clone().into(),
-                buffer: buffer,
-            });
+        Self {
+            icon: icon_t,
+            source_path,
+            buffer,
         }
-
-        None
     }
 }
 
@@ -798,6 +762,7 @@ impl SvgColor {
     }
 }
 
+#[allow(dead_code)]
 fn generate_random_color() -> String {
     // Generate random RGB values
     let mut rng = rand::rng();
@@ -826,7 +791,7 @@ pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
      id="defs1" />
-  <g
+  <
      id="layer1">
     <circle
        style="fill:{}"
@@ -850,15 +815,14 @@ pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
         color, first_letter
     );
 
-    if let Some(loc) = icons_location() {
-        let path = loc.join(file_name);
+    if let Some(mut source) = icons_location() {
+        source.push(file_name);
 
-        tracing::info!("icon wrote to {:?}", path);
-
-        std::fs::write(&path, &svg_document).expect("writing icon");
+        let _ = std::fs::write(&source, &svg_document);
 
         return Some(WebappIcon {
-            path,
+            icon: IconType::Svg,
+            source_path: Some(source),
             buffer: svg_document.as_bytes().to_vec(),
         });
     }

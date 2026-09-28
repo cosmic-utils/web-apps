@@ -3,7 +3,7 @@ use cosmic::{
     Element, Task,
     action::Action,
     iced::Length,
-    task, theme,
+    task,
     widget::{self},
 };
 use webapps::fl;
@@ -16,17 +16,17 @@ pub enum Message {
     DownloadIconsPack,
     OpenIconPickerDialog,
     IconSearch,
-    SetIcon(Option<webapps::Icon>),
+    SetIcon(Option<String>),
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct IconPicker {
     pub icon_searching: String,
-    pub icons: Vec<webapps::Icon>,
+    pub icons: Vec<String>,
 }
 
 impl IconPicker {
-    pub fn push_icon(&mut self, icon: webapps::Icon) {
+    pub fn push_icon(&mut self, icon: String) {
         self.icons.push(icon);
     }
 
@@ -81,7 +81,9 @@ impl IconPicker {
                 });
             }
             Message::SetIcon(icon) => {
-                return task::message(pages::Message::SetIcon(icon));
+                if let Some(source) = icon {
+                    return Task::done(cosmic::Action::App(pages::Message::SetIcon(source)));
+                }
             }
         }
 
@@ -89,23 +91,23 @@ impl IconPicker {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let mut icons: Vec<Element<Message>> = Vec::new();
+        let icons: Vec<Element<Message>> = Vec::new();
 
-        for ico in self.icons.iter() {
-            let btn = match ico.clone().icon {
-                webapps::IconType::Raster(icon) => widget::button::custom(widget::image(icon))
-                    .width(Length::Fixed(48.))
-                    .height(Length::Fixed(48.))
-                    .on_press(Message::SetIcon(Some(ico.clone())))
-                    .class(theme::Button::Icon),
-                webapps::IconType::Svg(icon) => widget::button::custom(widget::svg(icon))
-                    .width(Length::Fixed(48.))
-                    .height(Length::Fixed(48.))
-                    .on_press(Message::SetIcon(Some(ico.clone())))
-                    .class(theme::Button::Icon),
-            };
-            icons.push(btn.into());
-        }
+        // for ico in self.icons.iter() {
+        //     let btn = match ico.clone().icon {
+        //         webapps::IconType::Raster(icon) => widget::button::custom(widget::image(icon))
+        //             .width(Length::Fixed(48.))
+        //             .height(Length::Fixed(48.))
+        //             .on_press(Message::SetIcon(Some(ico.clone())))
+        //             .class(theme::Button::Icon),
+        //         webapps::IconType::Svg(icon) => widget::button::custom(widget::svg(icon))
+        //             .width(Length::Fixed(48.))
+        //             .height(Length::Fixed(48.))
+        //             .on_press(Message::SetIcon(Some(ico.clone())))
+        //             .class(theme::Button::Icon),
+        //     };
+        //     icons.push(btn.into());
+        // }
 
         let icons_input = widget::text_input(fl!("icon-name-to-find"), &self.icon_searching)
             .on_input(Message::CustomIconsSearch)
