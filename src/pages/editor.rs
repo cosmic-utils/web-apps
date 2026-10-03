@@ -15,6 +15,7 @@ use crate::pages;
 #[derive(Debug, Clone)]
 pub struct AppEditor {
     pub app_browsers: Vec<webapps::browser::Browser>,
+    pub app_browser: Option<webapps::browser::Browser>,
     pub app_browser_selection: Option<usize>,
     pub app_title: String,
     pub app_url: String,
@@ -36,10 +37,12 @@ impl Default for AppEditor {
         let categories = webapps::Category::iter()
             .map(|c| c.name())
             .collect::<Vec<String>>();
+        let installed_browsers = webapps::browser::installed_browsers();
 
-        AppEditor {
-            app_browsers: webapps::browser::Browser::installed_browsers(),
+        let mut editor = AppEditor {
             app_browser_selection: None,
+            app_browser: None,
+            app_browsers: installed_browsers.clone(),
             app_title: String::new(),
             app_url: String::new(),
             app_icon: None,
@@ -53,7 +56,14 @@ impl Default for AppEditor {
             categories,
             category_idx: webapps::Category::iter().position(|c| c == Category::Utility),
             is_installed: false,
+        };
+
+        if !installed_browsers.is_empty() {
+            editor.app_browser_selection = Some(0);
+            editor.app_browser = Some(installed_browsers[0].clone());
         }
+
+        editor
     }
 }
 
@@ -78,6 +88,7 @@ impl AppEditor {
             }
             Message::Browser(idx) => {
                 self.app_browser_selection = Some(idx);
+                self.app_browser = Some(self.app_browsers[idx].clone());
             }
             Message::Category(idx) => {
                 self.app_category = webapps::Category::from_index(idx as u8);
@@ -157,7 +168,7 @@ impl AppEditor {
         let browsers: Vec<String> = self
             .app_browsers
             .iter()
-            .map(|b| b.name.to_string())
+            .map(|b| b.display_name.to_string())
             .collect();
 
         widget::container(
@@ -250,9 +261,21 @@ impl AppEditor {
                         .add(widget::settings::item(
                             fl!("isolated-profile"),
                             widget::toggler(self.app_isolated).on_toggle(Message::AppIsolated),
-                        )),
+                        ))
+                        .add_maybe(if self.app_browser.is_some() {
+                            Some(widget::settings::item_row(vec![
+                                widget::text(if let Some(browser) = &self.app_browser {
+                                    browser.display_preview_string()
+                                } else {
+                                    "".into()
+                                })
+                                .into(),
+                            ]))
+                        } else {
+                            None
+                        }),
                 )
-                .push(widget::button::suggested(fl!("create")).on_press_maybe(
+                .push(widget::button::standard(fl!("create")).on_press_maybe(
                     if webapps::launcher::webapplauncher_is_valid(
                         &self.app_title,
                         &Some(self.app_url.clone()),

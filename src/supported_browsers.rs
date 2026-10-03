@@ -1,11 +1,18 @@
-use crate::browser::{Browser, Installation};
+use crate::browser::{Browser, BrowserT};
 
 pub fn supported_browsers() -> Vec<Browser> {
-    vec![Browser::new(
-        "firefox",
-        "Firefox (Snap)",
-        "firefox",
-        "/snap/bin/firefox",
-        Installation::Snap,
-    )]
+    vec![
+        Browser::new(
+            "Firefox",
+            "org.mozilla.firefox",
+            "firefox",
+            BrowserT::Firefox,
+        ),
+        Browser::new(
+            "Zen Browser",
+            "app.zen_browser.zen",
+            "app.zen_browser.zen",
+            BrowserT::Zen,
+        ),
+    ]
 }
