@@ -1,71 +1,198 @@
-use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
-use crate::cef_path;
+use serde::{Deserialize, Serialize};
+
+use crate::{APP_ID, supported_browsers::supported_browsers};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Browser {
-    pub app_id: crate::WebviewArgs,
-    pub window_title: Option<String>,
-    pub url: Option<String>,
-    pub profile: PathBuf,
-    pub window_size: Option<crate::WindowSize>,
-    pub try_simulate_mobile: Option<bool>,
+pub enum Installation {
+    System,
+    Flatpak,
+    Snap,
 }
 
-impl Browser {
-    pub fn new(app_id: &str) -> Self {
-        let xdg_data = dirs::data_dir().unwrap_or_default();
-        let path = xdg_data.join(crate::APP_ID).join("profiles").join(&app_id);
-
-        Self {
-            app_id: crate::WebviewArgs {
-                id: app_id.to_string(),
-            },
-            window_title: None,
-            url: None,
-            profile: path,
-            window_size: None,
-            try_simulate_mobile: None,
+impl From<&PathBuf> for Installation {
+    fn from(value: &PathBuf) -> Self {
+        if value.starts_with("/usr/bin") || value.starts_with("/usr/local/bin") {
+            return Installation::System;
         }
-    }
 
-    pub fn from_appid(id: &str) -> Option<Self> {
-        if let Some(launcher) = crate::launcher::installed_webapps()
-            .iter()
-            .find(|launcher| launcher.browser.app_id.as_ref() == id)
-        {
-            return Some(launcher.browser.clone());
-        };
+        if value.starts_with("/snap/bin") {
+            return Installation::Snap;
+        }
+
+        if value.starts_with("/var/lib/flatpak") || value.starts_with("/home") {
+            return Installation::Flatpak;
+        }
+
+        Installation::System
+    }
+}
+
+impl Installation {
+    pub fn profile_path(&self, id: &str) -> Option<PathBuf> {
+        match self {
+            Installation::System => {
+                if let Some(mut dir) = dirs::data_local_dir() {
+                    dir.push(APP_ID);
+                    dir.push(id);
+
+                    if !dir.exists() {
+                        let _ = fs::create_dir_all(&dir);
+                    }
+
+                    return Some(dir.into());
+                }
+            }
+            Installation::Flatpak => {
+                if let Some(mut dir) = dirs::home_dir() {
+                    dir.push(".var");
+                    dir.push("app");
+                    dir.push(id);
+                    dir.push("data");
+
+                    if !dir.exists() {
+                        let _ = fs::create_dir_all(&dir);
+                    }
+
+                    return Some(dir);
+                }
+            }
+            Installation::Snap => {
+                if let Some(mut dir) = dirs::home_dir() {
+                    dir.push("snap");
+                    dir.push(id);
+                    dir.push("common");
+
+                    if !dir.exists() {
+                        let _ = fs::create_dir_all(&dir);
+                    }
+
+                    return Some(dir);
+                }
+            }
+        }
 
         None
     }
+}
 
-    pub fn get_exec(&self) -> Option<String> {
-        let Some(cef_path) = cef_path() else {
-            return None;
-        };
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum BrowserT {
+    Chromium,
+    Epiphany,
+    Falkon,
+    Firefox,
+    Floorp,
+    Zen,
+}
 
-        Some(format!(
-            "env LD_LIBRARY_PATH={} {}.webview {}",
-            cef_path.display(),
-            crate::APP_ID,
-            self.app_id.as_ref()
-        ))
+pub type ArgKey = String;
+pub type ArgValue = String;
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct BrowserArg(ArgKey, Option<ArgValue>);
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Browser {
+    pub display_name: String,
+    pub app_id: String,
+    pub executable_name: String,
+    pub executable_path: Option<PathBuf>,
+    pub install_type: Option<Installation>,
+    pub browser_type: BrowserT,
+    pub browser_args: Vec<BrowserArg>,
+}
+
+impl Browser {
+    pub fn new(display_name: &str, app_id: &str, exe_name: &str, browser_type: BrowserT) -> Self {
+        Self {
+            display_name: display_name.to_string(),
+            app_id: app_id.to_string(),
+            executable_name: exe_name.to_string(),
+            executable_path: None,
+            install_type: None,
+            browser_type,
+            browser_args: Vec::new(),
+        }
     }
 
-    pub fn delete(&self) {
-        let xdg_data = dirs::data_dir().unwrap_or_default();
+    pub fn update_with_path(&mut self, path: PathBuf) {
+        self.install_type = Some(Installation::from(&path));
+        self.executable_path = Some(path);
 
-        let path = xdg_data
-            .join(crate::APP_ID)
-            .join("profiles")
-            .join(self.app_id.as_ref());
-
-        if path.exists() {
-            if let Err(e) = std::fs::remove_dir_all(&path) {
-                eprintln!("Failed to delete profile directory: {}", e);
+        if let Some(i) = &self.install_type {
+            match i {
+                Installation::Flatpak => self.display_name.push_str(" (Flatpak)"),
+                Installation::Snap => self.display_name.push_str(" (Snap)"),
+                _ => {}
             }
         }
     }
+
+    pub fn update_arg(&mut self, arg: BrowserArg) {
+        self.browser_args.push(arg);
+    }
+
+    pub fn display_args(&self) -> String {
+        let mut result_string = String::new();
+
+        for args in self.browser_args.iter() {
+            result_string.push_str(&args.0);
+            result_string.push_str(" ");
+
+            if let Some(val) = &args.1 {
+                result_string.push_str(&val);
+                result_string.push_str(" ");
+            }
+        }
+
+        result_string
+    }
+
+    pub fn display_preview_string(&self) -> String {
+        let mut preview_string = String::new();
+
+        if let Some(path) = &self.executable_path {
+            preview_string.push_str(&path.display().to_string());
+        }
+
+        preview_string.push_str(&self.display_args());
+        preview_string
+    }
+}
+
+pub fn common_install_paths() -> Vec<PathBuf> {
+    let mut paths = vec![
+        PathBuf::from("/usr/bin"),
+        PathBuf::from("/usr/local/bin"),
+        PathBuf::from("/snap/bin"),
+        PathBuf::from("/var/lib/flatpak/exports/bin"),
+    ];
+
+    if let Some(mut data_dir) = dirs::data_dir() {
+        data_dir.push("flatpak");
+        data_dir.push("exports");
+        data_dir.push("bin");
+        paths.push(data_dir);
+    }
+
+    paths
+}
+
+pub fn installed_browsers() -> Vec<Browser> {
+    let mut installed: Vec<Browser> = vec![];
+
+    for browser in &mut supported_browsers() {
+        for path in &common_install_paths() {
+            let final_path = path.join(&browser.executable_name);
+
+            if final_path.exists() {
+                browser.update_with_path(final_path);
+                installed.push(browser.clone());
+            }
+        }
+    }
+
+    installed
 }
