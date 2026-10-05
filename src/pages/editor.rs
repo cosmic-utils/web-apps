@@ -4,7 +4,7 @@ use cosmic::{
     Element, Task,
     action::Action,
     iced::{Length, alignment::Vertical},
-    style, task,
+    style,
     widget::{self},
 };
 use strum::IntoEnumIterator as _;
@@ -17,15 +17,12 @@ pub struct AppEditor {
     pub app_browsers: Vec<webapps::browser::Browser>,
     pub app_browser: Option<webapps::browser::Browser>,
     pub app_browser_selection: Option<usize>,
+    pub app_profile: Option<String>,
+    pub app_id: Option<String>,
     pub app_title: String,
     pub app_url: String,
     pub app_icon: Option<WebappIcon>,
     pub app_category: webapps::Category,
-    pub app_window_width: String,
-    pub app_window_height: String,
-    pub app_window_size: webapps::WindowSize,
-    pub app_isolated: bool,
-    pub app_simulate_mobile: bool,
     pub selected_icon: Option<String>,
     pub categories: Vec<String>,
     pub category_idx: Option<usize>,
@@ -43,15 +40,12 @@ impl Default for AppEditor {
             app_browser_selection: None,
             app_browser: None,
             app_browsers: installed_browsers.clone(),
+            app_profile: None,
+            app_id: None,
             app_title: String::new(),
             app_url: String::new(),
             app_icon: None,
             app_category: webapps::Category::default(),
-            app_window_width: String::from(webapps::DEFAULT_WINDOW_WIDTH.to_string()),
-            app_window_height: String::from(webapps::DEFAULT_WINDOW_HEIGHT.to_string()),
-            app_window_size: webapps::WindowSize::default(),
-            app_isolated: true,
-            app_simulate_mobile: false,
             selected_icon: None,
             categories,
             category_idx: webapps::Category::iter().position(|c| c == Category::Utility),
@@ -70,6 +64,7 @@ impl Default for AppEditor {
 #[derive(Debug, Clone)]
 pub enum Message {
     AppIsolated(bool),
+    AppPrivateMode(bool),
     Browser(usize),
     Category(usize),
     Done,
@@ -81,14 +76,62 @@ pub enum Message {
 }
 
 impl AppEditor {
+    fn set_profile_path_string(&mut self) {
+        let Some(browser) = self.app_browser.as_mut() else {
+            return;
+        };
+
+        let Some(install_t) = browser.install_t.as_ref() else {
+            return;
+        };
+
+        let Some(webapp_id) = self.app_id.as_ref() else {
+            return;
+        };
+
+        if let Some(path) =
+            install_t.profile_path(&browser.app_id, &browser.executable_name, webapp_id)
+        {
+            self.app_profile = Some(path.to_str().unwrap_or_default().to_string())
+        }
+
+        browser.config.set_profile_path(self.app_profile.clone());
+    }
+
+    fn set_class_name(&mut self) {
+        let Some(browser) = self.app_browser.as_mut() else {
+            return;
+        };
+
+        let Some(webapp_id) = self.app_id.as_ref() else {
+            return;
+        };
+
+        browser.config.class_name = webapp_id.to_owned();
+    }
+
     pub fn update(&mut self, message: Message) -> Task<Action<crate::pages::Message>> {
         match message {
             Message::AppIsolated(flag) => {
-                self.app_isolated = flag;
+                if let Some(browser) = self.app_browser.as_mut() {
+                    browser.config.isolated_profile = flag;
+                }
+            }
+            Message::AppPrivateMode(flag) => {
+                if let Some(browser) = self.app_browser.as_mut() {
+                    browser.config.private_mode = flag;
+                }
             }
             Message::Browser(idx) => {
                 self.app_browser_selection = Some(idx);
                 self.app_browser = Some(self.app_browsers[idx].clone());
+
+                if self.app_title.len() >= 3 {
+                    self.set_profile_path_string();
+                    self.set_class_name();
+                } else {
+                    self.app_profile = None;
+                }
             }
             Message::Category(idx) => {
                 self.app_category = webapps::Category::from_index(idx as u8);
@@ -148,13 +191,22 @@ impl AppEditor {
                 // }
             }
             Message::OpenIconPicker => {
-                return task::future(async { pages::Message::OpenIconPicker });
+                return Task::done(Action::App(pages::Message::OpenIconPicker));
             }
             Message::ResetIcon => {
                 self.app_icon = None;
                 self.selected_icon = None;
             }
             Message::Title(title) => {
+                if self.app_title.len() >= 3 {
+                    self.app_id = Some(webapps::webapp_id(&title));
+                    self.set_profile_path_string();
+                    self.set_class_name();
+                } else {
+                    self.app_profile = None;
+                    self.app_id = None;
+                }
+
                 self.app_title = title;
             }
             Message::Url(url) => {
@@ -260,12 +312,26 @@ impl AppEditor {
                         ))
                         .add(widget::settings::item(
                             fl!("isolated-profile"),
-                            widget::toggler(self.app_isolated).on_toggle(Message::AppIsolated),
+                            widget::toggler(if let Some(browser) = &self.app_browser {
+                                browser.config.isolated_profile
+                            } else {
+                                true
+                            })
+                            .on_toggle(Message::AppIsolated),
+                        ))
+                        .add(widget::settings::item(
+                            fl!("private-mode"),
+                            widget::toggler(if let Some(browser) = &self.app_browser {
+                                browser.config.private_mode
+                            } else {
+                                false
+                            })
+                            .on_toggle(Message::AppPrivateMode),
                         ))
                         .add_maybe(if self.app_browser.is_some() {
                             Some(widget::settings::item_row(vec![
                                 widget::text(if let Some(browser) = &self.app_browser {
-                                    browser.display_preview_string()
+                                    browser.get_exec_string()
                                 } else {
                                     "".into()
                                 })

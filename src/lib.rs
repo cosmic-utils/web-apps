@@ -86,6 +86,12 @@ impl AppConfig {
     }
 }
 
+pub fn webapp_id(name: &str) -> String {
+    let mut app_id = name.replace(' ', "");
+    app_id = app_id + &rand::rng().random_range(1000..10000).to_string();
+    format!("{}.{}", APP_ID, app_id)
+}
+
 pub fn url_valid(url: &str) -> bool {
     if Url::parse(url).is_ok() {
         return true;
