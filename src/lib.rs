@@ -86,7 +86,11 @@ impl AppConfig {
     }
 }
 
-pub fn webapp_id(name: &str) -> String {
+pub fn webapp_id(name: String) -> String {
+    if name.is_empty() || name.len() < 3 {
+        return APP_ID.to_owned();
+    };
+
     let mut app_id = name.replace(' ', "");
     app_id = app_id + &rand::rng().random_range(1000..10000).to_string();
     format!("{}.{}", APP_ID, app_id)

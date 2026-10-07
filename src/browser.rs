@@ -256,6 +256,7 @@ impl Browser {
         exec.push_str(" ");
         exec.push_str(&self.profile_path_arg());
         exec.push_str(" ");
+        exec.push_str(&self.config.url);
 
         exec
     }

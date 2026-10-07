@@ -8,7 +8,7 @@ use cosmic::{
     widget::{self},
 };
 use strum::IntoEnumIterator as _;
-use webapps::{Category, WebappIcon, fl};
+use webapps::{Category, WebappIcon, fl, url_valid, webapp_id};
 
 use crate::pages;
 
@@ -18,7 +18,7 @@ pub struct AppEditor {
     pub app_browser: Option<webapps::browser::Browser>,
     pub app_browser_selection: Option<usize>,
     pub app_profile: Option<String>,
-    pub app_id: Option<String>,
+    pub app_id: String,
     pub app_title: String,
     pub app_url: String,
     pub app_icon: Option<WebappIcon>,
@@ -41,7 +41,7 @@ impl Default for AppEditor {
             app_browser: None,
             app_browsers: installed_browsers.clone(),
             app_profile: None,
-            app_id: None,
+            app_id: String::new(),
             app_title: String::new(),
             app_url: String::new(),
             app_icon: None,
@@ -76,7 +76,10 @@ pub enum Message {
 }
 
 impl AppEditor {
-    fn set_profile_path_string(&mut self) {
+    pub fn update_browser_config(&mut self) {
+        if self.app_title.len() >= 3 {
+            self.app_id = webapp_id(self.app_title.clone());
+        }
         let Some(browser) = self.app_browser.as_mut() else {
             return;
         };
@@ -85,29 +88,17 @@ impl AppEditor {
             return;
         };
 
-        let Some(webapp_id) = self.app_id.as_ref() else {
-            return;
-        };
+        // set classname
+        browser.config.class_name = self.app_id.clone();
 
+        // set profile path
         if let Some(path) =
-            install_t.profile_path(&browser.app_id, &browser.executable_name, webapp_id)
+            install_t.profile_path(&browser.app_id, &browser.executable_name, &self.app_id)
         {
             self.app_profile = Some(path.to_str().unwrap_or_default().to_string())
         }
 
         browser.config.set_profile_path(self.app_profile.clone());
-    }
-
-    fn set_class_name(&mut self) {
-        let Some(browser) = self.app_browser.as_mut() else {
-            return;
-        };
-
-        let Some(webapp_id) = self.app_id.as_ref() else {
-            return;
-        };
-
-        browser.config.class_name = webapp_id.to_owned();
     }
 
     pub fn update(&mut self, message: Message) -> Task<Action<crate::pages::Message>> {
@@ -125,13 +116,6 @@ impl AppEditor {
             Message::Browser(idx) => {
                 self.app_browser_selection = Some(idx);
                 self.app_browser = Some(self.app_browsers[idx].clone());
-
-                if self.app_title.len() >= 3 {
-                    self.set_profile_path_string();
-                    self.set_class_name();
-                } else {
-                    self.app_profile = None;
-                }
             }
             Message::Category(idx) => {
                 self.app_category = webapps::Category::from_index(idx as u8);
@@ -199,20 +183,27 @@ impl AppEditor {
             }
             Message::Title(title) => {
                 if self.app_title.len() >= 3 {
-                    self.app_id = Some(webapps::webapp_id(&title));
-                    self.set_profile_path_string();
-                    self.set_class_name();
+                    self.app_id = webapps::webapp_id(title.clone());
                 } else {
                     self.app_profile = None;
-                    self.app_id = None;
+                    self.app_id.clear();
                 }
 
                 self.app_title = title;
             }
             Message::Url(url) => {
                 self.app_url = url;
+
+                if url_valid(&self.app_url) {
+                    let Some(browser) = self.app_browser.as_mut() else {
+                        return Task::none();
+                    };
+
+                    browser.config.url = self.app_url.clone();
+                }
             }
         }
+        self.update_browser_config();
         Task::none()
     }
 
@@ -223,137 +214,139 @@ impl AppEditor {
             .map(|b| b.display_name.to_string())
             .collect();
 
-        widget::container(
-            widget::column()
-                .spacing(24)
-                .push(
-                    widget::container(
-                        widget::row()
-                            .spacing(12)
-                            .push(
-                                widget::container(icon_iced_element(&self.selected_icon))
-                                    .width(96.)
-                                    .height(96.)
+        widget::scrollable(
+            widget::container(
+                widget::column()
+                    .spacing(24)
+                    .push(
+                        widget::container(
+                            widget::row()
+                                .spacing(12)
+                                .push(
+                                    widget::container(icon_iced_element(&self.selected_icon))
+                                        .width(96.)
+                                        .height(96.)
+                                        .align_y(Vertical::Center),
+                                )
+                                .push(
+                                    widget::container(
+                                        widget::column()
+                                            .spacing(12)
+                                            .push(widget::text::title3(format!(
+                                                "{}: {}",
+                                                fl!("title"),
+                                                if self.app_title.is_empty() {
+                                                    fl!("new-webapp-title")
+                                                } else {
+                                                    self.app_title.clone()
+                                                }
+                                            )))
+                                            .push(widget::text::title4(format!(
+                                                "{}: {}",
+                                                fl!("category"),
+                                                self.app_category.name()
+                                            ))),
+                                    )
+                                    .height(Length::Fixed(96.))
                                     .align_y(Vertical::Center),
+                                ),
+                        )
+                        .padding(12)
+                        .width(Length::Fill)
+                        .class(style::Container::Card),
+                    )
+                    .push(
+                        widget::row()
+                            .spacing(8)
+                            .push(
+                                widget::text_input(fl!("title"), &self.app_title)
+                                    .on_input(Message::Title),
                             )
                             .push(
-                                widget::container(
-                                    widget::column()
-                                        .spacing(12)
-                                        .push(widget::text::title3(format!(
-                                            "{}: {}",
-                                            fl!("title"),
-                                            if self.app_title.is_empty() {
-                                                fl!("new-webapp-title")
-                                            } else {
-                                                self.app_title.clone()
-                                            }
-                                        )))
-                                        .push(widget::text::title4(format!(
-                                            "{}: {}",
-                                            fl!("category"),
-                                            self.app_category.name()
-                                        ))),
-                                )
-                                .height(Length::Fixed(96.))
-                                .align_y(Vertical::Center),
-                            ),
-                    )
-                    .padding(12)
-                    .width(Length::Fill)
-                    .class(style::Container::Card),
-                )
-                .push(
-                    widget::row()
-                        .spacing(8)
-                        .push(
-                            widget::text_input(fl!("title"), &self.app_title)
-                                .on_input(Message::Title),
-                        )
-                        .push(
-                            widget::button::standard(fl!("generate-icon")).on_press_maybe(
-                                if self.app_title.len() > 1 {
-                                    Some(Message::GenerateIcon)
+                                widget::button::standard(fl!("generate-icon")).on_press_maybe(
+                                    if self.app_title.len() > 1 {
+                                        Some(Message::GenerateIcon)
+                                    } else {
+                                        None
+                                    },
+                                ),
+                            )
+                            .push(
+                                widget::button::standard(fl!("icon-selector"))
+                                    .on_press_maybe(Some(Message::OpenIconPicker)),
+                            )
+                            .push(widget::button::standard(fl!("reset-icon")).on_press_maybe(
+                                if self.selected_icon.is_some() {
+                                    Some(Message::ResetIcon)
                                 } else {
                                     None
                                 },
-                            ),
-                        )
-                        .push(
-                            widget::button::standard(fl!("icon-selector"))
-                                .on_press_maybe(Some(Message::OpenIconPicker)),
-                        )
-                        .push(widget::button::standard(fl!("reset-icon")).on_press_maybe(
-                            if self.selected_icon.is_some() {
-                                Some(Message::ResetIcon)
+                            )),
+                    )
+                    .push(widget::text_input(fl!("url"), &self.app_url).on_input(Message::Url))
+                    .push(
+                        widget::settings::section()
+                            .add(widget::settings::item(
+                                fl!("select-category"),
+                                widget::dropdown(
+                                    &self.categories,
+                                    self.category_idx,
+                                    Message::Category,
+                                ),
+                            ))
+                            .add(widget::settings::item(
+                                fl!("select-browser"),
+                                widget::dropdown(
+                                    browsers,
+                                    self.app_browser_selection,
+                                    Message::Browser,
+                                ),
+                            ))
+                            .add(widget::settings::item(
+                                fl!("isolated-profile"),
+                                widget::toggler(if let Some(browser) = &self.app_browser {
+                                    browser.config.isolated_profile
+                                } else {
+                                    true
+                                })
+                                .on_toggle(Message::AppIsolated),
+                            ))
+                            .add(widget::settings::item(
+                                fl!("private-mode"),
+                                widget::toggler(if let Some(browser) = &self.app_browser {
+                                    browser.config.private_mode
+                                } else {
+                                    false
+                                })
+                                .on_toggle(Message::AppPrivateMode),
+                            ))
+                            .add_maybe(if self.app_browser.is_some() {
+                                Some(widget::settings::item_row(vec![
+                                    widget::text(if let Some(browser) = &self.app_browser {
+                                        browser.get_exec_string()
+                                    } else {
+                                        "".into()
+                                    })
+                                    .into(),
+                                ]))
                             } else {
                                 None
-                            },
-                        )),
-                )
-                .push(widget::text_input(fl!("url"), &self.app_url).on_input(Message::Url))
-                .push(
-                    widget::settings::section()
-                        .add(widget::settings::item(
-                            fl!("select-category"),
-                            widget::dropdown(
-                                &self.categories,
-                                self.category_idx,
-                                Message::Category,
-                            ),
-                        ))
-                        .add(widget::settings::item(
-                            fl!("select-browser"),
-                            widget::dropdown(
-                                browsers,
-                                self.app_browser_selection,
-                                Message::Browser,
-                            ),
-                        ))
-                        .add(widget::settings::item(
-                            fl!("isolated-profile"),
-                            widget::toggler(if let Some(browser) = &self.app_browser {
-                                browser.config.isolated_profile
-                            } else {
-                                true
-                            })
-                            .on_toggle(Message::AppIsolated),
-                        ))
-                        .add(widget::settings::item(
-                            fl!("private-mode"),
-                            widget::toggler(if let Some(browser) = &self.app_browser {
-                                browser.config.private_mode
-                            } else {
-                                false
-                            })
-                            .on_toggle(Message::AppPrivateMode),
-                        ))
-                        .add_maybe(if self.app_browser.is_some() {
-                            Some(widget::settings::item_row(vec![
-                                widget::text(if let Some(browser) = &self.app_browser {
-                                    browser.get_exec_string()
-                                } else {
-                                    "".into()
-                                })
-                                .into(),
-                            ]))
+                            }),
+                    )
+                    .push(widget::button::standard(fl!("create")).on_press_maybe(
+                        if webapps::launcher::webapplauncher_is_valid(
+                            &self.app_title,
+                            &Some(self.app_url.clone()),
+                        ) {
+                            Some(Message::Done)
                         } else {
                             None
-                        }),
-                )
-                .push(widget::button::standard(fl!("create")).on_press_maybe(
-                    if webapps::launcher::webapplauncher_is_valid(
-                        &self.app_title,
-                        &Some(self.app_url.clone()),
-                    ) {
-                        Some(Message::Done)
-                    } else {
-                        None
-                    },
-                )),
+                        },
+                    )),
+            )
+            .padding(cosmic::iced::Padding::new(0.).left(30.0).right(30.0))
+            .max_width(1000),
         )
-        .padding(cosmic::iced::Padding::new(0.).left(30.0).right(30.0))
-        .max_width(1000)
         .into()
     }
 }

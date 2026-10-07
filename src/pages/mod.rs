@@ -159,8 +159,8 @@ impl Application for QuickWebApps {
 
         let tasks = vec![
             task::message(Message::ReloadNavbarItems),
-            task::message(Message::LoadThemes),
-            task::message(Message::UpdateTheme(Box::new(Theme::Light))),
+            //task::message(Message::LoadThemes),
+            //task::message(Message::UpdateTheme(Box::new(Theme::Light))),
         ];
 
         (app, Task::batch(tasks))
@@ -230,9 +230,11 @@ impl Application for QuickWebApps {
                 self.theme_idx = Some(idx);
                 let selected = self.themes_list[idx].clone();
 
-                tasks.push(task::message(cosmic::action::app(Message::UpdateTheme(
-                    Box::new(selected),
-                ))));
+                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
+                    return task::message(cosmic::action::app(Message::UpdateTheme(Box::new(
+                        selected,
+                    ))));
+                }
             }
             Message::CloseDialog => self.dialogs = None,
             Message::ConfirmDeletion(id) => {
