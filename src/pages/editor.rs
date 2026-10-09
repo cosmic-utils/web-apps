@@ -153,7 +153,7 @@ impl AppEditor {
             }
             Message::GenerateIcon => {
                 let first_letter = &self.app_title.split_at(1).0;
-                if !self.app_title.is_empty() {
+                if !self.app_title.is_empty() && self.app_icon.is_none() {
                     let webapp_icon = webapps::generate_icon(&first_letter);
 
                     return Task::done(Action::App(pages::Message::SetIcon(webapp_icon)));

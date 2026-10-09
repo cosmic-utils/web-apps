@@ -65,7 +65,7 @@ impl IconPicker {
                             })
                             .collect::<Vec<String>>();
 
-                        pages::Message::OpenFileResult(files)
+                        pages::Message::OpenFileResult(files[0].clone())
                     } else {
                         pages::Message::None
                     }

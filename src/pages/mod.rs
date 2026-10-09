@@ -52,7 +52,7 @@ pub enum Message {
     ImportThemeFilePicker,
     LaunchUrl(String),
     LoadThemes,
-    OpenFileResult(Vec<String>),
+    OpenFileResult(String),
     OpenIconPicker,
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
@@ -406,13 +406,15 @@ impl Application for QuickWebApps {
                     Theme::Custom(theme) => self.config.app_theme == theme.0,
                 })
             }
-            Message::OpenFileResult(file_paths) => {
-                if !file_paths.is_empty() {
+            Message::OpenFileResult(file_path) => {
+                if !file_path.is_empty() {
                     self.dialogs = None;
 
-                    // return Task::done(cosmic::Action::App(Message::SetIcon(
-                    //     file_paths[0].clone(),
-                    // )));
+                    return Task::future(async move {
+                        let webapp_icon = WebappIcon::build_from_path(&file_path).await;
+
+                        cosmic::Action::App(Message::SetIcon(Some(webapp_icon)))
+                    });
                 }
             }
             Message::OpenIconPicker => {
