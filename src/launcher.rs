@@ -68,6 +68,34 @@ impl WebappLauncher {
             let key = line_split[0];
             let value = line_split[1];
 
+            // fill browser config
+            if let Some(browser) = launcher.browser.as_mut() {
+                match key {
+                    "StartupWMClass" => browser.config.class_name = value.to_string(),
+                    "X-WebApp-Isolated" => {
+                        browser.config.isolated_profile = match value {
+                            "true" => true,
+                            "false" => false,
+                            _ => true,
+                        }
+                    }
+                    "X-WebApp-PrivateMode" => {
+                        browser.config.private_mode = match value {
+                            "true" => true,
+                            "false" => false,
+                            _ => false,
+                        }
+                    }
+                    "X-WebApp-ProfilePath" => browser.config.profile_path = Some(value.to_string()),
+                    "X-WebApp-CustomParameters" => {
+                        browser.config.custom_parameters = value.to_string()
+                    }
+                    _ => {
+                        continue;
+                    }
+                }
+            }
+
             match key {
                 "X-WebApp-Browser-Id" => launcher.browser = Browser::from_id(value),
                 "X-WebApp-Id" => launcher.webapp_id = value.to_string(),
