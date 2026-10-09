@@ -152,8 +152,9 @@ impl AppEditor {
                 }
             }
             Message::GenerateIcon => {
+                let first_letter = &self.app_title.split_at(1).0;
                 if !self.app_title.is_empty() {
-                    let webapp_icon = webapps::generate_icon(&self.app_title.split_at(1).0);
+                    let webapp_icon = webapps::generate_icon(&first_letter);
 
                     return Task::done(Action::App(pages::Message::SetIcon(webapp_icon)));
                 }
@@ -165,7 +166,7 @@ impl AppEditor {
                 self.app_icon = None;
                 self.selected_icon = None;
             }
-            Message::Title(mut title) => {
+            Message::Title(title) => {
                 if title.len() < 3 {
                     self.app_profile = None;
                     self.app_id.clear();
@@ -174,9 +175,7 @@ impl AppEditor {
                 self.app_title = title.clone();
 
                 if !title.is_empty() {
-                    return Task::done(Action::App(pages::Message::SetIcon(
-                        webapps::generate_icon(&title.split_off(1)),
-                    )));
+                    return Task::done(Action::App(pages::Message::Editor(Message::GenerateIcon)));
                 }
             }
             Message::Url(url) => {

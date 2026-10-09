@@ -85,7 +85,13 @@ pub fn create_desktop_entry(
     tracing::info!("{}", desktop_entry);
 
     if !PathBuf::from(icon_path).exists() {
-        let _ = fs::write(icon_path, &webapp_icon.buffer);
+        let _ = match webapp_icon.icon {
+            crate::IconType::Raster => fs::write(icon_path, webapp_icon.buffer.clone()),
+            crate::IconType::Svg => fs::write(
+                icon_path,
+                String::from_utf8_lossy_owned(webapp_icon.buffer.clone()),
+            ),
+        };
     }
 
     if let Some(path) = crate::launcher_desktop_entry_path(&webapp_id) {

@@ -799,27 +799,25 @@ pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
      id="defs1" />
-  <
-     id="layer1">
-    <circle
-       style="fill:{}"
-       id="path1"
-       cx="67.73333"
-       cy="-67.73333"
-       r="64.96875"
-       transform="scale(1,-1)" />
-    <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:88.1944px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-       x="39.599369"
-       y="99.350899"
-       id="text1"><tspan
-         id="tspan1"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:88.1944px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-         x="39.599369"
-         y="99.350899">{}</tspan></text>
-  </g>
-</svg>"#,
+  <circle
+     style="fill:{};stroke-width:1"
+     id="path1"
+     cx="68.17894"
+     cy="-67.73333"
+     transform="scale(1,-1)"
+     r="64.96875" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:88.1944px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+     x="36.649605"
+     y="99.21859"
+     id="text1"><tspan
+       id="tspan1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:88.1944px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
+       x="36.649605"
+       y="99.21859">{}</tspan></text>
+</svg>
+"#,
         color, first_letter
     );
 
