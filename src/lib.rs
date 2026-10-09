@@ -86,14 +86,13 @@ impl AppConfig {
     }
 }
 
-pub fn webapp_id(name: String) -> String {
+pub fn webapp_id(name: String, num_id: u16) -> String {
     if name.is_empty() || name.len() < 3 {
-        return APP_ID.to_owned();
+        return format!("{}.{}", APP_ID.to_owned(), num_id);
     };
 
-    let mut app_id = name.replace(' ', "");
-    app_id = app_id + &rand::rng().random_range(1000..10000).to_string();
-    format!("{}.{}", APP_ID, app_id)
+    let name = name.replace(' ', "");
+    format!("{}.{}{}", APP_ID, name, num_id)
 }
 
 pub fn url_valid(url: &str) -> bool {
@@ -133,7 +132,7 @@ pub fn state_path() -> Option<PathBuf> {
 }
 
 pub fn launcher_desktop_entry_path(appid: &str) -> Option<PathBuf> {
-    let filename = format!("webapp-.{}.desktop", appid);
+    let filename = format!("{}.desktop", appid);
 
     if let Some(mut xdg_data) = dirs::data_dir() {
         xdg_data = xdg_data.join("applications");
@@ -826,8 +825,6 @@ pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
 
     if let Some(mut source) = icons_location() {
         source.push(file_name);
-
-        let _ = std::fs::write(&source, &svg_document);
 
         return Some(WebappIcon {
             icon: IconType::Svg,

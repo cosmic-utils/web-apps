@@ -31,7 +31,7 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{APP_ID, AppConfig, Theme, fl};
+use webapps::{APP_ID, AppConfig, Theme, WebappIcon, fl};
 
 use crate::pages::iconpicker::IconPicker;
 
@@ -59,8 +59,8 @@ pub enum Message {
     PushIcon(String),
     ReloadNavbarItems,
     ResetSettings,
-    SaveLauncher(webapps::launcher::WebAppLauncher),
-    SetIcon(String),
+    SaveLauncher,
+    SetIcon(Option<WebappIcon>),
     Surface(surface::Action),
     DownloaderStop,
     ToggleContextPage(ContextPage),
@@ -410,9 +410,9 @@ impl Application for QuickWebApps {
                 if !file_paths.is_empty() {
                     self.dialogs = None;
 
-                    return Task::done(cosmic::Action::App(Message::SetIcon(
-                        file_paths[0].clone(),
-                    )));
+                    // return Task::done(cosmic::Action::App(Message::SetIcon(
+                    //     file_paths[0].clone(),
+                    // )));
                 }
             }
             Message::OpenIconPicker => {
@@ -471,25 +471,12 @@ impl Application for QuickWebApps {
 
                 return cosmic::command::set_theme(cosmic::Theme::light());
             }
-            Message::SaveLauncher(launcher) => {
-                // if let Some(location) =
-                //     webapps::database_path(&format!("{}.ron", launcher.browser.app_id.as_ref()))
-                // {
-                //     let content = to_string_pretty(&launcher, ron::ser::PrettyConfig::default());
-
-                //     if let Ok(content) = content {
-                //         let file = std::fs::File::create(location);
-
-                //         if let Ok(mut f) = file {
-                //             let _ = f.write_all(content.as_bytes());
-                //         }
-                //     }
-
-                //     return task::message(Message::ReloadNavbarItems);
-                // }
+            Message::SaveLauncher => {
+                return task::message(Message::ReloadNavbarItems);
             }
-            Message::SetIcon(icon) => {
+            Message::SetIcon(webapp_icon) => {
                 let Page::Editor(app_editor) = &mut self.page;
+                app_editor.app_icon = webapp_icon;
             }
             Message::Surface(a) => {
                 return cosmic::task::message(cosmic::Action::Cosmic(

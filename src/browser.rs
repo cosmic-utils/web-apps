@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
@@ -42,11 +42,6 @@ impl Installation {
                     dir.push(APP_ID);
                     dir.push(browser_id);
                     dir.push(webapp_id);
-
-                    if !dir.exists() {
-                        let _ = fs::create_dir_all(&dir);
-                    }
-
                     return Some(dir.into());
                 }
             }
@@ -57,11 +52,6 @@ impl Installation {
                     dir.push(browser_id);
                     dir.push("data");
                     dir.push(webapp_id);
-
-                    if !dir.exists() {
-                        let _ = fs::create_dir_all(&dir);
-                    }
-
                     return Some(dir);
                 }
             }
@@ -71,11 +61,6 @@ impl Installation {
                     dir.push(browser_exe);
                     dir.push("common");
                     dir.push(webapp_id);
-
-                    if !dir.exists() {
-                        let _ = fs::create_dir_all(&dir);
-                    }
-
                     return Some(dir);
                 }
             }
@@ -102,6 +87,7 @@ pub struct BrowserConfig {
     pub isolated_profile: bool,
     pub private_mode: bool,
     pub profile_path: Option<String>,
+    pub custom_parameters: String,
     pub url: String,
 }
 
@@ -112,6 +98,7 @@ impl Default for BrowserConfig {
             isolated_profile: true,
             private_mode: false,
             profile_path: None,
+            custom_parameters: String::new(),
             url: String::new(),
         }
     }
@@ -120,6 +107,10 @@ impl Default for BrowserConfig {
 impl BrowserConfig {
     pub fn set_profile_path(&mut self, path_str: Option<String>) {
         self.profile_path = path_str;
+    }
+
+    pub fn set_custom_parameters(&mut self, params: &str) {
+        self.custom_parameters = params.to_string();
     }
 }
 
@@ -256,6 +247,9 @@ impl Browser {
         exec.push_str(" ");
         exec.push_str(&self.profile_path_arg());
         exec.push_str(" ");
+        exec.push_str(&self.config.custom_parameters);
+        exec.push_str(" ");
+
         exec.push_str(&self.config.url);
 
         exec

@@ -1,8 +1,9 @@
-use std::fs;
+use std::{
+    fs::{self, create_dir_all},
+    path::PathBuf,
+};
 
-use serde::{Deserialize, Serialize};
-
-use crate::{APP_ID, browser::Browser};
+use crate::{WebappIcon, browser::Browser};
 
 pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
     if let Some(url) = url {
@@ -38,50 +39,66 @@ pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
 //     webapps
 // }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct WebAppLauncher {
-    pub webapp_name: String,
-    pub filename: String,
-    pub icon_file_path: String,
-    pub browser_data: Browser,
-    pub category: crate::Category,
-}
+pub fn create_desktop_entry(
+    browser: &Browser,
+    webapp_id: &str,
+    webapp_name: &str,
+    webapp_icon: &Option<WebappIcon>,
+    category: &str,
+) -> anyhow::Result<bool> {
+    let mut desktop_entry = String::new();
 
-impl WebAppLauncher {
-    pub fn create(&self) -> anyhow::Result<bool> {
-        let mut desktop_entry = String::new();
+    let exec = browser.get_exec_string();
 
-        let app_id = format!("{}_{}", APP_ID, self.webapp_name.to_lowercase());
+    let Some(webapp_icon) = webapp_icon else {
+        return Ok(false);
+    };
 
-        let exe = self.browser_data.executable_name.clone();
-        let args = self.browser_data.executable_name.clone();
+    let Some(icon_path) = &webapp_icon.source_path else {
+        return Ok(false);
+    };
 
-        desktop_entry.push_str("[Desktop Entry]\n");
-        desktop_entry.push_str("Version=1.0\n");
-        desktop_entry.push_str("Type=Application\n");
-        desktop_entry.push_str(&format!("Name={}\n", self.webapp_name));
-        desktop_entry.push_str(&format!("Comment=Quick WebApp\n",));
-        desktop_entry.push_str(&format!("Exec={} {}\n", exe, args));
-        desktop_entry.push_str(&format!("StartupWMClass={}\n", app_id));
-        desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
+    desktop_entry.push_str("[Desktop Entry]\n");
+    desktop_entry.push_str("Version=1.0\n");
+    desktop_entry.push_str("Type=Application\n");
+    desktop_entry.push_str(&format!("Name={}\n", webapp_name));
+    desktop_entry.push_str(&format!("Comment=Quick WebApp\n",));
+    desktop_entry.push_str(&format!("Exec={}\n", exec));
+    desktop_entry.push_str(&format!("Icon={}\n", icon_path.display()));
+    desktop_entry.push_str(&format!("StartupWMClass={}\n", browser.config.class_name));
+    desktop_entry.push_str(&format!("Categories={}\n", category));
+    desktop_entry.push_str(&format!("X-WebApp-Browser={}\n", browser.display_name));
+    desktop_entry.push_str(&format!("X-WebApp-URL={}\n", browser.config.url));
+    desktop_entry.push_str(&format!(
+        "X-WebApp-CustomParameters={}\n",
+        browser.config.custom_parameters
+    ));
+    desktop_entry.push_str(&format!(
+        "X-WebApp-PrivateMode={}\n",
+        browser.config.private_mode
+    ));
+    desktop_entry.push_str(&format!(
+        "X-WebApp-Isolated={}\n",
+        browser.config.isolated_profile
+    ));
 
-        tracing::info!("{}", desktop_entry);
+    tracing::info!("{}", desktop_entry);
 
-        if let Some(mut path) = crate::launcher_desktop_entry_path(&self.filename) {
-            path.push(&self.filename);
-            let _ = fs::write(path, &desktop_entry);
-        }
-
-        Ok(false)
+    if !PathBuf::from(icon_path).exists() {
+        let _ = fs::write(icon_path, &webapp_icon.buffer);
     }
 
-    pub fn delete(&self) -> std::io::Result<()> {
-        if let Some(path) = crate::launcher_desktop_entry_path(&self.filename) {
-            fs::remove_file(path)?;
-        }
-
-        // TODO: delete profile path + icon
-
-        Ok(())
+    if let Some(path) = crate::launcher_desktop_entry_path(&webapp_id) {
+        let _ = fs::write(path, &desktop_entry);
     }
+
+    if let Some(profile) = &browser.config.profile_path {
+        let path = PathBuf::from(profile);
+
+        if !path.exists() {
+            let _ = create_dir_all(path);
+        }
+    }
+
+    Ok(true)
 }

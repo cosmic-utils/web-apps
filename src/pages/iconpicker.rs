@@ -6,7 +6,7 @@ use cosmic::{
     task,
     widget::{self},
 };
-use webapps::fl;
+use webapps::{WebappIcon, fl};
 
 use crate::pages;
 
@@ -16,7 +16,7 @@ pub enum Message {
     DownloadIconsPack,
     OpenIconPickerDialog,
     IconSearch,
-    SetIcon(Option<String>),
+    SetIcon(Option<WebappIcon>),
 }
 
 #[derive(Debug, Clone, Default)]
@@ -81,9 +81,7 @@ impl IconPicker {
                 });
             }
             Message::SetIcon(icon) => {
-                if let Some(source) = icon {
-                    return Task::done(cosmic::Action::App(pages::Message::SetIcon(source)));
-                }
+                return Task::done(cosmic::Action::App(pages::Message::SetIcon(icon)));
             }
         }
 

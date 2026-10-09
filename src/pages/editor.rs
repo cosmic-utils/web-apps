@@ -7,8 +7,9 @@ use cosmic::{
     style,
     widget::{self},
 };
+use rand::RngExt;
 use strum::IntoEnumIterator as _;
-use webapps::{Category, WebappIcon, fl, url_valid, webapp_id};
+use webapps::{Category, WebappIcon, fl, launcher::create_desktop_entry, url_valid, webapp_id};
 
 use crate::pages;
 
@@ -19,6 +20,7 @@ pub struct AppEditor {
     pub app_browser_selection: Option<usize>,
     pub app_profile: Option<String>,
     pub app_id: String,
+    pub app_num_id: u16,
     pub app_title: String,
     pub app_url: String,
     pub app_icon: Option<WebappIcon>,
@@ -26,6 +28,7 @@ pub struct AppEditor {
     pub selected_icon: Option<String>,
     pub categories: Vec<String>,
     pub category_idx: Option<usize>,
+    pub custom_params: String,
     pub is_installed: bool,
 }
 
@@ -36,12 +39,15 @@ impl Default for AppEditor {
             .collect::<Vec<String>>();
         let installed_browsers = webapps::browser::installed_browsers();
 
+        let num_id = rand::rng().random_range(1000..10000);
+
         let mut editor = AppEditor {
             app_browser_selection: None,
             app_browser: None,
             app_browsers: installed_browsers.clone(),
             app_profile: None,
             app_id: String::new(),
+            app_num_id: num_id,
             app_title: String::new(),
             app_url: String::new(),
             app_icon: None,
@@ -49,6 +55,7 @@ impl Default for AppEditor {
             selected_icon: None,
             categories,
             category_idx: webapps::Category::iter().position(|c| c == Category::Utility),
+            custom_params: String::new(),
             is_installed: false,
         };
 
@@ -67,6 +74,7 @@ pub enum Message {
     AppPrivateMode(bool),
     Browser(usize),
     Category(usize),
+    CustomParams(String),
     Done,
     GenerateIcon,
     OpenIconPicker,
@@ -78,7 +86,7 @@ pub enum Message {
 impl AppEditor {
     pub fn update_browser_config(&mut self) {
         if self.app_title.len() >= 3 {
-            self.app_id = webapp_id(self.app_title.clone());
+            self.app_id = webapp_id(self.app_title.clone(), self.app_num_id);
         }
         let Some(browser) = self.app_browser.as_mut() else {
             return;
@@ -87,6 +95,10 @@ impl AppEditor {
         let Some(install_t) = browser.install_t.as_ref() else {
             return;
         };
+
+        if url_valid(&self.app_url) {
+            browser.config.url = self.app_url.clone();
+        }
 
         // set classname
         browser.config.class_name = self.app_id.clone();
@@ -99,6 +111,8 @@ impl AppEditor {
         }
 
         browser.config.set_profile_path(self.app_profile.clone());
+
+        browser.config.custom_parameters = self.custom_params.clone();
     }
 
     pub fn update(&mut self, message: Message) -> Task<Action<crate::pages::Message>> {
@@ -121,58 +135,28 @@ impl AppEditor {
                 self.app_category = webapps::Category::from_index(idx as u8);
                 self.category_idx = Some(idx);
             }
+            Message::CustomParams(s) => {
+                self.custom_params = s;
+            }
             Message::Done => {
-                // let browser = if let Some(browser) = &self.app_browser {
-                //     browser.clone()
-                // } else {
-                //     let app_id = self.app_title.replace(' ', "");
-                //     let app_id = app_id + &rng().random_range(1000..10000).to_string();
-
-                //     let mut browser = webapps::browser::Browser::new(&app_id);
-                //     browser.window_title = Some(self.app_title.clone());
-                //     browser.url = Some(self.app_url.clone());
-                //     browser.window_size = Some(self.app_window_size.clone());
-                //     browser.try_simulate_mobile = Some(self.app_simulate_mobile);
-                //     browser
-                // };
-
-                // if webapps::launcher::webapplauncher_is_valid(&self.app_title, &browser.url) {
-                //     if let Some(icon) = &self.app_icon {
-                //             browser: browser.clone(),
-                //             name: self.app_title.clone(),
-                //             icon: icon.clone(),
-                //             category: self.app_category.clone(),
-                //         };
-
-                //         return task::future(async move {
-                //             if let Ok(success) = launcher.create().await {
-                //                 if success {
-                //                     return crate::pages::Message::SaveLauncher(launcher);
-                //                 }
-                //             }
-                //             crate::pages::Message::None
-                //         });
-                //     }
-                // } else {
-                //     return Task::none();
-                // }
+                if let Some(browser) = &self.app_browser {
+                    if let Ok(_) = create_desktop_entry(
+                        browser,
+                        &self.app_id,
+                        &self.app_title,
+                        &self.app_icon,
+                        self.app_category.as_ref(),
+                    ) {
+                        return Task::done(Action::App(crate::pages::Message::SaveLauncher));
+                    }
+                }
             }
             Message::GenerateIcon => {
-                // if self.app_title.len() > 1 {
-                //     let icon = generate_icon(&self.app_title.split_at(1).0);
+                if !self.app_title.is_empty() {
+                    let webapp_icon = webapps::generate_icon(&self.app_title.split_at(1).0);
 
-                //     self.update_icon(icon.clone());
-
-                //     if let Some(icon) = icon {
-                //         if webapp_icon_valid(&icon) {
-                //             let ico = webapps::handle_icon(icon.path);
-
-                //             return task::future(async {
-                //                 Action::App(pages::Message::SetIcon(ico.into()))
-                //             });
-                //         };
-                //     }
-                // }
+                    return Task::done(Action::App(pages::Message::SetIcon(webapp_icon)));
+                }
             }
             Message::OpenIconPicker => {
                 return Task::done(Action::App(pages::Message::OpenIconPicker));
@@ -181,15 +165,19 @@ impl AppEditor {
                 self.app_icon = None;
                 self.selected_icon = None;
             }
-            Message::Title(title) => {
-                if self.app_title.len() >= 3 {
-                    self.app_id = webapps::webapp_id(title.clone());
-                } else {
+            Message::Title(mut title) => {
+                if title.len() < 3 {
                     self.app_profile = None;
                     self.app_id.clear();
                 }
 
-                self.app_title = title;
+                self.app_title = title.clone();
+
+                if !title.is_empty() {
+                    return Task::done(Action::App(pages::Message::SetIcon(
+                        webapps::generate_icon(&title.split_off(1)),
+                    )));
+                }
             }
             Message::Url(url) => {
                 self.app_url = url;
@@ -223,7 +211,7 @@ impl AppEditor {
                             widget::row()
                                 .spacing(12)
                                 .push(
-                                    widget::container(icon_iced_element(&self.selected_icon))
+                                    widget::container(icon_iced_element(&self.app_icon))
                                         .width(96.)
                                         .height(96.)
                                         .align_y(Vertical::Center),
@@ -320,6 +308,11 @@ impl AppEditor {
                                 })
                                 .on_toggle(Message::AppPrivateMode),
                             ))
+                            .add(widget::settings::item(
+                                fl!("non-standard-arguments"),
+                                widget::text_input("--window-size=800,600", &self.custom_params)
+                                    .on_input(Message::CustomParams),
+                            ))
                             .add_maybe(if self.app_browser.is_some() {
                                 Some(widget::settings::item_row(vec![
                                     widget::text(if let Some(browser) = &self.app_browser {
@@ -351,8 +344,8 @@ impl AppEditor {
     }
 }
 
-pub fn icon_iced_element<'a>(source_path: &'a Option<String>) -> Element<'a, Message> {
-    let Some(source) = source_path else {
+pub fn icon_iced_element<'a>(webapp_icon: &'a Option<WebappIcon>) -> Element<'a, Message> {
+    let Some(icon) = webapp_icon else {
         let data: &'static [u8] =
             include_bytes!("../../resources/icons/hicolor/128x128/apps/dev.heppen.webapps.png");
 
@@ -365,23 +358,17 @@ pub fn icon_iced_element<'a>(source_path: &'a Option<String>) -> Element<'a, Mes
                 .class(style::Button::Icon),
         );
     };
-    if webapps::is_svg(&source) {
-        return Element::from(
-            widget::button::custom(widget::svg::Svg::from_path(source))
-                .width(Length::Fixed(92.0))
-                .height(Length::Fixed(92.0))
-                .class(style::Button::Icon),
-        );
-    } else {
-        let data = fs::read(&source).unwrap_or_default();
 
-        let handle = cosmic::iced_core::image::Handle::from_bytes(data);
-
-        return Element::from(
-            widget::button::custom(widget::image(handle))
-                .width(Length::Fixed(92.0))
-                .height(Length::Fixed(92.0))
-                .class(style::Button::Icon),
-        );
-    }
+    return match icon.icon {
+        webapps::IconType::Raster => Element::from(
+            widget::icon::from_raster_bytes(icon.buffer.clone())
+                .icon()
+                .size(92),
+        ),
+        webapps::IconType::Svg => Element::from(
+            widget::icon::from_svg_bytes(icon.buffer.clone())
+                .icon()
+                .size(92),
+        ),
+    };
 }
