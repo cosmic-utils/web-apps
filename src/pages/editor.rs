@@ -1,5 +1,3 @@
-use std::fs;
-
 use cosmic::{
     Element, Task,
     action::Action,

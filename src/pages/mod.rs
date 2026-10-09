@@ -56,7 +56,7 @@ pub enum Message {
     OpenIconPicker,
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
-    PushIcon(String),
+    PushIcon(WebappIcon),
     ReloadNavbarItems,
     ResetSettings,
     SaveLauncher,
@@ -316,7 +316,11 @@ impl Application for QuickWebApps {
             Message::IconsResult(result) => {
                 if let Some(Dialogs::IconPicker(_icon_picker)) = &mut self.dialogs {
                     for path in result {
-                        tasks.push(Task::done(cosmic::Action::App(Message::PushIcon(path))))
+                        tasks.push(Task::future(async move {
+                            cosmic::Action::App(Message::PushIcon(
+                                WebappIcon::build_from_path(&path).await,
+                            ))
+                        }))
                     }
                 };
             }
@@ -438,7 +442,7 @@ impl Application for QuickWebApps {
             }
             Message::PushIcon(icon) => {
                 if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
-                    icon_picker.push_icon(icon);
+                    icon_picker.push_icon(Some(icon));
                 }
             }
             Message::ReloadNavbarItems => {
@@ -479,6 +483,10 @@ impl Application for QuickWebApps {
             Message::SetIcon(webapp_icon) => {
                 let Page::Editor(app_editor) = &mut self.page;
                 app_editor.app_icon = webapp_icon;
+
+                if self.dialogs.is_some() && app_editor.app_icon.is_some() {
+                    self.dialogs = None;
+                }
             }
             Message::Surface(a) => {
                 return cosmic::task::message(cosmic::Action::Cosmic(

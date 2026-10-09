@@ -22,12 +22,14 @@ pub enum Message {
 #[derive(Debug, Clone, Default)]
 pub struct IconPicker {
     pub icon_searching: String,
-    pub icons: Vec<String>,
+    pub icons: Vec<WebappIcon>,
 }
 
 impl IconPicker {
-    pub fn push_icon(&mut self, icon: String) {
-        self.icons.push(icon);
+    pub fn push_icon(&mut self, icon: Option<WebappIcon>) {
+        if let Some(webapp_icon) = icon {
+            self.icons.push(webapp_icon);
+        }
     }
 
     pub fn update(&mut self, message: Message) -> Task<Action<pages::Message>> {
@@ -89,24 +91,6 @@ impl IconPicker {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let icons: Vec<Element<Message>> = Vec::new();
-
-        // for ico in self.icons.iter() {
-        //     let btn = match ico.clone().icon {
-        //         webapps::IconType::Raster(icon) => widget::button::custom(widget::image(icon))
-        //             .width(Length::Fixed(48.))
-        //             .height(Length::Fixed(48.))
-        //             .on_press(Message::SetIcon(Some(ico.clone())))
-        //             .class(theme::Button::Icon),
-        //         webapps::IconType::Svg(icon) => widget::button::custom(widget::svg(icon))
-        //             .width(Length::Fixed(48.))
-        //             .height(Length::Fixed(48.))
-        //             .on_press(Message::SetIcon(Some(ico.clone())))
-        //             .class(theme::Button::Icon),
-        //     };
-        //     icons.push(btn.into());
-        // }
-
         let icons_input = widget::text_input(fl!("icon-name-to-find"), &self.icon_searching)
             .on_input(Message::CustomIconsSearch)
             .on_submit(|_| Message::IconSearch);
@@ -131,10 +115,33 @@ impl IconPicker {
                 )
                 .padding(8),
             )
-            .push_maybe(if !icons.is_empty() {
+            .push_maybe(if !self.icons.is_empty() {
                 Some(
-                    widget::container(widget::scrollable(widget::flex_row(icons)))
-                        .height(Length::FillPortion(1)),
+                    widget::container(widget::scrollable(widget::flex_row(
+                        self.icons
+                            .iter()
+                            .map(|icon| match icon.icon {
+                                webapps::IconType::Raster => widget::button::custom(
+                                    widget::icon::from_raster_bytes(icon.buffer.clone())
+                                        .icon()
+                                        .size(48),
+                                )
+                                .on_press(Message::SetIcon(Some(icon.clone())))
+                                .class(cosmic::theme::Button::Icon),
+                                webapps::IconType::Svg => widget::button::custom(
+                                    widget::icon::from_svg_bytes(icon.buffer.clone())
+                                        .icon()
+                                        .size(48),
+                                )
+                                .on_press(Message::SetIcon(Some(icon.clone())))
+                                .class(cosmic::theme::Button::Icon),
+                            })
+                            .fold(Vec::new(), |mut v, icon| {
+                                v.push(icon.into());
+                                v
+                            }),
+                    )))
+                    .height(Length::FillPortion(1)),
                 )
             } else {
                 None
