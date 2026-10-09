@@ -31,7 +31,7 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{APP_ID, AppConfig, Theme, WebappIcon, fl};
+use webapps::{APP_ICON, APP_ID, AppConfig, Theme, WebappIcon, fl};
 
 use crate::pages::iconpicker::IconPicker;
 
@@ -317,9 +317,9 @@ impl Application for QuickWebApps {
                 if let Some(Dialogs::IconPicker(_icon_picker)) = &mut self.dialogs {
                     for path in result {
                         tasks.push(Task::future(async move {
-                            cosmic::Action::App(Message::PushIcon(
-                                WebappIcon::build_from_path(&path).await,
-                            ))
+                            cosmic::Action::App(Message::PushIcon(WebappIcon::build_from_path(
+                                &path,
+                            )))
                         }))
                     }
                 };
@@ -415,7 +415,7 @@ impl Application for QuickWebApps {
                     self.dialogs = None;
 
                     return Task::future(async move {
-                        let webapp_icon = WebappIcon::build_from_path(&file_path).await;
+                        let webapp_icon = WebappIcon::build_from_path(&file_path);
 
                         cosmic::Action::App(Message::SetIcon(Some(webapp_icon)))
                     });
@@ -455,18 +455,20 @@ impl Application for QuickWebApps {
                     .data::<Page>(Page::Editor(AppEditor::default()))
                     .activate();
 
-                // webapps::launcher::installed_webapps()
-                //     .into_iter()
-                //     .for_each(|app| {
-                //         self.nav
-                //             .insert()
-                //             .icon(navbar_item_icon(
-                //                 &app.icon.path.as_path().to_str().expect("path conversion"),
-                //             ))
-                //             .text(app.name.clone())
-                //             .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
-                //             .closable();
-                //     });
+                webapps::launcher::installed_webapps()
+                    .into_iter()
+                    .for_each(|app| {
+                        let Some(editor) = editor::AppEditor::from_launcher(&app) else {
+                            return;
+                        };
+
+                        self.nav
+                            .insert()
+                            .icon(navbar_item_icon(&app.webapp_icon))
+                            .text(app.webapp_name.clone())
+                            .data::<Page>(Page::Editor(editor))
+                            .closable();
+                    });
 
                 self.page = Page::Editor(AppEditor::default());
             }
@@ -707,13 +709,14 @@ impl QuickWebApps {
     }
 }
 
-fn navbar_item_icon(icon: &str) -> widget::icon::Icon {
-    if icon.starts_with("/") {
-        let path = std::path::PathBuf::from_str(icon).expect("incorrect icon path");
+fn navbar_item_icon(icon: &Option<WebappIcon>) -> widget::icon::Icon {
+    let Some(icon) = icon else {
+        return widget::icon::from_raster_bytes(APP_ICON).icon();
+    };
 
-        widget::icon::from_path(path).icon()
-    } else {
-        widget::icon::from_name(icon).icon()
+    match icon.icon {
+        webapps::IconType::Raster => widget::icon::from_raster_bytes(icon.buffer.clone()).icon(),
+        webapps::IconType::Svg => widget::icon::from_svg_bytes(icon.buffer.clone()).icon(),
     }
 }
 

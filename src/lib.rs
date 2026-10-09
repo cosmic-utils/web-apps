@@ -131,6 +131,21 @@ pub fn state_path() -> Option<PathBuf> {
     None
 }
 
+/// Desktop entries path, common data_dir/applications
+pub fn desktop_files() -> PathBuf {
+    let mut pathbuf = PathBuf::new();
+
+    if let Some(xdg_data) = dirs::data_dir() {
+        pathbuf.push(xdg_data.join("applications"));
+
+        if !pathbuf.exists() {
+            let _ = std::fs::create_dir_all(&pathbuf);
+        }
+    }
+
+    pathbuf
+}
+
 pub fn launcher_desktop_entry_path(appid: &str) -> Option<PathBuf> {
     let filename = format!("{}.desktop", appid);
 
@@ -445,7 +460,7 @@ pub struct WebappIcon {
 }
 
 impl WebappIcon {
-    pub async fn build_from_path(path: &str) -> Self {
+    pub fn build_from_path(path: &str) -> Self {
         let source_path = if path.is_empty() {
             None
         } else {
@@ -457,7 +472,7 @@ impl WebappIcon {
             false => IconType::Raster,
         };
 
-        let buffer = tokio::fs::read(path).await.unwrap_or_default();
+        let buffer = std::fs::read(path).unwrap_or_default();
 
         Self {
             icon: icon_t,

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{APP_ID, supported_browsers::supported_browsers};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum Installation {
     System,
     Flatpak,
@@ -70,7 +70,7 @@ impl Installation {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum BrowserT {
     Chromium,
     Epiphany,
@@ -81,7 +81,7 @@ pub enum BrowserT {
     Zen,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct BrowserConfig {
     pub class_name: String,
     pub isolated_profile: bool,
@@ -114,7 +114,7 @@ impl BrowserConfig {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Browser {
     pub display_name: String,
     pub app_id: String,
@@ -126,6 +126,13 @@ pub struct Browser {
 }
 
 impl Browser {
+    pub fn from_id(app_id: &str) -> Option<Browser> {
+        installed_browsers()
+            .iter()
+            .find(|b| b.app_id == app_id)
+            .map(|b| b.clone())
+    }
+
     pub fn new(display_name: &str, app_id: &str, exe_name: &str, browser_t: BrowserT) -> Self {
         Self {
             display_name: display_name.to_string(),

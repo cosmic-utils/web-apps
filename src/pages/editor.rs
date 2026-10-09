@@ -7,7 +7,7 @@ use cosmic::{
 };
 use rand::RngExt;
 use strum::IntoEnumIterator as _;
-use webapps::{Category, WebappIcon, fl, launcher::create_desktop_entry, url_valid, webapp_id};
+use webapps::{Category, WebappIcon, fl, launcher::WebappLauncher, url_valid, webapp_id};
 
 use crate::pages;
 
@@ -82,6 +82,45 @@ pub enum Message {
 }
 
 impl AppEditor {
+    pub fn from_launcher(value: &WebappLauncher) -> Option<Self> {
+        let Some(ref browser) = value.browser else {
+            return None;
+        };
+
+        let categories = webapps::Category::iter()
+            .map(|c| c.name())
+            .collect::<Vec<String>>();
+
+        let category = webapps::Category::iter()
+            .find(|c| c.name() == value.category)
+            .map(|c| c)
+            .unwrap_or_default();
+
+        let installed_browsers = webapps::browser::installed_browsers();
+
+        let app_browser_selection = installed_browsers.iter().position(|b| b == browser);
+
+        let num_id = rand::rng().random_range(1000..10000);
+
+        Some(Self {
+            app_browser_selection,
+            app_browser: Some(browser.clone()),
+            app_browsers: installed_browsers.clone(),
+            app_profile: browser.config.profile_path.clone(),
+            app_id: value.webapp_id.clone(),
+            app_num_id: num_id,
+            app_title: value.webapp_name.clone(),
+            app_url: browser.config.url.clone(),
+            app_icon: value.webapp_icon.clone(),
+            app_category: category,
+            selected_icon: None,
+            categories,
+            category_idx: webapps::Category::iter().position(|c| c.name() == value.category),
+            custom_params: browser.config.custom_parameters.clone(),
+            is_installed: true,
+        })
+    }
+
     pub fn update_browser_config(&mut self) {
         if self.app_title.len() >= 3 {
             self.app_id = webapp_id(self.app_title.clone(), self.app_num_id);
@@ -138,22 +177,26 @@ impl AppEditor {
             }
             Message::Done => {
                 if let Some(browser) = &self.app_browser {
-                    if let Ok(_) = create_desktop_entry(
-                        browser,
-                        &self.app_id,
-                        &self.app_title,
-                        &self.app_icon,
-                        self.app_category.as_ref(),
-                    ) {
+                    let webapp_launcher = WebappLauncher {
+                        browser: Some(browser.clone()),
+                        webapp_id: self.app_id.clone(),
+                        webapp_name: self.app_title.clone(),
+                        webapp_icon: self.app_icon.clone(),
+                        category: self.app_category.as_ref().to_owned(),
+                    };
+
+                    if let Ok(_) = webapp_launcher.create_desktop_entry() {
                         return Task::done(Action::App(crate::pages::Message::SaveLauncher));
                     }
                 }
             }
             Message::GenerateIcon => {
                 let first_letter = &self.app_title.split_at(1).0;
-                if !self.app_title.is_empty() && self.app_icon.is_none() {
-                    let webapp_icon = webapps::generate_icon(&first_letter);
 
+                if !self.app_title.is_empty() {
+                    self.app_icon = None;
+
+                    let webapp_icon = webapps::generate_icon(&first_letter);
                     return Task::done(Action::App(pages::Message::SetIcon(webapp_icon)));
                 }
             }
@@ -170,11 +213,7 @@ impl AppEditor {
                     self.app_id.clear();
                 }
 
-                self.app_title = title.clone();
-
-                if !title.is_empty() {
-                    return Task::done(Action::App(pages::Message::Editor(Message::GenerateIcon)));
-                }
+                self.app_title = title;
             }
             Message::Url(url) => {
                 self.app_url = url;
