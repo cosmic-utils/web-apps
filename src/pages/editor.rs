@@ -100,15 +100,13 @@ impl AppEditor {
 
         let app_browser_selection = installed_browsers.iter().position(|b| b == browser);
 
-        let num_id = rand::rng().random_range(1000..10000);
-
         Some(Self {
             app_browser_selection,
             app_browser: Some(browser.clone()),
             app_browsers: installed_browsers.clone(),
             app_profile: browser.config.profile_path.clone(),
             app_id: value.webapp_id.clone(),
-            app_num_id: num_id,
+            app_num_id: 0,
             app_title: value.webapp_name.clone(),
             app_url: browser.config.url.clone(),
             app_icon: value.webapp_icon.clone(),

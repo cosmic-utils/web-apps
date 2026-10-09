@@ -31,7 +31,7 @@ use tokio::{
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{APP_ICON, APP_ID, AppConfig, Theme, WebappIcon, fl};
+use webapps::{APP_ICON, APP_ID, AppConfig, Theme, WebappIcon, fl, launcher::installed_webapps};
 
 use crate::pages::iconpicker::IconPicker;
 
@@ -254,21 +254,26 @@ impl Application for QuickWebApps {
                 if let Some(page) = data {
                     let Page::Editor(app_editor) = page;
 
-                    // if let Some(browser) = &app_editor.app_browser {
-                    //     if let Some(icon) = &app_editor.app_icon {
-                    //         // let launcher = webapps::launcher::WebAppLauncher {
-                    //         //     browser: browser.clone(),
-                    //         //     name: app_editor.app_title.clone(),
-                    //         //     icon: icon.clone(),
-                    //         //     category: app_editor.app_category.clone(),
-                    //         // };
+                    println!("{:?}", app_editor);
 
-                    //         // return task::future(async move {
-                    //         //     launcher.delete().await.unwrap();
-                    //         //     cosmic::action::app(Message::DeletionDone(id))
-                    //         // });
-                    //     }
-                    // }
+                    let app_id = app_editor.app_id.clone();
+
+                    return task::future(async move {
+                        let launcher = installed_webapps()
+                            .into_iter()
+                            .find(|w| w.webapp_id == app_id)
+                            .map(|l| l);
+
+                        let Some(launcher) = launcher else {
+                            return cosmic::action::none();
+                        };
+
+                        if launcher.delete(&app_id) {
+                            cosmic::action::app(Message::DeletionDone(id))
+                        } else {
+                            return cosmic::action::none();
+                        }
+                    });
                 }
             }
             Message::DeletionDone(id) => {

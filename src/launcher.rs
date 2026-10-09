@@ -40,6 +40,7 @@ pub fn installed_webapps() -> Vec<WebappLauncher> {
     webapps
 }
 
+#[derive(Debug)]
 pub struct WebappLauncher {
     pub browser: Option<Browser>,
     pub webapp_id: String,
@@ -90,6 +91,7 @@ impl WebappLauncher {
                     "X-WebApp-CustomParameters" => {
                         browser.config.custom_parameters = value.to_string()
                     }
+                    "X-WebApp-URL" => browser.config.url = value.to_string(),
                     _ => {
                         continue;
                     }
@@ -137,7 +139,7 @@ impl WebappLauncher {
         desktop_entry.push_str(&format!("Icon={}\n", icon_path.display()));
         desktop_entry.push_str(&format!("StartupWMClass={}\n", browser.config.class_name));
         desktop_entry.push_str(&format!("Categories={}\n", self.category));
-        desktop_entry.push_str(&format!("X-WebApp-Id=={}\n", self.webapp_id));
+        desktop_entry.push_str(&format!("X-WebApp-Id={}\n", self.webapp_id));
         desktop_entry.push_str(&format!("X-WebApp-Browser={}\n", browser.display_name));
         desktop_entry.push_str(&format!("X-WebApp-Browser-Id={}\n", browser.app_id));
         desktop_entry.push_str(&format!("X-WebApp-URL={}\n", browser.config.url));
@@ -187,5 +189,27 @@ impl WebappLauncher {
         }
 
         Ok(true)
+    }
+
+    pub fn delete(&self, webapp_id: &str) -> bool {
+        if let Some(path) = crate::launcher_desktop_entry_path(&webapp_id) {
+            if path.exists() {
+                let _ = fs::remove_file(path);
+            }
+        }
+
+        let Some(browser) = &self.browser else {
+            return false;
+        };
+
+        if let Some(profile) = &browser.config.profile_path {
+            let path = PathBuf::from(profile);
+
+            if path.exists() {
+                let _ = fs::remove_dir(profile);
+            }
+        }
+
+        true
     }
 }
