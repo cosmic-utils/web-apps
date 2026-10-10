@@ -14,7 +14,7 @@ pub fn supported_browsers() -> Vec<Browser> {
             "app.zen_browser.zen",
             BrowserT::Zen,
         ),
-        Browser::new("Brave", "com.brave.Browser", "brave", BrowserT::Chromium),
+        Browser::new("Brave", "com.brave.Browser", "brave", BrowserT::Brave),
         Browser::new(
             "Google Chrome",
             "com.google.Chrome",

@@ -75,6 +75,7 @@ impl Installation {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum BrowserT {
+    Brave,
     Chromium,
     Epiphany,
     Falkon,
@@ -193,7 +194,7 @@ impl Browser {
         if let Some(path) = &self.config.profile_path {
             if self.config.isolated_profile {
                 match &self.browser_t {
-                    BrowserT::Chromium | BrowserT::MsEdge => {
+                    BrowserT::Brave | BrowserT::Chromium | BrowserT::MsEdge => {
                         arg.push_str(&format!("--user-data-dir={}", path))
                     }
                     BrowserT::Epiphany => arg.push_str(&format!("--profile={}", path)),
@@ -213,7 +214,7 @@ impl Browser {
 
         if self.config.private_mode {
             match &self.browser_t {
-                BrowserT::Chromium => arg.push_str("--incognito"),
+                BrowserT::Brave | BrowserT::Chromium => arg.push_str("--incognito"),
                 BrowserT::Falkon => arg.push_str("--private-browsing"),
                 BrowserT::Firefox | BrowserT::Floorp | BrowserT::Zen => {
                     arg.push_str("--private-window")
@@ -235,7 +236,7 @@ impl Browser {
 
         match &self.browser_t {
             BrowserT::Falkon => arg.push_str(&format!("--wmclass={}", &self.config.class_name)),
-            BrowserT::Chromium | BrowserT::MsEdge => {
+            BrowserT::Brave | BrowserT::Chromium | BrowserT::MsEdge => {
                 arg.push_str(&format!("--class={}", &self.config.class_name));
             }
             _ => {
@@ -339,12 +340,12 @@ pub fn installed_browsers() -> Vec<Browser> {
     installed
 }
 
-pub fn try_chromium_classname(url: &str) -> String {
+pub fn try_chromium_classname(browser_prefix: &str, url: &str) -> String {
     let mut class_name_from_url = String::new();
 
     if let Ok(url) = url::Url::parse(url) {
         if let Some(domain) = url.domain() {
-            class_name_from_url.push_str(&format!("chrome-{}__-Default", domain));
+            class_name_from_url.push_str(&format!("{}-{}__-Default", browser_prefix, domain));
         }
     }
 

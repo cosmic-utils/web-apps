@@ -151,7 +151,10 @@ impl AppEditor {
             webapps::browser::BrowserT::Chromium | webapps::browser::BrowserT::MsEdge => {
                 // workaround for chromium browser since they does not respect --class argument
                 // on wayland
-                webapps::browser::try_chromium_classname(&self.app_url)
+                webapps::browser::try_chromium_classname("chrome", &self.app_url)
+            }
+            webapps::browser::BrowserT::Brave => {
+                webapps::browser::try_chromium_classname("brave", &self.app_url)
             }
             _ => self.app_id.clone(),
         };
