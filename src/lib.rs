@@ -49,6 +49,14 @@ impl Theme {
 
         Self::Light
     }
+
+    pub fn to_cosmic_theme(&self) -> cosmic::Theme {
+        match self {
+            Theme::Light => cosmic::theme::system_light(),
+            Theme::Dark => cosmic::theme::system_dark(),
+            _ => cosmic::theme::system_preference(),
+        }
+    }
 }
 
 #[derive(Debug, Default, Clone, CosmicConfigEntry, Eq, PartialEq)]
@@ -98,7 +106,7 @@ pub fn url_valid(url: &str) -> bool {
 /// Checks if /.flatpak-info exists so we can assume
 /// Its a flatpak installation
 pub fn is_flatpak() -> bool {
-    PathBuf::from("/.flatpak-info").exists()
+    PathBuf::from("/.flatpak-info").exists() || std::env::var("FLATPAK_ID").is_ok()
 }
 
 pub fn is_svg(path: &str) -> bool {
@@ -121,10 +129,10 @@ pub fn cache_path() -> Option<PathBuf> {
     None
 }
 
-/// Local state path for storing icons mostly
-pub fn state_path() -> Option<PathBuf> {
-    if let Some(state) = dirs::state_dir() {
-        return Some(state.join(APP_ID));
+/// Local xdg_data path for storing icons mostly and profiles
+pub fn data_path() -> Option<PathBuf> {
+    if let Some(data) = dirs::data_dir() {
+        return Some(data.join(APP_ID));
     }
 
     None
@@ -164,16 +172,16 @@ pub fn launcher_desktop_entry_path(appid: &str) -> Option<PathBuf> {
 }
 
 pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
-    if let Some(mut state) = dirs::state_dir() {
-        state = state.join(APP_ID).join("themes");
+    if let Some(mut data) = data_path() {
+        data.push("themes");
 
-        if !state.exists() {
-            let _ = std::fs::create_dir_all(&state);
+        if !data.exists() {
+            let _ = std::fs::create_dir_all(&data);
         }
 
-        state = state.join(theme_file);
+        data.push(theme_file);
 
-        return Some(state);
+        return Some(data);
     }
 
     None
@@ -211,8 +219,8 @@ pub fn profiles_path(app_id: &str) -> Option<PathBuf> {
 }
 
 pub fn icons_location() -> Option<PathBuf> {
-    if let Some(state) = state_path() {
-        let directory = state.join("icons");
+    if let Some(data) = data_path() {
+        let directory = data.join("icons");
 
         if !directory.exists() {
             if let Err(e) = std::fs::create_dir_all(&directory) {
@@ -234,7 +242,8 @@ pub fn icon_pack_installed() -> bool {
         Some(dir) => dir,
         None => PathBuf::from(env!("HOME"))
             .join(".local")
-            .join("state")
+            .join("share")
+            .join(APP_ID)
             .join("icons"),
     };
 

@@ -1,6 +1,8 @@
 {
     "app-id": "dev.heppen.webapps",
-    "sdk": "org.gnome.Sdk",
+    "runtime": "org.freedesktop.Platform",
+    "runtime-version": "26.08",
+    "sdk": "org.freedesktop.Sdk",
     "sdk-extensions": [
         "org.freedesktop.Sdk.Extension.rust-stable"
     ],
@@ -13,15 +15,15 @@
         "--socket=wayland",
         "--device=dri",
 	"--filesystem=host:ro",
-	"--filesystem=xdg-data/flatpak/exports/bin:ro",
-	"--filesystem=/var/lib/flatpak/exports/bin:ro",
+	"--filesystem=~/.local/share/flatpak:ro",
+	"--filesystem=/var/lib/flatpak:ro",
 	"--filesystem=xdg-data/applications:create",
         "--filesystem=xdg-config/cosmic:rw",
         "--talk-name=com.system76.CosmicSettingsDaemon",
         "--talk-name=com.system76.CosmicSettingsDaemon.*"
     ],
     "build-options": {
-        "append-path": "/usr/lib/sdk/rust-stable/bin",
+        "append-path": "/usr/lib/sdk/rust-stable/bin"
     },
     "modules": [
         {

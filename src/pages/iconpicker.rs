@@ -67,9 +67,9 @@ impl IconPicker {
                             })
                             .collect::<Vec<String>>();
 
-                        pages::Message::OpenFileResult(files[0].clone())
+                        cosmic::action::app(pages::Message::OpenFileResult(files[0].clone()))
                     } else {
-                        pages::Message::None
+                        cosmic::action::none()
                     }
                 });
             }

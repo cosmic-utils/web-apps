@@ -65,8 +65,6 @@ pub enum Message {
     ToggleContextPage(ContextPage),
     UpdateConfig(AppConfig),
     UpdateTheme(Box<Theme>),
-    // emty message
-    None,
 }
 
 #[derive(Debug, Clone)]
@@ -378,6 +376,7 @@ impl Application for QuickWebApps {
                 let Some(folder) = webapps::themes_path("") else {
                     return Task::none();
                 };
+
                 let dir = read_dir(folder);
 
                 if let Ok(files) = dir {
@@ -396,12 +395,6 @@ impl Application for QuickWebApps {
 
                                 let theme = Theme::build(theme_name.to_string(), content);
 
-                                if theme_name == self.config.app_theme {
-                                    tasks.push(task::message(cosmic::action::app(
-                                        Message::UpdateTheme(Box::new(theme.clone())),
-                                    )));
-                                }
-
                                 self.themes_list.push(theme);
                             }
                         }
@@ -417,6 +410,10 @@ impl Application for QuickWebApps {
                 if self.theme_idx.is_none() {
                     self.theme_idx = Some(0);
                 }
+
+                return task::message(cosmic::action::app(Message::UpdateTheme(Box::new(
+                    self.themes_list[self.theme_idx.unwrap_or_default()].clone(),
+                ))));
             }
             Message::OpenFileResult(file_path) => {
                 if !file_path.is_empty() {
@@ -524,20 +521,19 @@ impl Application for QuickWebApps {
                         if let Some(handler) = AppConfig::config_handler() {
                             let _ = self.config.set_app_theme(&handler, "COSMIC Light".into());
                         };
-                        set_theme(cosmic::theme::Theme::light())
+                        set_theme(cosmic::theme::system_light())
                     }
                     Theme::Dark => {
                         if let Some(handler) = AppConfig::config_handler() {
                             let _ = self.config.set_app_theme(&handler, "COSMIC Dark".into());
                         };
-                        set_theme(cosmic::theme::Theme::dark())
+                        set_theme(cosmic::theme::system_dark())
                     }
                     _ => Task::none(),
                 };
 
                 tasks.push(theme_selector);
             }
-            Message::None => (),
         };
 
         Task::batch(tasks)

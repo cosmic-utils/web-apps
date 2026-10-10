@@ -179,7 +179,7 @@ impl WebappLauncher {
                 crate::IconType::Raster => fs::write(icon_path, webapp_icon.buffer.clone()),
                 crate::IconType::Svg => fs::write(
                     icon_path,
-                    String::from_utf8_lossy_owned(webapp_icon.buffer.clone()),
+                    String::from_utf8_lossy(&webapp_icon.buffer).as_ref(),
                 ),
             };
         }

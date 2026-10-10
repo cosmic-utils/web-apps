@@ -7,20 +7,20 @@ const APP_ID: &str = "dev.heppen.webapps";
 fn main() {
     // this will copy from data to XDG_STATE/APP_ID dir empty firefox profile
     // as a template for next firefox's webapps
-    if let Some(mut state) = dirs::state_dir() {
-        state.push(APP_ID);
+    if let Some(mut data) = dirs::data_dir() {
+        data.push(APP_ID);
 
-        if !state.exists() {
-            let _ = create_dir_all(&state);
+        if !data.exists() {
+            let _ = create_dir_all(&data);
         }
 
-        let firefox = state.join("firefox");
+        let firefox = data.join("firefox");
 
         if !firefox.exists() {
             let _ = copy_dir("data/firefox", &firefox);
         }
 
-        let zen = state.join("zen");
+        let zen = data.join("zen");
 
         if !zen.exists() {
             let _ = copy_dir("data/zen", &zen);

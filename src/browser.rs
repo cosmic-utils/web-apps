@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{APP_ID, supported_browsers::supported_browsers};
+use crate::{APP_ID, is_flatpak, supported_browsers::supported_browsers};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum Installation {
@@ -154,7 +154,10 @@ impl Browser {
 
     pub fn update_with_path(&mut self, path: PathBuf) {
         self.install_t = Some(Installation::from(&path));
-        self.executable_path = Some(path);
+        self.executable_path = match path.strip_prefix("/run/host") {
+            Ok(path) => Some(PathBuf::from("/").join(path.to_path_buf())),
+            Err(_) => Some(path),
+        };
 
         if let Some(i) = &self.install_t {
             match i {
@@ -281,14 +284,27 @@ pub fn common_install_paths() -> Vec<PathBuf> {
         PathBuf::from("/var/lib/flatpak/exports/bin"),
     ];
 
-    if let Some(mut data_dir) = dirs::data_dir() {
-        data_dir.push("flatpak");
-        data_dir.push("exports");
-        data_dir.push("bin");
-        paths.push(data_dir);
+    let mut sandboxed_paths = vec![
+        PathBuf::from("/run/host/usr/bin"),
+        PathBuf::from("/run/host/usr/local/bin"),
+        PathBuf::from("/var/lib/flatpak/exports/bin"),
+    ];
+
+    if let Some(mut home_dir) = dirs::home_dir() {
+        home_dir.push(".local");
+        home_dir.push("share");
+        home_dir.push("flatpak");
+        home_dir.push("exports");
+        home_dir.push("bin");
+
+        if is_flatpak() {
+            sandboxed_paths.push(home_dir);
+        } else {
+            paths.push(home_dir);
+        }
     }
 
-    paths
+    if is_flatpak() { sandboxed_paths } else { paths }
 }
 
 pub fn installed_browsers() -> Vec<Browser> {

@@ -6,7 +6,7 @@ APP_ID="dev.heppen.webapps"
 
 gh_repo="papirus-icon-theme"
 
-: "${XDG_STATE_HOME:=$HOME/.local/state}"
+: "${XDG_DATA_HOME:=$HOME/.local/share}"
 : "${EXTRA_THEMES=Papirus Papirus-Dark Papirus-Light}"
 : "${TAG:=master}"
 
@@ -40,7 +40,7 @@ cleanup() {
 
 download
 
-install_path="$XDG_STATE_HOME/$APP_ID/icons"
+install_path="$XDG_DATA_HOME/$APP_ID/icons"
 
 install $install_path $EXTRA_THEMES
 
