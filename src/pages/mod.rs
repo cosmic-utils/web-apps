@@ -61,6 +61,7 @@ pub enum Message {
     ResetSettings,
     SaveLauncher,
     SetIcon(Option<WebappIcon>),
+    ShowWarningDialog(String),
     DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(AppConfig),
@@ -77,6 +78,7 @@ pub enum Dialogs {
     IconPicker(IconPicker),
     Confirmation((widget::segmented_button::Entity, String)),
     IconsDownloader,
+    SandboxWarning(String),
 }
 
 pub struct QuickWebApps {
@@ -490,11 +492,19 @@ impl Application for QuickWebApps {
             }
             Message::SetIcon(webapp_icon) => {
                 let Page::Editor(app_editor) = &mut self.page;
-                app_editor.app_icon = webapp_icon;
+
+                let Some(webapp_icon) = webapp_icon else {
+                    return Task::none();
+                };
+
+                app_editor.app_icon = Some(webapp_icon);
 
                 if self.dialogs.is_some() && app_editor.app_icon.is_some() {
                     self.dialogs = None;
                 }
+            }
+            Message::ShowWarningDialog(profile_path_str) => {
+                self.dialogs = Some(Dialogs::SandboxWarning(profile_path_str));
             }
             Message::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {
@@ -667,6 +677,32 @@ impl Application for QuickWebApps {
                     .secondary_action(
                         widget::button::suggested(fl!("close")).on_press(Message::CloseDialog),
                     ),
+                Dialogs::SandboxWarning(path) => {
+                    let path = std::path::PathBuf::from(path.clone());
+                    let path = path.parent().unwrap();
+
+                    widget::dialog()
+                        .title(fl!("permissions-warning"))
+                        .control(
+                            widget::Column::new()
+                                .spacing(12)
+                                .push(widget::text(fl!(
+                                    "permissions-body",
+                                    HashMap::from([("path", path.display().to_string())])
+                                )))
+                                .push(widget::text(format!(
+                                    "flatpak override --user --filesystem={} dev.heppen.webapps",
+                                    path.display().to_string()
+                                )))
+                                .push(widget::text(format!(
+                                    "flatpak override --filesystem={} dev.heppen.webapps",
+                                    path.display().to_string()
+                                ))),
+                        )
+                        .primary_action(
+                            widget::button::suggested(fl!("close")).on_press(Message::CloseDialog),
+                        )
+                }
             };
 
             return Some(element.into());

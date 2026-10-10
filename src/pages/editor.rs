@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use cosmic::{
     Element, Task,
     action::Action,
@@ -8,8 +10,8 @@ use cosmic::{
 use rand::RngExt;
 use strum::IntoEnumIterator as _;
 use webapps::{
-    APP_ICON, Category, WebappIcon, browser::BrowserConfig, fl, launcher::WebappLauncher,
-    url_valid, webapp_id,
+    APP_ICON, Category, WebappIcon, browser::BrowserConfig, fl, is_profile_path_readonly,
+    launcher::WebappLauncher, url_valid, webapp_id,
 };
 
 use crate::pages;
@@ -26,7 +28,6 @@ pub struct AppEditor {
     pub app_url: String,
     pub app_icon: Option<WebappIcon>,
     pub app_category: webapps::Category,
-    pub selected_icon: Option<String>,
     pub categories: Vec<String>,
     pub category_idx: Option<usize>,
     pub custom_params: String,
@@ -53,7 +54,6 @@ impl Default for AppEditor {
             app_url: String::new(),
             app_icon: None,
             app_category: webapps::Category::default(),
-            selected_icon: None,
             categories,
             category_idx: webapps::Category::iter().position(|c| c == Category::Utility),
             custom_params: String::new(),
@@ -123,7 +123,6 @@ impl AppEditor {
             app_url: browser.config.url.clone(),
             app_icon: value.webapp_icon.clone(),
             app_category: category,
-            selected_icon: None,
             categories,
             category_idx: webapps::Category::iter().position(|c| c.name() == value.category),
             custom_params: browser.config.custom_parameters.clone(),
@@ -167,6 +166,10 @@ impl AppEditor {
             Message::AppIsolated(flag) => {
                 if let Some(browser) = self.app_browser.as_mut() {
                     browser.config.isolated_profile = flag;
+
+                    if !flag {
+                        self.app_profile = None;
+                    }
                 }
             }
             Message::AppPrivateMode(flag) => {
@@ -197,6 +200,14 @@ impl AppEditor {
                 self.custom_params = s;
             }
             Message::Done => {
+                if let Some(profile) = &self.app_profile {
+                    if is_profile_path_readonly(&PathBuf::from(&profile)) {
+                        return Task::done(Action::App(pages::Message::ShowWarningDialog(
+                            profile.clone(),
+                        )));
+                    }
+                }
+
                 if let Some(browser) = &self.app_browser {
                     let webapp_launcher = WebappLauncher {
                         browser: Some(browser.clone()),
@@ -226,7 +237,6 @@ impl AppEditor {
             }
             Message::ResetIcon => {
                 self.app_icon = None;
-                self.selected_icon = None;
             }
             Message::Title(title) => {
                 if title.len() < 3 {
@@ -321,7 +331,7 @@ impl AppEditor {
                                     .on_press_maybe(Some(Message::OpenIconPicker)),
                             )
                             .push(widget::button::standard(fl!("reset-icon")).on_press_maybe(
-                                if self.selected_icon.is_some() {
+                                if self.app_icon.is_some() {
                                     Some(Message::ResetIcon)
                                 } else {
                                     None

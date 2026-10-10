@@ -1,6 +1,7 @@
 use dircpy::copy_dir;
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
+use std::fs::Permissions;
 use std::{ffi::OsStr, os::unix::fs::PermissionsExt as _, path::PathBuf, str::FromStr};
 use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
 
@@ -834,12 +835,11 @@ pub fn install_firefox_empty_profile(dst: &str) -> std::io::Result<()> {
 
     std::fs::create_dir_all(&dst)?;
 
-    if let Some(mut state) = dirs::state_dir() {
-        state.push(APP_ID);
-        state.push("firefox");
-        state.push("profile");
+    if let Some(mut data) = data_path() {
+        data.push("firefox");
+        data.push("profile");
 
-        let _ = copy_dir(state, dst);
+        let _ = copy_dir(data, dst);
     }
 
     Ok(())
@@ -850,13 +850,24 @@ pub fn install_zen_empty_profile(dst: &str) -> std::io::Result<()> {
 
     std::fs::create_dir_all(&dst)?;
 
-    if let Some(mut state) = dirs::state_dir() {
-        state.push(APP_ID);
-        state.push("zen");
-        state.push("profile");
+    if let Some(mut data) = data_path() {
+        data.push("zen");
+        data.push("profile");
 
-        let _ = copy_dir(state, dst);
+        let _ = copy_dir(data, dst);
     }
 
     Ok(())
+}
+
+pub fn is_profile_path_readonly(profile_path: &PathBuf) -> bool {
+    if let Some(parent) = profile_path.parent() {
+        let Ok(metadata) = parent.metadata() else {
+            return true;
+        };
+
+        return Permissions::readonly(&metadata.permissions());
+    }
+
+    true
 }
