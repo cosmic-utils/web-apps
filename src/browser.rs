@@ -38,11 +38,14 @@ impl Installation {
     ) -> Option<PathBuf> {
         match self {
             Installation::System => {
-                if let Some(mut dir) = dirs::data_local_dir() {
+                if let Some(mut dir) = dirs::home_dir() {
+                    dir.push(".local");
+                    dir.push("share");
                     dir.push(APP_ID);
+                    dir.push("data");
                     dir.push(browser_id);
                     dir.push(webapp_id);
-                    return Some(dir.into());
+                    return Some(dir);
                 }
             }
             Installation::Flatpak => {
