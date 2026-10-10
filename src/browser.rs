@@ -169,15 +169,13 @@ impl Browser {
         let mut starting_args = String::new();
 
         match self.browser_t {
-            BrowserT::Chromium | BrowserT::MsEdge => {
-                starting_args.push_str("--app");
-            }
             BrowserT::Epiphany => {
                 starting_args.push_str("--application-mode");
             }
             BrowserT::Falkon | BrowserT::Firefox | BrowserT::Floorp | BrowserT::Zen => {
                 starting_args.push_str("--no-remote");
             }
+            _ => {}
         }
 
         starting_args
@@ -231,6 +229,9 @@ impl Browser {
 
         match &self.browser_t {
             BrowserT::Falkon => arg.push_str(&format!("--wmclass={}", &self.config.class_name)),
+            BrowserT::Chromium | BrowserT::MsEdge => {
+                arg.push_str(&format!("--class={}", &self.config.class_name));
+            }
             _ => {
                 arg.push_str(&format!("--class={}", &self.config.class_name));
                 arg.push_str(" ");
@@ -263,7 +264,9 @@ impl Browser {
         exec.push_str(" ");
         exec.push_str(&self.config.custom_parameters);
         exec.push_str(" ");
-
+        if &self.browser_t == &BrowserT::Chromium || &self.browser_t == &BrowserT::MsEdge {
+            exec.push_str("--app=");
+        }
         exec.push_str(&self.config.url);
 
         exec

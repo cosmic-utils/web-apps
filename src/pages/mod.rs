@@ -485,6 +485,7 @@ impl Application for QuickWebApps {
                     let _ = self.config.set_app_theme(&handler, String::new());
                 };
 
+                self.theme_idx = Some(0);
                 return cosmic::command::set_theme(cosmic::theme::system_dark());
             }
             Message::SaveLauncher => {

@@ -158,16 +158,16 @@ pub fn launcher_desktop_entry_path(appid: &str) -> Option<PathBuf> {
 }
 
 pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
-    if let Some(mut xdg_data) = dirs::data_dir() {
-        xdg_data = xdg_data.join(APP_ID).join("themes");
+    if let Some(mut state) = dirs::state_dir() {
+        state = state.join(APP_ID).join("themes");
 
-        if !xdg_data.exists() {
-            let _ = std::fs::create_dir_all(&xdg_data);
+        if !state.exists() {
+            let _ = std::fs::create_dir_all(&state);
         }
 
-        xdg_data = xdg_data.join(theme_file);
+        state = state.join(theme_file);
 
-        return Some(xdg_data);
+        return Some(state);
     }
 
     None

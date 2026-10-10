@@ -17,3 +17,5 @@ user_pref("privacy.sanitize.sanitizeOnShutdown", false);
 user_pref("privacy.sanitize.timeSpan", 1);
 user_pref("browser.translations.automaticallyPopup", false);
 user_pref("browser.link.open_newwindow", 2);
+user_pref("zen.welcome-screen.seen", true);
+user_pref("zen.view.compact.enable-at-startup", true);

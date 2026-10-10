@@ -6,12 +6,16 @@ See the above repository for updates as well as full license text. */
  */
 
 :root{
-  --uc-autohide-toolbox-delay: 0ms; /* Wait 0.1s before hiding toolbars */
+  --uc-autohide-toolbox-delay: 200ms; /* Wait 0.1s before hiding toolbars */
   --uc-toolbox-rotation: 82deg;  /* This may need to be lower on mac - like 75 or so */
 }
 
 :root[sizemode="maximized"]{
   --uc-toolbox-rotation: 88.5deg;
+}
+
+@media  (-moz-platform: windows){
+  :root:not([lwtheme]) #navigator-toolbox{ background-color: -moz-dialog !important; }
 }
 
 :root[sizemode="fullscreen"],
@@ -20,6 +24,8 @@ See the above repository for updates as well as full license text. */
 #navigator-toolbox{
   --browser-area-z-index-toolbox: 3;
   position: fixed !important;
+  background: inherit;
+  background-color: var(--lwt-accent-color,black) !important;
   transition: transform 82ms linear, opacity 82ms linear !important;
   transition-delay: var(--uc-autohide-toolbox-delay) !important;
   transform-origin: top;
@@ -28,26 +34,39 @@ See the above repository for updates as well as full license text. */
   line-height: 0;
   z-index: 1;
   pointer-events: none;
+  width: 100vw;
 }
-:root[sessionrestored] #urlbar[popover]{
+#navigator-toolbox.chrome-block{
+  margin-top: 0 !important;
+  border-top-width: 0px !important;
+}
+:root[sessionrestored] toolbar #searchbar-new:popover-open,
+:root[sessionrestored] #urlbar:popover-open{
   pointer-events: none;
   opacity: 0;
   transition: transform 82ms linear var(--uc-autohide-toolbox-delay), opacity 0ms calc(var(--uc-autohide-toolbox-delay) + 82ms);
-  transform-origin: 0px calc(0px - var(--tab-min-height) - var(--tab-block-margin) * 2);
+  transform-origin: 0px calc(0px - var(--tab-min-height) - var(--tab-margin-block,var(--tab-block-margin,0px)) * 2);
   transform: rotateX(89.9deg);
 }
-#mainPopupSet:has(> [panelopen]:not(#ask-chat-shortcuts,#tab-preview-panel)) ~ toolbox #urlbar[popover],
-#navigator-toolbox:is(:hover,:focus-within) #urlbar[popover],
-#urlbar-container > #urlbar[popover]:is([focused],[open]){
+/* Using :popover-open here seems weird, but before bug 2022527 Firefox used to make the :popover "always-open" as a hacky workaround for another issue.
+ But now that the hack was removed, we don't want to apply these rules anymore. */
+:root:is([window-modal-open],[customizing]) toolbar #searchbar-new:popover-open,
+:root:is([window-modal-open],[customizing]) #urlbar:popover-open,
+#mainPopupSet:has(> [panelopen]:not(#ask-chat-shortcuts,#selection-shortcut-action-panel,#chat-shortcuts-options-panel,#tab-preview-panel), > #tab-group-editor > [panelopen]) ~ toolbox :is(.urlbar:popover-open,#urlbar:popover-open),
+#navigator-toolbox:is(:hover,:focus-within,[movingtab]) :is(.urlbar:popover-open,#urlbar:popover-open),
+:where(:root[sessionrestored]) #navigator-toolbox .urlbar:popover-open:is([focused],[open]),
+:where(:root[sessionrestored]) #urlbar-container > #urlbar:popover-open:is([focused],[open]){
   pointer-events: auto;
   opacity: 1;
   transition-delay: 33ms;
   transform: rotateX(0deg);
 }
-#mainPopupSet:has(> [panelopen]:not(#ask-chat-shortcuts,#tab-preview-panel)) ~ toolbox,
+
+:root[window-modal-open] #navigator-toolbox,
+#mainPopupSet:has(> [panelopen]:not(#ask-chat-shortcuts,#selection-shortcut-action-panel,#chat-shortcuts-options-panel,#tab-preview-panel), > #tab-group-editor > [panelopen]) ~ toolbox,
 #navigator-toolbox:has(#urlbar:is([open],[focus-within])),
-#navigator-toolbox:hover,
-#navigator-toolbox:focus-within{
+#navigator-toolbox:has(.urlbar:is([open],[focus-within])),
+#navigator-toolbox:is(:hover,:focus-within,[movingtab]){
   transition-delay: 33ms !important;
   transform: rotateX(0);
   opacity: 1;
@@ -55,10 +74,11 @@ See the above repository for updates as well as full license text. */
 /* This makes things like OS menubar/taskbar show the toolbox when hovered in maximized windows.
  * Unfortunately it also means that other OS native surfaces (such as context menu on macos)
  * and other always-on-top applications will trigger toolbox to show up. */
-@media (-moz-bool-pref: "userchrome.autohide-toolbox.unhide-by-native-ui.enabled"){
+@media -moz-pref("userchrome.autohide-toolbox.unhide-by-native-ui.enabled"){
   :root[sizemode="maximized"]:not(:hover){
     #navigator-toolbox:not(:-moz-window-inactive),
-    #urlbar[popover]:not(:-moz-window-inactive){
+    #searchbar-new:popover-open:not(:-moz-window-inactive),
+    #urlbar:popover-open:not(:-moz-window-inactive){
       transition-delay: 33ms !important;
       transform: rotateX(0);
       opacity: 1;
@@ -67,12 +87,6 @@ See the above repository for updates as well as full license text. */
 }
 
 #navigator-toolbox > *{ line-height: normal; pointer-events: auto }
-
-#navigator-toolbox,
-#navigator-toolbox > *{
-  width: 100vw;
-  -moz-appearance: none !important;
-}
 
 /* Don't apply transform before window has been fully created */
 :root:not([sessionrestored]) #navigator-toolbox{ transform:none !important }
@@ -84,4 +98,14 @@ See the above repository for updates as well as full license text. */
 }
 
 #navigator-toolbox[inFullscreen] > #PersonalToolbar,
-#PersonalToolbar[collapsed="true"]{ display: none }
+#PersonalToolbar:is([collapsed=""],[collapsed="true"]){ display: none }
+
+/* This is a bit hacky fix for an issue that will make urlbar zero pixels tall after you enter customize mode */
+:is(#urlbar,.urlbar)[breakout][breakout-extend]:popover-open > .urlbar-input-container{
+  padding-block: calc(min(4px,(var(--urlbar-container-height) - var(--urlbar-height)) / 2) + var(--urlbar-container-padding)) !important;
+}
+
+/* Uncomment the following for compatibility with tabs_on_bottom.css - this isn't well tested though */
+/*
+#navigator-toolbox{ flex-direction: column; display: flex; }
+*/
