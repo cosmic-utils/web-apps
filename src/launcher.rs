@@ -1,14 +1,14 @@
-use ashpd::desktop::{
-    Icon,
-    dynamic_launcher::{
-        DynamicLauncherProxy, InstallOptions, PrepareInstallOptions, UninstallOptions,
-    },
+use std::{
+    fs::{self, create_dir_all},
+    io::Read,
+    path::PathBuf,
 };
-use serde::{Deserialize, Serialize};
-use std::{io::Read as _, path::PathBuf};
-use tokio::fs::remove_file;
 
-use crate::{APP_ID, handle_icon};
+use crate::{
+    APP_ID, WebappIcon,
+    browser::{Browser, BrowserConfig, BrowserT},
+    desktop_files, install_firefox_empty_profile, install_zen_empty_profile,
+};
 
 pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
     if let Some(url) = url {
@@ -20,20 +20,20 @@ pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
     false
 }
 
-pub fn installed_webapps() -> Vec<WebAppLauncher> {
+pub fn installed_webapps() -> Vec<WebappLauncher> {
     let mut webapps = Vec::new();
 
-    if let Some(data_dir) = dirs::data_dir() {
-        if let Ok(entries) = std::fs::read_dir(data_dir.join(APP_ID).join("database")) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    let file = std::fs::File::open(entry.path());
-                    let mut content = String::new();
+    if let Ok(entries) = std::fs::read_dir(&desktop_files()) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                if let Ok(file_name) = entry.file_name().into_string() {
+                    if file_name.starts_with(APP_ID) {
+                        let file = std::fs::File::open(entry.path());
+                        let mut content = String::new();
 
-                    if let Ok(mut f) = file {
-                        f.read_to_string(&mut content).unwrap();
-                        if let Ok(launcher) = ron::from_str::<WebAppLauncher>(&content) {
-                            webapps.push(launcher);
+                        if let Ok(mut f) = file {
+                            let _ = f.read_to_string(&mut content);
+                            webapps.push(WebappLauncher::from_str(&content));
                         }
                     }
                 }
@@ -44,103 +44,191 @@ pub fn installed_webapps() -> Vec<WebAppLauncher> {
     webapps
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct WebappIcon {
-    pub path: PathBuf,
-    pub buffer: Vec<u8>,
+#[derive(Debug)]
+pub struct WebappLauncher {
+    pub browser: Option<Browser>,
+    pub unique_id: String,
+    pub webapp_name: String,
+    pub webapp_icon: Option<WebappIcon>,
+    pub category: String,
 }
 
-impl WebappIcon {
-    pub fn to_icon(&self) -> crate::Icon {
-        handle_icon(self.path.clone())
+impl WebappLauncher {
+    pub fn from_str(content: &str) -> Self {
+        let mut launcher = Self {
+            browser: None,
+            unique_id: String::new(),
+            webapp_name: String::new(),
+            webapp_icon: None,
+            category: String::new(),
+        };
+
+        let mut browser_config = BrowserConfig {
+            class_name: String::new(),
+            isolated_profile: true,
+            private_mode: false,
+            profile_path: None,
+            custom_parameters: String::new(),
+            url: String::new(),
+        };
+
+        for line in content.lines() {
+            let line_split = line.split('=').collect::<Vec<&str>>();
+
+            if line_split.len() < 2 {
+                continue;
+            }
+
+            let key = line_split[0];
+            let value = line_split[1];
+
+            match key {
+                "Name" => launcher.webapp_name = value.to_string(),
+                "Icon" => launcher.webapp_icon = Some(WebappIcon::build_from_path(value)),
+                "Categories" => launcher.category = value.to_string(),
+                "StartupWMClass" => browser_config.class_name = value.to_string(),
+                "X-WebApp-Browser-Exec" => launcher.browser = Browser::from_exec(value),
+                "X-WebApp-UniqueId" => launcher.unique_id = value.to_string(),
+                "X-WebApp-Isolated" => {
+                    browser_config.isolated_profile = value.parse::<bool>().unwrap_or(true);
+                }
+                "X-WebApp-PrivateMode" => {
+                    browser_config.private_mode = value.parse::<bool>().unwrap_or(false);
+                }
+                "X-WebApp-ProfilePath" => browser_config.profile_path = Some(value.to_string()),
+                "X-WebApp-CustomParameters" => {
+                    browser_config.custom_parameters = line
+                        .strip_prefix("X-WebApp-CustomParameters=")
+                        .unwrap_or_default()
+                        .to_string();
+                }
+                "X-WebApp-URL" => browser_config.url = value.to_string(),
+                _ => {}
+            }
+        }
+
+        if let Some(browser) = launcher.browser.as_mut() {
+            browser.config = browser_config
+        }
+
+        launcher
     }
-}
 
-pub fn webapp_icon_valid(icon: &WebappIcon) -> bool {
-    icon.path.exists() && !icon.buffer.is_empty()
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct WebAppLauncher {
-    pub browser: crate::browser::Browser,
-    pub name: String,
-    pub icon: WebappIcon,
-    pub category: crate::Category,
-}
-
-impl WebAppLauncher {
-    pub async fn create(&self) -> anyhow::Result<bool> {
+    pub fn create_desktop_entry(&self) -> anyhow::Result<bool> {
         let mut desktop_entry = String::new();
 
-        let Some(exe) = self.browser.get_exec() else {
+        let Some(browser) = &self.browser else {
             return Ok(false);
         };
 
-        if !webapp_icon_valid(&self.icon) {
-            tracing::warn!("icon invalid!");
+        let exec = browser.get_exec_string();
+
+        let Some(webapp_icon) = &self.webapp_icon else {
+            return Ok(false);
+        };
+
+        let Some(icon_path) = &webapp_icon.source_path else {
             return Ok(false);
         };
 
         desktop_entry.push_str("[Desktop Entry]\n");
         desktop_entry.push_str("Version=1.0\n");
         desktop_entry.push_str("Type=Application\n");
-        desktop_entry.push_str(&format!("Name={}\n", self.name));
+        desktop_entry.push_str(&format!("Name={}\n", self.webapp_name));
         desktop_entry.push_str(&format!("Comment=Quick WebApp\n",));
-        desktop_entry.push_str(&format!("Exec={}\n", exe));
-        desktop_entry.push_str(&format!("StartupWMClass={}\n", self.browser.app_id.id));
-        desktop_entry.push_str(&format!("Categories={}\n", self.category.as_ref()));
-
-        let proxy = DynamicLauncherProxy::new()
-            .await
-            .expect("Failed to create DynamicLauncherProxy");
-
-        let icon = Icon::Bytes(self.icon.buffer.clone());
-
-        let prepare_opts = PrepareInstallOptions::default().set_editable_icon(true);
-
-        let response = proxy
-            .prepare_install(None, &self.name, icon, prepare_opts)
-            .await
-            .expect("Failed to prepare install")
-            .response()
-            .expect("Failed to get response");
-
-        let token = response.token();
+        desktop_entry.push_str(&format!("Exec={}\n", exec));
+        desktop_entry.push_str(&format!("Icon={}\n", icon_path.display()));
+        desktop_entry.push_str(&format!("StartupWMClass={}\n", browser.config.class_name));
+        desktop_entry.push_str(&format!("Categories={}\n", self.category));
+        desktop_entry.push_str(&format!(
+            "X-WebApp-Browser-Exec={}\n",
+            browser
+                .executable_path
+                .clone()
+                .unwrap_or_default()
+                .display()
+        ));
+        desktop_entry.push_str(&format!("X-WebApp-Browser={}\n", browser.display_name));
+        desktop_entry.push_str(&format!("X-WebApp-UniqueId={}\n", self.unique_id));
+        desktop_entry.push_str(&format!("X-WebApp-URL={}\n", browser.config.url));
+        desktop_entry.push_str(&format!(
+            "X-WebApp-CustomParameters={}\n",
+            browser.config.custom_parameters
+        ));
+        desktop_entry.push_str(&format!(
+            "X-WebApp-PrivateMode={}\n",
+            browser.config.private_mode
+        ));
+        desktop_entry.push_str(&format!(
+            "X-WebApp-Isolated={}\n",
+            browser.config.isolated_profile
+        ));
+        desktop_entry.push_str(&format!(
+            "X-WebApp-ProfilePath={}\n",
+            browser
+                .config
+                .profile_path
+                .clone()
+                .unwrap_or_else(|| String::new())
+        ));
 
         tracing::info!("{}", desktop_entry);
 
-        proxy
-            .install(
-                &token,
-                &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id),
-                &desktop_entry,
-                InstallOptions::default(),
-            )
-            .await
-            .expect("installing");
-
-        return Ok(true);
-    }
-
-    pub async fn delete(&self) -> std::io::Result<()> {
-        let proxy = DynamicLauncherProxy::new()
-            .await
-            .expect("Failed to create DynamicLauncherProxy");
-
-        proxy
-            .uninstall(
-                &format!("{}.{}.desktop", &APP_ID, self.browser.app_id.id,),
-                UninstallOptions::default(),
-            )
-            .await
-            .expect("Failed to uninstall");
-
-        if let Some(path) = crate::database_path(&format!("{}.ron", self.browser.app_id.as_ref())) {
-            remove_file(path).await?;
+        if !PathBuf::from(icon_path).exists() {
+            let _ = match webapp_icon.icon {
+                crate::IconType::Raster => fs::write(icon_path, webapp_icon.buffer.clone()),
+                crate::IconType::Svg => fs::write(
+                    icon_path,
+                    String::from_utf8_lossy(&webapp_icon.buffer).as_ref(),
+                ),
+            };
         }
 
-        self.browser.delete();
+        if let Some(path) = crate::launcher_desktop_entry_path(&self.unique_id) {
+            if path.exists() {
+                tracing::debug!("Desktop entry exists. Probably editing.");
+            }
+            let _ = fs::write(path, &desktop_entry);
+        }
 
-        Ok(())
+        if let Some(profile) = &browser.config.profile_path {
+            let path = PathBuf::from(profile);
+
+            if !path.exists() {
+                let _ = create_dir_all(path);
+            }
+
+            if browser.browser_t == BrowserT::Firefox {
+                let _ = install_firefox_empty_profile(profile);
+            }
+
+            if browser.browser_t == BrowserT::Zen {
+                let _ = install_zen_empty_profile(profile);
+            }
+        }
+
+        Ok(true)
+    }
+
+    pub fn delete(&self) -> bool {
+        if let Some(path) = crate::launcher_desktop_entry_path(&self.unique_id) {
+            if path.exists() {
+                let _ = fs::remove_file(path);
+
+                if let Some(browser) = &self.browser {
+                    if let Some(profile) = &browser.config.profile_path {
+                        let path = PathBuf::from(profile);
+
+                        if path.exists() {
+                            let _ = fs::remove_dir_all(profile);
+                        }
+                    }
+                }
+
+                return true;
+            }
+        }
+
+        false
     }
 }

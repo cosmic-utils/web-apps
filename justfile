@@ -1,42 +1,36 @@
-export APPID := 'dev.heppen.webapps'
-BINARY_PREFIX := 'dev-heppen-webapps'
+APPID		:= 'dev.heppen.webapps'
+PREFIX		:= env("HOME", "/usr") / ".local"
+XDG_DATA	:= env("XDG_DATA_HOME", PREFIX / "share") / APPID
 
-prefix := '/usr/local'
-base-dir := prefix
+BASE_DIR := PREFIX
 
-target-dir := 'target' / 'release'
+TARGET_DIR := 'target' / 'release'
+BIN_SRC := TARGET_DIR / "webapps"
 
-webview := APPID + '.webview'
-helper := APPID + '.webview-helper'
+BIN_DST := BASE_DIR / 'bin' / APPID
+DESKTOP_SRC := 'resources' / (APPID + '.desktop')
+DESKTOP_DST := BASE_DIR / 'share/applications' / (APPID + '.desktop')
 
-bin-src := target-dir / BINARY_PREFIX
-webview-src := target-dir / (BINARY_PREFIX + '-webview')
-helper-src := target-dir / (BINARY_PREFIX + '-webview-helper')
+METAINFO_SRC := 'resources' / (APPID + '.metainfo.xml')
+METAINFO_DST := BASE_DIR / 'share/metainfo' / (APPID + '.metainfo.xml')
 
-bin-dst := base-dir / 'bin' / APPID
-webview-lib-dst := base-dir / 'share' / 'cef' / webview
-helper-lib-dst := base-dir / 'share' / 'cef' / helper
-webview-bin-dst := base-dir / 'bin' / webview
-
-desktop-src := 'resources' / (APPID + '.desktop')
-desktop-dst := base-dir / 'share/applications' / (APPID + '.desktop')
-
-metainfo-src := 'resources' / (APPID + '.metainfo.xml')
-metainfo-dst := base-dir / 'share/metainfo' / (APPID + '.metainfo.xml')
-
-icons-src := 'resources/icons/hicolor'
-icons-dst := base-dir / 'share/icons/hicolor'
+ICON_SRC := 'resources/icons/hicolor'
+ICON_DST := BASE_DIR / 'share/icons/hicolor'
 
 # Default task
 default: build
 
 # Builds the project
-build:
-    cargo build --release 
+build: format check test
+    cargo build --release
 
 # Checks the project
 check:
     cargo check
+
+# Format the project
+format:
+    cargo fmt --all
 
 # Runs tests
 test:
@@ -44,38 +38,37 @@ test:
 
 # Runs the application
 run: build
-    {{bin-src}}
+    {{BIN_SRC}}
+
+# Build the applications in debug mode
+build-debug: format check test
+    cargo build
+
+# Runs the applications in debug mode
+run-dev: build-debug
+    cargo run
+
+install-data:
+	@cp -rv "./data" {{XDG_DATA}}
 
 # Installs files
-install:
-    install -Dm0755 {{bin-src}} {{bin-dst}}
-    install -Dm0755 {{webview-src}} {{webview-lib-dst}}
-    install -Dm0755 {{helper-src}} {{helper-lib-dst}}
-    install -Dm0644 {{desktop-src}} {{desktop-dst}}
+install: install-data
+    install -Dm0755 {{BIN_SRC}} {{BIN_DST}}
+    install -Dm0644 {{DESKTOP_SRC}} {{DESKTOP_DST}}
+    install -Dm0644 {{METAINFO_SRC}} {{METAINFO_DST}}
 
-    install -Dm0644 {{metainfo-src}} {{metainfo-dst}}
-
-    for size in `ls {{icons-src}}`; do \
-        install -Dm0644 "{{icons-src}}/$size/apps/{{APPID}}.png" "{{icons-dst}}/$size/apps/{{APPID}}.png"; \
+    for size in `ls {{ICON_SRC}}`; do \
+        install -Dm0644 "{{ICON_SRC}}/$size/apps/{{APPID}}.png" "{{ICON_DST}}/$size/apps/{{APPID}}.png"; \
     done
-
-    # Create a symlink in bin to the webview in lib
-    ln -sf ../share/cef/{{webview}} {{webview-bin-dst}}
-
-# install cef lib
-install-lib:
-        mkdir -p {{base-dir}}/share/cef
-        find target -name "cef_linux_x86_64" -type d | head -n 1 | xargs -I {} cp -r {}/. {{base-dir}}/share/cef/
 
 # Uninstalls files
 uninstall:
-    rm -v {{bin-dst}}
-    rm -v {{webview-bin-dst}}
-    rm -v {{desktop-dst}}
-    rm -v {{metainfo-dst}}
-
-    rm -v {{icons-dst}}/*/apps/{{APPID}}.png
-
+    rm -v {{BIN_DST}}
+    rm -v {{DESKTOP_DST}}
+    rm -v {{METAINFO_DST}}
+    rm -v {{ICON_DST}}/*/apps/{{APPID}}.png
+    rm -rv {{XDG_DATA}}
+	
 # Vendor dependencies locally
 vendor:
     #!/usr/bin/env bash

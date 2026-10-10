@@ -3,10 +3,10 @@ use cosmic::{
     Element, Task,
     action::Action,
     iced::Length,
-    task, theme,
+    task,
     widget::{self},
 };
-use webapps::fl;
+use webapps::{WebappIcon, fl};
 
 use crate::pages;
 
@@ -16,18 +16,20 @@ pub enum Message {
     DownloadIconsPack,
     OpenIconPickerDialog,
     IconSearch,
-    SetIcon(Option<webapps::Icon>),
+    SetIcon(Option<WebappIcon>),
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct IconPicker {
     pub icon_searching: String,
-    pub icons: Vec<webapps::Icon>,
+    pub icons: Vec<WebappIcon>,
 }
 
 impl IconPicker {
-    pub fn push_icon(&mut self, icon: webapps::Icon) {
-        self.icons.push(icon);
+    pub fn push_icon(&mut self, icon: Option<WebappIcon>) {
+        if let Some(webapp_icon) = icon {
+            self.icons.push(webapp_icon);
+        }
     }
 
     pub fn update(&mut self, message: Message) -> Task<Action<pages::Message>> {
@@ -65,9 +67,9 @@ impl IconPicker {
                             })
                             .collect::<Vec<String>>();
 
-                        pages::Message::OpenFileResult(files)
+                        cosmic::action::app(pages::Message::OpenFileResult(files[0].clone()))
                     } else {
-                        pages::Message::None
+                        cosmic::action::none()
                     }
                 });
             }
@@ -81,7 +83,7 @@ impl IconPicker {
                 });
             }
             Message::SetIcon(icon) => {
-                return task::message(pages::Message::SetIcon(icon));
+                return Task::done(cosmic::Action::App(pages::Message::SetIcon(icon)));
             }
         }
 
@@ -89,52 +91,59 @@ impl IconPicker {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let mut icons: Vec<Element<Message>> = Vec::new();
-
-        for ico in self.icons.iter() {
-            let btn = match ico.clone().icon {
-                webapps::IconType::Raster(icon) => widget::button::custom(widget::image(icon))
-                    .width(Length::Fixed(48.))
-                    .height(Length::Fixed(48.))
-                    .on_press(Message::SetIcon(Some(ico.clone())))
-                    .class(theme::Button::Icon),
-                webapps::IconType::Svg(icon) => widget::button::custom(widget::svg(icon))
-                    .width(Length::Fixed(48.))
-                    .height(Length::Fixed(48.))
-                    .on_press(Message::SetIcon(Some(ico.clone())))
-                    .class(theme::Button::Icon),
-            };
-            icons.push(btn.into());
-        }
-
         let icons_input = widget::text_input(fl!("icon-name-to-find"), &self.icon_searching)
             .on_input(Message::CustomIconsSearch)
             .on_submit(|_| Message::IconSearch);
         let button = widget::button::standard(fl!("open")).on_press(Message::OpenIconPickerDialog);
 
-        widget::column()
+        widget::Column::new()
             .spacing(30)
             .push(
                 widget::container(
-                    widget::row()
+                    widget::Row::new()
                         .spacing(8)
                         .push(icons_input)
                         .push(button)
-                        .push_maybe(if !webapps::icon_pack_installed() {
-                            Some(
-                                widget::button::standard(fl!("download"))
-                                    .on_press(Message::DownloadIconsPack),
-                            )
-                        } else {
-                            None
-                        }),
+                        .push_maybe(
+                            if !webapps::icon_pack_installed() && !webapps::is_flatpak() {
+                                Some(
+                                    widget::button::standard(fl!("download"))
+                                        .on_press(Message::DownloadIconsPack),
+                                )
+                            } else {
+                                None
+                            },
+                        ),
                 )
                 .padding(8),
             )
-            .push_maybe(if !icons.is_empty() {
+            .push_maybe(if !self.icons.is_empty() {
                 Some(
-                    widget::container(widget::scrollable(widget::flex_row(icons)))
-                        .height(Length::FillPortion(1)),
+                    widget::container(widget::scrollable(widget::flex_row(
+                        self.icons
+                            .iter()
+                            .map(|icon| match icon.icon {
+                                webapps::IconType::Raster => widget::button::custom(
+                                    widget::icon::from_raster_bytes(icon.buffer.clone())
+                                        .icon()
+                                        .size(48),
+                                )
+                                .on_press(Message::SetIcon(Some(icon.clone())))
+                                .class(cosmic::theme::Button::Icon),
+                                webapps::IconType::Svg => widget::button::custom(
+                                    widget::icon::from_svg_bytes(icon.buffer.clone())
+                                        .icon()
+                                        .size(48),
+                                )
+                                .on_press(Message::SetIcon(Some(icon.clone())))
+                                .class(cosmic::theme::Button::Icon),
+                            })
+                            .fold(Vec::new(), |mut v, icon| {
+                                v.push(icon.into());
+                                v
+                            }),
+                    )))
+                    .height(Length::FillPortion(1)),
                 )
             } else {
                 None
