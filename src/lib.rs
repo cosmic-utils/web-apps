@@ -854,3 +854,19 @@ pub fn install_firefox_empty_profile(dst: &str) -> std::io::Result<()> {
 
     Ok(())
 }
+
+pub fn install_zen_empty_profile(dst: &str) -> std::io::Result<()> {
+    let dst = PathBuf::from(dst);
+
+    std::fs::create_dir_all(&dst)?;
+
+    if let Some(mut state) = dirs::state_dir() {
+        state.push(APP_ID);
+        state.push("zen");
+        state.push("profile");
+
+        let _ = copy_dir(state, dst);
+    }
+
+    Ok(())
+}

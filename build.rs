@@ -14,10 +14,16 @@ fn main() {
             let _ = create_dir_all(&state);
         }
 
-        state.push("firefox");
+        let firefox = state.join("firefox");
 
-        if !state.exists() {
-            let _ = copy_dir("data/firefox", &state);
+        if !firefox.exists() {
+            let _ = copy_dir("data/firefox", &firefox);
+        }
+
+        let zen = state.join("zen");
+
+        if !zen.exists() {
+            let _ = copy_dir("data/zen", &zen);
         }
     }
 }

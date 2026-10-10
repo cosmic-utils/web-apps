@@ -7,7 +7,7 @@ use std::{
 use crate::{
     APP_ID, WebappIcon,
     browser::{Browser, BrowserConfig, BrowserT},
-    desktop_files, install_firefox_empty_profile,
+    desktop_files, install_firefox_empty_profile, install_zen_empty_profile,
 };
 
 pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
@@ -200,6 +200,10 @@ impl WebappLauncher {
 
             if browser.browser_t == BrowserT::Firefox {
                 let _ = install_firefox_empty_profile(profile);
+            }
+
+            if browser.browser_t == BrowserT::Zen {
+                let _ = install_zen_empty_profile(profile);
             }
         }
 
