@@ -95,6 +95,12 @@ pub fn url_valid(url: &str) -> bool {
     false
 }
 
+/// Checks if /.flatpak-info exists so we can assume
+/// Its a flatpak installation
+pub fn is_flatpak() -> bool {
+    PathBuf::from("/.flatpak-info").exists()
+}
+
 pub fn is_svg(path: &str) -> bool {
     if !url_valid(path) {
         let Ok(pb) = PathBuf::from_str(path);

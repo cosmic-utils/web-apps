@@ -1,5 +1,5 @@
 APPID       := 'dev.heppen.webapps'
-PREFIX      := if "${HOME}" == "" { "/usr/local" } else { "${'HOME'}" / ".local"}
+PREFIX      := if "${HOME}" == "" { "/usr/local" } else { "${HOME}" / ".local"}
 
 BASE_DIR := PREFIX
 

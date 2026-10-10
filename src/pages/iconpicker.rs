@@ -104,14 +104,16 @@ impl IconPicker {
                         .spacing(8)
                         .push(icons_input)
                         .push(button)
-                        .push_maybe(if !webapps::icon_pack_installed() {
-                            Some(
-                                widget::button::standard(fl!("download"))
-                                    .on_press(Message::DownloadIconsPack),
-                            )
-                        } else {
-                            None
-                        }),
+                        .push_maybe(
+                            if !webapps::icon_pack_installed() && !webapps::is_flatpak() {
+                                Some(
+                                    widget::button::standard(fl!("download"))
+                                        .on_press(Message::DownloadIconsPack),
+                                )
+                            } else {
+                                None
+                            },
+                        ),
                 )
                 .padding(8),
             )
