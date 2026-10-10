@@ -123,13 +123,13 @@ impl Application for QuickWebApps {
         let about = About::default()
             .name(fl!("app"))
             // TODO: Update icon with a svg
-            .icon(icon::from_name(Self::APP_ID))
+            .icon(icon::from_raster_bytes(APP_ICON))
             .version(env!("CARGO_PKG_VERSION"))
-            .author("hepp3n")
+            .author("heppen")
             .comments(fl!("comment"))
             .license(env!("CARGO_PKG_LICENSE"))
             .license_url("https://spdx.org/licenses/GPL-3.0-only")
-            .developers([("hepp3n", "piotr@heppen.dev")])
+            .developers([("heppen", "piotr@heppen.dev")])
             .links([
                 (
                     fl!("repository"),
