@@ -7,7 +7,10 @@ use cosmic::{
 };
 use rand::RngExt;
 use strum::IntoEnumIterator as _;
-use webapps::{APP_ICON, Category, WebappIcon, fl, launcher::WebappLauncher, url_valid, webapp_id};
+use webapps::{
+    APP_ICON, Category, WebappIcon, browser::BrowserConfig, fl, launcher::WebappLauncher,
+    url_valid, webapp_id,
+};
 
 use crate::pages;
 
@@ -173,7 +176,18 @@ impl AppEditor {
             }
             Message::Browser(idx) => {
                 self.app_browser_selection = Some(idx);
+                let mut browser_config = BrowserConfig::default();
+
+                if let Some(browser) = &self.app_browser {
+                    browser_config = browser.config.clone();
+                }
+
                 self.app_browser = Some(self.app_browsers[idx].clone());
+
+                // recovery previous config if browser was selected
+                if let Some(browser) = self.app_browser.as_mut() {
+                    browser.config = browser_config;
+                }
             }
             Message::Category(idx) => {
                 self.app_category = webapps::Category::from_index(idx as u8);

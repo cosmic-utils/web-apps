@@ -90,21 +90,18 @@ impl WebappLauncher {
                 "X-WebApp-Browser-Exec" => launcher.browser = Browser::from_exec(value),
                 "X-WebApp-UniqueId" => launcher.unique_id = value.to_string(),
                 "X-WebApp-Isolated" => {
-                    browser_config.isolated_profile = match value {
-                        "true" => true,
-                        "false" => false,
-                        _ => true,
-                    }
+                    browser_config.isolated_profile = value.parse::<bool>().unwrap_or(true);
                 }
                 "X-WebApp-PrivateMode" => {
-                    browser_config.private_mode = match value {
-                        "true" => true,
-                        "false" => false,
-                        _ => false,
-                    }
+                    browser_config.private_mode = value.parse::<bool>().unwrap_or(false);
                 }
                 "X-WebApp-ProfilePath" => browser_config.profile_path = Some(value.to_string()),
-                "X-WebApp-CustomParameters" => browser_config.custom_parameters = value.to_string(),
+                "X-WebApp-CustomParameters" => {
+                    browser_config.custom_parameters = line
+                        .strip_prefix("X-WebApp-CustomParameters=")
+                        .unwrap_or_default()
+                        .to_string();
+                }
                 "X-WebApp-URL" => browser_config.url = value.to_string(),
                 _ => {}
             }

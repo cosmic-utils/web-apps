@@ -1,7 +1,6 @@
 use dircpy::copy_dir;
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
-use std::fs::create_dir_all;
 use std::{
     ffi::OsStr, fmt::Display, os::unix::fs::PermissionsExt as _, path::PathBuf, str::FromStr,
 };
