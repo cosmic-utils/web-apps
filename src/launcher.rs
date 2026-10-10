@@ -6,8 +6,8 @@ use std::{
 
 use crate::{
     APP_ID, WebappIcon,
-    browser::{Browser, BrowserConfig},
-    desktop_files,
+    browser::{Browser, BrowserConfig, BrowserT},
+    desktop_files, install_firefox_empty_profile,
 };
 
 pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
@@ -200,6 +200,10 @@ impl WebappLauncher {
             if !path.exists() {
                 let _ = create_dir_all(path);
             }
+
+            if browser.browser_t == BrowserT::Firefox {
+                let _ = install_firefox_empty_profile(profile);
+            }
         }
 
         Ok(true)
@@ -215,7 +219,7 @@ impl WebappLauncher {
                         let path = PathBuf::from(profile);
 
                         if path.exists() {
-                            let _ = fs::remove_dir(profile);
+                            let _ = fs::remove_dir_all(profile);
                         }
                     }
                 }

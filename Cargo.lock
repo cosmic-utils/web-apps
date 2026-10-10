@@ -1323,6 +1323,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dircpy"
+version = "0.3.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "248c4c8c68170f1eb97d2dd60e0909ef81805478fc863790d37eb95258f5c3d1"
+dependencies = [
+ "log",
+ "walkdir",
+]
+
+[[package]]
 name = "dirs"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5604,6 +5614,7 @@ dependencies = [
  "anyhow",
  "ashpd 0.13.13",
  "clap",
+ "dircpy",
  "dirs",
  "i18n-embed",
  "i18n-embed-fl",

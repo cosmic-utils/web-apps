@@ -1,5 +1,7 @@
+use dircpy::copy_dir;
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
+use std::fs::create_dir_all;
 use std::{
     ffi::OsStr, fmt::Display, os::unix::fs::PermissionsExt as _, path::PathBuf, str::FromStr,
 };
@@ -225,27 +227,6 @@ pub fn icons_location() -> Option<PathBuf> {
     }
     None
 }
-
-// pub fn handle_icon(path: PathBuf) -> Icon {
-//     let mut buff = Vec::new();
-
-//     let mut file = std::fs::File::open(&path).expect("temp icon not found");
-
-//     let _ = file.read_to_end(&mut buff).expect("reading icon data");
-
-//     match is_svg(&path.display().to_string()) {
-//         true => {
-//             let handle = iced_core::svg::Handle::from_memory(buff);
-
-//             Icon::new(IconType::Svg(handle), path.display().to_string().clone())
-//         }
-//         false => {
-//             let handle = iced_core::image::Handle::from_bytes(buff);
-
-//             Icon::new(IconType::Raster(handle), path.display().to_string().clone())
-//         }
-//     }
-// }
 
 pub fn icon_pack_installed() -> bool {
     let packs: Vec<&str> = vec!["Papirus", "Papirus-Dark", "Papirus-Light"];
@@ -857,4 +838,20 @@ impl Default for WindowSize {
     fn default() -> Self {
         WindowSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
     }
+}
+
+pub fn install_firefox_empty_profile(dst: &str) -> std::io::Result<()> {
+    let dst = PathBuf::from(dst);
+
+    std::fs::create_dir_all(&dst)?;
+
+    if let Some(mut state) = dirs::state_dir() {
+        state.push(APP_ID);
+        state.push("firefox");
+        state.push("profile");
+
+        let _ = copy_dir(state, dst);
+    }
+
+    Ok(())
 }

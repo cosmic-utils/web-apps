@@ -6,6 +6,10 @@ description = "Manage web apps in a quick way."
 license = "GPL-3.0-only"
 repository = "https://github.com/cosmic-utils/web-apps"
 
+[build-dependencies]
+dirs = "6.0.0"
+dircpy = "0.3.21"
+
 [dependencies]
 # core
 libcosmic = { git = "https://github.com/pop-os/libcosmic.git", features = ["a11y", "about", "winit", "multi-window", "wayland", "tokio"]}
@@ -17,6 +21,7 @@ ashpd = { version = "0.13.3", features = [
 ] }
 
 clap = { version = "4.5.60", features = ["derive"] }
+dircpy = "0.3.21"
 dirs = "6.0.0"
 i18n-embed-fl = "0.10.0"
 i18n-embed = { version = "0.16.0", features = [
