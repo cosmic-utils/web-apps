@@ -147,7 +147,14 @@ impl AppEditor {
         }
 
         // set classname
-        browser.config.class_name = self.app_id.clone();
+        browser.config.class_name = match browser.browser_t {
+            webapps::browser::BrowserT::Chromium | webapps::browser::BrowserT::MsEdge => {
+                // workaround for chromium browser since they does not respect --class argument
+                // on wayland
+                webapps::browser::try_chromium_classname(&self.app_url)
+            }
+            _ => self.app_id.clone(),
+        };
 
         // set profile path
         if let Some(path) =

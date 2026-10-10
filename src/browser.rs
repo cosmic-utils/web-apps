@@ -312,14 +312,38 @@ pub fn installed_browsers() -> Vec<Browser> {
 
     for browser in &mut supported_browsers() {
         for path in &common_install_paths() {
+            let by_id = path.join(&browser.app_id);
+
+            if by_id.exists() {
+                browser.update_with_path(by_id);
+                if !installed.contains(&browser) {
+                    installed.push(browser.clone());
+                    continue;
+                }
+            }
+
             let final_path = path.join(&browser.executable_name);
 
             if final_path.exists() {
                 browser.update_with_path(final_path);
-                installed.push(browser.clone());
+                if !installed.contains(&browser) {
+                    installed.push(browser.clone());
+                }
             }
         }
     }
 
     installed
+}
+
+pub fn try_chromium_classname(url: &str) -> String {
+    let mut class_name_from_url = String::new();
+
+    if let Ok(url) = url::Url::parse(url) {
+        if let Some(domain) = url.domain() {
+            class_name_from_url.push_str(&format!("chrome-{}__-Default", domain));
+        }
+    }
+
+    class_name_from_url
 }
