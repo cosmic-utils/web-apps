@@ -153,13 +153,12 @@ impl Application for QuickWebApps {
             downloader_id: 1,
             downloader_output: String::new(),
             themes_list,
-            theme_idx: Some(0),
+            theme_idx: None,
         };
 
         let tasks = vec![
             task::message(Message::ReloadNavbarItems),
-            //task::message(Message::LoadThemes),
-            //task::message(Message::UpdateTheme(Box::new(Theme::Light))),
+            task::message(Message::LoadThemes),
         ];
 
         (app, Task::batch(tasks))
@@ -228,11 +227,9 @@ impl Application for QuickWebApps {
                 self.theme_idx = Some(idx);
                 let selected = self.themes_list[idx].clone();
 
-                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
-                    return task::message(cosmic::action::app(Message::UpdateTheme(Box::new(
-                        selected,
-                    ))));
-                }
+                return task::message(cosmic::action::app(Message::UpdateTheme(Box::new(
+                    selected,
+                ))));
             }
             Message::CloseDialog => self.dialogs = None,
             Message::ConfirmDeletion(id) => {
@@ -326,7 +323,7 @@ impl Application for QuickWebApps {
                 };
             }
             Message::ImportThemeFilePicker => {
-                return task::future(async {
+                return task::future(async move {
                     let result = SelectedFiles::open_file()
                         .title("Open Theme")
                         .accept_label("Open")
@@ -339,25 +336,33 @@ impl Application for QuickWebApps {
                         .response();
 
                     if let Ok(result) = result {
-                        let files: Vec<String> = result
+                        let files = result
                             .uris()
                             .iter()
-                            .map(|file| file.as_str().to_string())
+                            .map(|file| {
+                                let mut file_path = file.as_str();
+                                println!("file path: {}", file_path);
+
+                                if file_path.starts_with("file://") {
+                                    file_path =
+                                        file_path.strip_prefix("file://").expect("removing prefix");
+                                }
+
+                                file_path.to_string()
+                            })
                             .collect::<Vec<String>>();
 
-                        if !files.is_empty() {
-                            return cosmic::action::app(Message::OpenThemeResult(
-                                urlencoding::decode(&files[0])
-                                    .unwrap_or_default()
-                                    .to_string(),
-                            ));
-                        }
-                        cosmic::action::none()
-                    } else {
-                        cosmic::action::none()
+                        return cosmic::action::app(Message::OpenThemeResult(
+                            urlencoding::decode(&files[0])
+                                .unwrap_or_default()
+                                .to_string(),
+                        ));
                     }
+
+                    cosmic::action::none()
                 });
             }
+
             Message::LaunchUrl(url) => match open::that_detached(&url) {
                 Ok(()) => {}
                 Err(err) => {
@@ -367,10 +372,8 @@ impl Application for QuickWebApps {
             Message::LoadThemes => {
                 self.themes_list.clear();
 
-                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
-                    self.themes_list.push(Theme::Light);
-                    self.themes_list.push(Theme::Dark);
-                }
+                self.themes_list.push(Theme::Dark);
+                self.themes_list.push(Theme::Light);
 
                 let Some(folder) = webapps::themes_path("") else {
                     return Task::none();
@@ -409,7 +412,11 @@ impl Application for QuickWebApps {
                     Theme::Light => self.config.app_theme == "COSMIC Light",
                     Theme::Dark => self.config.app_theme == "COSMIC Dark",
                     Theme::Custom(theme) => self.config.app_theme == theme.0,
-                })
+                });
+
+                if self.theme_idx.is_none() {
+                    self.theme_idx = Some(0);
+                }
             }
             Message::OpenFileResult(file_path) => {
                 if !file_path.is_empty() {
@@ -478,7 +485,7 @@ impl Application for QuickWebApps {
                     let _ = self.config.set_app_theme(&handler, String::new());
                 };
 
-                return cosmic::command::set_theme(cosmic::Theme::light());
+                return cosmic::command::set_theme(cosmic::theme::system_dark());
             }
             Message::SaveLauncher => {
                 return task::message(Message::ReloadNavbarItems);
@@ -527,9 +534,7 @@ impl Application for QuickWebApps {
                     _ => Task::none(),
                 };
 
-                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
-                    tasks.push(theme_selector);
-                }
+                tasks.push(theme_selector);
             }
             Message::None => (),
         };

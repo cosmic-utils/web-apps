@@ -1,9 +1,7 @@
 use dircpy::copy_dir;
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
-use std::{
-    ffi::OsStr, fmt::Display, os::unix::fs::PermissionsExt as _, path::PathBuf, str::FromStr,
-};
+use std::{ffi::OsStr, os::unix::fs::PermissionsExt as _, path::PathBuf, str::FromStr};
 use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
 
 use cosmic::cosmic_config::{self, CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry};
@@ -18,16 +16,12 @@ pub mod launcher;
 pub mod localize;
 pub mod supported_browsers;
 
-pub const DEFAULT_WINDOW_WIDTH: WindowWidth = 800;
-pub const DEFAULT_WINDOW_HEIGHT: WindowHeight = 600;
 pub const ICON_SIZE: u32 = 42;
 pub const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 pub const CONFIG_VERSION: u64 = 1;
 pub const APP_ID: &str = "dev.heppen.webapps";
 pub const APP_ICON: &[u8] =
     include_bytes!("../resources/icons/hicolor/256x256/apps/dev.heppen.webapps.png");
-pub const MOBILE_UA: &str = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.7632.76 Mobile Safari/537.36";
-pub const DESKTOP_UA: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36";
 
 #[derive(Debug, Default, Clone)]
 pub enum Theme {
@@ -61,7 +55,6 @@ impl Theme {
 #[version = 1]
 pub struct AppConfig {
     pub app_theme: String,
-    pub database: Vec<WebAppConfig>,
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Eq, PartialEq)]
@@ -819,24 +812,6 @@ pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
     }
 
     None
-}
-
-pub type WindowWidth = u32;
-pub type WindowHeight = u32;
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct WindowSize(pub WindowWidth, pub WindowHeight);
-
-impl Display for WindowSize {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}x{}", self.0, self.1)
-    }
-}
-
-impl Default for WindowSize {
-    fn default() -> Self {
-        WindowSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
-    }
 }
 
 pub fn install_firefox_empty_profile(dst: &str) -> std::io::Result<()> {
