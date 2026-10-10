@@ -254,21 +254,19 @@ impl Application for QuickWebApps {
                 if let Some(page) = data {
                     let Page::Editor(app_editor) = page;
 
-                    println!("{:?}", app_editor);
-
-                    let app_id = app_editor.app_id.clone();
+                    let app_unique_id = app_editor.app_id.clone();
 
                     return task::future(async move {
                         let launcher = installed_webapps()
                             .into_iter()
-                            .find(|w| w.webapp_id == app_id)
+                            .find(|w| w.unique_id == app_unique_id)
                             .map(|l| l);
 
                         let Some(launcher) = launcher else {
                             return cosmic::action::none();
                         };
 
-                        if launcher.delete(&app_id) {
+                        if launcher.delete() {
                             cosmic::action::app(Message::DeletionDone(id))
                         } else {
                             return cosmic::action::none();

@@ -100,15 +100,22 @@ impl AppEditor {
 
         let app_browser_selection = installed_browsers
             .iter()
-            .position(|b| b.app_id == browser.app_id);
+            .position(|b| b.executable_path == browser.executable_path);
+
+        let app_num_id = {
+            let split_pos = value.unique_id.char_indices().nth_back(3).unwrap().0;
+            value.unique_id[split_pos..]
+                .parse::<u16>()
+                .unwrap_or_default()
+        };
 
         Some(Self {
             app_browser_selection,
             app_browser: Some(browser.clone()),
             app_browsers: installed_browsers.clone(),
             app_profile: browser.config.profile_path.clone(),
-            app_id: value.webapp_id.clone(),
-            app_num_id: 0,
+            app_id: value.unique_id.clone(),
+            app_num_id,
             app_title: value.webapp_name.clone(),
             app_url: browser.config.url.clone(),
             app_icon: value.webapp_icon.clone(),
@@ -179,7 +186,7 @@ impl AppEditor {
                 if let Some(browser) = &self.app_browser {
                     let webapp_launcher = WebappLauncher {
                         browser: Some(browser.clone()),
-                        webapp_id: self.app_id.clone(),
+                        unique_id: self.app_id.clone(),
                         webapp_name: self.app_title.clone(),
                         webapp_icon: self.app_icon.clone(),
                         category: self.app_category.as_ref().to_owned(),

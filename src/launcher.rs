@@ -4,7 +4,11 @@ use std::{
     path::PathBuf,
 };
 
-use crate::{APP_ID, WebappIcon, browser::Browser, desktop_files};
+use crate::{
+    APP_ID, WebappIcon,
+    browser::{Browser, BrowserConfig},
+    desktop_files, webapp_id,
+};
 
 pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
     if let Some(url) = url {
@@ -43,7 +47,7 @@ pub fn installed_webapps() -> Vec<WebappLauncher> {
 #[derive(Debug)]
 pub struct WebappLauncher {
     pub browser: Option<Browser>,
-    pub webapp_id: String,
+    pub unique_id: String,
     pub webapp_name: String,
     pub webapp_icon: Option<WebappIcon>,
     pub category: String,
@@ -53,10 +57,19 @@ impl WebappLauncher {
     pub fn from_str(content: &str) -> Self {
         let mut launcher = Self {
             browser: None,
-            webapp_id: String::new(),
+            unique_id: String::new(),
             webapp_name: String::new(),
             webapp_icon: None,
             category: String::new(),
+        };
+
+        let mut browser_config = BrowserConfig {
+            class_name: String::new(),
+            isolated_profile: true,
+            private_mode: false,
+            profile_path: None,
+            custom_parameters: String::new(),
+            url: String::new(),
         };
 
         for line in content.lines() {
@@ -69,45 +82,36 @@ impl WebappLauncher {
             let key = line_split[0];
             let value = line_split[1];
 
-            // fill browser config
-            if let Some(browser) = launcher.browser.as_mut() {
-                match key {
-                    "StartupWMClass" => browser.config.class_name = value.to_string(),
-                    "X-WebApp-Isolated" => {
-                        browser.config.isolated_profile = match value {
-                            "true" => true,
-                            "false" => false,
-                            _ => true,
-                        }
-                    }
-                    "X-WebApp-PrivateMode" => {
-                        browser.config.private_mode = match value {
-                            "true" => true,
-                            "false" => false,
-                            _ => false,
-                        }
-                    }
-                    "X-WebApp-ProfilePath" => browser.config.profile_path = Some(value.to_string()),
-                    "X-WebApp-CustomParameters" => {
-                        browser.config.custom_parameters = value.to_string()
-                    }
-                    "X-WebApp-URL" => browser.config.url = value.to_string(),
-                    _ => {
-                        continue;
-                    }
-                }
-            }
-
             match key {
-                "X-WebApp-Browser-Id" => launcher.browser = Browser::from_id(value),
-                "X-WebApp-Id" => launcher.webapp_id = value.to_string(),
                 "Name" => launcher.webapp_name = value.to_string(),
                 "Icon" => launcher.webapp_icon = Some(WebappIcon::build_from_path(value)),
                 "Categories" => launcher.category = value.to_string(),
-                _ => {
-                    continue;
+                "StartupWMClass" => browser_config.class_name = value.to_string(),
+                "X-WebApp-Browser-Exec" => launcher.browser = Browser::from_exec(value),
+                "X-WebApp-UniqueId" => launcher.unique_id = value.to_string(),
+                "X-WebApp-Isolated" => {
+                    browser_config.isolated_profile = match value {
+                        "true" => true,
+                        "false" => false,
+                        _ => true,
+                    }
                 }
+                "X-WebApp-PrivateMode" => {
+                    browser_config.private_mode = match value {
+                        "true" => true,
+                        "false" => false,
+                        _ => false,
+                    }
+                }
+                "X-WebApp-ProfilePath" => browser_config.profile_path = Some(value.to_string()),
+                "X-WebApp-CustomParameters" => browser_config.custom_parameters = value.to_string(),
+                "X-WebApp-URL" => browser_config.url = value.to_string(),
+                _ => {}
             }
+        }
+
+        if let Some(browser) = launcher.browser.as_mut() {
+            browser.config = browser_config
         }
 
         launcher
@@ -139,9 +143,16 @@ impl WebappLauncher {
         desktop_entry.push_str(&format!("Icon={}\n", icon_path.display()));
         desktop_entry.push_str(&format!("StartupWMClass={}\n", browser.config.class_name));
         desktop_entry.push_str(&format!("Categories={}\n", self.category));
-        desktop_entry.push_str(&format!("X-WebApp-Id={}\n", self.webapp_id));
+        desktop_entry.push_str(&format!(
+            "X-WebApp-Browser-Exec={}\n",
+            browser
+                .executable_path
+                .clone()
+                .unwrap_or_default()
+                .display()
+        ));
         desktop_entry.push_str(&format!("X-WebApp-Browser={}\n", browser.display_name));
-        desktop_entry.push_str(&format!("X-WebApp-Browser-Id={}\n", browser.app_id));
+        desktop_entry.push_str(&format!("X-WebApp-UniqueId={}\n", self.unique_id));
         desktop_entry.push_str(&format!("X-WebApp-URL={}\n", browser.config.url));
         desktop_entry.push_str(&format!(
             "X-WebApp-CustomParameters={}\n",
@@ -176,7 +187,10 @@ impl WebappLauncher {
             };
         }
 
-        if let Some(path) = crate::launcher_desktop_entry_path(&self.webapp_id) {
+        if let Some(path) = crate::launcher_desktop_entry_path(&self.unique_id) {
+            if path.exists() {
+                tracing::debug!("Desktop entry exists. Probably editing.");
+            }
             let _ = fs::write(path, &desktop_entry);
         }
 
@@ -191,25 +205,25 @@ impl WebappLauncher {
         Ok(true)
     }
 
-    pub fn delete(&self, webapp_id: &str) -> bool {
-        if let Some(path) = crate::launcher_desktop_entry_path(&webapp_id) {
+    pub fn delete(&self) -> bool {
+        if let Some(path) = crate::launcher_desktop_entry_path(&self.unique_id) {
             if path.exists() {
                 let _ = fs::remove_file(path);
+
+                if let Some(browser) = &self.browser {
+                    if let Some(profile) = &browser.config.profile_path {
+                        let path = PathBuf::from(profile);
+
+                        if path.exists() {
+                            let _ = fs::remove_dir(profile);
+                        }
+                    }
+                }
+
+                return true;
             }
         }
 
-        let Some(browser) = &self.browser else {
-            return false;
-        };
-
-        if let Some(profile) = &browser.config.profile_path {
-            let path = PathBuf::from(profile);
-
-            if path.exists() {
-                let _ = fs::remove_dir(profile);
-            }
-        }
-
-        true
+        false
     }
 }

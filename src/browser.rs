@@ -126,10 +126,17 @@ pub struct Browser {
 }
 
 impl Browser {
-    pub fn from_id(app_id: &str) -> Option<Browser> {
+    pub fn from_exec(exec_path: &str) -> Option<Browser> {
         installed_browsers()
             .iter()
-            .find(|b| b.app_id == app_id)
+            .find(|b| {
+                b.executable_path
+                    .clone()
+                    .unwrap_or_default()
+                    .display()
+                    .to_string()
+                    == exec_path
+            })
             .map(|b| b.clone())
     }
 
