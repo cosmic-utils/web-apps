@@ -12,13 +12,9 @@
         "--socket=fallback-x11",
         "--socket=wayland",
         "--device=dri",
-	// for system installations
 	"--filesystem=host:ro",
-	// for local flatpak installs
 	"--filesystem=xdg-data/flatpak/exports/bin:ro",
-	// for system flatpak installs
 	"--filesystem=/var/lib/flatpak/exports/bin:ro",
-	// we need to write desktop entries by hand
 	"--filesystem=xdg-data/applications:create",
         "--filesystem=xdg-config/cosmic:rw",
         "--talk-name=com.system76.CosmicSettingsDaemon",
