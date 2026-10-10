@@ -778,6 +778,7 @@ fn generate_random_color() -> String {
 
 pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
     let color = generate_random_color();
+    let stroke = generate_random_color();
 
     let file_name = format!("{}_{}.svg", first_letter, &color);
 
@@ -796,25 +797,24 @@ pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
   <defs
      id="defs1" />
   <circle
-     style="fill:{};stroke-width:1"
+     fill="{}"
+     stroke="{}"
+     stroke-width="3"
      id="path1"
-     cx="68.17894"
-     cy="-67.73333"
-     transform="scale(1,-1)"
-     r="64.96875" />
+     cx="50%"
+     cy="50%"
+     r="65" />
   <text
      xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:88.1944px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-     x="36.649605"
-     y="99.21859"
-     id="text1"><tspan
-       id="tspan1"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:88.1944px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-       x="36.649605"
-       y="99.21859">{}</tspan></text>
+     x="50%"
+     y="50%"
+     dominant-baseline="middle"
+     text-anchor="middle"
+     id="text1">{}</text>
 </svg>
 "#,
-        color, first_letter
+        color, stroke, first_letter
     );
 
     if let Some(mut source) = icons_location() {
