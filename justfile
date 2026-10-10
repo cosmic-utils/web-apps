@@ -1,5 +1,6 @@
-APPID       := 'dev.heppen.webapps'
-PREFIX      := if "${HOME}" == "" { "/usr/local" } else { "${HOME}" / ".local"}
+APPID		:= 'dev.heppen.webapps'
+PREFIX		:= env("HOME", "/usr") / ".local"
+XDG_DATA	:= env("XDG_DATA_HOME", PREFIX / "share") / APPID
 
 BASE_DIR := PREFIX
 
@@ -47,8 +48,11 @@ build-debug: format check test
 run-dev: build-debug
     cargo run
 
+install-data:
+	@cp -rv "./data" {{XDG_DATA}}
+
 # Installs files
-install:
+install: install-data
     install -Dm0755 {{BIN_SRC}} {{BIN_DST}}
     install -Dm0644 {{DESKTOP_SRC}} {{DESKTOP_DST}}
     install -Dm0644 {{METAINFO_SRC}} {{METAINFO_DST}}
@@ -63,7 +67,8 @@ uninstall:
     rm -v {{DESKTOP_DST}}
     rm -v {{METAINFO_DST}}
     rm -v {{ICON_DST}}/*/apps/{{APPID}}.png
-
+    rm -rv {{XDG_DATA}}
+	
 # Vendor dependencies locally
 vendor:
     #!/usr/bin/env bash

@@ -830,17 +830,28 @@ pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
     None
 }
 
+fn profile_templates() -> PathBuf {
+    let prefix = if is_flatpak() {
+        PathBuf::from("/app")
+    } else {
+        dirs::home_dir()
+            .and_then(|d| Some(d.join(".local")))
+            .unwrap_or(PathBuf::from("/usr"))
+    };
+
+    prefix.join("share").join(APP_ID)
+}
+
 pub fn install_firefox_empty_profile(dst: &str) -> std::io::Result<()> {
     let dst = PathBuf::from(dst);
 
     std::fs::create_dir_all(&dst)?;
 
-    if let Some(mut data) = data_path() {
-        data.push("firefox");
-        data.push("profile");
+    let mut data = profile_templates();
+    data.push("firefox");
+    data.push("profile");
 
-        let _ = copy_dir(data, dst);
-    }
+    let _ = copy_dir(data, dst);
 
     Ok(())
 }
@@ -850,12 +861,11 @@ pub fn install_zen_empty_profile(dst: &str) -> std::io::Result<()> {
 
     std::fs::create_dir_all(&dst)?;
 
-    if let Some(mut data) = data_path() {
-        data.push("zen");
-        data.push("profile");
+    let mut data = profile_templates();
+    data.push("zen");
+    data.push("profile");
 
-        let _ = copy_dir(data, dst);
-    }
+    let _ = copy_dir(data, dst);
 
     Ok(())
 }
