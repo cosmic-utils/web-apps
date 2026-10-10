@@ -98,7 +98,9 @@ impl AppEditor {
 
         let installed_browsers = webapps::browser::installed_browsers();
 
-        let app_browser_selection = installed_browsers.iter().position(|b| b == browser);
+        let app_browser_selection = installed_browsers
+            .iter()
+            .position(|b| b.app_id == browser.app_id);
 
         Some(Self {
             app_browser_selection,
