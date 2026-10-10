@@ -1,4 +1,3 @@
-use cosmic::iced_winit::graphics::image::image_rs::ImageReader;
 use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -330,15 +329,8 @@ pub async fn find_icon(path: PathBuf, icon_name: String) -> Vec<String> {
                         }
                     }
                 } else if let Some(path) = entry.path().to_str() {
-                    if let Ok(image) = ImageReader::open(path) {
-                        if let Ok(img) = image.decode() {
-                            if img.width() >= ICON_SIZE
-                                && img.height() >= ICON_SIZE
-                                && !icons.contains(&path.to_string())
-                            {
-                                icons.push(path.to_string())
-                            }
-                        }
+                    if !icons.contains(&path.to_string()) {
+                        icons.push(path.to_string())
                     }
                 }
             }

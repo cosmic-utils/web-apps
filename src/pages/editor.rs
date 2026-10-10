@@ -7,7 +7,7 @@ use cosmic::{
 };
 use rand::RngExt;
 use strum::IntoEnumIterator as _;
-use webapps::{Category, WebappIcon, fl, launcher::WebappLauncher, url_valid, webapp_id};
+use webapps::{APP_ICON, Category, WebappIcon, fl, launcher::WebappLauncher, url_valid, webapp_id};
 
 use crate::pages;
 
@@ -247,11 +247,11 @@ impl AppEditor {
 
         widget::scrollable(
             widget::container(
-                widget::column()
+                widget::Column::new()
                     .spacing(24)
                     .push(
                         widget::container(
-                            widget::row()
+                            widget::Row::new()
                                 .spacing(12)
                                 .push(
                                     widget::container(icon_iced_element(&self.app_icon))
@@ -261,7 +261,7 @@ impl AppEditor {
                                 )
                                 .push(
                                     widget::container(
-                                        widget::column()
+                                        widget::Column::new()
                                             .spacing(12)
                                             .push(widget::text::title3(format!(
                                                 "{}: {}",
@@ -287,7 +287,7 @@ impl AppEditor {
                         .class(style::Container::Card),
                     )
                     .push(
-                        widget::row()
+                        widget::Row::new()
                             .spacing(8)
                             .push(
                                 widget::text_input(fl!("title"), &self.app_title)
@@ -389,13 +389,8 @@ impl AppEditor {
 
 pub fn icon_iced_element<'a>(webapp_icon: &'a Option<WebappIcon>) -> Element<'a, Message> {
     let Some(icon) = webapp_icon else {
-        let data: &'static [u8] =
-            include_bytes!("../../resources/icons/hicolor/128x128/apps/dev.heppen.webapps.png");
-
-        let handle = cosmic::iced_core::image::Handle::from_bytes(data);
-
         return Element::from(
-            widget::button::custom(widget::image(handle))
+            widget::button::custom(widget::icon::from_raster_bytes(APP_ICON).icon())
                 .width(Length::Fixed(92.0))
                 .height(Length::Fixed(92.0))
                 .class(style::Button::Icon),

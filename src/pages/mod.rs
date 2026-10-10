@@ -10,9 +10,9 @@ use cosmic::{
     iced::{
         Alignment, Length, Subscription,
         alignment::Horizontal,
-        futures::{SinkExt as _, future},
+        futures::{SinkExt as _, channel::mpsc::Sender, future},
     },
-    surface, task, theme,
+    task, theme,
     widget::{
         self, RcElementWrapper,
         about::About,
@@ -23,8 +23,8 @@ use cosmic::{
 };
 use editor::AppEditor;
 use std::{
-    collections::HashMap, fs::read_dir, io::Read, path::Path, process::ExitStatus, str::FromStr,
-    sync::Arc, time::Duration,
+    collections::HashMap, fs::read_dir, io::Read, path::Path, process::ExitStatus, sync::Arc,
+    time::Duration,
 };
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
@@ -61,7 +61,6 @@ pub enum Message {
     ResetSettings,
     SaveLauncher,
     SetIcon(Option<WebappIcon>),
-    Surface(surface::Action),
     DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(AppConfig),
@@ -176,9 +175,8 @@ impl Application for QuickWebApps {
         );
 
         if self.downloader_started {
-            subscriptions.push(Subscription::run_with_id(
-                self.downloader_id,
-                cosmic::iced::stream::channel(4, move |mut channel| async move {
+            subscriptions.push(Subscription::run_with(self.downloader_id, |_| {
+                cosmic::iced::stream::channel(4, move |mut channel: Sender<Message>| async move {
                     let Some(script) = webapps::add_icon_packs_install_script().await else {
                         return;
                     };
@@ -215,8 +213,8 @@ impl Application for QuickWebApps {
                     }
 
                     future::pending().await
-                }),
-            ));
+                })
+            }));
         }
 
         Subscription::batch(subscriptions)
@@ -493,11 +491,6 @@ impl Application for QuickWebApps {
                     self.dialogs = None;
                 }
             }
-            Message::Surface(a) => {
-                return cosmic::task::message(cosmic::Action::Cosmic(
-                    cosmic::app::Action::Surface(a),
-                ));
-            }
             Message::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {
                     self.core.window.show_context = !self.core.window.show_context;
@@ -588,7 +581,7 @@ impl Application for QuickWebApps {
         }
 
         Some(Element::from(
-            nav.width(Length::Shrink).height(Length::Shrink),
+            nav.width(Length::Shrink).height(Length::Fill),
         ))
     }
 
@@ -685,7 +678,7 @@ impl QuickWebApps {
     fn settings(&self) -> Element<'_, Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
-        widget::column()
+        widget::Column::new()
             .push(
                 widget::settings::section()
                     .add(widget::settings::item(

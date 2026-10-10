@@ -96,11 +96,11 @@ impl IconPicker {
             .on_submit(|_| Message::IconSearch);
         let button = widget::button::standard(fl!("open")).on_press(Message::OpenIconPickerDialog);
 
-        widget::column()
+        widget::Column::new()
             .spacing(30)
             .push(
                 widget::container(
-                    widget::row()
+                    widget::Row::new()
                         .spacing(8)
                         .push(icons_input)
                         .push(button)

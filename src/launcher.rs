@@ -7,7 +7,7 @@ use std::{
 use crate::{
     APP_ID, WebappIcon,
     browser::{Browser, BrowserConfig},
-    desktop_files, webapp_id,
+    desktop_files,
 };
 
 pub fn webapplauncher_is_valid(name: &str, url: &Option<String>) -> bool {
