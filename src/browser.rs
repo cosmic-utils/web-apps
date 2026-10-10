@@ -271,7 +271,10 @@ impl Browser {
         exec.push_str(" ");
         exec.push_str(&self.config.custom_parameters);
         exec.push_str(" ");
-        if &self.browser_t == &BrowserT::Chromium || &self.browser_t == &BrowserT::MsEdge {
+        if &self.browser_t == &BrowserT::Brave
+            || &self.browser_t == &BrowserT::Chromium
+            || &self.browser_t == &BrowserT::MsEdge
+        {
             exec.push_str("--app=");
         }
         exec.push_str(&self.config.url);
