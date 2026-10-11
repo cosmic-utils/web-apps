@@ -150,14 +150,17 @@ impl AppEditor {
         }
 
         // set classname
+        // workaround for chromium browser since they does not respect --class argument
+        // on wayland
         browser.config.class_name = match browser.browser_t {
-            webapps::browser::BrowserT::Chromium | webapps::browser::BrowserT::MsEdge => {
-                // workaround for chromium browser since they does not respect --class argument
-                // on wayland
-                webapps::browser::try_chromium_classname("chrome", &self.app_url)
-            }
             webapps::browser::BrowserT::Brave => {
                 webapps::browser::try_chromium_classname("brave", &self.app_url)
+            }
+            webapps::browser::BrowserT::Chromium | webapps::browser::BrowserT::MsEdge => {
+                webapps::browser::try_chromium_classname("chrome", &self.app_url)
+            }
+            webapps::browser::BrowserT::Vivaldi => {
+                webapps::browser::try_chromium_classname("vivaldi", &self.app_url)
             }
             _ => self.app_id.clone(),
         };

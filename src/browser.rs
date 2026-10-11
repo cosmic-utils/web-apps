@@ -82,6 +82,7 @@ pub enum BrowserT {
     Firefox,
     Floorp,
     MsEdge,
+    Vivaldi,
     Zen,
 }
 
@@ -194,7 +195,7 @@ impl Browser {
         if let Some(path) = &self.config.profile_path {
             if self.config.isolated_profile {
                 match &self.browser_t {
-                    BrowserT::Brave | BrowserT::Chromium | BrowserT::MsEdge => {
+                    BrowserT::Brave | BrowserT::Chromium | BrowserT::MsEdge | BrowserT::Vivaldi => {
                         arg.push_str(&format!("--user-data-dir={}", path))
                     }
                     BrowserT::Epiphany => arg.push_str(&format!("--profile={}", path)),
@@ -214,7 +215,9 @@ impl Browser {
 
         if self.config.private_mode {
             match &self.browser_t {
-                BrowserT::Brave | BrowserT::Chromium => arg.push_str("--incognito"),
+                BrowserT::Brave | BrowserT::Chromium | BrowserT::Vivaldi => {
+                    arg.push_str("--incognito")
+                }
                 BrowserT::Falkon => arg.push_str("--private-browsing"),
                 BrowserT::Firefox | BrowserT::Floorp | BrowserT::Zen => {
                     arg.push_str("--private-window")
@@ -236,7 +239,7 @@ impl Browser {
 
         match &self.browser_t {
             BrowserT::Falkon => arg.push_str(&format!("--wmclass={}", &self.config.class_name)),
-            BrowserT::Brave | BrowserT::Chromium | BrowserT::MsEdge => {
+            BrowserT::Brave | BrowserT::Chromium | BrowserT::MsEdge | BrowserT::Vivaldi => {
                 arg.push_str(&format!("--class={}", &self.config.class_name));
             }
             _ => {
@@ -274,6 +277,7 @@ impl Browser {
         if &self.browser_t == &BrowserT::Brave
             || &self.browser_t == &BrowserT::Chromium
             || &self.browser_t == &BrowserT::MsEdge
+            || &self.browser_t == &BrowserT::Vivaldi
         {
             exec.push_str("--app=");
         }

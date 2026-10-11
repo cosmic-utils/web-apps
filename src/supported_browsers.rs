@@ -25,7 +25,7 @@ pub fn supported_browsers() -> Vec<Browser> {
             "Vivaldi",
             "com.vivaldi.Vivaldi",
             "vivaldi-stable",
-            BrowserT::Chromium,
+            BrowserT::Vivaldi,
         ),
         Browser::new(
             "Epiphany",
