@@ -188,20 +188,6 @@ pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
     None
 }
 
-pub fn database_path(entry: &str) -> Option<PathBuf> {
-    if let Some(xdg_data) = dirs::data_dir() {
-        let path = xdg_data.join(APP_ID).join("database");
-
-        if !path.exists() {
-            std::fs::create_dir_all(&path).unwrap();
-        }
-
-        return Some(path.join(entry));
-    }
-
-    None
-}
-
 pub fn profiles_path(app_id: &str) -> Option<PathBuf> {
     if let Some(xdg_data) = dirs::data_dir() {
         let final_path = xdg_data.join(APP_ID).join("profiles").join(app_id);
