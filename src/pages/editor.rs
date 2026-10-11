@@ -10,8 +10,11 @@ use cosmic::{
 use rand::RngExt;
 use strum::IntoEnumIterator as _;
 use webapps::{
-    APP_ICON, Category, WebappIcon, browser::BrowserConfig, fl, is_profile_path_readonly,
-    launcher::WebappLauncher, url_valid, webapp_id,
+    APP_ICON, Category, WebappIcon,
+    browser::{BrowserConfig, BrowserT},
+    fl, is_profile_path_readonly,
+    launcher::WebappLauncher,
+    url_valid, webapp_id,
 };
 
 use crate::pages;
@@ -210,15 +213,18 @@ impl AppEditor {
                 self.custom_params = s;
             }
             Message::Done => {
-                if let Some(profile) = &self.app_profile {
-                    if is_profile_path_readonly(&PathBuf::from(&profile)) {
-                        return Task::done(Action::App(pages::Message::ShowWarningDialog(
-                            profile.clone(),
-                        )));
-                    }
-                }
-
                 if let Some(browser) = &self.app_browser {
+                    if let Some(profile) = &self.app_profile {
+                        if (browser.browser_t == BrowserT::Firefox
+                            || browser.browser_t == BrowserT::Zen)
+                            && is_profile_path_readonly(&PathBuf::from(&profile))
+                        {
+                            return Task::done(Action::App(pages::Message::ShowWarningDialog(
+                                profile.clone(),
+                            )));
+                        }
+                    }
+
                     let webapp_launcher = WebappLauncher {
                         browser: Some(browser.clone()),
                         unique_id: self.app_id.clone(),
