@@ -138,6 +138,7 @@ impl Application for QuickWebApps {
                     fl!("support"),
                     "https://github.com/cosmic-utils/web-apps/issues",
                 ),
+                (fl!("support-me"), "https://github.com/sponsors/hepp3n"),
             ]);
 
         let app = QuickWebApps {
