@@ -48,7 +48,13 @@
   </provides>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/3.0.0/resources/screenshots/window.png</image>
+      <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/4.0.0/resources/screenshots/window-dark.png</image>
+      <caption>Opened app</caption>
+      <caption xml:lang="cs">Otevřená aplikace</caption>
+      <caption xml:lang="uk">Відкритий застосунок</caption>
+    </screenshot>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/4.0.0/resources/screenshots/window-light.png</image>
       <caption>Opened app</caption>
       <caption xml:lang="cs">Otevřená aplikace</caption>
       <caption xml:lang="uk">Відкритий застосунок</caption>
@@ -67,9 +73,12 @@
     <control>pointing</control>
   </supports>
   <releases>
-    <release version="3.0.0" date="2026-03-01">
+    <release version="4.0.0" date="2026-10-11">
       <description>
-        <p>Many improvements for everything.</p>
+        <p>Breaking Changes!</p>
+	<p>Now uses your installed browser as a webapp</p>
+	<p>Updated libcosmic and other dependencies</p>
+	<p>More native and less bugs, I believe</p>
       </description>
     </release>
   </releases>
