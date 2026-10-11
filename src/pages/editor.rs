@@ -399,21 +399,21 @@ impl AppEditor {
                             fl!("non-standard-arguments"),
                             widget::text_input("--window-size=800,600", &self.custom_params)
                                 .on_input(Message::CustomParams),
-                        ))
-                        .add(widget::settings::item(
-                            "",
-                            widget::button::suggested(fl!("create")).on_press_maybe(
-                                if webapps::launcher::webapplauncher_is_valid(
-                                    &self.app_title,
-                                    &Some(self.app_url.clone()),
-                                ) {
-                                    Some(Message::Done)
-                                } else {
-                                    None
-                                },
-                            ),
                         )),
-                ),
+                )
+                .push(widget::settings::item(
+                    "",
+                    widget::button::suggested(fl!("create")).on_press_maybe(
+                        if webapps::launcher::webapplauncher_is_valid(
+                            &self.app_title,
+                            &Some(self.app_url.clone()),
+                        ) {
+                            Some(Message::Done)
+                        } else {
+                            None
+                        },
+                    ),
+                )),
         ))
         .max_width(1000)
         .into()
