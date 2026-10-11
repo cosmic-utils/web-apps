@@ -352,8 +352,16 @@ pub fn try_chromium_classname(browser_prefix: &str, url: &str) -> String {
 
     if let Ok(url) = url::Url::parse(url) {
         if let Some(domain) = url.domain() {
-            class_name_from_url.push_str(&format!("{}-{}__-Default", browser_prefix, domain));
+            class_name_from_url.push_str(&format!("{}-{}_", browser_prefix, domain));
         }
+        if let Some(segments) = url.path_segments().map(|c| c.collect::<Vec<_>>()) {
+            for segment in segments {
+                class_name_from_url.push_str(&format!("_{}", segment));
+            }
+        } else {
+            class_name_from_url.push_str("_");
+        }
+        class_name_from_url.push_str("-Default");
     }
 
     class_name_from_url
