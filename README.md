@@ -78,3 +78,9 @@ I would recommend pulling Papirus icons, it's simple as that:
 # License
 
 Code is distributed with [GPL-3.0 license](https://github.com/cosmic-utils/web-apps/blob/master/LICENSE)
+
+# Credits
+
+- system76 for [libcosmic](https://github.com/pop-os/libcosmic)
+- Linux Mint's [WebApp Manager](https://github.com/linuxmint/webapp-manager/tree/master) for ideas and solutions
+- [Papirus Icons Pack](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) for huge amount of icons to use
