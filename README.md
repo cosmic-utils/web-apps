@@ -8,7 +8,8 @@
 
   <br>
 
-  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/resources/screenshots/window.png" width="512">
+  <img alt="Quick Web Apps (light)" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/resources/screenshots/window-light.png" width="360">
+  <img alt="Quick Web Apps (dark)" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/resources/screenshots/window-dark.png" width="360">
 
 <br><br><br>
 
