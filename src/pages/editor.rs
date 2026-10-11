@@ -280,20 +280,22 @@ impl AppEditor {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
+        let spacing = cosmic::theme::active().cosmic().spacing;
+
         let browsers: Vec<String> = self
             .app_browsers
             .iter()
             .map(|b| b.display_name.to_string())
             .collect();
 
-        widget::scrollable(
-            widget::container(
+        widget::container(
+            widget::scrollable(
                 widget::Column::new()
-                    .spacing(24)
+                    .spacing(spacing.space_xs)
                     .push(
                         widget::container(
                             widget::Row::new()
-                                .spacing(12)
+                                .spacing(spacing.space_xs)
                                 .push(
                                     widget::container(icon_iced_element(&self.app_icon))
                                         .width(96.)
@@ -303,8 +305,8 @@ impl AppEditor {
                                 .push(
                                     widget::container(
                                         widget::Column::new()
-                                            .spacing(12)
-                                            .push(widget::text::title3(format!(
+                                            .spacing(spacing.space_xs)
+                                            .push(widget::text::title4(format!(
                                                 "{}: {}",
                                                 fl!("title"),
                                                 if self.app_title.is_empty() {
@@ -323,13 +325,12 @@ impl AppEditor {
                                     .align_y(Vertical::Center),
                                 ),
                         )
-                        .padding(12)
                         .width(Length::Fill)
                         .class(style::Container::Card),
                     )
                     .push(
                         widget::Row::new()
-                            .spacing(8)
+                            .spacing(spacing.space_xs)
                             .push(
                                 widget::text_input(fl!("title"), &self.app_title)
                                     .on_input(Message::Title),
@@ -421,9 +422,9 @@ impl AppEditor {
                         },
                     )),
             )
-            .padding(cosmic::iced::Padding::new(0.).left(30.0).right(30.0))
-            .max_width(1000),
+            .padding(spacing.space_xs),
         )
+        .max_width(1000)
         .into()
     }
 }

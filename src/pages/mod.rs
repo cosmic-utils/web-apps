@@ -54,6 +54,7 @@ pub enum Message {
     LoadThemes,
     OpenFileResult(String),
     OpenIconPicker,
+    OpenIconPickerDialog,
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
     PushIcon(WebappIcon),
@@ -432,6 +433,43 @@ impl Application for QuickWebApps {
             Message::OpenIconPicker => {
                 self.dialogs = Some(Dialogs::IconPicker(IconPicker::default()));
             }
+            Message::OpenIconPickerDialog => {
+                return task::future(async move {
+                    let result = SelectedFiles::open_file()
+                        .title("Open icon")
+                        .accept_label("Open")
+                        .modal(true)
+                        .multiple(false)
+                        .filter(FileFilter::new("PNG Image").glob("*.png"))
+                        .filter(FileFilter::new("SVG Images").glob("*.svg"))
+                        .send()
+                        .await
+                        .unwrap()
+                        .response();
+
+                    if let Ok(result) = result {
+                        let files = result
+                            .uris()
+                            .iter()
+                            .map(|file| {
+                                let mut file_path = file.as_str();
+                                println!("file path: {}", file_path);
+
+                                if file_path.starts_with("file://") {
+                                    file_path =
+                                        file_path.strip_prefix("file://").expect("removing prefix");
+                                }
+
+                                file_path.to_string()
+                            })
+                            .collect::<Vec<String>>();
+
+                        cosmic::action::app(Message::OpenFileResult(files[0].clone()))
+                    } else {
+                        cosmic::action::none()
+                    }
+                });
+            }
             Message::OpenThemeResult(theme) => {
                 if !theme.is_empty() {
                     let from_path = Path::new(&theme);
@@ -652,7 +690,11 @@ impl Application for QuickWebApps {
             let element = match dialog {
                 Dialogs::IconPicker(icon_picker) => widget::dialog()
                     .primary_action(
-                        widget::button::standard(fl!("close")).on_press(Message::CloseDialog),
+                        widget::button::standard(fl!("open"))
+                            .on_press(Message::OpenIconPickerDialog),
+                    )
+                    .secondary_action(
+                        widget::button::destructive(fl!("close")).on_press(Message::CloseDialog),
                     )
                     .control(icon_picker.view().map(Message::IconPicker)),
                 Dialogs::Confirmation((entity, title)) => widget::dialog()
@@ -672,11 +714,10 @@ impl Application for QuickWebApps {
                     .title(fl!("icons-installer-header"))
                     .body(self.downloader_output.clone())
                     .primary_action(
-                        widget::button::destructive(fl!("cancel"))
-                            .on_press(Message::DownloaderStop),
+                        widget::button::standard(fl!("cancel")).on_press(Message::DownloaderStop),
                     )
                     .secondary_action(
-                        widget::button::suggested(fl!("close")).on_press(Message::CloseDialog),
+                        widget::button::destructive(fl!("close")).on_press(Message::CloseDialog),
                     ),
                 Dialogs::SandboxWarning(path) => {
                     let path = std::path::PathBuf::from(path.clone());

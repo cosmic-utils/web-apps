@@ -1,4 +1,3 @@
-use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
     Element, Task,
     action::Action,
@@ -14,7 +13,6 @@ use crate::pages;
 pub enum Message {
     CustomIconsSearch(String),
     DownloadIconsPack,
-    OpenIconPickerDialog,
     IconSearch,
     SetIcon(Option<WebappIcon>),
 }
@@ -36,43 +34,6 @@ impl IconPicker {
         match message {
             Message::CustomIconsSearch(input) => self.icon_searching = input,
             Message::DownloadIconsPack => return task::message(pages::Message::DownloaderStarted),
-            Message::OpenIconPickerDialog => {
-                return task::future(async move {
-                    let result = SelectedFiles::open_file()
-                        .title("Open icon")
-                        .accept_label("Open")
-                        .modal(true)
-                        .multiple(false)
-                        .filter(FileFilter::new("PNG Image").glob("*.png"))
-                        .filter(FileFilter::new("SVG Images").glob("*.svg"))
-                        .send()
-                        .await
-                        .unwrap()
-                        .response();
-
-                    if let Ok(result) = result {
-                        let files = result
-                            .uris()
-                            .iter()
-                            .map(|file| {
-                                let mut file_path = file.as_str();
-                                println!("file path: {}", file_path);
-
-                                if file_path.starts_with("file://") {
-                                    file_path =
-                                        file_path.strip_prefix("file://").expect("removing prefix");
-                                }
-
-                                file_path.to_string()
-                            })
-                            .collect::<Vec<String>>();
-
-                        cosmic::action::app(pages::Message::OpenFileResult(files[0].clone()))
-                    } else {
-                        cosmic::action::none()
-                    }
-                });
-            }
             Message::IconSearch => {
                 self.icons.clear();
 
@@ -91,33 +52,26 @@ impl IconPicker {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let icons_input = widget::text_input(fl!("icon-name-to-find"), &self.icon_searching)
-            .on_input(Message::CustomIconsSearch)
-            .on_submit(|_| Message::IconSearch);
-        let button = widget::button::standard(fl!("open")).on_press(Message::OpenIconPickerDialog);
-
-        widget::Column::new()
-            .spacing(30)
-            .push(
-                widget::container(
-                    widget::Row::new()
-                        .spacing(8)
-                        .push(icons_input)
-                        .push(button)
-                        .push_maybe(
-                            if !webapps::icon_pack_installed() && !webapps::is_flatpak() {
-                                Some(
-                                    widget::button::standard(fl!("download"))
-                                        .on_press(Message::DownloadIconsPack),
-                                )
-                            } else {
-                                None
-                            },
-                        ),
-                )
-                .padding(8),
-            )
-            .push_maybe(if !self.icons.is_empty() {
+        widget::ListColumn::new()
+            .add(widget::container(
+                widget::Row::new()
+                    .push(
+                        widget::inline_input(fl!("icon-name-to-find"), &self.icon_searching)
+                            .on_input(Message::CustomIconsSearch)
+                            .on_submit(|_| Message::IconSearch),
+                    )
+                    .push_maybe(
+                        if !webapps::icon_pack_installed() && !webapps::is_flatpak() {
+                            Some(
+                                widget::button::link(fl!("download"))
+                                    .on_press(Message::DownloadIconsPack),
+                            )
+                        } else {
+                            None
+                        },
+                    ),
+            ))
+            .add(if !self.icons.is_empty() {
                 Some(
                     widget::container(widget::scrollable(widget::flex_row(
                         self.icons
@@ -126,14 +80,14 @@ impl IconPicker {
                                 webapps::IconType::Raster => widget::button::custom(
                                     widget::icon::from_raster_bytes(icon.buffer.clone())
                                         .icon()
-                                        .size(48),
+                                        .size(42),
                                 )
                                 .on_press(Message::SetIcon(Some(icon.clone())))
                                 .class(cosmic::theme::Button::Icon),
                                 webapps::IconType::Svg => widget::button::custom(
                                     widget::icon::from_svg_bytes(icon.buffer.clone())
                                         .icon()
-                                        .size(48),
+                                        .size(42),
                                 )
                                 .on_press(Message::SetIcon(Some(icon.clone())))
                                 .class(cosmic::theme::Button::Icon),
