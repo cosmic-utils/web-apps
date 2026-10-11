@@ -1,6 +1,8 @@
-APPID		:= 'dev.heppen.webapps'
-PREFIX		:= env("HOME", "/usr") / ".local"
-XDG_DATA	:= env("XDG_DATA_HOME", PREFIX / "share") / APPID
+APPID := 'dev.heppen.webapps'
+PREFIX := env("HOME", "/usr") / ".local"
+XDG_DATA := env("XDG_DATA_HOME", PREFIX / "share") / APPID
+
+FLATPAK_MANIFEST := (APPID + '.json')
 
 BASE_DIR := PREFIX
 
@@ -23,6 +25,10 @@ default: build
 # Builds the project
 build: format check test
     cargo build --release
+
+# Build the project with flatpak-builder
+build-flatpak: format check test
+	flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir {{FLATPAK_MANIFEST}}
 
 # Checks the project
 check:
