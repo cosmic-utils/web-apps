@@ -47,5 +47,11 @@ pub fn supported_browsers() -> Vec<Browser> {
             "microsoft-edge-stable",
             BrowserT::MsEdge,
         ),
+        Browser::new(
+            "Librewolf",
+            "io.gitlab.librewolf-community",
+            "librewolf",
+            BrowserT::Firefox,
+        ),
     ]
 }
