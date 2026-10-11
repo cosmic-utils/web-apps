@@ -218,6 +218,7 @@ impl AppEditor {
                         if (browser.browser_t == BrowserT::Firefox
                             || browser.browser_t == BrowserT::Zen)
                             && is_profile_path_readonly(&PathBuf::from(&profile))
+                            && browser.config.isolated_profile
                         {
                             return Task::done(Action::App(pages::Message::ShowWarningDialog(
                                 profile.clone(),
