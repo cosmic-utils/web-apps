@@ -374,6 +374,7 @@ impl Application for QuickWebApps {
             Message::LoadThemes => {
                 self.themes_list.clear();
 
+                self.themes_list.push(Theme::Default);
                 self.themes_list.push(Theme::Dark);
                 self.themes_list.push(Theme::Light);
 
@@ -406,6 +407,7 @@ impl Application for QuickWebApps {
                 }
 
                 self.theme_idx = self.themes_list.iter().position(|c| match c {
+                    Theme::Default => self.config.app_theme == "Default",
                     Theme::Light => self.config.app_theme == "COSMIC Light",
                     Theme::Dark => self.config.app_theme == "COSMIC Dark",
                     Theme::Custom(theme) => self.config.app_theme == theme.0,
@@ -520,11 +522,11 @@ impl Application for QuickWebApps {
             }
             Message::ResetSettings => {
                 if let Some(handler) = AppConfig::config_handler() {
-                    let _ = self.config.set_app_theme(&handler, String::new());
+                    let _ = self.config.set_app_theme(&handler, "Default".to_string());
                 };
 
                 self.theme_idx = Some(0);
-                return cosmic::command::set_theme(cosmic::theme::system_dark());
+                return cosmic::command::set_theme(cosmic::theme::system_preference());
             }
             Message::SaveLauncher => {
                 return task::message(Message::ReloadNavbarItems);
@@ -577,6 +579,12 @@ impl Application for QuickWebApps {
                             let _ = self.config.set_app_theme(&handler, "COSMIC Dark".into());
                         };
                         set_theme(cosmic::theme::system_dark())
+                    }
+                    Theme::Default => {
+                        if let Some(handler) = AppConfig::config_handler() {
+                            let _ = self.config.set_app_theme(&handler, "COSMIC Dark".into());
+                        };
+                        set_theme(cosmic::theme::system_preference())
                     }
                     _ => Task::none(),
                 };

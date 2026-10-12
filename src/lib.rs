@@ -26,6 +26,7 @@ pub const APP_ICON: &[u8] =
 #[derive(Debug, Default, Clone)]
 pub enum Theme {
     #[default]
+    Default,
     Light,
     Dark,
     Custom((String, Box<cosmic_theme::Theme>)),
@@ -34,6 +35,7 @@ pub enum Theme {
 impl AsRef<str> for Theme {
     fn as_ref(&self) -> &str {
         match self {
+            Theme::Default => "Default",
             Theme::Light => "COSMIC Light",
             Theme::Dark => "COSMIC Dark",
             Theme::Custom(theme) => &theme.0,
@@ -47,7 +49,7 @@ impl Theme {
             return Self::Custom((name, Box::new(palette.build())));
         }
 
-        Self::Light
+        Self::Default
     }
 
     pub fn to_cosmic_theme(&self) -> cosmic::Theme {
