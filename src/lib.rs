@@ -764,43 +764,16 @@ fn generate_random_color() -> String {
 
 pub fn generate_icon(first_letter: &str) -> Option<WebappIcon> {
     let color = generate_random_color();
-    let stroke = generate_random_color();
-
     let file_name = format!("{}_{}.svg", first_letter, &color);
 
     let svg_document = format!(
         r#"<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-   width="512"
-   height="512"
-   viewBox="0 0 135.46666 135.46667"
-   version="1.1"
-   id="svg1"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <defs
-     id="defs1" />
-  <circle
-     fill="{}"
-     stroke="{}"
-     stroke-width="3"
-     id="path1"
-     cx="50%"
-     cy="50%"
-     r="65" />
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:88.1944px;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;fill:#ffffff;fill-opacity:1;stroke-width:0.264583"
-     x="50%"
-     y="50%"
-     dominant-baseline="middle"
-     text-anchor="middle"
-     id="text1">{}</text>
+<svg width="256" height="256">
+  <circle cx="125" cy="125" r="100" fill="{}" />
+  <text x="50%" y="50%" text-anchor="middle" fill="white" font-size="128px" dy=".3em">{}</text>
 </svg>
 "#,
-        color, stroke, first_letter
+        color, first_letter
     );
 
     if let Some(mut source) = icons_location() {
