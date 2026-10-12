@@ -62,7 +62,6 @@ impl Installation {
                     dir.push("app");
                     dir.push(browser_id);
                     dir.push("data");
-                    dir.push(APP_ID);
                     dir.push(webapp_id);
                     return Some(dir);
                 }
@@ -72,7 +71,6 @@ impl Installation {
                     dir.push("snap");
                     dir.push(browser_exe);
                     dir.push("common");
-                    dir.push(APP_ID);
                     dir.push(webapp_id);
                     return Some(dir);
                 }
