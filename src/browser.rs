@@ -1,10 +1,10 @@
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{APP_ID, is_flatpak, supported_browsers::supported_browsers};
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, Hash, PartialEq, Eq)]
 pub enum Installation {
     System,
     Flatpak,
@@ -21,8 +21,16 @@ impl From<&PathBuf> for Installation {
             return Installation::Snap;
         }
 
-        if value.starts_with("/var/lib/flatpak") || value.starts_with("/home") {
+        if value.starts_with("/var/lib/flatpak") {
             return Installation::Flatpak;
+        }
+
+        if let Some(mut dir) = dirs::home_dir() {
+            dir.push(".local/share/flatpak");
+
+            if value.starts_with(dir) {
+                return Installation::Flatpak;
+            }
         }
 
         Installation::System
@@ -54,6 +62,7 @@ impl Installation {
                     dir.push("app");
                     dir.push(browser_id);
                     dir.push("data");
+                    dir.push(APP_ID);
                     dir.push(webapp_id);
                     return Some(dir);
                 }
@@ -63,6 +72,7 @@ impl Installation {
                     dir.push("snap");
                     dir.push(browser_exe);
                     dir.push("common");
+                    dir.push(APP_ID);
                     dir.push(webapp_id);
                     return Some(dir);
                 }
@@ -73,7 +83,7 @@ impl Installation {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, Hash, PartialEq, Eq)]
 pub enum BrowserT {
     Brave,
     Chromium,
@@ -86,7 +96,7 @@ pub enum BrowserT {
     Zen,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, Hash, PartialEq, Eq)]
 pub struct BrowserConfig {
     pub class_name: String,
     pub isolated_profile: bool,
@@ -119,7 +129,7 @@ impl BrowserConfig {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, Hash, PartialEq, Eq)]
 pub struct Browser {
     pub display_name: String,
     pub app_id: String,
@@ -318,28 +328,20 @@ pub fn common_install_paths() -> Vec<PathBuf> {
     if is_flatpak() { sandboxed_paths } else { paths }
 }
 
-pub fn installed_browsers() -> Vec<Browser> {
-    let mut installed: Vec<Browser> = vec![];
+pub fn installed_browsers() -> HashSet<Browser> {
+    let mut installed: HashSet<Browser> = HashSet::new();
 
     for browser in &mut supported_browsers() {
         for path in &common_install_paths() {
-            let by_id = path.join(&browser.app_id);
+            let app_id_path = path.join(&browser.app_id);
+            let bin_path = path.join(&browser.executable_name);
 
-            if by_id.exists() {
-                browser.update_with_path(by_id);
-                if !installed.contains(&browser) {
-                    installed.push(browser.clone());
-                    continue;
-                }
-            }
-
-            let final_path = path.join(&browser.executable_name);
-
-            if final_path.exists() {
-                browser.update_with_path(final_path);
-                if !installed.contains(&browser) {
-                    installed.push(browser.clone());
-                }
+            if app_id_path.exists() {
+                browser.update_with_path(app_id_path);
+                installed.insert(browser.clone());
+            } else if bin_path.exists() {
+                browser.update_with_path(bin_path);
+                installed.insert(browser.clone());
             }
         }
     }

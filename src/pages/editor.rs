@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf, sync::LazyLock};
 
 use cosmic::{
     Element, Task,
@@ -11,7 +11,7 @@ use rand::RngExt;
 use strum::IntoEnumIterator as _;
 use webapps::{
     APP_ICON, Category, WebappIcon,
-    browser::{BrowserConfig, BrowserT},
+    browser::{Browser, BrowserConfig, BrowserT, installed_browsers},
     fl, is_profile_path_readonly,
     launcher::WebappLauncher,
     url_valid, webapp_id,
@@ -19,11 +19,13 @@ use webapps::{
 
 use crate::pages;
 
+static INSTALLED_BROWSERS: LazyLock<HashSet<Browser>> = LazyLock::new(|| installed_browsers());
+
 #[derive(Debug, Clone)]
 pub struct AppEditor {
-    pub app_browsers: Vec<webapps::browser::Browser>,
     pub app_browser: Option<webapps::browser::Browser>,
     pub app_browser_selection: Option<usize>,
+    pub browser_config: BrowserConfig,
     pub app_profile: Option<String>,
     pub app_id: String,
     pub app_num_id: u16,
@@ -42,14 +44,13 @@ impl Default for AppEditor {
         let categories = webapps::Category::iter()
             .map(|c| c.name())
             .collect::<Vec<String>>();
-        let installed_browsers = webapps::browser::installed_browsers();
 
         let num_id = rand::rng().random_range(1000..10000);
 
         let mut editor = AppEditor {
-            app_browser_selection: None,
             app_browser: None,
-            app_browsers: installed_browsers.clone(),
+            app_browser_selection: None,
+            browser_config: BrowserConfig::default(),
             app_profile: None,
             app_id: String::new(),
             app_num_id: num_id,
@@ -63,9 +64,9 @@ impl Default for AppEditor {
             is_installed: false,
         };
 
-        if !installed_browsers.is_empty() {
+        if !INSTALLED_BROWSERS.is_empty() {
             editor.app_browser_selection = Some(0);
-            editor.app_browser = Some(installed_browsers[0].clone());
+            editor.app_browser = INSTALLED_BROWSERS.iter().next().cloned();
         }
 
         editor
@@ -102,9 +103,7 @@ impl AppEditor {
             .map(|c| c)
             .unwrap_or_default();
 
-        let installed_browsers = webapps::browser::installed_browsers();
-
-        let app_browser_selection = installed_browsers
+        let app_browser_selection = INSTALLED_BROWSERS
             .iter()
             .position(|b| b.executable_path == browser.executable_path);
 
@@ -118,7 +117,7 @@ impl AppEditor {
         Some(Self {
             app_browser_selection,
             app_browser: Some(browser.clone()),
-            app_browsers: installed_browsers.clone(),
+            browser_config: browser.config.clone(),
             app_profile: browser.config.profile_path.clone(),
             app_id: value.unique_id.clone(),
             app_num_id,
@@ -146,13 +145,13 @@ impl AppEditor {
         };
 
         if url_valid(&self.app_url) {
-            browser.config.url = self.app_url.clone();
+            self.browser_config.url = self.app_url.clone();
         }
 
         // set classname
         // workaround for chromium browser since they does not respect --class argument
         // on wayland
-        browser.config.class_name = match browser.browser_t {
+        self.browser_config.class_name = match browser.browser_t {
             webapps::browser::BrowserT::Brave => {
                 webapps::browser::try_chromium_classname("brave", &self.app_url)
             }
@@ -172,40 +171,34 @@ impl AppEditor {
             self.app_profile = Some(path.to_str().unwrap_or_default().to_string())
         }
 
-        browser.config.set_profile_path(self.app_profile.clone());
+        self.browser_config
+            .set_profile_path(self.app_profile.clone());
+        self.browser_config.custom_parameters = self.custom_params.clone();
 
-        browser.config.custom_parameters = self.custom_params.clone();
+        browser.config = self.browser_config.clone();
     }
 
     pub fn update(&mut self, message: Message) -> Task<Action<crate::pages::Message>> {
         match message {
             Message::AppIsolated(flag) => {
-                if let Some(browser) = self.app_browser.as_mut() {
-                    browser.config.isolated_profile = flag;
-
-                    if !flag {
-                        self.app_profile = None;
-                    }
+                self.browser_config.isolated_profile = flag;
+                if !flag {
+                    self.app_profile = None;
                 }
             }
             Message::AppPrivateMode(flag) => {
-                if let Some(browser) = self.app_browser.as_mut() {
-                    browser.config.private_mode = flag;
-                }
+                self.browser_config.private_mode = flag;
             }
             Message::Browser(idx) => {
                 self.app_browser_selection = Some(idx);
-                let mut browser_config = BrowserConfig::default();
+                self.app_browser = INSTALLED_BROWSERS
+                    .iter()
+                    .enumerate()
+                    .find(|(idx, _b)| Some(idx) == self.app_browser_selection.as_ref())
+                    .map(|(_, b)| b.clone());
 
-                if let Some(browser) = &self.app_browser {
-                    browser_config = browser.config.clone();
-                }
-
-                self.app_browser = Some(self.app_browsers[idx].clone());
-
-                // recovery previous config if browser was selected
                 if let Some(browser) = self.app_browser.as_mut() {
-                    browser.config = browser_config;
+                    browser.config = self.browser_config.clone();
                 }
             }
             Message::Category(idx) => {
@@ -279,8 +272,7 @@ impl AppEditor {
     pub fn view(&self) -> Element<'_, Message> {
         let spacing = cosmic::theme::active().cosmic().spacing;
 
-        let browsers: Vec<String> = self
-            .app_browsers
+        let browsers: Vec<String> = INSTALLED_BROWSERS
             .iter()
             .map(|b| b.display_name.to_string())
             .collect();
@@ -363,21 +355,13 @@ impl AppEditor {
                         ))
                         .add(widget::settings::item(
                             fl!("isolated-profile"),
-                            widget::toggler(if let Some(browser) = &self.app_browser {
-                                browser.config.isolated_profile
-                            } else {
-                                true
-                            })
-                            .on_toggle(Message::AppIsolated),
+                            widget::toggler(self.browser_config.isolated_profile)
+                                .on_toggle(Message::AppIsolated),
                         ))
                         .add(widget::settings::item(
                             fl!("private-mode"),
-                            widget::toggler(if let Some(browser) = &self.app_browser {
-                                browser.config.private_mode
-                            } else {
-                                false
-                            })
-                            .on_toggle(Message::AppPrivateMode),
+                            widget::toggler(self.browser_config.private_mode)
+                                .on_toggle(Message::AppPrivateMode),
                         ))
                         .add(widget::settings::item(
                             fl!("non-standard-arguments"),

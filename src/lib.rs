@@ -501,7 +501,7 @@ fn profile_templates() -> PathBuf {
             .unwrap_or(PathBuf::from("/usr"))
     };
 
-    prefix.join("share").join(APP_ID)
+    prefix.join("share").join(APP_ID).join("data")
 }
 
 pub fn install_firefox_empty_profile(dst: &str) -> std::io::Result<()> {
