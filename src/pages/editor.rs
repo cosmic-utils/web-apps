@@ -300,35 +300,25 @@ impl AppEditor {
                             .spacing(spacing.space_xs)
                             .push(
                                 widget::container(icon_iced_element(&self.app_icon))
-                                    .width(96.)
-                                    .height(96.)
+                                    .width(72.)
+                                    .height(72.)
                                     .align_y(Vertical::Center),
                             )
                             .push(
                                 widget::container(
                                     widget::Column::new()
-                                        .spacing(spacing.space_xs)
-                                        .push(widget::text::title4(format!(
-                                            "{}: {}",
-                                            fl!("title"),
-                                            if self.app_title.is_empty() {
-                                                fl!("new-webapp-title")
-                                            } else {
-                                                self.app_title.clone()
-                                            }
-                                        )))
-                                        .push(widget::text::title4(format!(
-                                            "{}: {}",
-                                            fl!("category"),
-                                            self.app_category.name()
-                                        ))),
+                                        .push(widget::text::title4(if self.app_title.is_empty() {
+                                            fl!("new-webapp-title")
+                                        } else {
+                                            self.app_title.clone()
+                                        }))
+                                        .push(widget::text(self.app_category.name())),
                                 )
-                                .height(Length::Fixed(96.))
+                                .height(Length::Fixed(72.))
                                 .align_y(Vertical::Center),
                             ),
                     )
-                    .width(Length::Fill)
-                    .class(style::Container::Card),
+                    .width(Length::Fill),
                 )
                 .push(
                     widget::Row::new()
@@ -360,7 +350,7 @@ impl AppEditor {
                 )
                 .push(widget::text_input(fl!("url"), &self.app_url).on_input(Message::Url))
                 .push(
-                    widget::settings::section()
+                    widget::list_column::list_column()
                         .add(widget::settings::item(
                             fl!("select-category"),
                             widget::dropdown(
