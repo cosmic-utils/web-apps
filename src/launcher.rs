@@ -198,12 +198,14 @@ impl WebappLauncher {
                 let _ = create_dir_all(path);
             }
 
-            if browser.browser_t == BrowserT::Firefox {
-                let _ = install_firefox_empty_profile(profile);
-            }
+            if browser.config.isolated_profile {
+                if browser.browser_t == BrowserT::Firefox {
+                    let _ = install_firefox_empty_profile(profile);
+                }
 
-            if browser.browser_t == BrowserT::Zen {
-                let _ = install_zen_empty_profile(profile);
+                if browser.browser_t == BrowserT::Zen {
+                    let _ = install_zen_empty_profile(profile);
+                }
             }
         }
 

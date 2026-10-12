@@ -1,6 +1,6 @@
 APPID := 'dev.heppen.webapps'
 PREFIX := env("HOME", "/usr") / ".local"
-XDG_DATA := env("XDG_DATA_HOME", PREFIX / "share") / APPID
+DATA_DIR := env("XDG_DATA_HOME", PREFIX / "share") / APPID
 
 FLATPAK_MANIFEST := (APPID + '.json')
 
@@ -55,7 +55,8 @@ run-dev: build-debug
     cargo run
 
 install-data:
-	@cp -rv "./data" {{XDG_DATA}}
+	mkdir -p {{DATA_DIR}}
+	cp -rv "data" {{DATA_DIR}}
 
 # Installs files
 install: install-data
@@ -73,7 +74,7 @@ uninstall:
     rm -v {{DESKTOP_DST}}
     rm -v {{METAINFO_DST}}
     rm -v {{ICON_DST}}/*/apps/{{APPID}}.png
-    rm -rv {{XDG_DATA}}
+    rm -rv {{DATA_DIR}}
 	
 # Vendor dependencies locally
 vendor:
