@@ -1,11 +1,11 @@
 use dircpy::copy_dir;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 use std::fs::Permissions;
 use std::{ffi::OsStr, os::unix::fs::PermissionsExt as _, path::PathBuf, str::FromStr};
 use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
 
 use cosmic::cosmic_config::{self, CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry};
-use cosmic::cosmic_theme::{self, ThemeBuilder};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use url::Url;
@@ -29,34 +29,27 @@ pub enum Theme {
     Default,
     Light,
     Dark,
-    Custom((String, Box<cosmic_theme::Theme>)),
+    Custom(String),
 }
 
 impl AsRef<str> for Theme {
     fn as_ref(&self) -> &str {
         match self {
             Theme::Default => "Default",
-            Theme::Light => "COSMIC Light",
-            Theme::Dark => "COSMIC Dark",
-            Theme::Custom(theme) => &theme.0,
+            Theme::Light => "Light",
+            Theme::Dark => "Dark",
+            Theme::Custom(n) => n,
         }
     }
 }
 
-impl Theme {
-    pub fn build(name: String, value: String) -> Self {
-        if let Ok(palette) = ron::from_str::<ThemeBuilder>(&value) {
-            return Self::Custom((name, Box::new(palette.build())));
-        }
-
-        Self::Default
-    }
-
-    pub fn to_cosmic_theme(&self) -> cosmic::Theme {
+impl Display for Theme {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Theme::Light => cosmic::theme::system_light(),
-            Theme::Dark => cosmic::theme::system_dark(),
-            _ => cosmic::theme::system_preference(),
+            Theme::Default => write!(f, "Default"),
+            Theme::Light => write!(f, "Light"),
+            Theme::Dark => write!(f, "Dark"),
+            Theme::Custom(name) => write!(f, "{}", name),
         }
     }
 }
@@ -65,11 +58,6 @@ impl Theme {
 #[version = 1]
 pub struct AppConfig {
     pub app_theme: String,
-}
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct WebAppConfig {
-    pub id: String,
 }
 
 impl AppConfig {

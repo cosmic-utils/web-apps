@@ -6,7 +6,7 @@ use cosmic::{
     Application, Element,
     app::{Core, Task, context_drawer},
     command::set_theme,
-    cosmic_theme,
+    cosmic_theme::{self, ThemeBuilder},
     iced::{
         Alignment, Length, Subscription,
         alignment::Horizontal,
@@ -66,7 +66,7 @@ pub enum Message {
     DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(AppConfig),
-    UpdateTheme(Box<Theme>),
+    UpdateTheme(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -155,7 +155,7 @@ impl Application for QuickWebApps {
             downloader_id: 1,
             downloader_output: String::new(),
             themes_list,
-            theme_idx: None,
+            theme_idx: Some(0),
         };
 
         let tasks = vec![
@@ -227,11 +227,7 @@ impl Application for QuickWebApps {
         match message {
             Message::ChangeUserTheme(idx) => {
                 self.theme_idx = Some(idx);
-                let selected = self.themes_list[idx].clone();
-
-                return task::message(cosmic::action::app(Message::UpdateTheme(Box::new(
-                    selected,
-                ))));
+                return task::message(cosmic::action::app(Message::UpdateTheme(idx)));
             }
             Message::CloseDialog => self.dialogs = None,
             Message::ConfirmDeletion(id) => {
@@ -388,38 +384,22 @@ impl Application for QuickWebApps {
                     for path in files {
                         let dir_entry = path.unwrap();
                         let file_name = dir_entry.file_name();
-                        let theme_name = file_name.to_str().unwrap().replace(".ron", "");
-                        let metadata = std::fs::metadata(dir_entry.path());
+                        let theme_name = file_name.to_str().unwrap_or("Custom").replace(".ron", "");
 
-                        if let Ok(meta) = metadata {
-                            if meta.is_file() {
-                                let mut content: String = String::new();
-
-                                let mut file = std::fs::File::open(dir_entry.path()).unwrap();
-                                let _ = file.read_to_string(&mut content);
-
-                                let theme = Theme::build(theme_name.to_string(), content);
-
-                                self.themes_list.push(theme);
-                            }
+                        if dir_entry.path().is_file() {
+                            self.themes_list.push(Theme::Custom(theme_name));
                         }
                     }
                 }
 
-                self.theme_idx = self.themes_list.iter().position(|c| match c {
-                    Theme::Default => self.config.app_theme == "Default",
-                    Theme::Light => self.config.app_theme == "COSMIC Light",
-                    Theme::Dark => self.config.app_theme == "COSMIC Dark",
-                    Theme::Custom(theme) => self.config.app_theme == theme.0,
-                });
+                self.theme_idx = self
+                    .themes_list
+                    .iter()
+                    .position(|t| t.to_string() == self.config.app_theme);
 
-                if self.theme_idx.is_none() {
-                    self.theme_idx = Some(0);
+                if let Some(theme_idx) = self.theme_idx {
+                    return Task::done(cosmic::action::app(Message::UpdateTheme(theme_idx)));
                 }
-
-                return task::message(cosmic::action::app(Message::UpdateTheme(Box::new(
-                    self.themes_list[self.theme_idx.unwrap_or_default()].clone(),
-                ))));
             }
             Message::OpenFileResult(file_path) => {
                 if !file_path.is_empty() {
@@ -555,41 +535,54 @@ impl Application for QuickWebApps {
                     self.core.window.show_context = true;
                 }
             }
-
             Message::UpdateConfig(config) => {
                 self.config = config;
             }
-            Message::UpdateTheme(theme) => {
-                if let Theme::Custom(theme) = *theme {
-                    if let Some(handler) = AppConfig::config_handler() {
-                        let _ = self.config.set_app_theme(&handler, theme.0);
-                    };
-                    return set_theme(cosmic::Theme::custom(Arc::new(*theme.1)));
-                };
+            Message::UpdateTheme(idx) => {
+                let theme = self.themes_list[idx].clone();
 
-                let theme_selector = match *theme {
-                    Theme::Light => {
-                        if let Some(handler) = AppConfig::config_handler() {
-                            let _ = self.config.set_app_theme(&handler, "COSMIC Light".into());
-                        };
-                        set_theme(cosmic::theme::system_light())
-                    }
-                    Theme::Dark => {
-                        if let Some(handler) = AppConfig::config_handler() {
-                            let _ = self.config.set_app_theme(&handler, "COSMIC Dark".into());
-                        };
-                        set_theme(cosmic::theme::system_dark())
-                    }
-                    Theme::Default => {
-                        if let Some(handler) = AppConfig::config_handler() {
-                            let _ = self.config.set_app_theme(&handler, "Default".into());
-                        };
-                        set_theme(cosmic::theme::system_preference())
-                    }
-                    _ => Task::none(),
-                };
+                if let Some(handler) = AppConfig::config_handler() {
+                    let _ = self.config.set_app_theme(&handler, theme.to_string());
+                }
 
-                tasks.push(theme_selector);
+                return match theme {
+                    Theme::Default => set_theme(cosmic::theme::system_preference()),
+                    Theme::Dark => set_theme(cosmic::theme::system_dark()),
+                    Theme::Light => set_theme(cosmic::theme::system_light()),
+                    Theme::Custom(name) => {
+                        let Some(folder) = webapps::themes_path("") else {
+                            return Task::none();
+                        };
+
+                        let dir = read_dir(folder);
+
+                        if let Ok(files) = dir {
+                            for path in files {
+                                let dir_entry = path.unwrap();
+                                let file_name = dir_entry.file_name();
+                                let theme_name =
+                                    file_name.to_str().unwrap_or("Custom").replace(".ron", "");
+
+                                if dir_entry.path().is_file() {
+                                    if theme_name == name {
+                                        let mut content = String::new();
+                                        let mut file =
+                                            std::fs::File::open(dir_entry.path()).unwrap();
+                                        let _ = file.read_to_string(&mut content);
+
+                                        if let Ok(palette) = ron::from_str::<ThemeBuilder>(&content)
+                                        {
+                                            return set_theme(cosmic::theme::Theme::custom(
+                                                Arc::new(palette.build()),
+                                            ));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Task::none()
+                    }
+                };
             }
         };
 
