@@ -582,7 +582,7 @@ impl Application for QuickWebApps {
                     }
                     Theme::Default => {
                         if let Some(handler) = AppConfig::config_handler() {
-                            let _ = self.config.set_app_theme(&handler, "COSMIC Dark".into());
+                            let _ = self.config.set_app_theme(&handler, "Default".into());
                         };
                         set_theme(cosmic::theme::system_preference())
                     }
