@@ -8,7 +8,8 @@
 
   <br>
 
-  <img alt="Quick Web Apps" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/resources/screenshots/window.png" width="512">
+  <img alt="Quick Web Apps (light)" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/resources/screenshots/window-light.png" width="360">
+  <img alt="Quick Web Apps (dark)" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/resources/screenshots/window-dark.png" width="360">
 
 <br><br><br>
 
@@ -35,38 +36,51 @@ cd into folder
 
 `cd web-apps`
 
-Building is simple. Make sure you have configured `flathub` remote as `--user`.
+### Native
 
-`flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo`
+`just build && just install`
 
-Install `flatpak-builder`.
+This will build using cargo and install it to `~/.local` prefix. If you want system install change it like that
 
-`flatpak install -y flathub org.flatpak.Builder`
+`just build && sudo just PREIFX=/usr install`
 
-and start the process:
+### Flatpak
 
-`flatpak run --command=flathub-build org.flatpak.Builder --install dev.heppen.webapps.json`
+You will need flathub configured [Setup](https://flathub.org/pl/setup)
+And installed `flatpak-builder` (preferably via your distro package manager)
 
-### Launching
-
-`flatpak run dev.heppen.webapps`
-
-### Uninstall
-
-`flatpak uninstall dev.heppen.webapps`
+`just build-flatpak`
 
 # Usage
 
-Created Web Apps are using WebKitGTK rendering engine.
+Created Web Apps are using your currently installed browser of choice.
 You can create new Web App by filling the form in the editor window. 
 To be able to create Web App you need to provide:
 - valid URL (starting with http:// or https://).
 - name of the application.
-- icon (press the icon button to choose one from your system).
-- the category of the web app
+- icon (generate or press the icon button to choose one from your system).
+- selected browser of choice
 
-For creating launcher, the application uses [DynamicLauncher Portal](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.DynamicLauncher.html). Make sure you have this portal supported on your system.
+# Additional tip
+
+This app can use icons from packs installed in `xdg-data/dev.heppen.webapps/icons` path. If you installed it as flatpak this will lands to `$HOME/.var/app/dev.heppen.webapps/data/dev.heppen.webapps/icons` or `$HOME/.local/share/dev.heppen.webapps/icons` - if built native.
+
+I would recommend pulling Papirus icons, it's simple as that:
+
+### Flatpak
+
+`wget -qO- https://git.io/papirus-icon-theme-install | env DESTDIR="$HOME/.var/app/dev.heppen.webapps/data/dev.heppen.webapps/icons" sh`
+
+### Native
+
+`wget -qO- https://git.io/papirus-icon-theme-install | env DESTDIR="$HOME/.local/share/dev.heppen.webapps/icons" sh`
 
 # License
 
 Code is distributed with [GPL-3.0 license](https://github.com/cosmic-utils/web-apps/blob/master/LICENSE)
+
+# Credits
+
+- system76 for [libcosmic](https://github.com/pop-os/libcosmic)
+- Linux Mint's [WebApp Manager](https://github.com/linuxmint/webapp-manager/tree/master) for ideas and solutions
+- [Papirus Icons Pack](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) for huge amount of icons to use

@@ -1,45 +1,39 @@
 pub mod editor;
 mod iconpicker;
 
-use crate::{config::AppConfig, pages::iconpicker::IconPicker, themes::Theme};
 use ashpd::desktop::file_chooser::{FileFilter, SelectedFiles};
 use cosmic::{
     Application, Element,
     app::{Core, Task, context_drawer},
     command::set_theme,
-    cosmic_theme,
+    cosmic_theme::{self, ThemeBuilder},
     iced::{
         Alignment, Length, Subscription,
         alignment::Horizontal,
-        futures::{SinkExt as _, future},
+        futures::{SinkExt as _, channel::mpsc::Sender, future},
     },
-    surface, task, theme,
+    task, theme,
     widget::{
+        self, RcElementWrapper,
         about::About,
-        self, RcElementWrapper, button, icon,
+        button, icon,
         menu::{self, ItemHeight, ItemWidth},
         nav_bar,
     },
 };
 use editor::AppEditor;
-use ron::ser::to_string_pretty;
 use std::{
-    collections::HashMap,
-    fs::read_dir,
-    io::{Read, Write},
-    path::Path,
-    process::ExitStatus,
-    str::FromStr,
-    sync::{Arc, LazyLock},
+    collections::HashMap, fs::read_dir, io::Read, path::Path, process::ExitStatus, sync::Arc,
     time::Duration,
 };
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
-    process::Command,
     sync::oneshot,
 };
 use tracing::debug;
-use webapps::{APP_ID, fl};
+use webapps::{APP_ICON, APP_ID, AppConfig, Theme, WebappIcon, fl, launcher::installed_webapps};
+
+use crate::pages::iconpicker::IconPicker;
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -56,25 +50,23 @@ pub enum Message {
     IconPicker(iconpicker::Message),
     IconsResult(Vec<String>),
     ImportThemeFilePicker,
-    Launch(webapps::WebviewArgs),
     LaunchUrl(String),
     LoadThemes,
-    OpenFileResult(Vec<String>),
+    OpenFileResult(String),
     OpenIconPicker,
+    OpenIconPickerDialog,
     OpenThemeResult(String),
     ConfirmDeletion(widget::segmented_button::Entity),
-    PushIcon(webapps::Icon),
+    PushIcon(WebappIcon),
     ReloadNavbarItems,
     ResetSettings,
-    SaveLauncher(webapps::launcher::WebAppLauncher),
-    SetIcon(Option<webapps::Icon>),
-    Surface(surface::Action),
+    SaveLauncher,
+    SetIcon(Option<WebappIcon>),
+    ShowWarningDialog(String),
     DownloaderStop,
     ToggleContextPage(ContextPage),
     UpdateConfig(AppConfig),
-    UpdateTheme(Box<Theme>),
-    // emty message
-    None,
+    UpdateTheme(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -87,6 +79,7 @@ pub enum Dialogs {
     IconPicker(IconPicker),
     Confirmation((widget::segmented_button::Entity, String)),
     IconsDownloader,
+    SandboxWarning(String),
 }
 
 pub struct QuickWebApps {
@@ -130,13 +123,13 @@ impl Application for QuickWebApps {
         let about = About::default()
             .name(fl!("app"))
             // TODO: Update icon with a svg
-            .icon(icon::from_name(Self::APP_ID))
+            .icon(icon::from_raster_bytes(APP_ICON))
             .version(env!("CARGO_PKG_VERSION"))
-            .author("hepp3n")
+            .author("heppen")
             .comments(fl!("comment"))
             .license(env!("CARGO_PKG_LICENSE"))
             .license_url("https://spdx.org/licenses/GPL-3.0-only")
-            .developers([("hepp3n", "piotr@heppen.dev")])
+            .developers([("heppen", "piotr@heppen.dev")])
             .links([
                 (
                     fl!("repository"),
@@ -146,6 +139,7 @@ impl Application for QuickWebApps {
                     fl!("support"),
                     "https://github.com/cosmic-utils/web-apps/issues",
                 ),
+                (fl!("support-me"), "https://github.com/sponsors/hepp3n"),
             ]);
 
         let app = QuickWebApps {
@@ -167,7 +161,6 @@ impl Application for QuickWebApps {
         let tasks = vec![
             task::message(Message::ReloadNavbarItems),
             task::message(Message::LoadThemes),
-            task::message(Message::UpdateTheme(Box::new(Theme::Light))),
         ];
 
         (app, Task::batch(tasks))
@@ -183,10 +176,12 @@ impl Application for QuickWebApps {
         );
 
         if self.downloader_started {
-            subscriptions.push(Subscription::run_with_id(
-                self.downloader_id,
-                cosmic::iced::stream::channel(4, move |mut channel| async move {
-                    let script = webapps::add_icon_packs_install_script().await;
+            subscriptions.push(Subscription::run_with(self.downloader_id, |_| {
+                cosmic::iced::stream::channel(4, move |mut channel: Sender<Message>| async move {
+                    let Some(script) = webapps::add_icon_packs_install_script().await else {
+                        return;
+                    };
+
                     let mut child = webapps::execute_script(script).await;
                     let stdout = child
                         .stdout
@@ -219,8 +214,8 @@ impl Application for QuickWebApps {
                     }
 
                     future::pending().await
-                }),
-            ));
+                })
+            }));
         }
 
         Subscription::batch(subscriptions)
@@ -232,11 +227,7 @@ impl Application for QuickWebApps {
         match message {
             Message::ChangeUserTheme(idx) => {
                 self.theme_idx = Some(idx);
-                let selected = self.themes_list[idx].clone();
-
-                tasks.push(task::message(cosmic::action::app(Message::UpdateTheme(
-                    Box::new(selected),
-                ))));
+                return task::message(cosmic::action::app(Message::UpdateTheme(idx)));
             }
             Message::CloseDialog => self.dialogs = None,
             Message::ConfirmDeletion(id) => {
@@ -256,21 +247,24 @@ impl Application for QuickWebApps {
                 if let Some(page) = data {
                     let Page::Editor(app_editor) = page;
 
-                    if let Some(browser) = &app_editor.app_browser {
-                        if let Some(icon) = &app_editor.app_icon {
-                            let launcher = webapps::launcher::WebAppLauncher {
-                                browser: browser.clone(),
-                                name: app_editor.app_title.clone(),
-                                icon: icon.clone(),
-                                category: app_editor.app_category.clone(),
-                            };
+                    let app_unique_id = app_editor.app_id.clone();
 
-                            return task::future(async move {
-                                launcher.delete().await.unwrap();
-                                cosmic::action::app(Message::DeletionDone(id))
-                            });
+                    return task::future(async move {
+                        let launcher = installed_webapps()
+                            .into_iter()
+                            .find(|w| w.unique_id == app_unique_id)
+                            .map(|l| l);
+
+                        let Some(launcher) = launcher else {
+                            return cosmic::action::none();
+                        };
+
+                        if launcher.delete() {
+                            cosmic::action::app(Message::DeletionDone(id))
+                        } else {
+                            return cosmic::action::none();
                         }
-                    }
+                    });
                 }
             }
             Message::DeletionDone(id) => {
@@ -318,18 +312,16 @@ impl Application for QuickWebApps {
             Message::IconsResult(result) => {
                 if let Some(Dialogs::IconPicker(_icon_picker)) = &mut self.dialogs {
                     for path in result {
-                        tasks.push(Task::perform(webapps::image_handle(path), |icon| {
-                            if let Some(icon) = icon {
-                                cosmic::Action::App(Message::PushIcon(icon))
-                            } else {
-                                cosmic::Action::None
-                            }
+                        tasks.push(Task::future(async move {
+                            cosmic::Action::App(Message::PushIcon(WebappIcon::build_from_path(
+                                &path,
+                            )))
                         }))
                     }
                 };
             }
             Message::ImportThemeFilePicker => {
-                return task::future(async {
+                return task::future(async move {
                     let result = SelectedFiles::open_file()
                         .title("Open Theme")
                         .accept_label("Open")
@@ -342,43 +334,33 @@ impl Application for QuickWebApps {
                         .response();
 
                     if let Ok(result) = result {
-                        let files: Vec<String> = result
+                        let files = result
                             .uris()
                             .iter()
-                            .map(|file| file.as_str().to_string())
+                            .map(|file| {
+                                let mut file_path = file.as_str();
+                                println!("file path: {}", file_path);
+
+                                if file_path.starts_with("file://") {
+                                    file_path =
+                                        file_path.strip_prefix("file://").expect("removing prefix");
+                                }
+
+                                file_path.to_string()
+                            })
                             .collect::<Vec<String>>();
 
-                        if !files.is_empty() {
-                            return cosmic::action::app(Message::OpenThemeResult(
-                                urlencoding::decode(&files[0])
-                                    .unwrap_or_default()
-                                    .to_string(),
-                            ));
-                        }
-                        cosmic::action::none()
-                    } else {
-                        cosmic::action::none()
+                        return cosmic::action::app(Message::OpenThemeResult(
+                            urlencoding::decode(&files[0])
+                                .unwrap_or_default()
+                                .to_string(),
+                        ));
                     }
+
+                    cosmic::action::none()
                 });
             }
-            Message::Launch(args) => {
-                let Some(cef_path) = webapps::cef_path() else {
-                    return cosmic::Task::none();
-                };
 
-                unsafe {
-                    std::env::set_var("LD_LIBRARY_PATH", cef_path.display().to_string());
-                }
-
-                return Task::perform(
-                    async move {
-                        let _ = Command::new(format!("{}.webview", APP_ID))
-                            .args(args)
-                            .spawn();
-                    },
-                    |_| cosmic::Action::App(Message::Close),
-                );
-            }
             Message::LaunchUrl(url) => match open::that_detached(&url) {
                 Ok(()) => {}
                 Err(err) => {
@@ -388,62 +370,87 @@ impl Application for QuickWebApps {
             Message::LoadThemes => {
                 self.themes_list.clear();
 
-                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
-                    self.themes_list.push(Theme::Light);
-                    self.themes_list.push(Theme::Dark);
-                }
+                self.themes_list.push(Theme::Default);
+                self.themes_list.push(Theme::Dark);
+                self.themes_list.push(Theme::Light);
 
                 let Some(folder) = webapps::themes_path("") else {
                     return Task::none();
                 };
+
                 let dir = read_dir(folder);
 
                 if let Ok(files) = dir {
                     for path in files {
                         let dir_entry = path.unwrap();
                         let file_name = dir_entry.file_name();
-                        let theme_name = file_name.to_str().unwrap().replace(".ron", "");
-                        let metadata = std::fs::metadata(dir_entry.path());
+                        let theme_name = file_name.to_str().unwrap_or("Custom").replace(".ron", "");
 
-                        if let Ok(meta) = metadata {
-                            if meta.is_file() {
-                                let mut content: String = String::new();
-
-                                let mut file = std::fs::File::open(dir_entry.path()).unwrap();
-                                let _ = file.read_to_string(&mut content);
-
-                                let theme = Theme::build(theme_name.to_string(), content);
-
-                                if theme_name == self.config.app_theme {
-                                    tasks.push(task::message(cosmic::action::app(
-                                        Message::UpdateTheme(Box::new(theme.clone())),
-                                    )));
-                                }
-
-                                self.themes_list.push(theme);
-                            }
+                        if dir_entry.path().is_file() {
+                            self.themes_list.push(Theme::Custom(theme_name));
                         }
                     }
                 }
 
-                self.theme_idx = self.themes_list.iter().position(|c| match c {
-                    Theme::Light => self.config.app_theme == "COSMIC Light",
-                    Theme::Dark => self.config.app_theme == "COSMIC Dark",
-                    Theme::Custom(theme) => self.config.app_theme == theme.0,
-                })
-            }
-            Message::OpenFileResult(file_paths) => {
-                for icon_path in file_paths {
-                    tasks.push(Task::perform(
-                        webapps::image_handle(icon_path.to_string()),
-                        |icon| cosmic::Action::App(Message::SetIcon(icon)),
-                    ))
-                }
+                self.theme_idx = self
+                    .themes_list
+                    .iter()
+                    .position(|t| t.to_string() == self.config.app_theme);
 
-                self.dialogs = None;
+                if let Some(theme_idx) = self.theme_idx {
+                    return Task::done(cosmic::action::app(Message::UpdateTheme(theme_idx)));
+                }
+            }
+            Message::OpenFileResult(file_path) => {
+                if !file_path.is_empty() {
+                    self.dialogs = None;
+
+                    return Task::future(async move {
+                        let webapp_icon = WebappIcon::build_from_path(&file_path);
+
+                        cosmic::Action::App(Message::SetIcon(Some(webapp_icon)))
+                    });
+                }
             }
             Message::OpenIconPicker => {
                 self.dialogs = Some(Dialogs::IconPicker(IconPicker::default()));
+            }
+            Message::OpenIconPickerDialog => {
+                return task::future(async move {
+                    let result = SelectedFiles::open_file()
+                        .title("Open icon")
+                        .accept_label("Open")
+                        .modal(true)
+                        .multiple(false)
+                        .filter(FileFilter::new("PNG Image").glob("*.png"))
+                        .filter(FileFilter::new("SVG Images").glob("*.svg"))
+                        .send()
+                        .await
+                        .unwrap()
+                        .response();
+
+                    if let Ok(result) = result {
+                        let files = result
+                            .uris()
+                            .iter()
+                            .map(|file| {
+                                let mut file_path = file.as_str();
+                                println!("file path: {}", file_path);
+
+                                if file_path.starts_with("file://") {
+                                    file_path =
+                                        file_path.strip_prefix("file://").expect("removing prefix");
+                                }
+
+                                file_path.to_string()
+                            })
+                            .collect::<Vec<String>>();
+
+                        cosmic::action::app(Message::OpenFileResult(files[0].clone()))
+                    } else {
+                        cosmic::action::none()
+                    }
+                });
             }
             Message::OpenThemeResult(theme) => {
                 if !theme.is_empty() {
@@ -463,7 +470,7 @@ impl Application for QuickWebApps {
             }
             Message::PushIcon(icon) => {
                 if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
-                    icon_picker.push_icon(icon);
+                    icon_picker.push_icon(Some(icon));
                 }
             }
             Message::ReloadNavbarItems => {
@@ -479,13 +486,15 @@ impl Application for QuickWebApps {
                 webapps::launcher::installed_webapps()
                     .into_iter()
                     .for_each(|app| {
+                        let Some(editor) = editor::AppEditor::from_launcher(&app) else {
+                            return;
+                        };
+
                         self.nav
                             .insert()
-                            .icon(navbar_item_icon(
-                                &app.icon.path.as_path().to_str().expect("path conversion"),
-                            ))
-                            .text(app.name.clone())
-                            .data::<Page>(Page::Editor(editor::AppEditor::from(app)))
+                            .icon(navbar_item_icon(&app.webapp_icon))
+                            .text(app.webapp_name.clone())
+                            .data::<Page>(Page::Editor(editor))
                             .closable();
                     });
 
@@ -493,41 +502,30 @@ impl Application for QuickWebApps {
             }
             Message::ResetSettings => {
                 if let Some(handler) = AppConfig::config_handler() {
-                    let _ = self.config.set_app_theme(&handler, String::new());
+                    let _ = self.config.set_app_theme(&handler, "Default".to_string());
                 };
 
-                return cosmic::command::set_theme(cosmic::Theme::light());
+                self.theme_idx = Some(0);
+                return cosmic::command::set_theme(cosmic::theme::system_preference());
             }
-            Message::SaveLauncher(launcher) => {
-                if let Some(location) =
-                    webapps::database_path(&format!("{}.ron", launcher.browser.app_id.as_ref()))
-                {
-                    let content = to_string_pretty(&launcher, ron::ser::PrettyConfig::default());
-
-                    if let Ok(content) = content {
-                        let file = std::fs::File::create(location);
-
-                        if let Ok(mut f) = file {
-                            let _ = f.write_all(content.as_bytes());
-                        }
-                    }
-
-                    return task::message(Message::ReloadNavbarItems);
-                }
+            Message::SaveLauncher => {
+                return task::message(Message::ReloadNavbarItems);
             }
-            Message::SetIcon(icon) => {
+            Message::SetIcon(webapp_icon) => {
                 let Page::Editor(app_editor) = &mut self.page;
 
-                if let Some(ico) = icon {
-                    println!("setting icon: {:?}", ico);
-                    app_editor.update_icon(ico.to_launcher_icon());
+                let Some(webapp_icon) = webapp_icon else {
+                    return Task::none();
+                };
+
+                app_editor.app_icon = Some(webapp_icon);
+
+                if self.dialogs.is_some() && app_editor.app_icon.is_some() {
                     self.dialogs = None;
                 }
             }
-            Message::Surface(a) => {
-                return cosmic::task::message(cosmic::Action::Cosmic(
-                    cosmic::app::Action::Surface(a),
-                ));
+            Message::ShowWarningDialog(profile_path_str) => {
+                self.dialogs = Some(Dialogs::SandboxWarning(profile_path_str));
             }
             Message::ToggleContextPage(context_page) => {
                 if self.context_page == context_page {
@@ -537,39 +535,55 @@ impl Application for QuickWebApps {
                     self.core.window.show_context = true;
                 }
             }
-
             Message::UpdateConfig(config) => {
                 self.config = config;
             }
-            Message::UpdateTheme(theme) => {
-                if let Theme::Custom(theme) = *theme {
-                    if let Some(handler) = AppConfig::config_handler() {
-                        let _ = self.config.set_app_theme(&handler, theme.0);
-                    };
-                    return set_theme(cosmic::Theme::custom(Arc::new(*theme.1)));
-                };
+            Message::UpdateTheme(idx) => {
+                let theme = self.themes_list[idx].clone();
 
-                let theme_selector = match *theme {
-                    Theme::Light => {
-                        if let Some(handler) = AppConfig::config_handler() {
-                            let _ = self.config.set_app_theme(&handler, "COSMIC Light".into());
-                        };
-                        set_theme(cosmic::theme::Theme::light())
-                    }
-                    Theme::Dark => {
-                        if let Some(handler) = AppConfig::config_handler() {
-                            let _ = self.config.set_app_theme(&handler, "COSMIC Dark".into());
-                        };
-                        set_theme(cosmic::theme::Theme::dark())
-                    }
-                    _ => Task::none(),
-                };
-
-                if std::env::var("XDG_CURRENT_DESKTOP") != Ok("COSMIC".to_string()) {
-                    tasks.push(theme_selector);
+                if let Some(handler) = AppConfig::config_handler() {
+                    let _ = self.config.set_app_theme(&handler, theme.to_string());
                 }
+
+                return match theme {
+                    Theme::Default => set_theme(cosmic::theme::system_preference()),
+                    Theme::Dark => set_theme(cosmic::theme::system_dark()),
+                    Theme::Light => set_theme(cosmic::theme::system_light()),
+                    Theme::Custom(name) => {
+                        let Some(folder) = webapps::themes_path("") else {
+                            return Task::none();
+                        };
+
+                        let dir = read_dir(folder);
+
+                        if let Ok(files) = dir {
+                            for path in files {
+                                let dir_entry = path.unwrap();
+                                let file_name = dir_entry.file_name();
+                                let theme_name =
+                                    file_name.to_str().unwrap_or("Custom").replace(".ron", "");
+
+                                if dir_entry.path().is_file() {
+                                    if theme_name == name {
+                                        let mut content = String::new();
+                                        let mut file =
+                                            std::fs::File::open(dir_entry.path()).unwrap();
+                                        let _ = file.read_to_string(&mut content);
+
+                                        if let Ok(palette) = ron::from_str::<ThemeBuilder>(&content)
+                                        {
+                                            return set_theme(cosmic::theme::Theme::custom(
+                                                Arc::new(palette.build()),
+                                            ));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Task::none()
+                    }
+                };
             }
-            Message::None => (),
         };
 
         Task::batch(tasks)
@@ -619,7 +633,7 @@ impl Application for QuickWebApps {
         }
 
         Some(Element::from(
-            nav.width(Length::Shrink).height(Length::Shrink),
+            nav.width(Length::Shrink).height(Length::Fill),
         ))
     }
 
@@ -677,7 +691,11 @@ impl Application for QuickWebApps {
             let element = match dialog {
                 Dialogs::IconPicker(icon_picker) => widget::dialog()
                     .primary_action(
-                        widget::button::standard(fl!("close")).on_press(Message::CloseDialog),
+                        widget::button::standard(fl!("open"))
+                            .on_press(Message::OpenIconPickerDialog),
+                    )
+                    .secondary_action(
+                        widget::button::destructive(fl!("close")).on_press(Message::CloseDialog),
                     )
                     .control(icon_picker.view().map(Message::IconPicker)),
                 Dialogs::Confirmation((entity, title)) => widget::dialog()
@@ -697,12 +715,37 @@ impl Application for QuickWebApps {
                     .title(fl!("icons-installer-header"))
                     .body(self.downloader_output.clone())
                     .primary_action(
-                        widget::button::destructive(fl!("cancel"))
-                            .on_press(Message::DownloaderStop),
+                        widget::button::standard(fl!("cancel")).on_press(Message::DownloaderStop),
                     )
                     .secondary_action(
-                        widget::button::suggested(fl!("close")).on_press(Message::CloseDialog),
+                        widget::button::destructive(fl!("close")).on_press(Message::CloseDialog),
                     ),
+                Dialogs::SandboxWarning(path) => {
+                    let path = std::path::PathBuf::from(path.clone());
+                    let path = path.parent().unwrap();
+
+                    widget::dialog()
+                        .title(fl!("permissions-warning"))
+                        .control(
+                            widget::Column::new()
+                                .spacing(12)
+                                .push(widget::text(fl!(
+                                    "permissions-body",
+                                    HashMap::from([("path", path.display().to_string())])
+                                )))
+                                .push(widget::text(format!(
+                                    "flatpak override --user --filesystem={} dev.heppen.webapps",
+                                    path.display().to_string()
+                                )))
+                                .push(widget::text(format!(
+                                    "flatpak override --filesystem={} dev.heppen.webapps",
+                                    path.display().to_string()
+                                ))),
+                        )
+                        .primary_action(
+                            widget::button::suggested(fl!("close")).on_press(Message::CloseDialog),
+                        )
+                }
             };
 
             return Some(element.into());
@@ -716,7 +759,7 @@ impl QuickWebApps {
     fn settings(&self) -> Element<'_, Message> {
         let cosmic_theme::Spacing { space_xxs, .. } = theme::active().cosmic().spacing;
 
-        widget::column()
+        widget::Column::new()
             .push(
                 widget::settings::section()
                     .add(widget::settings::item(
@@ -743,13 +786,14 @@ impl QuickWebApps {
     }
 }
 
-fn navbar_item_icon(icon: &str) -> widget::icon::Icon {
-    if icon.starts_with("/") {
-        let path = std::path::PathBuf::from_str(icon).expect("incorrect icon path");
+fn navbar_item_icon(icon: &Option<WebappIcon>) -> widget::icon::Icon {
+    let Some(icon) = icon else {
+        return widget::icon::from_raster_bytes(APP_ICON).icon();
+    };
 
-        widget::icon::from_path(path).icon()
-    } else {
-        widget::icon::from_name(icon).icon()
+    match icon.icon {
+        webapps::IconType::Raster => widget::icon::from_raster_bytes(icon.buffer.clone()).icon(),
+        webapps::IconType::Svg => widget::icon::from_svg_bytes(icon.buffer.clone()).icon(),
     }
 }
 

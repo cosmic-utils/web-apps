@@ -98,3 +98,7 @@ warning=You don't meet requirements
     .app-url=  - You must provide valid URL starting with http:// or https://
     .app-icon=  - You must select an Icon for your launcher
     .app-browser=  - Please select a browser. Make sure at least one is installed system-wide or via Flatpak
+
+# mod.rs
+permissions-warning=Permissions Warning
+permissions-body=You are trying to create Web Application with isolated profile in sandboxed environment. In some cases it require creating files in this path which seems to be readonly. If you want to continue, please allow writing to this path [ { $path } ]. You can do this with one of this commands for flatpak. You must restart app after.
