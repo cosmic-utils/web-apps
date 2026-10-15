@@ -27,7 +27,7 @@ build: format check test
     cargo build --release
 
 # Build the project with flatpak-builder
-build-flatpak: format check test
+build-flatpak:
 	flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir {{FLATPAK_MANIFEST}}
 
 # Checks the project
