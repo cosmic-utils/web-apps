@@ -359,7 +359,7 @@ impl From<String> for Category {
             "Video" => Category::Video,
             "Development" => Category::Development,
             "Education" => Category::Education,
-            "Game" => Category::Education,
+            "Game" => Category::Game,
             "Graphics" => Category::Graphics,
             "Network" => Category::Network,
             "Office" => Category::Office,
