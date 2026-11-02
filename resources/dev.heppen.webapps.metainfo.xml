@@ -13,29 +13,36 @@
   <name>Quick Web Apps</name>
   <name xml:lang="cs">Rychlé webové aplikace</name>
   <name xml:lang="uk">Швидкі застосунки</name>
+  <name xml:lang="ja">Quick Web Apps</name>
   <summary>Web applications at your fingertips</summary>
   <summary xml:lang="cs">Webové aplikace na dosah ruky</summary>
   <summary xml:lang="fr">Applications web à portée de main</summary>
   <summary xml:lang="uk">Створюйте застосунки з сайтів і керуйте ними</summary>
+  <summary xml:lang="ja">ウェブアプリをすぐ手元に</summary>
   <metadata_license>MIT</metadata_license>
   <project_license>GPL-3.0-only</project_license>
   <description>
     <p>Web App Manager for the COSMIC™ desktop written with love and libcosmic. Allow you to simply create web applications from given url working inside separate window. With some customization options.</p>
     <p xml:lang="cs">Manažer webových aplikací pro prostředí COSMIC™ napsaný s láskou a libcosmic. Umožňuje jednoduše vytvořit webové aplikace z daných url, které pracují v odděleném okně. Nechybí ani možnosti přizpůsobení.</p>
     <p xml:lang="uk">Менеджер застосунків для середовища COSMIC™, створений з любов’ю і libcosmic. Створюйте застосунки з URL вебсторінок, які працюють в окремому вікні. З можливостями налаштування.</p>
+    <p xml:lang="ja">愛情を込めてlibcosmicで開発された、COSMIC™デスクトップ用のウェブアプリマネージャーです。指定したURLから、別のウィンドウで動作するウェブアプリを簡単に作成できます。いくつかのカスタマイズオプションも備えています。</p>
     <ul>
       <li>Fast and easy to use</li>
       <li xml:lang="cs">Rychlé a snadné použití</li>
       <li xml:lang="uk">Швидкий і простий у використанні</li>
+      <li xml:lang="ja">高速で使いやすい</li>
       <li>Works out of the box</li>
       <li xml:lang="cs">Funguje ihned po instalaci</li>
       <li xml:lang="uk">Працює одразу після встановлення</li>
+      <li xml:lang="ja">すぐに使える</li>
       <li>In-app icon pack installer</li>
       <li xml:lang="cs">Instalátor balíčků ikon přímo v aplikaci</li>
       <li xml:lang="uk">Вбудований встановлювач пакунку іконок</li>
+      <li xml:lang="ja">アプリ内アイコンパックインストーラー</li>
       <li>Supports WebKitGTK web engine</li>
       <li xml:lang="cs">Podpora webového jádra WebKitGTK</li>
       <li xml:lang="uk">Підтримка рушія WebKitGTK</li>
+      <li xml:lang="ja">WebKitGTKウェブエンジンに対応</li>
     </ul>
   </description>
   <launchable type="desktop-id">dev.heppen.webapps.desktop</launchable>
@@ -52,12 +59,14 @@
       <caption>Opened app</caption>
       <caption xml:lang="cs">Otevřená aplikace</caption>
       <caption xml:lang="uk">Відкритий застосунок</caption>
+      <caption xml:lang="ja">起動したアプリ</caption>
     </screenshot>
     <screenshot type="default">
       <image>https://raw.githubusercontent.com/cosmic-utils/web-apps/refs/tags/4.0.0/resources/screenshots/window-light.png</image>
       <caption>Opened app</caption>
       <caption xml:lang="cs">Otevřená aplikace</caption>
       <caption xml:lang="uk">Відкритий застосунок</caption>
+      <caption xml:lang="ja">起動したアプリ</caption>
     </screenshot>
   </screenshots>
   <branding>
