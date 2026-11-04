@@ -61,7 +61,15 @@ install-data:
 # Installs files
 install: install-data
     install -Dm0755 {{BIN_SRC}} {{BIN_DST}}
-    install -Dm0644 {{DESKTOP_SRC}} {{DESKTOP_DST}}
+    # Native installs: point Exec at the installed binary so launchers work even when
+    # ~/.local/bin is not on the desktop session's PATH. Flatpak (/app) keeps the bare name.
+    if [ "{{BASE_DIR}}" = "/app" ]; then \
+        install -Dm0644 {{DESKTOP_SRC}} {{DESKTOP_DST}}; \
+    else \
+        install -d "$(dirname {{DESKTOP_DST}})" && \
+        sed 's|^Exec=.*|Exec={{BIN_DST}}|' {{DESKTOP_SRC}} > {{DESKTOP_DST}} && \
+        chmod 0644 {{DESKTOP_DST}}; \
+    fi
     install -Dm0644 {{METAINFO_SRC}} {{METAINFO_DST}}
 
     for size in `ls {{ICON_SRC}}`; do \
