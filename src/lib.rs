@@ -1,7 +1,6 @@
 use dircpy::copy_dir;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use std::fs::Permissions;
 use std::{
     ffi::OsStr,
     os::unix::fs::PermissionsExt as _,
@@ -570,22 +569,25 @@ pub fn install_zen_empty_profile(dst: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn is_profile_path_readonly(profile_path: &PathBuf) -> bool {
-    if let Some(parent) = profile_path.parent() {
-        let Ok(metadata) = parent.metadata() else {
-            return true;
-        };
+/// Whether a profile at `profile_path` could not be created because its location is
+/// read-only. Folders that do not exist yet are created later, so the check uses the
+/// nearest existing ancestor instead of reporting a missing parent as read-only.
+pub fn is_profile_path_readonly(profile_path: &Path) -> bool {
+    let Some(existing) = profile_path.ancestors().skip(1).find(|p| p.exists()) else {
+        return true;
+    };
 
-        return Permissions::readonly(&metadata.permissions());
+    match existing.metadata() {
+        Ok(metadata) => metadata.permissions().readonly(),
+        Err(_) => true,
     }
-
-    true
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use cosmic::cosmic_theme::ThemeBuilder;
+    use std::fs::Permissions;
 
     fn scratch_dir(tag: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("webapps-test-{}-{tag}", std::process::id()));
@@ -684,5 +686,24 @@ mod tests {
             .collect();
 
         assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
+
+    #[test]
+    fn missing_profile_parent_is_not_readonly() {
+        let dir = scratch_dir("profile");
+        let profile = dir
+            .join("org.mozilla.firefox")
+            .join("dev.heppen.webapps.WhatsApp123");
+        assert!(!is_profile_path_readonly(&profile));
+
+        let locked = dir.join("locked");
+        std::fs::create_dir(&locked).unwrap();
+        std::fs::set_permissions(&locked, Permissions::from_mode(0o555)).unwrap();
+        assert!(is_profile_path_readonly(
+            &locked.join("browser").join("app")
+        ));
+
+        std::fs::set_permissions(&locked, Permissions::from_mode(0o755)).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
