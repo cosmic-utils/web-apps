@@ -269,27 +269,17 @@ pub fn icons_location() -> Option<PathBuf> {
 }
 
 pub fn icon_pack_installed() -> bool {
-    let packs: Vec<&str> = vec!["Papirus", "Papirus-Dark", "Papirus-Light"];
-    let mut directories = 0;
-
-    let mut icons_dir = match icons_location() {
-        Some(dir) => dir,
-        None => PathBuf::from(env!("HOME"))
-            .join(".local")
-            .join("share")
-            .join(APP_ID)
-            .join("icons"),
+    // Resolved at run time; `env!("HOME")` would bake the build machine's home path
+    // into the binary.
+    let Some(icons_dir) =
+        icons_location().or_else(|| dirs::data_dir().map(|d| d.join(APP_ID).join("icons")))
+    else {
+        return false;
     };
 
-    for theme in packs.iter() {
-        icons_dir.push(theme);
-
-        if icons_dir.exists() {
-            directories += 1;
-        };
-    }
-
-    directories > 0
+    ["Papirus", "Papirus-Dark", "Papirus-Light"]
+        .iter()
+        .any(|pack| icons_dir.join(pack).exists())
 }
 
 pub async fn add_icon_packs_install_script() -> Option<String> {
@@ -417,7 +407,7 @@ impl From<String> for Category {
             "Video" => Category::Video,
             "Development" => Category::Development,
             "Education" => Category::Education,
-            "Game" => Category::Education,
+            "Game" => Category::Game,
             "Graphics" => Category::Graphics,
             "Network" => Category::Network,
             "Office" => Category::Office,
@@ -666,6 +656,14 @@ mod tests {
         let dir = scratch_dir("missing");
         assert!(load_custom_theme_in(&dir, "nope").is_err());
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn category_names_round_trip() {
+        for category in Category::iter() {
+            let key = category.as_ref().to_string();
+            assert_eq!(Category::from(key), category);
+        }
     }
 
     /// Checks real exported themes: `WEBAPPS_THEME_DIR=/some/dir cargo test -- --ignored`
