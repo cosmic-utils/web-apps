@@ -2,7 +2,12 @@ use dircpy::copy_dir;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::fs::Permissions;
-use std::{ffi::OsStr, os::unix::fs::PermissionsExt as _, path::PathBuf, str::FromStr};
+use std::{
+    ffi::OsStr,
+    os::unix::fs::PermissionsExt as _,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
 
 use cosmic::cosmic_config::{self, CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry};
@@ -159,6 +164,59 @@ pub fn launcher_desktop_entry_path(appid: &str) -> Option<PathBuf> {
     }
 
     None
+}
+
+/// Parses a COSMIC theme exported from Settings > Appearance > Export
+/// (a RON-serialized `ThemeBuilder`).
+pub fn parse_theme(content: &str) -> anyhow::Result<cosmic::cosmic_theme::ThemeBuilder> {
+    ron::from_str(content).map_err(|e| anyhow::anyhow!("invalid COSMIC theme file: {e}"))
+}
+
+/// Names (file stems) of the `.ron` themes stored in `dir`, sorted.
+pub fn custom_theme_names_in(dir: &Path) -> Vec<String> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+
+    let mut names: Vec<String> = entries
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|p| p.is_file() && p.extension() == Some(OsStr::new("ron")))
+        .filter_map(|p| p.file_stem().and_then(|s| s.to_str()).map(str::to_owned))
+        .collect();
+
+    names.sort_by_key(|n| n.to_lowercase());
+    names
+}
+
+/// Loads and builds the stored custom theme called `name` from `dir`.
+pub fn load_custom_theme_in(dir: &Path, name: &str) -> anyhow::Result<cosmic::cosmic_theme::Theme> {
+    let path = dir.join(format!("{name}.ron"));
+    let content = std::fs::read_to_string(&path)
+        .map_err(|e| anyhow::anyhow!("cannot read {}: {e}", path.display()))?;
+
+    Ok(parse_theme(&content)?.build())
+}
+
+/// Validates `src` as a COSMIC theme and copies it into `dir`,
+/// replacing an older import with the same name. Returns the theme name.
+pub fn import_theme_into(src: &Path, dir: &Path) -> anyhow::Result<String> {
+    let content = std::fs::read_to_string(src)
+        .map_err(|e| anyhow::anyhow!("cannot read {}: {e}", src.display()))?;
+
+    let _validated = parse_theme(&content)?;
+
+    let name = src
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| anyhow::anyhow!("theme file has no usable name"))?
+        .to_owned();
+
+    std::fs::create_dir_all(dir)?;
+    std::fs::write(dir.join(format!("{name}.ron")), content)?;
+
+    Ok(name)
 }
 
 pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
@@ -532,4 +590,101 @@ pub fn is_profile_path_readonly(profile_path: &PathBuf) -> bool {
     }
 
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmic::cosmic_theme::ThemeBuilder;
+
+    fn scratch_dir(tag: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("webapps-test-{}-{tag}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    fn exported(builder: &ThemeBuilder) -> String {
+        ron::ser::to_string_pretty(builder, ron::ser::PrettyConfig::default()).unwrap()
+    }
+
+    #[test]
+    fn parses_exported_dark_and_light_themes() {
+        let dark = parse_theme(&exported(&ThemeBuilder::dark())).unwrap();
+        assert!(dark.build().is_dark);
+
+        let light = parse_theme(&exported(&ThemeBuilder::light())).unwrap();
+        assert!(!light.build().is_dark);
+    }
+
+    #[test]
+    fn rejects_non_theme_ron() {
+        assert!(parse_theme("(foo: 1)").is_err());
+        assert!(parse_theme("not ron at all").is_err());
+    }
+
+    #[test]
+    fn import_validates_copies_and_replaces() {
+        let src_dir = scratch_dir("import-src");
+        let themes = scratch_dir("import-dst");
+
+        let src = src_dir.join("My Theme.ron");
+        std::fs::write(&src, exported(&ThemeBuilder::dark())).unwrap();
+        assert_eq!(import_theme_into(&src, &themes).unwrap(), "My Theme");
+        assert!(load_custom_theme_in(&themes, "My Theme").unwrap().is_dark);
+
+        // Re-importing an edited file with the same name replaces the old copy.
+        std::fs::write(&src, exported(&ThemeBuilder::light())).unwrap();
+        import_theme_into(&src, &themes).unwrap();
+        assert!(!load_custom_theme_in(&themes, "My Theme").unwrap().is_dark);
+
+        // Invalid files are refused and never stored.
+        let bad = src_dir.join("Broken.ron");
+        std::fs::write(&bad, "(palette: 3)").unwrap();
+        assert!(import_theme_into(&bad, &themes).is_err());
+        assert!(!themes.join("Broken.ron").exists());
+
+        let _ = std::fs::remove_dir_all(&src_dir);
+        let _ = std::fs::remove_dir_all(&themes);
+    }
+
+    #[test]
+    fn lists_only_ron_files_sorted() {
+        let dir = scratch_dir("list");
+        for f in ["b.ron", "A.ron", "notes.txt", "c.ron.bak"] {
+            std::fs::write(dir.join(f), "").unwrap();
+        }
+        std::fs::create_dir(dir.join("sub.ron")).unwrap();
+
+        assert_eq!(custom_theme_names_in(&dir), vec!["A", "b"]);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn missing_theme_is_an_error() {
+        let dir = scratch_dir("missing");
+        assert!(load_custom_theme_in(&dir, "nope").is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Checks real exported themes: `WEBAPPS_THEME_DIR=/some/dir cargo test -- --ignored`
+    #[test]
+    #[ignore]
+    fn parses_every_theme_in_env_dir() {
+        let dir = PathBuf::from(std::env::var("WEBAPPS_THEME_DIR").expect("set WEBAPPS_THEME_DIR"));
+        let names = custom_theme_names_in(&dir);
+        assert!(!names.is_empty(), "no .ron files in {}", dir.display());
+
+        let failures: Vec<String> = names
+            .iter()
+            .filter_map(|n| {
+                load_custom_theme_in(&dir, n)
+                    .err()
+                    .map(|e| format!("{n}: {e}"))
+            })
+            .collect();
+
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
 }

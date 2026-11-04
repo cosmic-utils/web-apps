@@ -6,7 +6,7 @@ use cosmic::{
     Application, Element,
     app::{Core, Task, context_drawer},
     command::set_theme,
-    cosmic_theme::{self, ThemeBuilder},
+    cosmic_theme,
     iced::{
         Alignment, Length, Subscription,
         alignment::Horizontal,
@@ -22,10 +22,7 @@ use cosmic::{
     },
 };
 use editor::AppEditor;
-use std::{
-    collections::HashMap, fs::read_dir, io::Read, path::Path, process::ExitStatus, sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, path::Path, process::ExitStatus, sync::Arc, time::Duration};
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
     sync::oneshot,
@@ -80,6 +77,7 @@ pub enum Dialogs {
     Confirmation((widget::segmented_button::Entity, String)),
     IconsDownloader,
     SandboxWarning(String),
+    ThemeError(String),
 }
 
 pub struct QuickWebApps {
@@ -226,7 +224,6 @@ impl Application for QuickWebApps {
 
         match message {
             Message::ChangeUserTheme(idx) => {
-                self.theme_idx = Some(idx);
                 return task::message(cosmic::action::app(Message::UpdateTheme(idx)));
             }
             Message::CloseDialog => self.dialogs = None,
@@ -322,42 +319,12 @@ impl Application for QuickWebApps {
             }
             Message::ImportThemeFilePicker => {
                 return task::future(async move {
-                    let result = SelectedFiles::open_file()
-                        .title("Open Theme")
-                        .accept_label("Open")
-                        .modal(true)
-                        .multiple(false)
-                        .filter(FileFilter::new("Ron Theme").glob("*.ron"))
-                        .send()
-                        .await
-                        .unwrap()
-                        .response();
+                    let filter = FileFilter::new("COSMIC theme (.ron)").glob("*.ron");
 
-                    if let Ok(result) = result {
-                        let files = result
-                            .uris()
-                            .iter()
-                            .map(|file| {
-                                let mut file_path = file.as_str();
-                                println!("file path: {}", file_path);
-
-                                if file_path.starts_with("file://") {
-                                    file_path =
-                                        file_path.strip_prefix("file://").expect("removing prefix");
-                                }
-
-                                file_path.to_string()
-                            })
-                            .collect::<Vec<String>>();
-
-                        return cosmic::action::app(Message::OpenThemeResult(
-                            urlencoding::decode(&files[0])
-                                .unwrap_or_default()
-                                .to_string(),
-                        ));
+                    match pick_single_file("Import theme", vec![filter]).await {
+                        Some(path) => cosmic::action::app(Message::OpenThemeResult(path)),
+                        None => cosmic::action::none(),
                     }
-
-                    cosmic::action::none()
                 });
             }
 
@@ -368,28 +335,14 @@ impl Application for QuickWebApps {
                 }
             },
             Message::LoadThemes => {
-                self.themes_list.clear();
+                self.themes_list = vec![Theme::Default, Theme::Dark, Theme::Light];
 
-                self.themes_list.push(Theme::Default);
-                self.themes_list.push(Theme::Dark);
-                self.themes_list.push(Theme::Light);
-
-                let Some(folder) = webapps::themes_path("") else {
-                    return Task::none();
-                };
-
-                let dir = read_dir(folder);
-
-                if let Ok(files) = dir {
-                    for path in files {
-                        let dir_entry = path.unwrap();
-                        let file_name = dir_entry.file_name();
-                        let theme_name = file_name.to_str().unwrap_or("Custom").replace(".ron", "");
-
-                        if dir_entry.path().is_file() {
-                            self.themes_list.push(Theme::Custom(theme_name));
-                        }
-                    }
+                if let Some(folder) = webapps::themes_path("") {
+                    self.themes_list.extend(
+                        webapps::custom_theme_names_in(&folder)
+                            .into_iter()
+                            .map(Theme::Custom),
+                    );
                 }
 
                 self.theme_idx = self
@@ -417,56 +370,33 @@ impl Application for QuickWebApps {
             }
             Message::OpenIconPickerDialog => {
                 return task::future(async move {
-                    let result = SelectedFiles::open_file()
-                        .title("Open icon")
-                        .accept_label("Open")
-                        .modal(true)
-                        .multiple(false)
-                        .filter(FileFilter::new("PNG Image").glob("*.png"))
-                        .filter(FileFilter::new("SVG Images").glob("*.svg"))
-                        .send()
-                        .await
-                        .unwrap()
-                        .response();
+                    let filters = vec![
+                        FileFilter::new("PNG Image").glob("*.png"),
+                        FileFilter::new("SVG Images").glob("*.svg"),
+                    ];
 
-                    if let Ok(result) = result {
-                        let files = result
-                            .uris()
-                            .iter()
-                            .map(|file| {
-                                let mut file_path = file.as_str();
-                                println!("file path: {}", file_path);
-
-                                if file_path.starts_with("file://") {
-                                    file_path =
-                                        file_path.strip_prefix("file://").expect("removing prefix");
-                                }
-
-                                file_path.to_string()
-                            })
-                            .collect::<Vec<String>>();
-
-                        cosmic::action::app(Message::OpenFileResult(files[0].clone()))
-                    } else {
-                        cosmic::action::none()
+                    match pick_single_file("Open icon", filters).await {
+                        Some(path) => cosmic::action::app(Message::OpenFileResult(path)),
+                        None => cosmic::action::none(),
                     }
                 });
             }
             Message::OpenThemeResult(theme) => {
-                if !theme.is_empty() {
-                    let from_path = Path::new(&theme);
-                    if let Some(file_name) = from_path.file_name() {
-                        let file_name = file_name.to_string_lossy();
+                let Some(folder) = webapps::themes_path("") else {
+                    return Task::none();
+                };
 
-                        if let Some(dest) = webapps::themes_path(&file_name) {
-                            if !dest.exists() {
-                                let _ = std::fs::copy(from_path, dest);
-                            }
-                        }
+                match webapps::import_theme_into(Path::new(&theme), &folder) {
+                    Ok(name) => {
+                        // Select the theme that was just imported.
+                        self.config.app_theme = name;
+                        tasks.push(task::message(Message::LoadThemes));
+                    }
+                    Err(why) => {
+                        tracing::error!("theme import failed: {why}");
+                        self.dialogs = Some(Dialogs::ThemeError(why.to_string()));
                     }
                 }
-
-                tasks.push(task::message(Message::LoadThemes));
             }
             Message::PushIcon(icon) => {
                 if let Some(Dialogs::IconPicker(icon_picker)) = &mut self.dialogs {
@@ -539,50 +469,49 @@ impl Application for QuickWebApps {
                 self.config = config;
             }
             Message::UpdateTheme(idx) => {
-                let theme = self.themes_list[idx].clone();
+                let Some(theme) = self.themes_list.get(idx).cloned() else {
+                    return Task::none();
+                };
+
+                let cosmic_theme = match &theme {
+                    // Follow the system theme (including custom/imported system themes)
+                    // and its dark/light mode switches.
+                    Theme::Default => cosmic::theme::system_preference(),
+                    // Keep the system's dark/light theme even when the system mode flips.
+                    // Without `prefer_dark` libcosmic treats these as "follow system".
+                    Theme::Dark => {
+                        let mut t = cosmic::theme::system_dark();
+                        t.theme_type.prefer_dark(Some(true));
+                        t
+                    }
+                    Theme::Light => {
+                        let mut t = cosmic::theme::system_light();
+                        t.theme_type.prefer_dark(Some(false));
+                        t
+                    }
+                    Theme::Custom(name) => {
+                        let loaded = webapps::themes_path("")
+                            .ok_or_else(|| anyhow::anyhow!("no data directory"))
+                            .and_then(|dir| webapps::load_custom_theme_in(&dir, name));
+
+                        match loaded {
+                            Ok(t) => cosmic::theme::Theme::custom(Arc::new(t)),
+                            Err(why) => {
+                                tracing::error!("cannot load theme {name}: {why}");
+                                self.dialogs = Some(Dialogs::ThemeError(why.to_string()));
+                                return Task::none();
+                            }
+                        }
+                    }
+                };
+
+                self.theme_idx = Some(idx);
 
                 if let Some(handler) = AppConfig::config_handler() {
                     let _ = self.config.set_app_theme(&handler, theme.to_string());
                 }
 
-                return match theme {
-                    Theme::Default => set_theme(cosmic::theme::system_preference()),
-                    Theme::Dark => set_theme(cosmic::theme::system_dark()),
-                    Theme::Light => set_theme(cosmic::theme::system_light()),
-                    Theme::Custom(name) => {
-                        let Some(folder) = webapps::themes_path("") else {
-                            return Task::none();
-                        };
-
-                        let dir = read_dir(folder);
-
-                        if let Ok(files) = dir {
-                            for path in files {
-                                let dir_entry = path.unwrap();
-                                let file_name = dir_entry.file_name();
-                                let theme_name =
-                                    file_name.to_str().unwrap_or("Custom").replace(".ron", "");
-
-                                if dir_entry.path().is_file() {
-                                    if theme_name == name {
-                                        let mut content = String::new();
-                                        let mut file =
-                                            std::fs::File::open(dir_entry.path()).unwrap();
-                                        let _ = file.read_to_string(&mut content);
-
-                                        if let Ok(palette) = ron::from_str::<ThemeBuilder>(&content)
-                                        {
-                                            return set_theme(cosmic::theme::Theme::custom(
-                                                Arc::new(palette.build()),
-                                            ));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        Task::none()
-                    }
-                };
+                return set_theme(cosmic_theme);
             }
         };
 
@@ -720,6 +649,12 @@ impl Application for QuickWebApps {
                     .secondary_action(
                         widget::button::destructive(fl!("close")).on_press(Message::CloseDialog),
                     ),
+                Dialogs::ThemeError(why) => widget::dialog()
+                    .title(fl!("theme-import-error"))
+                    .body(why.clone())
+                    .primary_action(
+                        widget::button::suggested(fl!("close")).on_press(Message::CloseDialog),
+                    ),
                 Dialogs::SandboxWarning(path) => {
                     let path = std::path::PathBuf::from(path.clone());
                     let path = path.parent().unwrap();
@@ -819,4 +754,35 @@ impl menu::action::MenuAction for MenuAction {
             MenuAction::Settings => Message::ToggleContextPage(ContextPage::Settings),
         }
     }
+}
+
+/// Opens the portal file chooser and returns the chosen local path, if any.
+async fn pick_single_file(title: &str, filters: Vec<FileFilter>) -> Option<String> {
+    let mut request = SelectedFiles::open_file()
+        .title(title)
+        .accept_label("Open")
+        .modal(true)
+        .multiple(false);
+
+    for filter in filters {
+        request = request.filter(filter);
+    }
+
+    let response = match request.send().await {
+        Ok(request) => request.response(),
+        Err(why) => {
+            tracing::error!("file chooser portal failed: {why}");
+            return None;
+        }
+    };
+
+    let selected = response.ok()?;
+    let uri = selected.uris().first()?;
+
+    // `to_file_path` also decodes percent-escapes such as `%20`.
+    url::Url::parse(uri.as_str())
+        .ok()?
+        .to_file_path()
+        .ok()
+        .map(|p| p.to_string_lossy().into_owned())
 }
