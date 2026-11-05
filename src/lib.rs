@@ -1,8 +1,12 @@
 use dircpy::copy_dir;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use std::fs::Permissions;
-use std::{ffi::OsStr, os::unix::fs::PermissionsExt as _, path::PathBuf, str::FromStr};
+use std::{
+    ffi::OsStr,
+    os::unix::fs::PermissionsExt as _,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 use tokio::{fs::File, io::AsyncWriteExt as _, process::Child};
 
 use cosmic::cosmic_config::{self, CosmicConfigEntry, cosmic_config_derive::CosmicConfigEntry};
@@ -161,6 +165,59 @@ pub fn launcher_desktop_entry_path(appid: &str) -> Option<PathBuf> {
     None
 }
 
+/// Parses a COSMIC theme exported from Settings > Appearance > Export
+/// (a RON-serialized `ThemeBuilder`).
+pub fn parse_theme(content: &str) -> anyhow::Result<cosmic::cosmic_theme::ThemeBuilder> {
+    ron::from_str(content).map_err(|e| anyhow::anyhow!("invalid COSMIC theme file: {e}"))
+}
+
+/// Names (file stems) of the `.ron` themes stored in `dir`, sorted.
+pub fn custom_theme_names_in(dir: &Path) -> Vec<String> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+
+    let mut names: Vec<String> = entries
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|p| p.is_file() && p.extension() == Some(OsStr::new("ron")))
+        .filter_map(|p| p.file_stem().and_then(|s| s.to_str()).map(str::to_owned))
+        .collect();
+
+    names.sort_by_key(|n| n.to_lowercase());
+    names
+}
+
+/// Loads and builds the stored custom theme called `name` from `dir`.
+pub fn load_custom_theme_in(dir: &Path, name: &str) -> anyhow::Result<cosmic::cosmic_theme::Theme> {
+    let path = dir.join(format!("{name}.ron"));
+    let content = std::fs::read_to_string(&path)
+        .map_err(|e| anyhow::anyhow!("cannot read {}: {e}", path.display()))?;
+
+    Ok(parse_theme(&content)?.build())
+}
+
+/// Validates `src` as a COSMIC theme and copies it into `dir`,
+/// replacing an older import with the same name. Returns the theme name.
+pub fn import_theme_into(src: &Path, dir: &Path) -> anyhow::Result<String> {
+    let content = std::fs::read_to_string(src)
+        .map_err(|e| anyhow::anyhow!("cannot read {}: {e}", src.display()))?;
+
+    let _validated = parse_theme(&content)?;
+
+    let name = src
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| anyhow::anyhow!("theme file has no usable name"))?
+        .to_owned();
+
+    std::fs::create_dir_all(dir)?;
+    std::fs::write(dir.join(format!("{name}.ron")), content)?;
+
+    Ok(name)
+}
+
 pub fn themes_path(theme_file: &str) -> Option<PathBuf> {
     if let Some(mut data) = data_path() {
         data.push("themes");
@@ -211,27 +268,17 @@ pub fn icons_location() -> Option<PathBuf> {
 }
 
 pub fn icon_pack_installed() -> bool {
-    let packs: Vec<&str> = vec!["Papirus", "Papirus-Dark", "Papirus-Light"];
-    let mut directories = 0;
-
-    let mut icons_dir = match icons_location() {
-        Some(dir) => dir,
-        None => PathBuf::from(env!("HOME"))
-            .join(".local")
-            .join("share")
-            .join(APP_ID)
-            .join("icons"),
+    // Resolved at run time; `env!("HOME")` would bake the build machine's home path
+    // into the binary.
+    let Some(icons_dir) =
+        icons_location().or_else(|| dirs::data_dir().map(|d| d.join(APP_ID).join("icons")))
+    else {
+        return false;
     };
 
-    for theme in packs.iter() {
-        icons_dir.push(theme);
-
-        if icons_dir.exists() {
-            directories += 1;
-        };
-    }
-
-    directories > 0
+    ["Papirus", "Papirus-Dark", "Papirus-Light"]
+        .iter()
+        .any(|pack| icons_dir.join(pack).exists())
 }
 
 pub async fn add_icon_packs_install_script() -> Option<String> {
@@ -359,7 +406,7 @@ impl From<String> for Category {
             "Video" => Category::Video,
             "Development" => Category::Development,
             "Education" => Category::Education,
-            "Game" => Category::Education,
+            "Game" => Category::Game,
             "Graphics" => Category::Graphics,
             "Network" => Category::Network,
             "Office" => Category::Office,
@@ -522,14 +569,141 @@ pub fn install_zen_empty_profile(dst: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn is_profile_path_readonly(profile_path: &PathBuf) -> bool {
-    if let Some(parent) = profile_path.parent() {
-        let Ok(metadata) = parent.metadata() else {
-            return true;
-        };
+/// Whether a profile at `profile_path` could not be created because its location is
+/// read-only. Folders that do not exist yet are created later, so the check uses the
+/// nearest existing ancestor instead of reporting a missing parent as read-only.
+pub fn is_profile_path_readonly(profile_path: &Path) -> bool {
+    let Some(existing) = profile_path.ancestors().skip(1).find(|p| p.exists()) else {
+        return true;
+    };
 
-        return Permissions::readonly(&metadata.permissions());
+    match existing.metadata() {
+        Ok(metadata) => metadata.permissions().readonly(),
+        Err(_) => true,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmic::cosmic_theme::ThemeBuilder;
+    use std::fs::Permissions;
+
+    fn scratch_dir(tag: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("webapps-test-{}-{tag}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
     }
 
-    true
+    fn exported(builder: &ThemeBuilder) -> String {
+        ron::ser::to_string_pretty(builder, ron::ser::PrettyConfig::default()).unwrap()
+    }
+
+    #[test]
+    fn parses_exported_dark_and_light_themes() {
+        let dark = parse_theme(&exported(&ThemeBuilder::dark())).unwrap();
+        assert!(dark.build().is_dark);
+
+        let light = parse_theme(&exported(&ThemeBuilder::light())).unwrap();
+        assert!(!light.build().is_dark);
+    }
+
+    #[test]
+    fn rejects_non_theme_ron() {
+        assert!(parse_theme("(foo: 1)").is_err());
+        assert!(parse_theme("not ron at all").is_err());
+    }
+
+    #[test]
+    fn import_validates_copies_and_replaces() {
+        let src_dir = scratch_dir("import-src");
+        let themes = scratch_dir("import-dst");
+
+        let src = src_dir.join("My Theme.ron");
+        std::fs::write(&src, exported(&ThemeBuilder::dark())).unwrap();
+        assert_eq!(import_theme_into(&src, &themes).unwrap(), "My Theme");
+        assert!(load_custom_theme_in(&themes, "My Theme").unwrap().is_dark);
+
+        // Re-importing an edited file with the same name replaces the old copy.
+        std::fs::write(&src, exported(&ThemeBuilder::light())).unwrap();
+        import_theme_into(&src, &themes).unwrap();
+        assert!(!load_custom_theme_in(&themes, "My Theme").unwrap().is_dark);
+
+        // Invalid files are refused and never stored.
+        let bad = src_dir.join("Broken.ron");
+        std::fs::write(&bad, "(palette: 3)").unwrap();
+        assert!(import_theme_into(&bad, &themes).is_err());
+        assert!(!themes.join("Broken.ron").exists());
+
+        let _ = std::fs::remove_dir_all(&src_dir);
+        let _ = std::fs::remove_dir_all(&themes);
+    }
+
+    #[test]
+    fn lists_only_ron_files_sorted() {
+        let dir = scratch_dir("list");
+        for f in ["b.ron", "A.ron", "notes.txt", "c.ron.bak"] {
+            std::fs::write(dir.join(f), "").unwrap();
+        }
+        std::fs::create_dir(dir.join("sub.ron")).unwrap();
+
+        assert_eq!(custom_theme_names_in(&dir), vec!["A", "b"]);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn missing_theme_is_an_error() {
+        let dir = scratch_dir("missing");
+        assert!(load_custom_theme_in(&dir, "nope").is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn category_names_round_trip() {
+        for category in Category::iter() {
+            let key = category.as_ref().to_string();
+            assert_eq!(Category::from(key), category);
+        }
+    }
+
+    /// Checks real exported themes: `WEBAPPS_THEME_DIR=/some/dir cargo test -- --ignored`
+    #[test]
+    #[ignore]
+    fn parses_every_theme_in_env_dir() {
+        let dir = PathBuf::from(std::env::var("WEBAPPS_THEME_DIR").expect("set WEBAPPS_THEME_DIR"));
+        let names = custom_theme_names_in(&dir);
+        assert!(!names.is_empty(), "no .ron files in {}", dir.display());
+
+        let failures: Vec<String> = names
+            .iter()
+            .filter_map(|n| {
+                load_custom_theme_in(&dir, n)
+                    .err()
+                    .map(|e| format!("{n}: {e}"))
+            })
+            .collect();
+
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
+
+    #[test]
+    fn missing_profile_parent_is_not_readonly() {
+        let dir = scratch_dir("profile");
+        let profile = dir
+            .join("org.mozilla.firefox")
+            .join("dev.heppen.webapps.WhatsApp123");
+        assert!(!is_profile_path_readonly(&profile));
+
+        let locked = dir.join("locked");
+        std::fs::create_dir(&locked).unwrap();
+        std::fs::set_permissions(&locked, Permissions::from_mode(0o555)).unwrap();
+        assert!(is_profile_path_readonly(
+            &locked.join("browser").join("app")
+        ));
+
+        std::fs::set_permissions(&locked, Permissions::from_mode(0o755)).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }
