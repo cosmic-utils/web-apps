@@ -10,12 +10,6 @@
 
   <img alt="Quick Web Apps (light)" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/resources/screenshots/window-light.png" width="360">
   <img alt="Quick Web Apps (dark)" src="https://raw.githubusercontent.com/cosmic-utils/web-apps/master/resources/screenshots/window-dark.png" width="360">
-
-<br><br><br>
-
-  <a href='https://flathub.org/apps/dev.heppen.webapps'>
-    <img width='240' alt='Download on Flathub' src='https://flathub.org/api/badge?locale=en'/>
-  </a>
 </div>
 
 # Support
