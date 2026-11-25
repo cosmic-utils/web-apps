@@ -102,3 +102,5 @@ warning=You don't meet requirements
 # mod.rs
 permissions-warning=Permissions Warning
 permissions-body=You are trying to create Web Application with isolated profile in sandboxed environment. In some cases it require creating files in this path which seems to be readonly. If you want to continue, please allow writing to this path [ { $path } ]. You can do this with one of this commands for flatpak. You must restart app after.
+# theme import
+theme-import-error=Could not use this theme
